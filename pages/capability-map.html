@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBTS AI Platform — Capability Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1b3a5c;
+    --navy-deep: #122a45;
+    --teal: #1b6e8c;
+    --teal-bright: #2e9bc0;
+    --orange: #e0922f;
+    --paper: #f5f7f9;
+    --card: #ffffff;
+    --ink: #21303f;
+    --ink-soft: #5b6b7a;
+    --line: #d8e0e7;
+    --display: 'Barlow Semi Condensed', sans-serif;
+    --body: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--body);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    background: linear-gradient(120deg, var(--navy-deep) 0%, var(--navy) 55%, var(--teal) 130%);
+    color: #fff;
+    padding: 40px 32px 34px;
+  }
+  .header-inner { max-width: 1180px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal-bright);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+  }
+  .subtitle { margin-top: 10px; font-size: 15px; color: #c6d5e2; max-width: 560px; }
+
+  .view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s ease;
+  }
+  .view-toggle:hover { background: rgba(255,255,255,0.15); }
+  .view-toggle:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .toggle-track {
+    width: 38px; height: 20px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  .toggle-knob {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: #fff; border-radius: 50%;
+    transition: transform 0.2s ease;
+  }
+  body.tech-view .toggle-track { background: var(--orange); }
+  body.tech-view .toggle-knob { transform: translateX(18px); }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px 32px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 26px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .dot.input { background: var(--navy); }
+  .dot.ai { background: var(--teal); }
+  .dot.output { background: var(--teal-bright); }
+  .dot.value { background: var(--orange); }
+
+  /* ---------- Lanes ---------- */
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 32px 20px; }
+
+  .lane {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-top: 22px;
+    overflow: hidden;
+  }
+  .lane-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 18px 24px 4px;
+  }
+  .lane-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .lane-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+
+  .flow {
+    display: grid;
+    grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr;
+    align-items: stretch;
+    gap: 0;
+    padding: 14px 24px 22px;
+  }
+
+  .node {
+    border-radius: 10px;
+    padding: 14px 16px;
+    min-height: 116px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
+  }
+  .node .stage {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .node .label {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 1.2;
+  }
+  .node .detail { font-size: 13px; line-height: 1.45; }
+
+  .node.input  { background: #eef2f7; border: 1px solid #cfdae6; }
+  .node.input .stage { color: var(--navy); }
+  .node.ai     { background: var(--teal); color: #fff; border: 1px solid var(--teal); }
+  .node.ai .stage { color: #bfe6f2; }
+  .node.output { background: #e4f2f8; border: 1px solid #bcdde9; }
+  .node.output .stage { color: var(--teal); }
+  .node.value  { background: #fdf3e4; border: 1px solid #f0d9b3; }
+  .node.value .stage { color: var(--orange); }
+  .node.value .label { color: #a5670f; }
+
+  /* Tech annotations */
+  .tech {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(0,0,0,0.18);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .node.ai .tech { border-top-color: rgba(255,255,255,0.35); color: #d6eef7; }
+  body.tech-view .tech { display: block; }
+
+  /* ---------- Flow connectors (signature: water-flow dashes) ---------- */
+  .pipe {
+    position: relative;
+    align-self: center;
+    height: 4px;
+    width: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--teal-bright) 0 8px,
+      transparent 8px 16px
+    );
+    background-size: 16px 4px;
+    border-radius: 2px;
+    animation: flow 0.9s linear infinite;
+  }
+  .pipe::after {
+    content: '';
+    position: absolute;
+    right: -1px; top: 50%;
+    transform: translateY(-50%);
+    border-left: 7px solid var(--teal-bright);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+  @keyframes flow {
+    from { background-position: 0 0; }
+    to   { background-position: 16px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pipe { animation: none; }
+  }
+
+  /* ---------- Connected data & tools tier ---------- */
+  .tools {
+    max-width: 1180px;
+    margin: 30px auto 0;
+    padding: 0 32px;
+  }
+  .tools-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .tools-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .tools-sub { font-size: 13px; color: var(--ink-soft); }
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .tool-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--teal);
+    border-radius: 12px;
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tool-card h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--navy);
+    line-height: 1.2;
+  }
+  .tool-card .role {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .tool-card p { font-size: 13px; line-height: 1.5; }
+  .feeds {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .feeds-label {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .feed-tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 3px 11px;
+  }
+  .feed-tag.support   { background: #e4f2f8; color: var(--teal); border: 1px solid #bcdde9; }
+  .feed-tag.submittal { background: #eef2f7; color: var(--navy); border: 1px solid #cfdae6; }
+  .feed-tag.bid       { background: #fdf3e4; color: #a5670f; border: 1px solid #f0d9b3; }
+  .tool-card .tech { border-top: 1px dashed var(--line); }
+
+  .concert {
+    background: #e4f2f8;
+    border: 1px solid #bcdde9;
+    border-radius: 12px;
+    margin-top: 16px;
+    padding: 16px 20px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  .concert b { color: var(--navy); }
+
+  @media (max-width: 860px) {
+    .tools { padding-left: 22px; padding-right: 22px; }
+    .tools-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Product line coverage ---------- */
+  .coverage {
+    max-width: 1180px;
+    margin: 30px auto 0;
+    padding: 0 32px;
+  }
+  .coverage-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 24px 22px;
+    overflow-x: auto;
+  }
+  .coverage-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .coverage-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+    min-width: 640px;
+  }
+  .matrix th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 500;
+    text-align: center;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--line);
+  }
+  .matrix th:first-child { text-align: left; }
+  .matrix td {
+    padding: 10px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+  .matrix tr:last-child td { border-bottom: none; }
+  .matrix td:first-child { text-align: left; }
+  .brand-name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--navy);
+    display: block;
+    line-height: 1.15;
+  }
+  .brand-lines { font-size: 12px; color: var(--ink-soft); }
+  .status {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+  }
+  .status.live    { background: var(--teal); }
+  .status.partial { background: #fff; border: 3px solid var(--orange); width: 10px; height: 10px; }
+  .status.planned { background: #fff; border: 2px solid var(--line); width: 12px; height: 12px; }
+  .coverage-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    align-items: center;
+  }
+  .coverage-legend span { display: inline-flex; align-items: center; gap: 7px; }
+  @media (max-width: 860px) {
+    .coverage { padding-left: 22px; padding-right: 22px; }
+  }
+
+  /* ---------- Ticket status strip ---------- */
+  .status-strip {
+    margin: 0 24px 20px;
+    background: #f5f8fa;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 16px 14px;
+  }
+  .status-strip .strip-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .status-steps {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .status-step {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 13.5px;
+    color: var(--navy);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 14px;
+    white-space: nowrap;
+  }
+  .status-step small {
+    display: block;
+    font-family: var(--body);
+    font-weight: 400;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    line-height: 1.2;
+  }
+  .status-arrow { color: var(--teal-bright); font-size: 14px; }
+  .status-step.loop {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+  }
+  .status-step.loop small { color: #bfe6f2; }
+  .loop-note {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .loop-note b { color: var(--teal); }
+
+  /* ---------- D&A expansion ---------- */
+  .expansion {
+    max-width: 1180px;
+    margin: 30px auto 0;
+    padding: 0 32px;
+  }
+  .expansion-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--orange);
+    border-radius: 14px;
+    padding: 20px 24px 22px;
+  }
+  .expansion-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .expansion-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .expansion-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 18px;
+    margin-top: 16px;
+  }
+  .exp-block h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .team-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+  .team-row:last-of-type { border-bottom: none; }
+  .team-row .team { font-weight: 600; color: var(--navy); }
+  .team-row .owner { color: var(--ink-soft); font-size: 12px; flex: 1; }
+  .team-row .vol {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #a5670f;
+    background: #fdf3e4;
+    border: 1px solid #f0d9b3;
+    border-radius: 6px;
+    padding: 1px 8px;
+    white-space: nowrap;
+  }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--navy);
+  }
+  .needs-list { list-style: none; }
+  .needs-list li {
+    position: relative;
+    padding: 6px 0 6px 22px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    border-bottom: 1px solid var(--line);
+  }
+  .needs-list li:last-child { border-bottom: none; }
+  .needs-list li::before {
+    content: '';
+    position: absolute;
+    left: 2px; top: 12px;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    background: var(--teal-bright);
+  }
+  .needs-list li b { color: var(--navy); }
+  @media (max-width: 860px) {
+    .expansion { padding-left: 22px; padding-right: 22px; }
+    .expansion-grid { grid-template-columns: 1fr; }
+    .status-strip { margin: 0 16px 18px; }
+  }
+
+  /* ---------- Platform foundation ---------- */
+  .foundation {
+    max-width: 1180px;
+    margin: 30px auto 0;
+    padding: 0 32px 48px;
+  }
+  .foundation-card {
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 24px 28px 26px;
+    color: #fff;
+  }
+  .foundation-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .foundation-title small {
+    font-family: var(--body);
+    font-weight: 400;
+    font-size: 13px;
+    color: #a8bccd;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px;
+    padding: 7px 13px;
+    color: #dbe7f0;
+  }
+  .chip b { color: var(--teal-bright); font-weight: 500; }
+  .chip.migration { border-color: var(--orange); color: #f6d9ab; }
+
+  footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding: 0 24px 34px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    .flow {
+      grid-template-columns: 1fr;
+      grid-auto-rows: auto;
+    }
+    .pipe {
+      width: 4px;
+      height: 26px;
+      justify-self: center;
+      background: repeating-linear-gradient(
+        180deg,
+        var(--teal-bright) 0 8px,
+        transparent 8px 16px
+      );
+      background-size: 4px 16px;
+      animation-name: flowV;
+    }
+    .pipe::after {
+      right: auto; top: auto;
+      left: 50%; bottom: -1px;
+      transform: translateX(-50%);
+      border-top: 7px solid var(--teal-bright);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: none;
+    }
+    @keyframes flowV {
+      from { background-position: 0 0; }
+      to   { background-position: 0 16px; }
+    }
+    header { padding: 30px 22px 26px; }
+    main, .foundation, .legend { padding-left: 22px; padding-right: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="eyebrow">Neptune Benson Technical Support · Xylem D&amp;A</div>
+      <h1>NBTS AI Platform — What It Does</h1>
+      <p class="subtitle">Three AI workstreams powered by shared data and tools, on one platform. Each lane reads left to right: what goes in, what the AI does, what comes out, and why it matters.</p>
+    </div>
+    <div class="view-toggle" role="switch" aria-checked="false" tabindex="0" id="techToggle">
+      <span>Technical view</span>
+      <span class="toggle-track"><span class="toggle-knob"></span></span>
+    </div>
+  </div>
+</header>
+
+<div class="legend">
+  <span><span class="dot input"></span> Input</span>
+  <span><span class="dot ai"></span> AI processing</span>
+  <span><span class="dot output"></span> Output</span>
+  <span><span class="dot value"></span> Business value</span>
+</div>
+
+<main>
+
+  <!-- Lane 1: Technical Support AI -->
+  <section class="lane">
+    <div class="lane-header">
+      <span class="lane-title">Technical Support AI</span>
+      <span class="lane-tag">Live · 24/7</span>
+    </div>
+    <div class="flow">
+      <div class="node input">
+        <span class="stage">Input</span>
+        <span class="label">Customer calls &amp; texts</span>
+        <span class="detail">Phone calls and SMS from customers and field techs, any hour.</span>
+        <span class="tech">Twilio SMS routing · ElevenLabs voice agent · platinum customer registry lookup</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node ai">
+        <span class="stage">AI Processing</span>
+        <span class="label">Answers from the knowledge base</span>
+        <span class="detail">Understands the question, identifies the product, and pulls the right answer from NBTS documentation and past tickets.</span>
+        <span class="tech">Jira RAG Agent · Supabase vector store (match_documents) · parts catalog agent on master_product_list</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node output">
+        <span class="stage">Output</span>
+        <span class="label">Instant answer + Jira ticket</span>
+        <span class="detail">Customer gets a direct answer; a ticket is created automatically for anything needing follow-up.</span>
+        <span class="tech">Jira Service Management auto-create · SMS reply branch · call transcript attached</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node value">
+        <span class="stage">Value</span>
+        <span class="label">24/7 coverage, 3.7× throughput</span>
+        <span class="detail">265 tickets in June vs. a 5-year average of ~71/month — with ~1,300 tickets through the platform to date.</span>
+      </div>
+    </div>
+    <div class="status-strip">
+      <div class="strip-label">Ticket lifecycle — every request follows the same path</div>
+      <div class="status-steps">
+        <span class="status-step">Intake<small>call / email / SMS / web form</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">AI Triaged<small>product ID'd, KB answer attached</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Assigned<small>routed to the right engineer</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">In Progress<small>customer &amp; Xylem collaborate on ticket</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Resolved<small>engineer documents resolution</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step loop">KB Updated<small>gap closed for next month</small></span>
+      </div>
+      <div class="loop-note"><b>The learning loop:</b> monthly export of every ticket shows what AI answered vs. what needed an engineer — those gaps go back into the knowledge base, so the same question gets answered automatically next time.</div>
+    </div>
+  </section>
+
+  <!-- Lane 2: Submittal Generator -->
+  <section class="lane">
+    <div class="lane-header">
+      <span class="lane-title">Submittal Package Generator</span>
+      <span class="lane-tag">Live</span>
+    </div>
+    <div class="flow">
+      <div class="node input">
+        <span class="stage">Input</span>
+        <span class="label">Neptune Benson quote PDF</span>
+        <span class="detail">A sales quote — including multi-pool projects and scanned, image-only PDFs.</span>
+        <span class="tech">FastAPI on Render · OCR fallback for image-only PDFs</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node ai">
+        <span class="stage">AI Processing</span>
+        <span class="label">Parses &amp; assembles the package</span>
+        <span class="detail">Reads the quote line by line, finds every product, and pulls the matching cut sheets and schematics.</span>
+        <span class="tech">Quote parser · annotation engine (red row boxes, yellow callouts) · schematic dedup</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node output">
+        <span class="stage">Output</span>
+        <span class="label">Annotated submittal package</span>
+        <span class="detail">A finished, engineer-ready submittal PDF with every quoted item highlighted on its documentation.</span>
+        <span class="tech">Merged PDF output · per-item annotation overlays</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node value">
+        <span class="stage">Value</span>
+        <span class="label">Hours of manual work → minutes</span>
+        <span class="detail">Applications engineers spend time on engineering, not document assembly.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lane 3: Bid Scorecard -->
+  <section class="lane">
+    <div class="lane-header">
+      <span class="lane-title">Bid / Spec Scorecard</span>
+      <span class="lane-tag">Live · Scaling</span>
+    </div>
+    <div class="flow">
+      <div class="node input">
+        <span class="stage">Input</span>
+        <span class="label">Project spec document</span>
+        <span class="detail">The bid specification for an aquatics or disinfection project.</span>
+        <span class="tech">n8n Cloud workflow trigger · document intake</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node ai">
+        <span class="stage">AI Processing</span>
+        <span class="label">Scores 28 categories in parallel</span>
+        <span class="detail">Evaluates fit against every scoring category at once, then forms an overall commercial position.</span>
+        <span class="tech">Haiku parallel category scoring · Opus commercial position · Supabase scoring registry (multi-product-line)</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node output">
+        <span class="stage">Output</span>
+        <span class="label">Go / no-go scorecard</span>
+        <span class="detail">A structured scorecard with per-category results and a clear recommendation.</span>
+        <span class="tech">scorecard_runs + scorecard_category_results tables · full run history</span>
+      </div>
+      <div class="pipe" aria-hidden="true"></div>
+      <div class="node value">
+        <span class="stage">Value</span>
+        <span class="label">Consistent, faster bid decisions</span>
+        <span class="detail">Every bid judged by the same yardstick — no more gut-feel triage.</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="tools">
+  <div class="tools-header">
+    <span class="tools-title">Connected Data &amp; Tools</span>
+    <span class="tools-sub">Supporting capabilities that feed the lanes above — all reading and writing to the same shared data.</span>
+  </div>
+  <div class="tools-grid">
+
+    <div class="tool-card">
+      <span class="role">Front of the funnel</span>
+      <h3>Product Configurators</h3>
+      <p>Guided tools for building correct equipment configurations — SOFA main drains and horizontal sand filters across seven system types — so quotes start with valid part numbers, not guesswork.</p>
+      <span class="tech">Self-contained HTML tools · 174 connection codes · posts to n8n webhooks · validated against master product list</span>
+      <div class="feeds">
+        <span class="feeds-label">Feeds into</span>
+        <span class="feed-tag submittal">Submittal Generator</span>
+        <span class="feed-tag support">Tech Support AI</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <span class="role">Product truth</span>
+      <h3>Part Number Lookup</h3>
+      <p>Instant search across the full NBTS catalog — 3,832 SKUs from SAP — by part number, description, or fuzzy match. One authoritative answer for every product question.</p>
+      <span class="tech">master_product_list in Supabase · full-text + trigram search · parts catalog AI agent</span>
+      <div class="feeds">
+        <span class="feeds-label">Feeds into</span>
+        <span class="feed-tag support">Tech Support AI</span>
+        <span class="feed-tag submittal">Submittal Generator</span>
+        <span class="feed-tag bid">Bid Scorecard</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <span class="role">Customer truth</span>
+      <h3>GoldMine CRM Data</h3>
+      <p>Decades of Neptune Benson contact and opportunity history, migrated and queryable. The AI knows who's calling, what they own, and what's been quoted before.</p>
+      <span class="tech">goldmine schema in Supabase · 6 tables, 3 assembled views · powers platinum caller registry</span>
+      <div class="feeds">
+        <span class="feeds-label">Feeds into</span>
+        <span class="feed-tag support">Tech Support AI</span>
+        <span class="feed-tag bid">Bid Scorecard</span>
+        <span class="feed-tag submittal">Submittal Generator</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="concert">
+    <b>How it works in concert:</b> a rep configures equipment with the <b>configurator</b>, which validates every line against the <b>part number catalog</b> — so the quote that reaches the <b>Submittal Generator</b> is clean on arrival. When a customer calls, <b>GoldMine data</b> tells the voice agent who they are and what they own, and the <b>parts catalog</b> answers what they need — before a human ever picks up. And when a bid comes in, the <b>Scorecard</b> can weigh it against real customer and opportunity history, not just the spec. Same data, three workstreams, no re-keying.
+  </div>
+</div>
+
+<div class="coverage">
+  <div class="coverage-card">
+    <div class="coverage-title">Product Line Coverage — ~42 Lines Across 7 Brand Families</div>
+    <div class="coverage-sub">How far each brand family has moved through the four platform enablement stages. Every stage a line completes unlocks more of the lanes above.</div>
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Brand family</th>
+          <th>1 · Parts searchable</th>
+          <th>2 · Docs in knowledge base</th>
+          <th>3 · Configurator</th>
+          <th>4 · Scorecard enabled</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="brand-name">Neptune Benson</span><span class="brand-lines">Defender RMF, ProStrainer, strainers &amp; filtration</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Lawson Aquatics</span><span class="brand-lines">Main drains, sand filters, aquatics equipment</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live — SOFA + horizontal sand filters"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">ETS UV</span><span class="brand-lines">UV disinfection systems</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Pacific Ozone</span><span class="brand-lines">Ozone generation &amp; treatment</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Wallace &amp; Tiernan</span><span class="brand-lines">Chemical feed &amp; analysis</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">OSEC</span><span class="brand-lines">On-site hypochlorite generation</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Water Champ</span><span class="brand-lines">Chemical induction systems</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="coverage-legend">
+      <span><span class="status live"></span> Live</span>
+      <span><span class="status partial"></span> In progress</span>
+      <span><span class="status planned"></span> Planned</span>
+      <span style="margin-left:auto;">Stage 1 covers all 3,832 SKUs via the master product list</span>
+    </div>
+  </div>
+</div>
+
+<div class="expansion">
+  <div class="expansion-card">
+    <div class="expansion-title">Scaling Across D&amp;A — Proven Playbook, New Teams</div>
+    <div class="expansion-sub">The aquatics project becomes the copy-ready baseline for the rest of the division: one landing page, product-specific entry points, and queues routed to each team's first line of support.</div>
+    <div class="expansion-grid">
+
+      <div class="exp-block">
+        <h4>Candidate teams &amp; estimated monthly volume</h4>
+        <div class="team-row"><span class="team">Aquatics</span><span class="owner">Live today — the baseline project</span><span class="vol">265 (June)</span></div>
+        <div class="team-row"><span class="team">Sanitary</span><span class="owner">Stephen's team</span><span class="vol">~100 / mo</span></div>
+        <div class="team-row"><span class="team">Wedeco UV &amp; Ozone (US)</span><span class="owner">Combined UV + ozone</span><span class="vol">~100–150 / mo</span></div>
+        <div class="team-row"><span class="team">Filter Press</span><span class="owner">Ferris &amp; Harrison</span><span class="vol">~80–100 / mo</span></div>
+        <div class="team-row"><span class="team">Leopold</span><span class="owner">Wastewater filtration</span><span class="vol">~50 / mo</span></div>
+        <div class="team-row"><span class="team">Wastewater / Construction</span><span class="owner">Harry's group</span><span class="vol">~50–100 / mo</span></div>
+        <div class="total-row"><span>Potential platform volume</span><span>~650–900 / mo</span></div>
+      </div>
+
+      <div class="exp-block">
+        <h4>What each new product group needs to onboard</h4>
+        <ul class="needs-list">
+          <li><b>Product list</b> — which lines the team supports, so entry points and queues can be built per product</li>
+          <li><b>Point of contact</b> — who receives tickets, for manual or automatic assignment</li>
+          <li><b>O&amp;M documentation</b> — manuals and technical data sheets to seed the knowledge base (42 products covered today)</li>
+          <li><b>Copy of the aquatics project</b> — cloned as a starting point; teams test it and flag changes rather than building from scratch</li>
+          <li><b>Entry point preferences</b> — phone AI, email, SMS, web form, or embedded site widget, all funneling to one Jira project</li>
+        </ul>
+        <h4 style="margin-top:16px;">CRM connection</h4>
+        <ul class="needs-list">
+          <li><b>Dynamics 365</b> — Jira triggers updating Dynamics cases; tested in sandbox, moving to live cases now. Same pattern available for Salesforce (Europe).</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="foundation">
+  <div class="foundation-card">
+    <div class="foundation-title">Shared Platform Foundation <small>every lane runs on the same core — build once, reuse everywhere</small></div>
+    <div class="chips">
+      <span class="chip"><b>Orchestration</b> n8n Cloud</span>
+      <span class="chip"><b>Data &amp; Vector Store</b> Supabase</span>
+      <span class="chip"><b>APIs</b> FastAPI on Render</span>
+      <span class="chip"><b>AI Models</b> Anthropic Claude + OpenAI</span>
+      <span class="chip"><b>Ticketing</b> Jira Service Mgmt</span>
+      <span class="chip"><b>Voice &amp; SMS</b> ElevenLabs + Twilio</span>
+      <span class="chip migration"><b>Roadmap</b> Re-host to Microsoft Foundry</span>
+    </div>
+  </div>
+</div>
+
+<footer>NBTS AI Platform · Neptune Benson Technical Support · Xylem Disinfection &amp; Aquatics</footer>
+
+<script>
+  const toggle = document.getElementById('techToggle');
+  function flip() {
+    const on = document.body.classList.toggle('tech-view');
+    toggle.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  toggle.addEventListener('click', flip);
+  toggle.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+</script>
+
+</body>
+</html>

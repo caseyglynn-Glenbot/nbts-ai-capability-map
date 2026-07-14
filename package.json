@@ -1,0 +1,16 @@
+{
+  "name": "nbts-portal",
+  "version": "1.0.0",
+  "description": "Authenticated internal portal for NBTS AI Platform documentation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "express-basic-auth": "^1.2.1"
+  }
+}
