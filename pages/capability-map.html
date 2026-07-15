@@ -299,6 +299,17 @@
   .feed-tag.bid       { background: #fdf3e4; color: #a5670f; border: 1px solid #f0d9b3; }
   .tool-card .tech { border-top: 1px dashed var(--line); }
 
+  a.tool-card { text-decoration: none; color: inherit; }
+  .tool-card.clickable { cursor: pointer; transition: transform .12s, box-shadow .12s, border-top-color .12s; }
+  .tool-card.clickable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(21,47,74,.12);
+    border-top-color: var(--orange);
+  }
+  .tool-card.clickable:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+  .tool-card .open-cue { color: var(--teal); font-size: 14px; font-weight: 700; }
+  .tool-card.clickable:hover .open-cue { color: var(--orange); }
+
   .concert {
     background: #e4f2f8;
     border: 1px solid #bcdde9;
@@ -309,34 +320,6 @@
     line-height: 1.6;
   }
   .concert b { color: var(--navy); }
-
-  .loader-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .loader-btn {
-    display: inline-block;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    color: #fff;
-    background: var(--teal);
-    border-radius: 6px;
-    transition: background .12s, transform .12s;
-  }
-  .loader-btn:hover { background: #155870; transform: translateY(-1px); }
-  .loader-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
-  .loader-btn.disabled {
-    background: #C2CDD5;
-    color: #EDF1F4;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-  .loader-btn.disabled:hover { background: #C2CDD5; transform: none; }
 
   @media (max-width: 860px) {
     .tools { padding-left: 22px; padding-right: 22px; }
@@ -829,9 +812,9 @@
       </div>
     </div>
 
-    <div class="tool-card">
+    <a class="tool-card clickable" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener">
       <span class="role">Customer truth</span>
-      <h3>GoldMine CRM Data</h3>
+      <h3>GoldMine CRM Data <span class="open-cue" aria-hidden="true">↗</span></h3>
       <p>Decades of Neptune Benson contact and opportunity history, migrated and queryable. The AI knows who's calling, what they own, and what's been quoted before.</p>
       <span class="tech">goldmine schema in Supabase · 6 tables, 3 assembled views · powers platinum caller registry</span>
       <div class="feeds">
@@ -840,24 +823,18 @@
         <span class="feed-tag bid">Bid Scorecard</span>
         <span class="feed-tag submittal">Submittal Generator</span>
       </div>
-    </div>
+    </a>
 
-    <div class="tool-card">
+    <a class="tool-card clickable" href="/knowledge-base-loader">
       <span class="role">Upload product information</span>
-      <h3>Knowledge Base Vector Store</h3>
-      <p>Self-serve forms to add, update, or remove documents in the knowledge base — no engineering needed. Handles PDFs (including scanned drawings), Word, Excel and Google Docs; re-uploading a file replaces the old version instead of duplicating it.</p>
+      <h3>Knowledge Base Vector Store <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
+      <p>Self-serve document loader — add or update product documentation in the AI knowledge base with no engineering needed. Handles PDFs (including scanned drawings), Word, Excel, Google Docs, and more; re-uploading a file replaces the old version instead of duplicating it.</p>
       <span class="tech">n8n form triggers · OCR + GPT-4.1 vision for drawings · chunk + embed to Supabase vector store · record manager for versioning</span>
-      <div class="loader-actions">
-        <span class="feeds-label">Open a form</span>
-        <a class="loader-btn" href="https://glenbot.app.n8n.cloud/form/dd772021-c5be-4bb2-aa67-5bfed3bc2fb0" target="_blank" rel="noopener">Upload</a>
-        <a class="loader-btn" href="https://glenbot.app.n8n.cloud/form/fd35adc8-4a8c-48f7-a5b7-f75a84930da0" target="_blank" rel="noopener">Update</a>
-        <span class="loader-btn disabled" role="link" aria-disabled="true" title="Contact Casey Glynn to remove a document">Delete</span>
-      </div>
       <div class="feeds">
         <span class="feeds-label">Feeds into</span>
         <span class="feed-tag support">Tech Support AI</span>
       </div>
-    </div>
+    </a>
 
   </div>
 </div>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform — Knowledge Base Loader</title>
+<style>
+  :root{
+    --navy:#1B3A5C;--navy-deep:#152F4A;--teal:#1B6E8C;--orange:#E0922F;
+    --ink:#213547;--muted:#5A6B78;--line:#E2E8ED;--bg:#F4F6F8;--card:#FFFFFF;
+    --shadow:0 1px 2px rgba(21,47,74,.06),0 8px 24px rgba(21,47,74,.06);
+    --pdf:#B23A2E;--word:#2B5C9B;--excel:#1E7A46;--gdoc:#3B6FB6;--md:#4A5568;--web:#8A5CB4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:940px;margin:0 auto;padding:0 20px 80px}
+  a{color:var(--teal)}
+
+  .backbar{max-width:940px;margin:0 auto;padding:14px 20px 0}
+  .back{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}
+  .back:hover{color:var(--teal)}
+
+  .hero{background:var(--navy);color:#fff;border-bottom:4px solid var(--orange);margin-top:12px}
+  .hero-inner{max-width:940px;margin:0 auto;padding:30px 20px 28px;display:flex;gap:22px;align-items:center}
+  .hero-icon{flex:none;width:64px;height:64px;color:var(--orange)}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8FB8CC;margin:0 0 8px}
+  .hero h1{font-size:clamp(26px,5vw,36px);font-weight:800;letter-spacing:-.01em;margin:0 0 8px;line-height:1.08}
+  .hero p{max-width:560px;margin:0;color:#C7D6E0;font-size:15px}
+
+  section{margin-top:34px}
+  .sec-label{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--teal);margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+
+  .types{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .type{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;
+    display:flex;gap:13px;align-items:flex-start;box-shadow:var(--shadow)}
+  .fileicon{flex:none;width:38px;height:48px;position:relative}
+  .fileicon svg{width:100%;height:100%}
+  .type .t{font-weight:700;font-size:15px;color:var(--navy)}
+  .type .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+
+  .how{background:#EFF4F7;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:16px}
+  .how h3{margin:0 0 8px;font-size:14px;color:var(--navy)}
+  .how ul{margin:0;padding-left:18px}
+  .how li{font-size:13.5px;color:var(--muted);margin:4px 0}
+  .how b{color:var(--ink)}
+
+  .actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}
+  .action{flex:1;min-width:230px;display:flex;gap:14px;align-items:center;text-decoration:none;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+    box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-color .12s}
+  .action:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(21,47,74,.12)}
+  .action.primary{border-left:4px solid var(--teal)}
+  .action.primary:hover{border-color:var(--teal);border-left-color:var(--teal)}
+  .action.secondary{border-left:4px solid var(--orange)}
+  .action.secondary:hover{border-color:var(--orange);border-left-color:var(--orange)}
+  .action .ico{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+    border-radius:9px;color:#fff}
+  .action.primary .ico{background:var(--teal)}
+  .action.secondary .ico{background:var(--orange)}
+  .action .ico svg{width:22px;height:22px}
+  .action .lbl{font-weight:700;font-size:16px;color:var(--navy)}
+  .action .sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+  .action .go{margin-left:auto;color:var(--muted);font-size:18px;font-weight:700}
+  .action:hover .go{color:var(--orange)}
+
+  .fields{margin-top:16px;font-size:13px;color:var(--muted)}
+  .fields b{color:var(--navy)}
+  .fields .chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;
+    padding:3px 11px;font-size:12px;margin:3px 4px 0 0;color:var(--ink)}
+
+  .note{margin-top:22px;font-size:12.5px;color:var(--muted)}
+
+  @media (max-width:720px){
+    .types{grid-template-columns:1fr 1fr}
+    .hero-inner{gap:16px}
+    .hero-icon{width:48px;height:48px}
+  }
+  @media (max-width:480px){ .types{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+<div class="backbar"><a class="back" href="/capability-map">&larr; Back to platform map</a></div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+      <path d="M12 18v-6"/><path d="M9.5 14.5 12 12l2.5 2.5"/>
+    </svg>
+    <div>
+      <p class="eyebrow">NBTS AI Platform</p>
+      <h1>Knowledge Base Loader</h1>
+      <p>Add product documentation to the AI knowledge base yourself — no engineering needed. Anything you load here is read, chunked, embedded, and made searchable by the Technical Support AI within minutes.</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <p class="sec-label">What you can upload</p>
+    <div class="types">
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--pdf)"/><text x="20" y="39.5" font-size="8.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">PDF</text></svg>
+        </span>
+        <div><div class="t">PDF documents</div><div class="d">Manuals, cut sheets, spec sheets — including scanned, image-only files (OCR is applied automatically).</div></div>
+      </div>
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--navy)"/><text x="20" y="39.5" font-size="7" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">DRAWING</text></svg>
+        </span>
+        <div><div class="t">Engineering drawings</div><div class="d">P&amp;IDs and technical drawings in PDF — read page-by-page with AI vision, not just text extraction.</div></div>
+      </div>
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--word)"/><text x="20" y="39.5" font-size="7.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">DOCX</text></svg>
+        </span>
+        <div><div class="t">Word documents</div><div class="d">.docx product write-ups, guides and technical notes.</div></div>
+      </div>
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--excel)"/><text x="20" y="39.5" font-size="7.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">XLSX</text></svg>
+        </span>
+        <div><div class="t">Excel spreadsheets</div><div class="d">.xlsx parts tables and data — flattened to text so the AI can read every row.</div></div>
+      </div>
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--gdoc)"/><text x="20" y="39.5" font-size="7" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">GDOC</text></svg>
+        </span>
+        <div><div class="t">Google Docs</div><div class="d">Paste a Google Doc link — pulled in and processed directly.</div></div>
+      </div>
+
+      <div class="type">
+        <span class="fileicon">
+          <svg viewBox="0 0 40 50"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#CBD5DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#E2E8ED"/><rect x="2" y="30" width="36" height="13" rx="2" fill="var(--md)"/><text x="20" y="39.5" font-size="6.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">MD·HTML·TXT</text></svg>
+        </span>
+        <div><div class="t">Markdown, HTML &amp; text</div><div class="d">.md, .html and .txt — notes, exported pages and plain text.</div></div>
+      </div>
+
+    </div>
+
+    <div class="how">
+      <h3>What happens when you upload</h3>
+      <ul>
+        <li>The document is read (with <b>OCR</b> for scans and <b>AI vision</b> for drawings), split into chunks, embedded, and stored in the Supabase vector store.</li>
+        <li>Re-uploading the same document <b>replaces the old version</b> — it won't create duplicates.</li>
+        <li>Once processed, the <b>Technical Support AI</b> can cite it when answering customer and field questions.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Load a document</p>
+    <div class="actions">
+      <a class="action primary" href="https://glenbot.app.n8n.cloud/form/dd772021-c5be-4bb2-aa67-5bfed3bc2fb0" target="_blank" rel="noopener">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+        </span>
+        <span>
+          <span class="lbl">Upload a document</span>
+          <span class="sub">Add something new to the knowledge base</span>
+        </span>
+        <span class="go">&rsaquo;</span>
+      </a>
+
+      <a class="action secondary" href="https://glenbot.app.n8n.cloud/form/fd35adc8-4a8c-48f7-a5b7-f75a84930da0" target="_blank" rel="noopener">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+        </span>
+        <span>
+          <span class="lbl">Update a document</span>
+          <span class="sub">Replace an existing document with a newer version</span>
+        </span>
+        <span class="go">&rsaquo;</span>
+      </a>
+    </div>
+
+    <div class="fields">
+      Each form asks for a bit of context alongside the file so the AI can find it later:
+      <span class="chip">Product</span><span class="chip">Product source</span><span class="chip">Doc type</span><span class="chip">Revision date</span><span class="chip">Part numbers</span>
+    </div>
+
+    <p class="note">The Upload and Update forms open in a new tab. Removing a document is restricted — contact Casey Glynn to retire something from the knowledge base.</p>
+  </section>
+
+</div>
+
+</body>
+</html>
