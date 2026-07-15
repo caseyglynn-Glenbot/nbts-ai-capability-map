@@ -5,7 +5,7 @@ services:
     plan: starter          # always-on. Use "free" to avoid cost (adds ~50s cold starts).
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /
+    healthCheckPath: /healthz
     envVars:
       - key: PORTAL_USER
         sync: false        # set in the Render dashboard

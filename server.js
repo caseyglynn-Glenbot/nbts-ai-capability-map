@@ -33,6 +33,10 @@ if (!USER || !PASS) {
 
 app.disable("x-powered-by");
 
+// Health check — MUST be above the auth gate so Render's probe (which sends
+// no credentials) gets a 200. Reveals nothing about the app or its pages.
+app.get("/healthz", (req, res) => res.type("text").send("ok"));
+
 // Never let internal pages be cached by a shared proxy or indexed.
 app.use((req, res, next) => {
   res.set("Cache-Control", "no-store, private");
