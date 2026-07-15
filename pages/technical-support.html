@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform — Technical Support</title>
+<style>
+  :root{
+    --navy:#1B3A5C;--navy-deep:#152F4A;--teal:#1B6E8C;--orange:#E0922F;
+    --ink:#213547;--muted:#5A6B78;--line:#E2E8ED;--bg:#F4F6F8;--card:#FFFFFF;
+    --shadow:0 1px 2px rgba(21,47,74,.06),0 8px 24px rgba(21,47,74,.06);
+    --ready:#1E7A46;--ready-bg:#E6F3EC;--prog:#A5670F;--prog-bg:#FBF1E0;
+  }
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px 80px}
+  .backbar{max-width:980px;margin:0 auto;padding:14px 20px 0}
+  .back{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}
+  .back:hover{color:var(--teal)}
+
+  .hero{background:var(--navy);color:#fff;border-bottom:4px solid var(--orange);margin-top:12px}
+  .hero-inner{max-width:980px;margin:0 auto;padding:32px 20px 28px;display:flex;gap:22px;align-items:center}
+  .hero-icon{flex:none;width:60px;height:60px;color:var(--orange)}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8FB8CC;margin:0 0 8px}
+  .hero h1{font-size:clamp(26px,5vw,38px);font-weight:800;letter-spacing:-.01em;margin:0 0 8px;line-height:1.08}
+  .hero p{max-width:600px;margin:0;color:#C7D6E0;font-size:15px}
+  .hero .tag{display:inline-block;margin-top:12px;font-size:12px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;color:#BFE3CD;background:rgba(30,122,70,.25);border:1px solid rgba(30,122,70,.5);
+    padding:4px 12px;border-radius:999px}
+
+  section{margin-top:32px}
+  .sec-label{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin:0 0 6px}
+  .sec-sub{font-size:13.5px;color:var(--muted);margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+
+  .how{background:#EFF4F7;border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .how h3{margin:0 0 8px;font-size:14px;color:var(--navy)}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--muted)}
+  .step{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--ink);font-weight:600}
+  .arrow{color:var(--teal);font-weight:700}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;
+    padding:18px;text-decoration:none;color:inherit;display:flex;gap:15px;align-items:flex-start;
+    box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-left-color .12s;position:relative}
+  a.tile:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(21,47,74,.12);border-left-color:var(--orange)}
+  a.tile:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+  .tile .ico{flex:none;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:var(--teal);color:#fff}
+  .tile .ico svg{width:23px;height:23px}
+  .tile .body{flex:1;min-width:0}
+  .tile .chan{font-family:var(--mono,ui-monospace);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:700}
+  .tile h3{margin:2px 0 3px;font-size:17px;font-weight:700;color:var(--navy);word-break:break-word}
+  .tile .desc{font-size:12.5px;color:var(--muted)}
+  .tile .cue{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--teal)}
+  a.tile:hover .cue{color:var(--orange)}
+  a.tile:hover .ico{background:var(--orange)}
+
+  .tile.pending{border-left-color:#CBD5DE;cursor:not-allowed;background:#FAFBFC}
+  .tile.pending .ico{background:#B7C2CC}
+  .tile.pending h3{color:#7C8B98}
+  .tile.pending .desc{color:#9AA7B2}
+  .tile .badge{position:absolute;top:14px;right:14px;font-size:10px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--prog-bg);color:var(--prog)}
+
+  .note{margin-top:22px;padding:14px 16px;background:#EFF4F7;border-radius:8px;font-size:13px;color:var(--muted);border:1px solid var(--line)}
+  .note b{color:var(--navy)}
+
+  @media (max-width:720px){.grid{grid-template-columns:1fr}.hero-inner{gap:16px}.hero-icon{width:46px;height:46px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="backbar"><a class="back" href="/capability-map">&larr; Back to platform map</a></div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 9a2 2 0 0 1 2 2"/><path d="M14 5a6 6 0 0 1 6 6"/><path d="M5.6 10.8a11 11 0 0 0 4.9 4.9l1.6-1.6a1.5 1.5 0 0 1 1.6-.3 8.5 8.5 0 0 0 2.7.6 1.5 1.5 0 0 1 1.4 1.5v2.3a1.5 1.5 0 0 1-1.6 1.5A17 17 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4h2.3a1.5 1.5 0 0 1 1.5 1.4 8.5 8.5 0 0 0 .6 2.7 1.5 1.5 0 0 1-.3 1.6z"/>
+    </svg>
+    <div>
+      <p class="eyebrow">NBTS AI Platform</p>
+      <h1>Technical Support</h1>
+      <p>Reach Neptune Benson Technical Support however works best — call, text, email, or the ticket portal. Every request becomes a tracked Jira ticket, and the AI answers common questions instantly, day or night.</p>
+      <span class="tag">● Live · 24/7 intake</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="how">
+      <h3>How it works</h3>
+      <div class="steps">
+        <span class="step">Reach out any channel</span><span class="arrow">&rarr;</span>
+        <span class="step">AI identifies the product</span><span class="arrow">&rarr;</span>
+        <span class="step">Instant answer + Jira ticket</span><span class="arrow">&rarr;</span>
+        <span class="step">Engineer follows up if needed</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Choose how to reach us</p>
+    <p class="sec-sub">All four channels open a tracked ticket. On a phone, the call and text tiles work with one tap.</p>
+    <div class="grid">
+
+      <a class="tile" href="tel:+18667221776">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </span>
+        <span class="body">
+          <span class="chan">Phone · voice AI</span>
+          <h3>(866) 722-1776</h3>
+          <span class="desc">Call and the voice assistant takes your details, answers common questions, and opens a ticket. Available 24/7.</span>
+          <span class="cue">Tap to call &rsaquo;</span>
+        </span>
+      </a>
+
+      <a class="tile" href="sms:+18667221776">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span class="body">
+          <span class="chan">Text · SMS</span>
+          <h3>Text (866) 722-1776</h3>
+          <span class="desc">Text your question to the same number. Replies route to your ticket; text "menu" any time to reach the agents.</span>
+          <span class="cue">Tap to text &rsaquo;</span>
+        </span>
+      </a>
+
+      <a class="tile" href="mailto:nbts@xyleminc.atlassian.net?subject=NBTS%20Technical%20Support%20Request">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </span>
+        <span class="body">
+          <span class="chan">Email</span>
+          <h3>Email support</h3>
+          <span class="desc">Send details and attachments to <b>nbts@xyleminc.atlassian.net</b>. Your email opens a Jira ticket automatically.</span>
+          <span class="cue">Open email &rsaquo;</span>
+        </span>
+      </a>
+
+      <a class="tile pending" href="#" onclick="return false;" title="Portal URL coming soon" aria-disabled="true">
+        <span class="badge">Coming soon</span>
+        <span class="ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </span>
+        <span class="body">
+          <span class="chan">Jira · self-service portal</span>
+          <h3>Submit &amp; track tickets</h3>
+          <span class="desc">Open the support portal to file a request, upload files, and follow your ticket to resolution. Link is being finalized.</span>
+        </span>
+      </a>
+
+    </div>
+
+    <div class="note">
+      <b>Every channel lands in the same place:</b> a tracked ticket in NBTS Jira Service Management, where an engineer picks it up if the AI can't fully resolve it. Phone and text share one number — <b>(866) 722-1776</b> — and email opens a ticket the moment it arrives.
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
