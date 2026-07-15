@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform — Spec Scorecard</title>
+<style>
+  :root{
+    --navy:#1B3A5C;--navy-deep:#152F4A;--teal:#1B6E8C;--orange:#E0922F;
+    --ink:#213547;--muted:#5A6B78;--line:#E2E8ED;--bg:#F4F6F8;--card:#FFFFFF;
+    --shadow:0 1px 2px rgba(21,47,74,.06),0 8px 24px rgba(21,47,74,.06);
+    --ready:#1E7A46;--ready-bg:#E6F3EC;--prog:#A5670F;--prog-bg:#FBF1E0;--plan:#6B7785;--plan-bg:#EEF1F4;
+  }
+  *{box-sizing:border-box}html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 20px 80px}
+  .backbar{max-width:980px;margin:0 auto;padding:14px 20px 0}
+  .back{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}
+  .back:hover{color:var(--teal)}
+
+  .hero{background:var(--navy);color:#fff;border-bottom:4px solid var(--orange);margin-top:12px}
+  .hero-inner{max-width:980px;margin:0 auto;padding:32px 20px 28px;display:flex;gap:22px;align-items:center}
+  .hero-icon{flex:none;width:60px;height:60px;color:var(--orange)}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8FB8CC;margin:0 0 8px}
+  .hero h1{font-size:clamp(26px,5vw,38px);font-weight:800;letter-spacing:-.01em;margin:0 0 8px;line-height:1.08}
+  .hero p{max-width:580px;margin:0;color:#C7D6E0;font-size:15px}
+
+  section{margin-top:32px}
+  .sec-label{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin:0 0 6px}
+  .sec-sub{font-size:13.5px;color:var(--muted);margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+
+  .how{background:#EFF4F7;border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .how h3{margin:0 0 8px;font-size:14px;color:var(--navy)}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--muted)}
+  .step{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--ink);font-weight:600}
+  .arrow{color:var(--teal);font-weight:700}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;
+    padding:16px 16px 14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:4px;
+    box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-left-color .12s;position:relative}
+  a.tile:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(21,47,74,.12);border-left-color:var(--orange)}
+  a.tile:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+  .tile .brand{font-weight:700;font-size:15.5px;color:var(--navy)}
+  .tile .lines{font-size:12.5px;color:var(--muted)}
+  .tile .badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px}
+  .tile .cue{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--teal)}
+  a.tile:hover .cue{color:var(--orange)}
+  .tile.ready .badge{background:var(--ready-bg);color:var(--ready)}
+
+  .tile.pending{border-left-color:#CBD5DE;cursor:not-allowed;background:#FAFBFC}
+  .tile.pending .brand{color:#7C8B98}
+  .tile.pending .lines{color:#9AA7B2}
+  .tile.pending.prog .badge{background:var(--prog-bg);color:var(--prog)}
+  .tile.pending.plan .badge{background:var(--plan-bg);color:var(--plan)}
+
+  .note{margin-top:22px;padding:14px 16px;background:#EFF4F7;border-radius:8px;font-size:13px;color:var(--muted);border:1px solid var(--line)}
+  .note b{color:var(--navy)}
+
+  @media (max-width:760px){.grid{grid-template-columns:1fr 1fr}.hero-inner{gap:16px}.hero-icon{width:46px;height:46px}}
+  @media (max-width:480px){.grid{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="backbar"><a class="back" href="/capability-map">&larr; Back to platform map</a></div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+    </svg>
+    <div>
+      <p class="eyebrow">NBTS AI Platform</p>
+      <h1>Bid / Spec Scorecard</h1>
+      <p>Upload a project spec and drawings — AI reads every page, scores 28 engineering categories, forms a commercial position, and files a go/no-go scorecard to Jira with a copy to you.</p>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <div class="how">
+      <h3>How it works</h3>
+      <div class="steps">
+        <span class="step">Upload spec + drawing PDFs</span><span class="arrow">&rarr;</span>
+        <span class="step">Claude vision reads every page</span><span class="arrow">&rarr;</span>
+        <span class="step">28 categories + commercial position</span><span class="arrow">&rarr;</span>
+        <span class="step">Filed to Jira + emailed</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">Choose a product line</p>
+    <p class="sec-sub">The scorecard is tuned per product line. Ready lines open the intake form; the others are on the roadmap as their scoring models are built.</p>
+    <div class="grid">
+
+      <a class="tile ready" href="https://glenbot.app.n8n.cloud/form/3698571e-6b1f-4fd1-adb5-2f9fc9cb6382" target="_blank" rel="noopener">
+        <span class="badge">Ready</span>
+        <span class="brand">Secondary Clarifiers</span>
+        <span class="lines">Circular clarifier mechanisms — Tow-Bro, spiral, scraper, DAF</span>
+        <span class="cue">Score a project &rsaquo;</span>
+      </a>
+
+      <span class="tile pending prog" title="Scoring model in development" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <span class="brand">Primary Clarifiers</span>
+        <span class="lines">Primary treatment collectors &amp; mechanisms</span>
+      </span>
+
+      <span class="tile pending prog" title="Scoring model in development" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <span class="brand">Thickeners</span>
+        <span class="lines">Gravity thickeners &amp; sludge collection</span>
+      </span>
+
+      <span class="tile pending plan" title="Planned" aria-disabled="true">
+        <span class="badge">Planned</span>
+        <span class="brand">DAF Systems</span>
+        <span class="lines">Dissolved air flotation units</span>
+      </span>
+
+      <span class="tile pending plan" title="Planned" aria-disabled="true">
+        <span class="badge">Planned</span>
+        <span class="brand">Grit &amp; Screening</span>
+        <span class="lines">Detritors, grit removal, headworks</span>
+      </span>
+
+      <span class="tile pending plan" title="Planned" aria-disabled="true">
+        <span class="badge">Planned</span>
+        <span class="brand">Filtration</span>
+        <span class="lines">Tertiary filtration &amp; polishing</span>
+      </span>
+
+    </div>
+
+    <div class="note">
+      <b>All ready lines use the same intake form.</b> The scorecard currently evaluates <b>circular secondary clarifiers</b> against 28 engineering categories plus a commercial A/B/C/D position. The form opens in a new tab and asks for the project name, your email, and the spec + drawing PDFs. Results are filed to NBTS Jira and copied to you by email.
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

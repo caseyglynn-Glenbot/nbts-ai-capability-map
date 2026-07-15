@@ -134,6 +134,10 @@
     text-transform: uppercase;
     color: var(--teal);
   }
+  a.lane-title{text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:color .12s}
+  a.lane-title:hover{color:var(--teal)}
+  a.lane-title .open-cue{color:var(--teal);font-size:16px;font-weight:800}
+  a.lane-title:hover .open-cue{color:var(--orange)}
 
   .flow {
     display: grid;
@@ -709,7 +713,7 @@
   <!-- Lane 2: Submittal Generator -->
   <section class="lane">
     <div class="lane-header">
-      <span class="lane-title">Submittal Package Generator</span>
+      <a class="lane-title" href="/submittal-generator">Submittal Package Generator <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
       <span class="lane-tag">Live</span>
     </div>
     <div class="flow">
@@ -745,7 +749,7 @@
   <!-- Lane 3: Bid Scorecard -->
   <section class="lane">
     <div class="lane-header">
-      <span class="lane-title">Bid / Spec Scorecard</span>
+      <a class="lane-title" href="/spec-scorecard">Bid / Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
       <span class="lane-tag">Live · Scaling</span>
     </div>
     <div class="flow">
