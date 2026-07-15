@@ -58,6 +58,19 @@ app.use(
   })
 );
 
+// --- Authenticated static assets ---------------------------------------
+// Files under ./assets are served (behind the auth gate above) at /assets/*.
+// Used for self-contained tools that ship their own files — e.g. the SOFA
+// configurator and its O&M zip. Still no-store + noindex from the headers above.
+app.use(
+  "/assets",
+  express.static(path.join(__dirname, "assets"), {
+    index: false,
+    dotfiles: "ignore",
+    fallthrough: true,
+  })
+);
+
 /** Turn "capability-map.html" into "Capability Map". */
 function prettify(file) {
   return file

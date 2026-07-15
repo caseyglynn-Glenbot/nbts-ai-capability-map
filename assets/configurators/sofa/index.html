@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neptune-Benson MLD-SG SOFA — Configurator &amp; Submittal</title>
+<!-- Self-contained: no external dependencies. Uses system fonts so it passes strict CSP review. -->
+<!-- To get the exact Archivo + IBM Plex Mono look, self-host the woff2 files and add @font-face here. -->
+<style>
+  :root{
+    --ink:#16202a;--ink-soft:#475560;--paper:#eceae3;--sheet:#fff;
+    --line:#c4c8bf;--line-strong:#8d958a;--accent:#0e7c86;--accent-deep:#0a5b63;
+    --amber:#c9760a;--red:#b3331f;--grid:#e7e9e2;--field:#f6f5f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:ui-monospace,'SF Mono','Cascadia Mono','Segoe UI Mono',Menlo,Consolas,'Liberation Mono',monospace;color:var(--ink);
+    background:linear-gradient(0deg,rgba(0,0,0,.015),rgba(0,0,0,.015)),var(--paper);-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.disp,.sp-h{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;}
+  .appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+    gap:16px;padding:12px 22px;background:var(--ink);color:#f4f3ee;border-bottom:3px solid var(--accent);}
+  .appbar .brand{display:flex;align-items:baseline;gap:12px;}
+  .appbar h1{font-size:17px;letter-spacing:.05em;text-transform:uppercase;margin:0;font-weight:800;}
+  .appbar .sub{font-size:11px;color:#9fb0ad;letter-spacing:.16em;text-transform:uppercase;}
+  .btn{font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    font-size:12px;cursor:pointer;border:none;border-radius:2px;padding:10px 16px;background:var(--accent);color:#fff;transition:.15s;}
+  .btn:hover{background:var(--accent-deep);}
+  .btn.ghost{background:transparent;color:#cfe0de;border:1px solid #3a4751;}
+  .btn.ghost:hover{background:#22303a;}
+  .wrap{display:grid;grid-template-columns:380px 1fr;gap:0;align-items:start;}
+  .panel{padding:18px 18px 60px;border-right:1px solid var(--line);position:sticky;top:60px;
+    max-height:calc(100vh - 60px);overflow:auto;background:#f1efe8;}
+  .stage{padding:26px 26px 80px;}
+  .grp{margin-bottom:22px;}
+  .grp > .label{font-family:'Archivo',sans-serif;font-weight:700;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink);border-bottom:2px solid var(--ink);padding-bottom:5px;
+    margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg button{flex:1;min-width:60px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;padding:9px 4px;
+    border:1px solid var(--line-strong);background:#fff;cursor:pointer;border-radius:2px;color:var(--ink-soft);transition:.12s;}
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .seg.sm button{font-size:11px;padding:8px 4px;}
+  .row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  .row label{font-size:11px;color:var(--ink-soft);min-width:108px;text-transform:uppercase;letter-spacing:.05em;}
+  input[type=number],input[type=text],select{font-family:'IBM Plex Mono',monospace;font-size:13px;
+    border:1px solid var(--line-strong);background:#fff;border-radius:2px;padding:7px 8px;width:100%;color:var(--ink);}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
+  .conns{display:flex;flex-direction:column;gap:10px;}
+  .conn{border:1px solid var(--line-strong);border-left:4px solid var(--accent);background:#fff;border-radius:2px;padding:10px;}
+  .conn.over{border-left-color:var(--amber);}
+  .conn .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .conn .tag{font-weight:700;font-size:12px;letter-spacing:.05em;}
+  .conn .del{border:none;background:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;}
+  .conn .mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .field{display:flex;flex-direction:column;gap:3px;}
+  .field span{font-size:9.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;}
+  .addbtn{width:100%;margin-top:12px;border:1.5px dashed var(--accent);background:#eaf4f4;color:var(--accent-deep);
+    font-family:'Archivo',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:12px;
+    padding:11px;cursor:pointer;border-radius:2px;}
+  .addbtn:hover{background:#dcefef;}
+  .nsfcard{background:#fff;border:1px solid var(--line-strong);border-top:3px solid var(--accent);border-radius:2px;padding:10px 12px;font-size:11px;line-height:1.5;}
+  .nsfcard b{font-family:'Archivo',sans-serif;}
+  .sheet{background:var(--sheet);max-width:1080px;margin:0 auto;border:1px solid var(--line);
+    box-shadow:0 1px 0 rgba(0,0,0,.04),0 18px 50px -28px rgba(0,0,0,.4);}
+  .sheet-pad{padding:30px 34px;}
+  .titleblock{display:grid;grid-template-columns:1fr auto;gap:18px;border-bottom:3px solid var(--ink);padding-bottom:14px;margin-bottom:0;}
+  .titleblock .logo{display:flex;align-items:center;gap:13px;}
+  .logomark{width:50px;height:50px;border:2px solid var(--ink);border-radius:3px;display:grid;place-items:center;
+    background:var(--ink);color:#fff;font-family:'Archivo',sans-serif;font-weight:800;font-size:17px;letter-spacing:.02em;}
+  .titleblock h2{margin:0;font-size:22px;letter-spacing:.01em;line-height:1.05;font-weight:800;}
+  .titleblock .company{font-size:11px;letter-spacing:.04em;color:var(--ink-soft);margin-top:3px;}
+  .titleblock .doctype{font-size:10px;letter-spacing:.2em;color:var(--accent-deep);text-transform:uppercase;margin-top:3px;}
+  .modelbox{text-align:right;}
+  .modelbox .mlab{font-size:9px;letter-spacing:.18em;color:var(--ink-soft);text-transform:uppercase;}
+  .modelbox input{font-family:'Archivo',sans-serif;font-weight:700;font-size:18px;text-align:right;border:none;
+    background:none;width:240px;color:var(--ink);padding:2px 0;}
+  .modelbox input:focus{outline:none;border-bottom:1px solid var(--accent);}
+  .modelbox .sku{font-size:10px;color:var(--ink-soft);letter-spacing:.05em;}
+  .certrow{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+  .cbadge{font-family:'Archivo',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    border:1px solid var(--accent);color:var(--accent-deep);border-radius:2px;padding:2px 7px;}
+  .flowband{display:grid;grid-template-columns:1fr 1fr 1.1fr;margin:16px 0 0;border:1px solid var(--accent-deep);}
+  .flowband .fb{padding:9px 14px;border-right:1px solid #2c8e96;}
+  .flowband .fb:last-child{border-right:none;background:var(--accent);color:#fff;}
+  .flowband .fl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+  .flowband .fb:last-child .fl{color:#d6f0ef;}
+  .flowband .fv{font-family:'Archivo',sans-serif;font-weight:800;font-size:22px;line-height:1.1;}
+  .flowband .fv small{font-size:11px;font-weight:600;}
+  .sec-h{font-family:'Archivo',sans-serif;font-weight:700;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:#fff;background:var(--ink);padding:5px 10px;margin:0;display:flex;justify-content:space-between;align-items:center;}
+  .sec-h .cap{font-weight:400;font-size:9px;letter-spacing:.1em;color:#9fb0ad;text-transform:none;}
+  .draw-wrap{border:1px solid var(--line-strong);border-top:none;}
+  .draw{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/22px 22px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/22px 22px,#fff;}
+  .draw + .draw{border-top:1px dashed var(--line);}
+  .draw-row{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:center;border-top:1px dashed var(--line);}
+  .draw-row .draw{border-top:none;}
+  .draw-row .draw + .draw{border-left:1px dashed var(--line);}
+  @media (max-width:700px){
+    .draw-row{grid-template-columns:1fr;}
+    .draw-row .draw + .draw{border-left:none;border-top:1px dashed var(--line);}
+  }
+  .port-hit{cursor:grab;}.port-hit:active{cursor:grabbing;}
+  .topgap{margin-top:18px;}
+  .cols{display:grid;grid-template-columns:1.15fr 1fr;gap:0;margin-top:18px;border:1px solid var(--line-strong);}
+  .col-l{border-right:1px solid var(--line-strong);}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th,td{text-align:left;padding:5px 10px;border-bottom:1px solid var(--line);}
+  th{background:var(--field);font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;font-size:9.5px;width:46%;}
+  td{font-weight:500;}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .tot td{border-top:2px solid var(--ink);font-weight:700;background:#eaf4f4;}
+  .sub td{background:#f6f5f0;font-size:10.5px;color:var(--ink-soft);}
+  .conn-table th{width:auto;}
+  .conn-table td{font-size:11px;}
+  .pill{display:inline-block;background:var(--accent);color:#fff;border-radius:2px;padding:1px 7px;font-size:10.5px;font-weight:600;}
+  .pill.warn{background:var(--amber);}
+  .proj{margin-top:18px;border:1px solid var(--line-strong);}
+  .proj .pg{display:grid;grid-template-columns:repeat(3,1fr);}
+  .proj .cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:7px 10px;}
+  .proj .cell:nth-child(3n){border-right:none;}
+  .proj .cell span{display:block;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px;}
+  .proj .cell input{border:none;background:none;width:100%;font-size:12.5px;padding:2px 0;color:var(--ink);}
+  .proj .cell input:focus{outline:none;border-bottom:1px solid var(--accent);}
+  .notes-area{margin-top:18px;}
+  .notes-area textarea{width:100%;min-height:58px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    border:1px solid var(--line-strong);padding:8px;resize:vertical;color:var(--ink);}
+  .compliance{margin-top:14px;font-size:10px;line-height:1.5;color:var(--ink-soft);}
+  .compliance strong{color:var(--ink);}
+  .warnbox{margin-top:14px;border:1px solid var(--amber);background:#fdf4e6;padding:8px 12px;border-radius:2px;}
+  .warnbox.hide{display:none;}
+  .warnbox .wh{font-family:'Archivo',sans-serif;font-weight:700;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:5px;}
+  .warnbox ul{margin:0;padding-left:18px;font-size:10.5px;color:#7a4a06;}
+  .badge-ok{display:inline-block;background:#e6f3ee;border:1px solid #2f8a5b;color:#1d6e44;font-size:10px;font-weight:600;padding:2px 8px;border-radius:2px;letter-spacing:.05em;}
+  .foot{display:flex;justify-content:space-between;font-size:9px;color:var(--ink-soft);letter-spacing:.1em;text-transform:uppercase;margin-top:18px;border-top:1px solid var(--line);padding-top:8px;}
+  .hint{font-size:10px;color:var(--ink-soft);margin-top:6px;line-height:1.4;}
+  .dragcap{font-size:10px;color:var(--accent-deep);background:#eaf4f4;border:1px solid #bfe0e0;padding:5px 10px;
+    border-top:none;display:flex;align-items:center;gap:6px;letter-spacing:.03em;}
+  .sendpanel{max-width:1080px;margin:0 auto 18px;background:#fff;border:1px solid var(--line-strong);
+    border-left:4px solid var(--accent);border-radius:3px;padding:15px 18px;box-shadow:0 12px 34px -24px rgba(0,0,0,.55);}
+  .sendpanel .sp-h{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px;margin-bottom:12px;}
+  .sp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sp-grid label{display:flex;flex-direction:column;gap:4px;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+  .sp-grid label.full{grid-column:1/-1;}
+  .sp-grid input,.sp-grid textarea{font-family:inherit;border:1px solid var(--line-strong);border-radius:2px;padding:7px 8px;font-size:13px;color:var(--ink);}
+  .sp-grid input:focus,.sp-grid textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
+  .sp-actions{display:flex;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap;}
+  .btn.dark{background:#eaf4f4;color:var(--accent-deep);border:1px solid var(--accent);}
+  .btn.dark:hover{background:#dcefef;}
+  .sp-status{font-size:11px;letter-spacing:.02em;}
+  .sp-status.ok{color:#1d6e44;font-weight:600;}
+  .sp-status.err{color:var(--red);font-weight:600;}
+  .sp-note{font-size:9.5px;color:var(--ink-soft);margin-top:11px;line-height:1.55;}
+  .sp-note code{background:var(--field);padding:1px 5px;border-radius:2px;}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;
+    font-size:12px;padding:10px 16px;border-radius:4px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);opacity:0;
+    pointer-events:none;transition:.25s;z-index:60;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (max-width:700px){.sp-grid{grid-template-columns:1fr;}}
+  @media print{
+    .no-print{display:none !important;}
+    @page{size:letter landscape;margin:.4in;}
+    .appbar,.panel,.dragcap{display:none !important;}
+    .wrap{display:block;}.stage{padding:0;}
+    .sheet{box-shadow:none;border:none;max-width:none;}.draw{background:#fff;}body{background:#fff;}
+  }
+  @media (max-width:900px){
+    .wrap{grid-template-columns:1fr;}
+    .panel{position:static;max-height:none;border-right:none;border-bottom:1px solid var(--line);}
+    .flowband{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="appbar">
+  <div class="brand"><h1>MLD-SG Main Drain SOFA</h1><span class="sub">Configurator &amp; Submittal Generator</span></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+    <button class="btn ghost" onclick="resetCfg()">Reset</button>
+    <button class="btn ghost" onclick="downloadCert()">📄 Certificate of Compliance</button>
+    <button class="btn" onclick="toggleSend()">Submit for Quote</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <aside class="panel">
+    <div class="grp">
+      <div class="label">Sump Body Size</div>
+      <div class="seg" id="sizeSeg">
+        <button data-l="18">18×18</button>
+        <button data-l="36">18×36</button>
+        <button data-l="54">18×54</button>
+        <button data-l="72">18×72</button>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <label>Body Depth</label>
+        <input type="number" id="depth" value="33" min="6" step="0.5"> <span style="font-size:11px;color:var(--ink-soft)">in</span>
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="label">Mounting Orientation</div>
+      <div class="seg sm" id="orientSeg">
+        <button data-o="floor">Floor</button>
+        <button data-o="wall">Wall</button>
+      </div>
+      <div class="nsfcard" id="nsfcard" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="grp">
+      <div class="label"><span>Suction Connections</span><span id="connCount" style="font-weight:400;color:var(--ink-soft);font-size:10px;"></span></div>
+      <div class="conns" id="conns"></div>
+      <button class="addbtn" onclick="addConn()">+ Add Connection</button>
+      <div class="hint">Add a port, then <strong>drag it on the diagram</strong> to place it. Drag onto an edge to snap to that face; drag into the middle for a floor (bottom) port. Drag vertically in the elevation to set height. The NSF certified Design Flow Rate is the governing max regardless of port count.</div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="sendpanel no-print" id="sendpanel" hidden>
+      <div class="sp-h">Submit for Quote</div>
+      <div class="sp-grid">
+        <label>Your name *<input id="cName" type="text"></label>
+        <label>Your email *<input id="cEmail" type="email" placeholder="you@company.com"></label>
+        <label>Company<input id="cCompany" type="text"></label>
+        <label>Phone (optional)<input id="cCc" type="text" placeholder="optional"></label>
+        <label class="full">Notes / requirements (optional)<textarea id="cMsg" rows="2" placeholder="lead time, quantity, project details…"></textarea></label>
+      </div>
+      <div class="sp-actions">
+        <button class="btn" onclick="sendSubmittal()">Submit Quote Request</button>
+        <button class="btn dark" onclick="copyPayload()">Copy data (JSON)</button>
+        <span class="sp-status" id="sendStatus"></span>
+      </div>
+      <div class="sp-note">Sends your full configuration to Neptune-Benson Technical Support to open a quote request. A copy of the submittal is included. Endpoint is set at the top of the file; test with <code>?wh=https://&hellip;</code>.</div>
+    </div>
+    <div class="sheet" id="sheet">
+      <div class="sheet-pad">
+        <div class="titleblock">
+          <div class="logo">
+            <div class="logomark">NB</div>
+            <div>
+              <h2 id="titleName">MLD-SG Main Drain</h2>
+              <div class="company">Neptune-Benson · Suction Outlet Fitting Assembly</div>
+              <div class="doctype">Product Submittal Sheet</div>
+            </div>
+          </div>
+          <div class="modelbox">
+            <div class="mlab">Model No.</div>
+            <input type="text" id="model" value="">
+            <div class="sku" id="skuLine"></div>
+            <div class="certrow">
+              <span class="cbadge">ANSI/APSP/ICC-16</span>
+              <span class="cbadge">NSF Listed</span>
+              <span class="cbadge">VGB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flowband" id="flowband"></div>
+
+        <h3 class="sec-h topgap">Plan View — Top <span class="cap">drag ports to place</span></h3>
+        <div class="draw-wrap">
+          <svg class="draw" id="svgPlan" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="draw-row">
+            <svg class="draw" id="svgElev" viewBox="0 0 1000 420" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg class="draw" id="svgSide" viewBox="0 0 460 340" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+        <div class="dragcap">✋ Tip: drag any port on the diagrams — plan view sets face &amp; offset, elevation sets height.</div>
+
+        <div class="cols">
+          <div class="col-l"><h3 class="sec-h">Connection Schedule</h3><table class="conn-table" id="schedule"></table></div>
+          <div><h3 class="sec-h">Specifications</h3><table id="specs"></table></div>
+        </div>
+
+        <div class="warnbox hide" id="warnbox"><div class="wh">⚠ Configuration Checks</div><ul id="warnlist"></ul></div>
+
+        <div class="proj">
+          <h3 class="sec-h">Project Information</h3>
+          <div class="pg">
+            <div class="cell"><span>Project Name</span><input data-key="project_name" type="text" placeholder="—"></div>
+            <div class="cell"><span>Location</span><input data-key="location" type="text" placeholder="—"></div>
+            <div class="cell"><span>Pool / Spa No.</span><input data-key="pool_no" type="text" placeholder="—"></div>
+            <div class="cell"><span>Date</span><input data-key="date" type="text" id="dateField"></div>
+            <div class="cell"><span>Submitted By</span><input data-key="submitted_by" type="text" placeholder="—"></div>
+            <div class="cell"><span>Quantity</span><input data-key="quantity" type="text" placeholder="—"></div>
+          </div>
+        </div>
+
+        <div class="notes-area"><h3 class="sec-h">Notes</h3>
+          <textarea id="notes">Furnish &amp; install Neptune-Benson MLD-SG suction outlet fitting assembly with anti-entrapment cover/grate. Total system flow through the assembly shall not exceed the NSF certified Design Flow Rate for the selected size and mounting orientation. Provide a minimum of two suction outlets per pump or an approved unblockable single-outlet / SVRS configuration. Install per ANSI/APSP/ICC-16 and manufacturer instructions. All fasteners 316 stainless steel.</textarea>
+        </div>
+
+        <div class="compliance" id="compliance"></div>
+        <div class="foot"><span>Neptune-Benson MLD-SG SOFA Submittal</span><span id="footMeta"></span></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const OD  = {3:3.5,4:4.5,6:6.625,8:8.625,10:10.75,12:12.75,14:14.0,16:16.0};
+const ID80= {3:2.900,4:3.826,6:5.761,8:7.565,10:9.493,12:11.294,14:12.814,16:14.940};
+const SIZES=[3,4,6,8,10,12,14,16];
+const FACES=[["front","Front (long)"],["back","Back (long)"],["left","Left (end)"],["right","Right (end)"],["bottom","Bottom (floor)"]];
+
+/* NSF certified data — Neptune-Benson MLD-SG series (from NSF listing) */
+const RATINGS = {
+  18:{model:'MLD-SG-1818',sku:'1001-9894',pipe:8 ,floor:816 ,wall:696 },
+  36:{model:'MLD-SG-1836',sku:'1000-8099',pipe:12,floor:2080,wall:1496},
+  54:{model:'MLD-SG-1854',sku:'1000-8122',pipe:14,floor:3120,wall:2244},
+  72:{model:'MLD-SG-1872',sku:'1000-8137',pipe:16,floor:4160,wall:2992}
+};
+
+/* Certificate of Compliance files — keyed by size. Drop the PDFs in a /certificates folder
+   next to this HTML using these names (or change the paths). Leave blank to show "pending upload". */
+const CERTS = { 18:'', 36:'', 54:'', 72:'' };
+const CERT_GENERAL = 'Lawson_O_M_and_GCCS.zip'; // full O&M + GCC certificate package — host alongside index.html
+
+let cfg = {
+  L:54, depth:33, vel:6, orient:'floor', basis:'nsf', cover:'grate',
+  conns:[{id:1,size:14,face:'left',p:9,h:9},{id:2,size:14,face:'right',p:9,h:9}]
+};
+let uid=3, dragging=null;
+
+const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
+function gpm(d,v){return v*(Math.PI/4)*Math.pow(d/12,2)*448.831;}
+const r1=x=>Math.round(x*10)/10, r0=x=>Math.round(x);
+function faceLabel(f){return (FACES.find(x=>x[0]===f)||["",""])[1];}
+function rated(){return RATINGS[cfg.L];}
+
+/* ---------- panel ---------- */
+function buildSizeSeg(){
+  document.querySelectorAll('#sizeSeg button').forEach(b=>{
+    b.classList.toggle('on',+b.dataset.l===cfg.L);
+    b.onclick=()=>{cfg.L=+b.dataset.l;clampAll();render();};
+  });
+}
+function buildOrientSeg(){
+  document.querySelectorAll('#orientSeg button').forEach(b=>{
+    b.classList.toggle('on',b.dataset.o===cfg.orient);
+    b.onclick=()=>{cfg.orient=b.dataset.o;render();};
+  });
+}
+function buildNsfCard(){
+  const r=rated();
+  document.getElementById('nsfcard').innerHTML = r
+    ? `<b>${r.model}</b> &nbsp;<span style="color:var(--ink-soft)">(${r.sku})</span><br>
+       Listed connection: <b>${r.pipe}"</b><br>
+       Certified Design Flow: Floor <b>${r.floor}</b> · Wall <b>${r.wall}</b> GPM`
+    : 'No NSF record for this size.';
+}
+function connRowHTML(c){
+  const isBottom=c.face==='bottom';
+  const over = rated() && c.size>rated().pipe;
+  const sizeOpts=SIZES.map(s=>`<option value="${s}" ${s===c.size?'selected':''}>${s}"</option>`).join('');
+  const faceOpts=FACES.map(f=>`<option value="${f[0]}" ${f[0]===c.face?'selected':''}>${f[1]}</option>`).join('');
+  let f1lab,f2lab,f1val,f2val;
+  if(isBottom){f1lab='X from Left (in)';f2lab='Y from Front (in)';f1val=c.p;f2val=(c.y??9);}
+  else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;f1lab=`C/L offset · 0–${len}`;f2lab='C/L height';f1val=c.p;f2val=c.h;}
+  return `<div class="conn ${over?'over':''}" data-id="${c.id}">
+    <div class="top"><span class="tag"><span class="pill ${over?'warn':''}">${c.size}"</span> &nbsp;${faceLabel(c.face)}</span>
+      <button class="del" title="Remove" onclick="delConn(${c.id})">✕</button></div>
+    <div class="mini">
+      <div class="field"><span>Size (Sch 80)</span><select onchange="upd(${c.id},'size',this.value)">${sizeOpts}</select></div>
+      <div class="field"><span>Face / Side</span><select onchange="upd(${c.id},'face',this.value)">${faceOpts}</select></div>
+    </div>
+    <div class="mini" style="margin-top:8px;">
+      <div class="field"><span>${f1lab}</span><input type="number" step="0.5" value="${f1val}" onchange="upd(${c.id},'p',this.value)"></div>
+      <div class="field"><span>${f2lab}</span><input type="number" step="0.5" value="${f2val}" onchange="upd(${c.id},${isBottom?"'y'":"'h'"},this.value)"></div>
+    </div>
+  </div>`;
+}
+function buildConns(){
+  document.getElementById('conns').innerHTML=cfg.conns.map(connRowHTML).join('');
+  document.getElementById('connCount').textContent=cfg.conns.length+(cfg.conns.length===1?' port':' ports');
+}
+window.addConn=()=>{const p=rated()?rated().pipe:8;cfg.conns.push({id:uid++,size:p,face:'front',p:Math.round(cfg.L/2),h:Math.round(cfg.depth/2)});render();};
+window.delConn=id=>{cfg.conns=cfg.conns.filter(c=>c.id!==id);render();};
+window.upd=(id,key,val)=>{
+  const c=cfg.conns.find(x=>x.id===id);if(!c)return;
+  if(['size','p','h','y'].includes(key))val=+val;
+  c[key]=val;
+  if(key==='face'){if(val==='bottom'){c.p=Math.round(cfg.L/2);c.y=9;}else{c.h=c.h??Math.round(cfg.depth/2);}}
+  clampAll();render();
+};
+function clampAll(){
+  cfg.depth=+document.getElementById('depth').value||33;
+  cfg.conns.forEach(c=>{
+    if(c.face==='bottom'){c.p=clamp(c.p,0,cfg.L);c.y=clamp(c.y??9,0,18);}
+    else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;c.p=clamp(c.p,0,len);c.h=clamp(c.h??Math.round(cfg.depth/2),0,cfg.depth);}
+  });
+}
+
+/* ---------- svg ---------- */
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function txt(x,y,s,a={}){const t=el('text',Object.assign({x,y},a));t.textContent=s;return t;}
+function dimLine(svg,x1,y1,x2,y2,label,off){
+  svg.appendChild(el('line',{x1,y1,x2,y2,stroke:'#16202a','stroke-width':1}));
+  const a=Math.atan2(y2-y1,x2-x1)+Math.PI/2,t=4;
+  [[x1,y1],[x2,y2]].forEach(([px,py])=>svg.appendChild(el('line',{x1:px-Math.cos(a)*t,y1:py-Math.sin(a)*t,x2:px+Math.cos(a)*t,y2:py+Math.sin(a)*t,stroke:'#16202a','stroke-width':1})));
+  svg.appendChild(txt((x1+x2)/2,(y1+y2)/2+(off||0),label,{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600}));
+}
+function hit(svg,cx,cy,r,id,which){
+  const h=el('circle',{cx,cy,r:Math.max(r,15),fill:'transparent',class:'port-hit'});
+  h.addEventListener('pointerdown',ev=>{ev.preventDefault();dragging={id,which};h.setPointerCapture&&h.setPointerCapture(ev.pointerId);});
+  svg.appendChild(h);
+}
+let planGeom=null,elevGeom=null;
+function portColor(c){return (rated()&&c.size>rated().pipe)?['#c9760a','#9c5a06']:['#0e7c86','#0a5b63'];}
+
+function renderPlan(){
+  const svg=document.getElementById('svgPlan');svg.innerHTML='';
+  const L=cfg.L,W=18,VBW=1000,VBH=420,stub=42,pad=64;
+  const scale=Math.min((VBW-2*pad-2*stub)/L,(VBH-2*pad-2*stub)/W);
+  const bw=L*scale,bh=W*scale,x0=(VBW-bw)/2,y0=(VBH-bh)/2;
+  planGeom={x0,y0,bw,bh,scale,L};
+  svg.appendChild(el('rect',{x:x0,y:y0,width:bw,height:bh,fill:'#f4faf9',stroke:'#16202a','stroke-width':2}));
+  svg.appendChild(txt(x0+bw/2,y0+bh/2-2,'SUMP',{'font-size':13,'font-family':'Archivo,sans-serif','font-weight':700,'text-anchor':'middle',fill:'#9bb4b2','letter-spacing':'3'}));
+  svg.appendChild(txt(x0+bw/2,y0+bh/2+14,'(grate over)',{'font-size':9,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#9bb4b2'}));
+  dimLine(svg,x0,y0+bh+stub+22,x0+bw,y0+bh+stub+22,L+'"',14);
+  const wlx=Math.max(16,x0-stub-58);
+  svg.appendChild(el('line',{x1:wlx,y1:y0,x2:wlx,y2:y0+bh,stroke:'#16202a','stroke-width':1}));
+  [y0,y0+bh].forEach(yy=>svg.appendChild(el('line',{x1:wlx-4,y1:yy,x2:wlx+4,y2:yy,stroke:'#16202a','stroke-width':1})));
+  const wt=txt(wlx-6,y0+bh/2,'18"',{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600});
+  wt.setAttribute('transform',`rotate(-90 ${wlx-6} ${y0+bh/2})`);svg.appendChild(wt);
+  const kx=VBW-92,ky=42;
+  svg.appendChild(txt(kx,ky-12,'ORIENTATION',{'font-size':8,'font-family':'IBM Plex Mono,monospace',fill:'#475560','letter-spacing':'1.5'}));
+  svg.appendChild(el('rect',{x:kx,y:ky,width:64,height:46,fill:'none',stroke:'#c4c8bf'}));
+  svg.appendChild(txt(kx+32,ky+11,'BACK',{'font-size':8,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#475560'}));
+  svg.appendChild(txt(kx+32,ky+41,'FRONT',{'font-size':8,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#475560'}));
+  svg.appendChild(txt(kx+6,ky+27,'L',{'font-size':8,'font-family':'IBM Plex Mono,monospace',fill:'#475560'}));
+  svg.appendChild(txt(kx+54,ky+27,'R',{'font-size':8,'font-family':'IBM Plex Mono,monospace',fill:'#475560'}));
+
+  cfg.conns.forEach(c=>{
+    const od=Math.max(OD[c.size]*scale,9),[fill,stroke]=portColor(c);let cx,cy;
+    if(c.face==='front'||c.face==='back'){
+      cx=x0+c.p*scale;const edgeY=c.face==='front'?y0+bh:y0,dir=c.face==='front'?1:-1;
+      svg.appendChild(el('rect',{x:cx-od/2,y:dir>0?edgeY:edgeY-stub,width:od,height:stub,fill,stroke,'stroke-width':1.2}));
+      svg.appendChild(el('line',{x1:cx,y1:edgeY,x2:cx,y2:edgeY+dir*stub,stroke:'#fff','stroke-width':1,'stroke-dasharray':'3 3'}));
+      const ly=dir>0?edgeY+stub+14:edgeY-stub-7;
+      svg.appendChild(txt(cx,ly,c.size+'"',{'font-size':12,'font-weight':700,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a'}));
+      svg.appendChild(txt(cx,ly+12,'@ '+r1(c.p)+'"',{'font-size':9,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#475560'}));
+      cy=edgeY;
+    }else if(c.face==='left'||c.face==='right'){
+      cy=y0+(18-c.p)*scale;const edgeX=c.face==='left'?x0:x0+bw,dir=c.face==='left'?-1:1;
+      svg.appendChild(el('rect',{x:dir>0?edgeX:edgeX-stub,y:cy-od/2,width:stub,height:od,fill,stroke,'stroke-width':1.2}));
+      svg.appendChild(el('line',{x1:edgeX,y1:cy,x2:edgeX+dir*stub,y2:cy,stroke:'#fff','stroke-width':1,'stroke-dasharray':'3 3'}));
+      const lx=dir>0?edgeX+stub+5:edgeX-stub-5,anc=dir>0?'start':'end';
+      svg.appendChild(txt(lx,cy-3,c.size+'"',{'font-size':12,'font-weight':700,'font-family':'IBM Plex Mono,monospace','text-anchor':anc,fill:'#16202a'}));
+      svg.appendChild(txt(lx,cy+10,'@ '+r1(c.p)+'"',{'font-size':9,'font-family':'IBM Plex Mono,monospace','text-anchor':anc,fill:'#475560'}));
+      cx=edgeX;
+    }else{
+      cx=x0+c.p*scale;cy=y0+(18-(c.y??9))*scale;
+      svg.appendChild(el('circle',{cx,cy,r:od/2,fill:'none',stroke,'stroke-width':1.4,'stroke-dasharray':'4 3'}));
+      svg.appendChild(el('circle',{cx,cy,r:2.4,fill:stroke}));
+      svg.appendChild(txt(cx,cy-od/2-4,c.size+'" BOT',{'font-size':10.5,'font-weight':700,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:stroke}));
+    }
+    hit(svg,cx,cy,od/2,c.id,'plan');
+  });
+}
+function renderElev(){
+  /* Flipped orientation: sump BASE at top, RIM/COVER at bottom (right-side-up per std convention).
+     Port height h is measured above the sump base, so on screen it reads downward from the top. */
+  const svg=document.getElementById('svgElev');svg.innerHTML='';
+  const L=cfg.L,D=cfg.depth,VBW=1000,VBH=420,stub=40,pad=58;
+  const topRoom=58,botRoom=78;
+  const scale=Math.min((VBW-2*pad-2*stub)/L,(VBH-topRoom-botRoom)/D);
+  const bw=L*scale,bh=D*scale,x0=(VBW-bw)/2,y0=topRoom;
+  elevGeom={x0,y0,bw,bh,scale,L,D};
+  const yBase=y0, yRim=y0+bh;            // base at top, rim/cover at bottom
+  svg.appendChild(txt(x0,y0-10,'FRONT ELEVATION',{'font-size':10,'font-family':'Archivo,sans-serif','font-weight':700,fill:'#475560','letter-spacing':'1'}));
+  svg.appendChild(el('rect',{x:x0,y:y0,width:bw,height:bh,fill:'#f4faf9',stroke:'#16202a','stroke-width':2}));
+  // sump base (top, heavy)
+  svg.appendChild(el('line',{x1:x0-10,y1:yBase,x2:x0+bw+10,y2:yBase,stroke:'#16202a','stroke-width':2}));
+  svg.appendChild(txt(x0+bw,y0-2,'SUMP BASE',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'end',fill:'#475560','letter-spacing':'1'}));
+  // cover/grate indication (bottom) — slot ticks
+  svg.appendChild(el('line',{x1:x0,y1:yRim,x2:x0+bw,y2:yRim,stroke:'#0a5b63','stroke-width':2.4}));
+  const slots=Math.max(6,Math.round(bw/16));
+  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yRim-6,x2:gx,y2:yRim,stroke:'#0a5b63','stroke-width':1.3}));}
+  // depth dim (left)
+  const dlx=Math.max(16,x0-stub-58);
+  svg.appendChild(el('line',{x1:dlx,y1:y0,x2:dlx,y2:y0+bh,stroke:'#16202a','stroke-width':1}));
+  [y0,y0+bh].forEach(yy=>svg.appendChild(el('line',{x1:dlx-4,y1:yy,x2:dlx+4,y2:yy,stroke:'#16202a','stroke-width':1})));
+  const dt=txt(dlx-7,y0+bh/2,D+'"',{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600});
+  dt.setAttribute('transform',`rotate(-90 ${dlx-7} ${y0+bh/2})`);svg.appendChild(dt);
+  // length dim (below the rim label)
+  dimLine(svg,x0,yRim+botRoom-26,x0+bw,yRim+botRoom-26,L+'"',13);
+  cfg.conns.forEach(c=>{
+    const od=Math.max(OD[c.size]*scale,9),[fill,stroke]=portColor(c);let cx,cy;
+    if(c.face==='bottom'){              // sump-base face: now at top, stubs upward
+      cx=x0+c.p*scale;cy=yBase;
+      svg.appendChild(el('rect',{x:cx-od/2,y:yBase-stub,width:od,height:stub,fill,stroke,'stroke-width':1.2}));
+      svg.appendChild(txt(cx,yBase-stub-5,c.size+'"',{'font-size':10,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#16202a'}));
+    }else if(c.face==='front'||c.face==='back'){
+      cx=x0+c.p*scale;cy=yBase+(c.h??D/2)*scale;const dashed=c.face==='back';
+      svg.appendChild(el('circle',{cx,cy,r:od/2,fill:dashed?'none':fill,stroke,'stroke-width':1.3,'stroke-dasharray':dashed?'4 3':'none'}));
+      svg.appendChild(txt(cx,cy-od/2-4,c.size+'"'+(dashed?' (bk)':''),{'font-size':9.5,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:stroke}));
+    }else{
+      cx=c.face==='left'?x0:x0+bw;cy=yBase+(c.h??D/2)*scale;const dir=c.face==='left'?-1:1;
+      svg.appendChild(el('rect',{x:dir>0?cx:cx-stub,y:cy-od/2,width:stub,height:od,fill,stroke,'stroke-width':1.2,opacity:.85}));
+      svg.appendChild(txt(dir>0?cx+stub+4:cx-stub-4,cy+3,c.size+'"',{'font-size':9.5,'font-weight':700,'font-family':'IBM Plex Mono,monospace','text-anchor':dir>0?'start':'end',fill:stroke}));
+    }
+    hit(svg,cx,cy,od/2,c.id,'elev');
+  });
+}
+
+function renderSide(){
+  /* End / side cross-section: 18" width (horizontal, FRONT at left → BACK at right) x depth.
+     Same flip as the elevation: sump BASE at top, cover/grate at bottom. Reference view (not draggable). */
+  const svg=document.getElementById('svgSide');svg.innerHTML='';
+  const W=18,D=cfg.depth,VBW=460,VBH=340,stub=24;
+  const topG=48,botG=58;
+  const scale=Math.min((VBH-topG-botG)/D,(VBW*0.55)/W);
+  const bw=W*scale,bh=D*scale,x0=(VBW-bw)/2,y0=topG;
+  const yBase=y0,yRim=y0+bh;
+  svg.appendChild(txt(x0-58,y0-30,'END / SIDE VIEW — cross-section',{'font-size':10,'font-family':'Archivo,sans-serif','font-weight':700,fill:'#475560','letter-spacing':'1'}));
+  svg.appendChild(el('rect',{x:x0,y:y0,width:bw,height:bh,fill:'#f4faf9',stroke:'#16202a','stroke-width':2}));
+  // sump base (top, heavy)
+  svg.appendChild(el('line',{x1:x0-10,y1:yBase,x2:x0+bw+10,y2:yBase,stroke:'#16202a','stroke-width':2}));
+  svg.appendChild(txt(x0+bw+14,y0-2,'SUMP BASE',{'font-size':8,'font-family':'IBM Plex Mono,monospace',fill:'#475560','letter-spacing':'1'}));
+  // cover/grate slots (bottom)
+  svg.appendChild(el('line',{x1:x0,y1:yRim,x2:x0+bw,y2:yRim,stroke:'#0a5b63','stroke-width':2.4}));
+  const slots=Math.max(4,Math.round(bw/16));
+  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yRim-6,x2:gx,y2:yRim,stroke:'#0a5b63','stroke-width':1.3}));}
+  // depth dim (left, outboard of any front-wall stubs)
+  const dlx=x0-64;
+  svg.appendChild(el('line',{x1:dlx,y1:y0,x2:dlx,y2:y0+bh,stroke:'#16202a','stroke-width':1}));
+  [y0,y0+bh].forEach(yy=>svg.appendChild(el('line',{x1:dlx-4,y1:yy,x2:dlx+4,y2:yy,stroke:'#16202a','stroke-width':1})));
+  const dt=txt(dlx-7,y0+bh/2,D+'"',{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600});
+  dt.setAttribute('transform',`rotate(-90 ${dlx-7} ${y0+bh/2})`);svg.appendChild(dt);
+  // width dim (below) with FRONT / BACK end labels
+  const wy=yRim+botG-30;
+  dimLine(svg,x0,wy,x0+bw,wy,W+'"',12);
+  svg.appendChild(txt(x0,wy+16,'FRONT',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#475560','letter-spacing':'1'}));
+  svg.appendChild(txt(x0+bw,wy+16,'BACK',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#475560','letter-spacing':'1'}));
+  cfg.conns.forEach(c=>{
+    const od=Math.max(OD[c.size]*scale,9),[fill,stroke]=portColor(c);
+    if(c.face==='bottom'){                 // base face (top), positioned across width by Y-from-front
+      const cx=x0+(c.y??9)*scale;
+      svg.appendChild(el('rect',{x:cx-od/2,y:yBase-stub,width:od,height:stub,fill,stroke,'stroke-width':1.2}));
+      svg.appendChild(txt(cx,yBase-stub-5,c.size+'"',{'font-size':9.5,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#16202a'}));
+    }else if(c.face==='left'||c.face==='right'){   // end-wall ports show as circles in section
+      const cx=x0+clamp(c.p,0,18)*scale, cy=yBase+(c.h??D/2)*scale, dashed=c.face==='right';
+      svg.appendChild(el('circle',{cx,cy,r:od/2,fill:dashed?'none':fill,stroke,'stroke-width':1.3,'stroke-dasharray':dashed?'4 3':'none'}));
+      svg.appendChild(txt(cx,cy-od/2-4,c.size+'"'+(c.face==='left'?' L':' R'),{'font-size':9,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:stroke}));
+    }else{                                  // front/back long-wall ports stub out the side walls
+      const front=c.face==='front', wallX=front?x0:x0+bw, dir=front?-1:1, cy=yBase+(c.h??D/2)*scale;
+      svg.appendChild(el('rect',{x:dir>0?wallX:wallX-stub,y:cy-od/2,width:stub,height:od,fill,stroke,'stroke-width':1.2,opacity:.85}));
+      svg.appendChild(txt(dir>0?wallX+stub+4:wallX-stub-4,cy+3,c.size+'"',{'font-size':9,'font-weight':700,'font-family':'IBM Plex Mono,monospace','text-anchor':dir>0?'start':'end',fill:stroke}));
+    }
+  });
+}
+
+/* ---------- drag ---------- */
+function svgPt(svg,ev){const p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+window.addEventListener('pointermove',ev=>{
+  if(!dragging)return;
+  const c=cfg.conns.find(x=>x.id===dragging.id);if(!c)return;
+  if(dragging.which==='plan'){
+    const g=planGeom,p=svgPt(document.getElementById('svgPlan'),ev);
+    const ix=p.x-g.x0,iy=p.y-g.y0,Lpx=g.bw,Wpx=g.bh;
+    const cxp=clamp(ix,0,Lpx),cyp=clamp(iy,0,Wpx);
+    const dL=cxp,dR=Lpx-cxp,dT=cyp,dB=Wpx-cyp,minE=Math.min(dL,dR,dT,dB);
+    const interior=Math.min(g.scale*4,Math.min(Lpx,Wpx)/3);
+    if(p.x>g.x0&&p.x<g.x0+Lpx&&p.y>g.y0&&p.y<g.y0+Wpx&&minE>interior){
+      c.face='bottom';c.p=clamp(ix/g.scale,0,g.L);c.y=clamp(18-iy/g.scale,0,18);
+    }else{
+      if(minE===dB){c.face='front';c.p=clamp(cxp/g.scale,0,g.L);}
+      else if(minE===dT){c.face='back';c.p=clamp(cxp/g.scale,0,g.L);}
+      else if(minE===dL){c.face='left';c.p=clamp(18-cyp/g.scale,0,18);}
+      else{c.face='right';c.p=clamp(18-cyp/g.scale,0,18);}
+      if(c.h==null)c.h=Math.round(cfg.depth/2);
+    }
+    c.p=Math.round(c.p*2)/2;if(c.y!=null)c.y=Math.round(c.y*2)/2;
+  }else{
+    const g=elevGeom,p=svgPt(document.getElementById('svgElev'),ev);
+    if(c.face==='bottom'){c.p=clamp((p.x-g.x0)/g.scale,0,g.L);}
+    else if(c.face==='front'||c.face==='back'){c.p=clamp((p.x-g.x0)/g.scale,0,g.L);c.h=clamp((p.y-g.y0)/g.scale,0,cfg.depth);}
+    else{c.h=clamp((p.y-g.y0)/g.scale,0,cfg.depth);}
+    c.p=Math.round(c.p*2)/2;if(c.h!=null)c.h=Math.round(c.h*2)/2;
+  }
+  render();
+});
+window.addEventListener('pointerup',()=>{dragging=null;});
+
+/* ---------- flow / schedule / specs ---------- */
+function pipeCapTotal(){let s=0;cfg.conns.forEach(c=>s+=gpm(ID80[c.size],cfg.vel));return s;}
+function governingFlow(cap){
+  if(cfg.basis==='nsf'){
+    const r=rated();const val=r?r[cfg.orient]:0;
+    return {val,label:`NSF certified Design Flow — ${cfg.orient}`,nsf:true,cap};
+  }
+  return {val:cap,label:`Σ pipe capacity @ ${cfg.vel} ft/s`,nsf:false,cap};
+}
+function renderFlowband(gov){
+  const r=rated();
+  document.getElementById('flowband').innerHTML = r ? `
+    <div class="fb"><div class="fl">Certified — Floor</div><div class="fv">${r.floor}<small> GPM</small></div></div>
+    <div class="fb"><div class="fl">Certified — Wall</div><div class="fv">${r.wall}<small> GPM</small></div></div>
+    <div class="fb"><div class="fl">Your current choice: ${cfg.orient}</div><div class="fv">${r0(gov.val)}<small> GPM MAX</small></div></div>`
+    : `<div class="fb"><div class="fl">Flow</div><div class="fv">${r0(gov.val)}<small> GPM</small></div></div>`;
+}
+function renderSchedule(){
+  let rows=`<tr><th>Mark</th><th>Size</th><th>Face</th><th>C/L Location</th><th style="text-align:right">Pipe cap.*</th></tr>`;
+  let cap=0;
+  cfg.conns.forEach((c,i)=>{
+    const g=gpm(ID80[c.size],cfg.vel);cap+=g;
+    const over=rated()&&c.size>rated().pipe;
+    let loc;
+    if(c.face==='bottom')loc=`X ${r1(c.p)}", Y ${r1(c.y??9)}"`;
+    else if(c.face==='front'||c.face==='back')loc=`${r1(c.p)}" fr.L · h ${r1(c.h)}"`;
+    else loc=`${r1(c.p)}" fr.F · h ${r1(c.h)}"`;
+    rows+=`<tr><td>P${i+1}</td><td><span class="pill ${over?'warn':''}">${c.size}"</span></td><td>${faceLabel(c.face).replace(/ \(.*\)/,'')}</td><td>${loc}</td><td class="num">${r0(g)}</td></tr>`;
+  });
+  const gov=governingFlow(cap);
+  if(gov.nsf) rows+=`<tr class="sub"><td colspan="4">Configured pipe capacity @ ${cfg.vel} ft/s</td><td class="num">${r0(cap)} GPM</td></tr>`;
+  rows+=`<tr class="tot"><td colspan="4">${gov.label}</td><td class="num">${r0(gov.val)} GPM</td></tr>`;
+  document.getElementById('schedule').innerHTML=rows;
+  return gov;
+}
+function renderSpecs(gov){
+  const L=cfg.L,D=cfg.depth,r=rated(),unblock=(18>=18&&L>=23);
+  document.getElementById('specs').innerHTML=`
+    <tr><th>NSF model · SKU</th><td>${r?`${r.model} · ${r.sku}`:'—'}</td></tr>
+    <tr><th>Sump footprint</th><td>18" × ${L}"</td></tr>
+    <tr><th>Sump depth</th><td>${D}"</td></tr>
+    <tr><th>Listed connection</th><td>${r?(r.pipe+'" Sch 80 or smaller connection (certified)'):'—'}</td></tr>
+    <tr><th>Mounting</th><td>${cfg.orient.charAt(0).toUpperCase()+cfg.orient.slice(1)}</td></tr>
+    <tr><th>Cover / grate</th><td>${cfg.cover==='aegis'?'Anti-entrapment cover &mdash; Aegis':'Certified grate'}</td></tr>
+    <tr><th>Standard</th><td>ANSI/APSP/ICC-16 · NSF Listed</td></tr>
+    <tr><th>Fasteners</th><td>316 stainless steel</td></tr>
+    <tr><th>Unblockable (geometry)</th><td>${unblock?'<span class="badge-ok">Qualifies — verify by test</span>':'No — multi-outlet only'}</td></tr>
+    <tr><th>Certified Design Flow</th><td>Floor ${r?r.floor:'—'} · Wall ${r?r.wall:'—'} GPM</td></tr>
+    <tr><th>Governing max flow</th><td><b>${r0(gov.val)} GPM</b></td></tr>`;
+}
+function renderWarnings(gov){
+  const w=[],L=cfg.L,r=rated(),byFace={};
+  cfg.conns.forEach(c=>(byFace[c.face]=byFace[c.face]||[]).push(c));
+  for(const f in byFace){
+    if(f==='bottom')continue;
+    const len=(f==='front'||f==='back')?L:18,arr=byFace[f].slice().sort((a,b)=>a.p-b.p);
+    arr.forEach(c=>{const half=OD[c.size]/2;
+      if(c.p-half<1.5)w.push(`A ${c.size}" port on ${faceLabel(f)} is within 1.5" of the datum corner.`);
+      if((len-c.p)-half<1.5)w.push(`A ${c.size}" port on ${faceLabel(f)} is within 1.5" of the far corner.`);});
+    for(let i=1;i<arr.length;i++){const gap=(arr[i].p-arr[i-1].p)-(OD[arr[i].size]+OD[arr[i-1].size])/2;
+      if(gap<2)w.push(`Two ports on ${faceLabel(f)} have <2" clear between pipe walls.`);}
+  }
+  cfg.conns.forEach(c=>{if(c.face!=='bottom'){
+    if((c.h-OD[c.size]/2)<1)w.push(`A ${c.size}" port on ${faceLabel(c.face)} sits within 1" of the floor.`);
+    if((cfg.depth-c.h-OD[c.size]/2)<1)w.push(`A ${c.size}" port on ${faceLabel(c.face)} sits within 1" of the top — may foul grate/frame.`);}});
+  if(r){
+    const big=cfg.conns.filter(c=>c.size>r.pipe);
+    if(big.length)w.push(`Port size exceeds the NSF-listed connection (${r.pipe}") for ${r.model} — outside the certified configuration; confirm with manufacturer / NSF listing.`);
+    if(gov.nsf && gov.cap < gov.val)w.push(`Configured connections carry ~${r0(gov.cap)} GPM at ${cfg.vel} ft/s — below the ${r0(gov.val)} GPM certified max. Add/upsize ports to deliver full rated flow, or set the system design flow accordingly.`);
+  }
+  if(cfg.conns.length<2)w.push(`Single outlet shown — provide two outlets per pump OR an approved unblockable single-outlet / SVRS design.`);
+  const box=document.getElementById('warnbox'),list=document.getElementById('warnlist');
+  if(w.length){box.classList.remove('hide');list.innerHTML=w.map(x=>`<li>${x}</li>`).join('');}else box.classList.add('hide');
+}
+function renderMeta(){
+  document.getElementById('compliance').innerHTML=`<strong>Compliance &amp; references:</strong> Neptune-Benson MLD-SG suction outlet fitting assembly, NSF listed and certified to ANSI/APSP/ICC-16; install per the Virginia Graeme Baker Pool &amp; Spa Safety Act. The Design Flow Rate shown is the NSF certified maximum for the selected size and mounting orientation — total system flow through the assembly must not exceed it. Pipe-capacity figures (*) are velocity × Sch 80 bore for plumbing-design reference only. Port sizes/locations beyond the listed configuration are field plumbing variations; confirm against the NSF listing and manufacturer instructions.`;
+  document.getElementById('footMeta').textContent=`Generated ${new Date().toLocaleDateString()} · 18×${cfg.L}×${r0(cfg.depth)} · ${cfg.orient} · ${cfg.conns.length} port(s)`;
+}
+function render(){
+  document.getElementById('depth').value=cfg.depth;
+  buildSizeSeg();buildOrientSeg();buildNsfCard();buildConns();
+  renderPlan();renderElev();renderSide();
+  const gov=renderSchedule();renderFlowband(gov);renderSpecs(gov);renderWarnings(gov);renderMeta();
+  const r=rated();
+  document.getElementById('titleName').textContent = r?`${r.model} Main Drain`:'MLD-SG Main Drain';
+  document.getElementById('skuLine').textContent = r?`SKU ${r.sku} · 18"×${cfg.L}" SOFA`:'';
+  const m=document.getElementById('model');if(!m.dataset.touched)m.value=r?r.model:'MLD-SG';
+}
+window.resetCfg=()=>{cfg={L:54,depth:33,vel:6,orient:'floor',basis:'nsf',cover:'grate',
+  conns:[{id:uid++,size:14,face:'left',p:9,h:9},{id:uid++,size:14,face:'right',p:9,h:9}]};
+  document.getElementById('model').dataset.touched='';render();};
+
+/* ============ n8n WEBHOOK AUTOMATION ============
+   Set your PRODUCTION webhook URL here (activate the workflow in n8n first).
+   Override for testing by appending ?wh=<url> to the page URL.            */
+const N8N_WEBHOOK_URL = new URLSearchParams(location.search).get('wh')
+  || "https://glenbot.app.n8n.cloud/webhook/sofa-quote-request";
+const INCLUDE_SHEET_HTML = true;  // send a print-ready HTML snapshot for PDF rendering in n8n
+
+function projData(){const o={};document.querySelectorAll('#sheet [data-key]').forEach(i=>o[i.dataset.key]=i.value||'');return o;}
+function warningsList(){return [...document.querySelectorAll('#warnlist li')].map(li=>li.textContent.trim());}
+function snapshotHtml(){
+  const css=document.querySelector('style').textContent;
+  const clone=document.getElementById('sheet').cloneNode(true);
+  clone.querySelectorAll('input').forEach(i=>i.setAttribute('value',i.value));
+  clone.querySelectorAll('textarea').forEach(t=>{t.textContent=t.value;});
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body style="background:#fff;margin:0;padding:18px">${clone.outerHTML}</body></html>`;
+}
+function buildPayload(contact){
+  const r=rated(),cap=pipeCapTotal(),gov=governingFlow(cap);
+  const id='SOFA-'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
+  const p={
+    submittal_id:id, created_at:new Date().toISOString(), source:'web-configurator', request_type:'quote',
+    product:{family:'MLD-SG', model:document.getElementById('model').value, sku:r?r.sku:null,
+      footprint_in:`18x${cfg.L}`, length_in:cfg.L, width_in:18, depth_in:cfg.depth,
+      orientation:cfg.orient, cover:cfg.cover, listed_connection_in:r?r.pipe:null,
+      certified_floor_gpm:r?r.floor:null, certified_wall_gpm:r?r.wall:null,
+      flow_basis:cfg.basis, velocity_fps:cfg.vel,
+      governing_max_gpm:Math.round(gov.val), configured_pipe_capacity_gpm:Math.round(cap)},
+    connections:cfg.conns.map((c,i)=>({mark:'P'+(i+1),size_in:c.size,face:c.face,
+      cl_offset_in:c.p, cl_height_in:c.face==='bottom'?null:(c.h??null), y_from_front_in:c.face==='bottom'?(c.y??null):null})),
+    project:projData(), contact:contact||{}, warnings:warningsList()
+  };
+  if(INCLUDE_SHEET_HTML) p.sheet_html=snapshotHtml();
+  return p;
+}
+function toggleSend(){const el=document.getElementById('sendpanel');el.hidden=!el.hidden;if(!el.hidden)el.scrollIntoView({behavior:'smooth',block:'center'});}
+async function sendSubmittal(){
+  const st=document.getElementById('sendStatus');
+  const email=(document.getElementById('cEmail').value||'').trim();
+  if(!email){st.textContent='Enter your email first.';st.className='sp-status err';return;}
+  const contact={name:document.getElementById('cName').value,email,
+    company:document.getElementById('cCompany').value,phone:document.getElementById('cCc').value,
+    message:document.getElementById('cMsg').value};
+  const payload=buildPayload(contact);
+  st.textContent='Submitting…';st.className='sp-status';
+  try{
+    const res=await fetch(N8N_WEBHOOK_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(res.ok){st.textContent='✓ Quote request submitted — ref '+payload.submittal_id+'.';st.className='sp-status ok';}
+    else{st.textContent='Webhook responded '+res.status+'. Verify the n8n workflow is active.';st.className='sp-status err';}
+  }catch(e){st.textContent='Could not reach the webhook (likely CORS). Use “Copy data” + enable CORS on the n8n node.';st.className='sp-status err';}
+}
+function copyPayload(){
+  const txt=JSON.stringify(buildPayload({email:(document.getElementById('cEmail').value||'').trim()}),null,2);
+  const done=()=>{const st=document.getElementById('sendStatus');st.textContent='✓ Copied JSON to clipboard.';st.className='sp-status ok';};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt,done));}
+  else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(t);}
+
+/* ---- Certificate of Compliance download (per selected model) ---- */
+async function downloadCert(){
+  const r=rated();
+  const url=((CERTS[cfg.L]||'').trim())||CERT_GENERAL.trim();
+  const name=r?r.model:'this model';
+  if(!url){toast('Certificate of Compliance for '+name+' is pending upload.');return;}
+  try{
+    const res=await fetch(url,{method:'HEAD'});
+    if(!res.ok) throw 0;
+    const a=document.createElement('a');a.href=url;a.download=url.split('/').pop();
+    document.body.appendChild(a);a.click();a.remove();
+    toast('Downloading certificate package…');
+  }catch(e){toast('Certificate package not uploaded yet (expected: '+url+').');}
+}
+function toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.className='toast no-print';document.body.appendChild(t);}
+  t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);
+}
+document.getElementById('depth').addEventListener('input',()=>{clampAll();render();});
+document.getElementById('model').addEventListener('input',e=>{e.target.dataset.touched='1';});
+document.getElementById('dateField').value=new Date().toLocaleDateString();
+render();
+</script>
+</body>
+</html>
