@@ -138,6 +138,13 @@
   a.lane-title:hover{color:var(--teal)}
   a.lane-title .open-cue{color:var(--teal);font-size:16px;font-weight:800}
   a.lane-title:hover .open-cue{color:var(--orange)}
+  a.lane-howto{
+    margin-left:auto;text-decoration:none;font-family:var(--mono);font-size:11px;
+    letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+    color:var(--teal);background:#EAF3F7;border:1px solid #C4DEEA;
+    padding:4px 12px;border-radius:999px;transition:background .12s,color .12s,border-color .12s;white-space:nowrap;
+  }
+  a.lane-howto:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
 
   .flow {
     display: grid;
@@ -483,7 +490,7 @@
   .expansion-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
   .expansion-grid {
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
+    grid-template-columns: 1fr;
     gap: 18px;
     margin-top: 16px;
   }
@@ -662,6 +669,7 @@
     <div class="lane-header">
       <a class="lane-title" href="/technical-support">Technical Support AI <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
       <span class="lane-tag">Live · 24/7</span>
+      <a class="lane-howto" href="https://nbts-portal.onrender.com/technical-support">How it works &rsaquo;</a>
     </div>
     <div class="flow">
       <div class="node input">
@@ -947,17 +955,6 @@
     <div class="expansion-title">Scaling Across D&amp;A — Proven Playbook, New Teams</div>
     <div class="expansion-sub">The aquatics project becomes the copy-ready baseline for the rest of the division: one landing page, product-specific entry points, and queues routed to each team's first line of support.</div>
     <div class="expansion-grid">
-
-      <div class="exp-block">
-        <h4>Candidate teams &amp; estimated monthly volume</h4>
-        <div class="team-row"><span class="team">Aquatics</span><span class="owner">Live today — the baseline project</span><span class="vol">265 (June)</span></div>
-        <div class="team-row"><span class="team">Sanitary</span><span class="owner"></span><span class="vol">~100 / mo</span></div>
-        <div class="team-row"><span class="team">Wedeco UV &amp; Ozone (US)</span><span class="owner"></span><span class="vol">~100–150 / mo</span></div>
-        <div class="team-row"><span class="team">Filter Press</span><span class="owner"></span><span class="vol">~80–100 / mo</span></div>
-        <div class="team-row"><span class="team">Leopold</span><span class="owner"></span><span class="vol">~50 / mo</span></div>
-        <div class="team-row"><span class="team">Wastewater / Construction</span><span class="owner"></span><span class="vol">~50–100 / mo</span></div>
-        <div class="total-row"><span>Potential platform volume</span><span>~650–900 / mo</span></div>
-      </div>
 
       <div class="exp-block">
         <h4>What each new product group needs to onboard</h4>
