@@ -787,7 +787,7 @@
 <div class="tools">
   <div class="tools-header">
     <span class="tools-title">Connected Data &amp; Tools</span>
-    <span class="tools-sub">Supporting capabilities that feed the lanes above — all reading and writing to the same shared data.</span>
+    <span class="tools-sub">The tools and shared data behind the platform — all reading and writing to the same source. Click any tile to open it.</span>
   </div>
   <div class="tools-grid">
 
@@ -837,6 +837,30 @@
       <div class="feeds">
         <span class="feeds-label">Feeds into</span>
         <span class="feed-tag support">Tech Support AI</span>
+      </div>
+    </a>
+
+    <a class="tool-card clickable" href="/submittal-generator">
+      <span class="role">Quote &rarr; submittal</span>
+      <h3>Submittal Generator <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
+      <p>Upload a quote PDF and get a finished, annotated submittal package — every quoted item highlighted on its cut sheets and schematics, then filed to Jira.</p>
+      <span class="tech">FastAPI on Render · OCR fallback for image-only PDFs · per-item annotation · multi-pool detection</span>
+      <div class="feeds">
+        <span class="feeds-label">Output</span>
+        <span class="feed-tag submittal">Jira ticket</span>
+        <span class="feed-tag support">Annotated PDF</span>
+      </div>
+    </a>
+
+    <a class="tool-card clickable" href="/spec-scorecard">
+      <span class="role">Bid &rarr; decision</span>
+      <h3>Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
+      <p>Upload a project spec and drawings — AI reads every page, scores 28 engineering categories plus a commercial position, and files a go/no-go scorecard to Jira.</p>
+      <span class="tech">Claude vision PDF read · Haiku parallel category scoring · Opus commercial position · Supabase scoring registry</span>
+      <div class="feeds">
+        <span class="feeds-label">Output</span>
+        <span class="feed-tag bid">Go / no-go</span>
+        <span class="feed-tag submittal">Jira ticket</span>
       </div>
     </a>
 
