@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform — Architecture Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .stats{display:flex;margin-bottom:28px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+  .stats .s{flex:1;padding:12px 18px;border-right:1px solid var(--rule)}
+  .stats .s:last-child{border-right:none}
+  .stats .n{font-weight:800;font-size:24px;color:var(--blue)}
+  .stats .l{font-size:13px;color:var(--ink2);margin-left:8px}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 14px}
+  .flow{display:flex;align-items:stretch}
+  .lane{display:flex;flex-direction:column}
+  .lane.intake{width:270px}
+  .lane.orch{width:300px}
+  .lane.tools{flex:1}
+  .lane.out{width:250px}
+  .arrow{width:48px;display:flex;align-items:center;justify-content:center;flex:none}
+  .lane .note{font-size:11px;color:var(--ink2);margin-top:12px;line-height:1.45}
+  .item{border-left:3px solid var(--teal);padding:8px 0 8px 12px;display:block}
+  a.item{transition:background .12s}
+  a.item:hover{background:var(--stripe)}
+  .item .it{font-weight:700;font-size:14px;color:var(--blue)}
+  .item .id{font-size:12px;color:var(--ink);margin-top:2px}
+  .item.out-item{border-left-color:var(--blue);font-weight:700;font-size:14px;color:var(--blue)}
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .core{background:var(--stripe);border-top:3px solid var(--blue);padding:14px 16px}
+  .core .ct{font-weight:800;font-size:17px;color:var(--blue)}
+  .core .cs{font-size:12px;color:var(--ink2);margin:2px 0 12px}
+  .core .row{display:flex;gap:8px;font-size:13px;color:var(--ink);margin:7px 0}
+  .core .row b{color:var(--teal);font-weight:800}
+  .toolgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .tool{background:var(--stripe);border-top:3px solid var(--teal);padding:12px 13px;display:block;position:relative;transition:border-top-color .12s,background .12s}
+  a.tool:hover{border-top-color:var(--blue);background:#DEE8EE}
+  .tool .tt{font-weight:700;font-size:14px;color:var(--blue)}
+  .tool .td{font-size:11.5px;color:var(--ink);margin-top:3px;line-height:1.35}
+  .tool .cue{position:absolute;top:10px;right:12px;color:var(--teal);font-weight:800;font-size:14px}
+  a.tool:hover .cue{color:var(--blue)}
+  .tools-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .badge{font-size:11px;font-weight:700;color:var(--teal);border:1px solid var(--teal);padding:2px 9px;letter-spacing:.03em;white-space:nowrap}
+  .strip{margin-top:30px}
+  .datagrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:14px}
+  .dcell{border-top:1px solid var(--rule);padding-top:10px}
+  .dcell .dt{font-weight:700;font-size:14px;color:var(--blue)}
+  .dcell .dd{font-size:12px;color:var(--ink);margin-top:4px;line-height:1.45}
+  .loops{margin-top:28px;background:var(--stripe);padding:16px 20px;border-left:4px solid var(--teal)}
+  .loops .lh{font-weight:800;font-size:13px;color:var(--blue);letter-spacing:.06em;margin-bottom:10px}
+  .loopgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;font-size:12.5px;color:var(--ink);line-height:1.45}
+  .loopgrid b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:28px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .flow{flex-wrap:wrap;gap:20px}
+    .lane.intake,.lane.orch,.lane.out,.lane.tools{width:100%;flex:none}
+    .arrow{display:none}
+    .stats{flex-wrap:wrap}.stats .s{flex:1 1 40%}
+    .toolgrid,.datagrid,.loopgrid{grid-template-columns:1fr 1fr}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+  }
+  @media (max-width:620px){.toolgrid,.datagrid,.loopgrid{grid-template-columns:1fr}.stats .s{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/capability-map">&larr; Back to platform map</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A · a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI Support Platform</div>
+      <div class="t2">Architecture Map — Process Overview</div>
+      <div class="t3">Owner: Casey Glynn · Updated 2026-07-15 · One n8n · One Supabase · One Jira</div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="s"><span class="n">8</span><span class="l">portal tool pages</span></div>
+    <div class="s"><span class="n">14</span><span class="l">active n8n workflows</span></div>
+    <div class="s"><span class="n">9,703</span><span class="l">install-base projects</span></div>
+    <div class="s"><span class="n">17,648</span><span class="l">filter units tracked</span></div>
+    <div class="s"><span class="n">3,832</span><span class="l">catalog products</span></div>
+  </div>
+  <div class="flow">
+    <div class="lane intake">
+      <div class="lbl">INTAKE</div><div class="rule"></div>
+      <div class="note" style="margin-top:0;margin-bottom:12px;">Every channel funnels into one orchestration layer.</div>
+      <div class="stack">
+        <a class="item" href="/technical-support"><div class="it">Phone — Voice agent</div><div class="id">ElevenLabs · <b>(866)&nbsp;722-1776</b></div></a>
+        <a class="item" href="/technical-support"><div class="it">Text — SMS agent</div><div class="id">Twilio · Q&amp;A + RAG branch</div></a>
+        <a class="item" href="/technical-support"><div class="it">Email &amp; web forms</div><div class="id">Jira intake mailbox</div></a>
+        <a class="item" href="/parts-lookup"><div class="it">Chat agents</div><div class="id">Install-base · parts lookup</div></a>
+      </div>
+    </div>
+    <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
+    <div class="lane orch">
+      <div class="lbl">ORCHESTRATION + AI</div><div class="rule"></div>
+      <div class="core">
+        <div class="ct">n8n Cloud</div>
+        <div class="cs">One workflow per trigger · 14 active</div>
+        <div class="row"><b>•</b><span>Ingest / normalize / route</span></div>
+        <div class="row"><b>•</b><span>Classify &amp; vision reads (OpenAI)</span></div>
+        <div class="row"><b>•</b><span>RAG retrieval over KB vectors</span></div>
+        <div class="row"><b>•</b><span>Voice / transcription (ElevenLabs)</span></div>
+        <div class="row"><b>•</b><span>FastAPI submittal assembly</span></div>
+      </div>
+      <div class="note">Deterministic logic (SQL / rules) kept separate from LLM calls. Models tiered by task.</div>
+    </div>
+    <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
+    <div class="lane tools">
+      <div class="tools-head">
+        <div class="lbl">INTERNAL PORTAL &amp; TOOLS</div>
+        <div class="badge">HTTP BASIC AUTH · nbts-portal.onrender.com</div>
+      </div>
+      <div class="rule"></div>
+      <div class="toolgrid">
+        <a class="tool" href="/capability-map"><span class="cue">&rsaquo;</span><div class="tt">Capability Map</div><div class="td">The "start here" overview — lanes, tiles, coverage matrix.</div></a>
+        <a class="tool" href="/architecture-map"><span class="cue">&rsaquo;</span><div class="tt">Architecture Map</div><div class="td">This flow — intake → data → outputs + loops.</div></a>
+        <a class="tool" href="/technical-support"><span class="cue">&rsaquo;</span><div class="tt">Technical Support</div><div class="td">Phone / text / email tap-to-action + Jira portal.</div></a>
+        <a class="tool" href="/parts-lookup"><span class="cue">&rsaquo;</span><div class="tt">Parts Lookup</div><div class="td">Plain-language search over 3,832 products.</div></a>
+        <a class="tool" href="/product-configurators"><span class="cue">&rsaquo;</span><div class="tt">Product Configurators</div><div class="td">Lawson Aquatics SOFA live; others in progress.</div></a>
+        <a class="tool" href="/knowledge-base-loader"><span class="cue">&rsaquo;</span><div class="tt">Knowledge Base Loader</div><div class="td">Upload / update → OCR + vision → vectors.</div></a>
+        <a class="tool" href="/submittal-generator"><span class="cue">&rsaquo;</span><div class="tt">Submittal Generator</div><div class="td">Quote PDF → annotated submittal → Jira.</div></a>
+        <a class="tool" href="/spec-scorecard"><span class="cue">&rsaquo;</span><div class="tt">Spec Scorecard</div><div class="td">Spec + drawings → 28-category go/no-go score.</div></a>
+        <a class="tool" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener"><span class="cue">&rsaquo;</span><div class="tt">Install Base Assistant</div><div class="td">Chat over national install-base data — 53 states.</div></a>
+      </div>
+    </div>
+    <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
+    <div class="lane out">
+      <div class="lbl">OUTPUTS</div><div class="rule"></div>
+      <div class="stack">
+        <div class="item out-item">Instant answer</div>
+        <div class="item out-item">Tracked Jira ticket</div>
+        <div class="item out-item">Annotated submittal</div>
+        <div class="item out-item">Go / no-go scorecard</div>
+        <div class="item out-item">Outbound SMS + email</div>
+      </div>
+      <div class="note">Every request becomes a tracked ticket in the system of record.</div>
+    </div>
+  </div>
+  <div class="strip">
+    <div class="lbl">SHARED DATA &amp; SYSTEM OF RECORD</div><div class="rule"></div>
+    <div class="datagrid">
+      <div class="dcell"><div class="dt">Supabase — one project</div><div class="dd">Postgres + pgvector. install_base (9,703 projects · 17,648 units · 53 states), master_product_list (3,832), documents (vectors), scoring registry, goldmine CRM.</div></div>
+      <div class="dcell"><div class="dt">Jira Service Management</div><div class="dd">System of record — one project. Every intake becomes a ticket.</div></div>
+      <div class="dcell"><div class="dt">Render</div><div class="dd">Hosts the portal, FastAPI submittal service, and configurators.</div></div>
+      <div class="dcell"><div class="dt">KB vectors — shared brain</div><div class="dd">RAG / chat agents read; the loader writes. text-embedding-3-small.</div></div>
+    </div>
+  </div>
+  <div class="loops">
+    <div class="lh">FEEDBACK LOOPS</div>
+    <div class="loopgrid">
+      <div><b>Loop A · </b>New Jira comment → product routing → human review → post back to ticket + KB.</div>
+      <div><b>Loop B · </b>Raw Defender logs → AI log analysis → executive health report.</div>
+      <div><b>Learning · </b>Monthly ticket export (AI-answered vs. engineer-needed) → gaps back into KB.</div>
+    </div>
+  </div>
+  <div class="ftr">
+    <div class="disc">Internal architecture reference. Deterministic logic separated from LLM calls; models tiered by task (embeddings, vision, agents, analysis). One n8n · one Supabase · one Jira. Tiles link to their live portal pages.</div>
+    <div class="xy">xylem<sup>°</sup></div>
+  </div>
+</div>
+</body>
+</html>
