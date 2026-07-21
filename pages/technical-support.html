@@ -66,6 +66,30 @@
   .note{margin-top:22px;padding:14px 16px;background:#EFF4F7;border-radius:8px;font-size:13px;color:var(--muted);border:1px solid var(--line)}
   .note b{color:var(--navy)}
 
+  /* ---------- What you can text or ask ---------- */
+  .askgrid{display:grid;grid-template-columns:1fr 1fr;gap:26px 34px}
+  .askhead{margin:0 0 12px;font-size:15px;font-weight:800;color:var(--navy)}
+  .askfoot{font-size:12px;color:var(--muted);margin:14px 0 0;line-height:1.5}
+
+  .cmdlist{display:flex;flex-direction:column;gap:12px}
+  .cmd{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);
+    border-radius:8px;padding:11px 14px;box-shadow:var(--shadow)}
+  .cmd .kw{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+    font-weight:700;color:#fff;background:var(--teal);padding:3px 10px;border-radius:5px;letter-spacing:.02em}
+  .cmd .cd{display:block;font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+  .cmd .cd b{color:var(--ink)}
+  .cmd .cd i{color:var(--ink);font-style:normal;background:#EFF4F7;padding:1px 5px;border-radius:4px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px}
+
+  .qcat{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--teal);margin:16px 0 7px}
+  .qcat:first-of-type{margin-top:0}
+  .bubble{background:var(--card);border:1px solid var(--line);border-radius:14px 14px 14px 3px;
+    padding:9px 14px;font-size:13.5px;color:var(--ink);margin-bottom:7px;box-shadow:var(--shadow);
+    display:inline-block;max-width:100%}
+
+  @media (max-width:720px){.askgrid{grid-template-columns:1fr;gap:24px}}
+
   @media (max-width:720px){.grid{grid-template-columns:1fr}.hero-inner{gap:16px}.hero-icon{width:46px;height:46px}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -159,6 +183,60 @@
 
     <div class="note">
       <b>Every channel lands in the same place:</b> a tracked ticket in NBTS Jira Service Management, where an engineer picks it up if the AI can't fully resolve it. Phone and text share one number — <b>(866) 722-1776</b> — and email opens a ticket the moment it arrives.
+    </div>
+  </section>
+
+  <section>
+    <p class="sec-label">What you can text or ask</p>
+    <p class="sec-sub">Text a question directly and the AI searches the NBTS knowledge base and answers in seconds — or use a keyword to open a ticket or add to an existing one.</p>
+
+    <div class="askgrid">
+
+      <div class="askcol">
+        <h4 class="askhead">Text these keywords</h4>
+        <div class="cmdlist">
+          <div class="cmd">
+            <span class="kw">Menu</span>
+            <span class="cd">See every option at any time.</span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Start ticket</span>
+            <span class="cd">Opens a tracked Jira ticket. Include your name, email and the issue — for example: <i>Name: Jane Smith, Email: jane@company.com, Issue: Need RMF 12 wire guide</i></span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Leave comment</span>
+            <span class="cd">Adds to a ticket you already have. Include <b>Ticket: NBTS-###</b> and your comment — <b>you can attach photos</b>, which land right on the ticket.</span>
+          </div>
+        </div>
+        <p class="askfoot">No keyword needed for a question — just text it and the AI will look it up.</p>
+      </div>
+
+      <div class="askcol">
+        <h4 class="askhead">Questions the AI can answer</h4>
+
+        <p class="qcat">Troubleshooting &amp; alarms</p>
+        <div class="bubble">My Defender is showing an alarm — what should I check first?</div>
+        <div class="bubble">Pressure differential is climbing on our sand filter. What causes that?</div>
+
+        <p class="qcat">Wiring &amp; installation</p>
+        <div class="bubble">What are the wiring connections for an RMF 12 controller?</div>
+        <div class="bubble">I need the wire guide for an RMF 11.</div>
+
+        <p class="qcat">Operation &amp; maintenance</p>
+        <div class="bubble">How do I backwash a Defender regenerative media filter?</div>
+        <div class="bubble">What's the recommended media charge for this filter?</div>
+
+        <p class="qcat">Specs, parts &amp; compatibility</p>
+        <div class="bubble">What's the flow rate on an SHF sand high-rate filter?</div>
+        <div class="bubble">Is this strainer compatible with a 6-inch line?</div>
+
+        <p class="askfoot">The AI answers only from approved NBTS documentation — it won't guess at specs or part numbers. If it doesn't have the answer, it hands you to the team.</p>
+      </div>
+
+    </div>
+
+    <div class="note">
+      <b>Not sure which product you have?</b> Just describe it. The AI identifies the brand and model from what you write — and if it's still unclear (say, which Defender controller you're on), it asks one quick question rather than guessing. Reply <b>Start ticket</b> any time to reach a live engineer.
     </div>
   </section>
 
