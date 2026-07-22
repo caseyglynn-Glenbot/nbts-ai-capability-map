@@ -38,7 +38,7 @@
   .stats .l{font-size:13px;color:var(--ink2);margin-left:8px}
   .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
   .rule{height:3px;background:var(--teal);margin:7px 0 14px}
-  .flow{display:flex;align-items:stretch}
+  .flow{display:flex;align-items:center}
   .lane{display:flex;flex-direction:column}
   .lane.intake{width:270px}
   .lane.orch{width:300px}
@@ -72,10 +72,24 @@
   .dcell{border-top:1px solid var(--rule);padding-top:10px}
   .dcell .dt{font-weight:700;font-size:14px;color:var(--blue)}
   .dcell .dd{font-size:12px;color:var(--ink);margin-top:4px;line-height:1.45}
-  .loops{margin-top:28px;background:var(--stripe);padding:16px 20px;border-left:4px solid var(--teal)}
-  .loops .lh{font-weight:800;font-size:13px;color:var(--blue);letter-spacing:.06em;margin-bottom:10px}
-  .loopgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;font-size:12.5px;color:var(--ink);line-height:1.45}
-  .loopgrid b{color:var(--blue)}
+  .kpigrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:2px}
+  .kpi{background:var(--stripe);border-top:3px solid var(--teal);padding:12px 14px}
+  .kpi .kl{font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+  .kpi .kn{font-weight:800;font-size:26px;color:var(--blue);line-height:1.1;margin-top:4px}
+  .kpi .ks{font-size:11.5px;color:var(--ink2);margin-top:2px}
+  .kpinote{margin-top:14px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);font-size:12.5px;color:var(--ink);line-height:1.45}
+  .kpinote b{color:var(--blue)}
+  .wf-head{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .view-toggle{display:flex;align-items:center;gap:10px;border:1px solid var(--teal);border-radius:999px;
+    padding:6px 14px;cursor:pointer;user-select:none;font-size:12.5px;font-weight:700;color:var(--teal);
+    letter-spacing:.03em;transition:background .2s;white-space:nowrap}
+  .view-toggle:hover{background:var(--stripe)}
+  .view-toggle:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .toggle-track{width:38px;height:20px;background:#C9D6DE;border-radius:999px;position:relative;transition:background .2s;flex-shrink:0}
+  .toggle-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s}
+  body.wf-on .toggle-track{background:var(--teal)}
+  body.wf-on .toggle-knob{transform:translateX(18px)}
+  body:not(.wf-on) .flow{display:none}
   .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:28px;border-top:1px solid var(--rule);padding-top:12px}
   .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
   .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
@@ -86,13 +100,13 @@
     .lane.intake,.lane.orch,.lane.out,.lane.tools{width:100%;flex:none}
     .arrow{display:none}
     .stats{flex-wrap:wrap}.stats .s{flex:1 1 40%}
-    .toolgrid,.datagrid,.loopgrid{grid-template-columns:1fr 1fr}
+    .toolgrid,.datagrid,.kpigrid{grid-template-columns:1fr 1fr}
     .hdr{height:auto;padding-bottom:16px}
     .hdr .title{position:static;text-align:left;margin-top:14px}
     .hdr .brand{position:static}
     .hdr svg.swoosh{display:none}
   }
-  @media (max-width:620px){.toolgrid,.datagrid,.loopgrid{grid-template-columns:1fr}.stats .s{flex:1 1 100%}}
+  @media (max-width:620px){.toolgrid,.datagrid,.kpigrid{grid-template-columns:1fr}.stats .s{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -112,6 +126,21 @@
       <div class="t3">Owner: Casey Glynn · Updated 2026-07-15 · One n8n · One Supabase · One Jira</div>
     </div>
   </div>
+  <div class="strip" style="margin-top:0;margin-bottom:28px;">
+    <div class="lbl">NBTS MASTER REPORT — KEY METRICS</div><div class="rule"></div>
+    <div class="kpigrid">
+      <div class="kpi"><div class="kl">Total support tickets</div><div class="kn">1,187</div><div class="ks">Oct 2025 – Jul 13 2026</div></div>
+      <div class="kpi"><div class="kl">Overall ticket resolution</div><div class="kn">85%</div><div class="ks">1,005 of 1,187 resolved</div></div>
+      <div class="kpi"><div class="kl">AI phone calls (EL)</div><div class="kn">370</div><div class="ks">Jan – Jul 2026, Twilio</div></div>
+      <div class="kpi"><div class="kl">AI agent success rate</div><div class="kn">98%</div><div class="ks">362 of 370 (EL success eval)</div></div>
+      <div class="kpi"><div class="kl">Median first response</div><div class="kn">4.0 biz hrs</div><div class="ks">Mon–Fri 8 am–5 pm only</div></div>
+      <div class="kpi"><div class="kl">Median resolution</div><div class="kn">10.1 biz hrs</div><div class="ks">Business hours only</div></div>
+      <div class="kpi"><div class="kl">Output per engineer vs legacy</div><div class="kn">+292%</div><div class="ks">~94 tickets/mo vs 24 legacy (3.9&times;)</div></div>
+      <div class="kpi"><div class="kl">Tickets handled end-to-end by AI</div><div class="kn">25%</div><div class="ks">293 of 1,187 — AI intake to auto-ticket</div></div>
+      <div class="kpi"><div class="kl">People using the platform</div><div class="kn">58</div><div class="ks">Distinct reporters + engineers</div></div>
+    </div>
+    <div class="kpinote"><b>Monthly volume, before vs. after:</b> legacy manual system averaged 71 tickets/month (2022) — the NBTS system averages 148/month (Oct 2025 – Jul 2026), peaking at 258 in June 2026.</div>
+  </div>
   <div class="stats">
     <div class="s"><span class="n">8</span><span class="l">portal tool pages</span></div>
     <div class="s"><span class="n">14</span><span class="l">active n8n workflows</span></div>
@@ -119,6 +148,14 @@
     <div class="s"><span class="n">17,648</span><span class="l">filter units tracked</span></div>
     <div class="s"><span class="n">3,832</span><span class="l">catalog products</span></div>
   </div>
+  <div class="wf-head">
+    <div class="lbl">NBTS WORKFLOW</div>
+    <div class="view-toggle" role="switch" aria-checked="false" tabindex="0" id="wfToggle">
+      <span>Show workflow</span>
+      <span class="toggle-track"><span class="toggle-knob"></span></span>
+    </div>
+  </div>
+  <div class="rule"></div>
   <div class="flow">
     <div class="lane intake">
       <div class="lbl">INTAKE</div><div class="rule"></div>
@@ -148,7 +185,6 @@
     <div class="lane tools">
       <div class="tools-head">
         <div class="lbl">INTERNAL PORTAL &amp; TOOLS</div>
-        <div class="badge">HTTP BASIC AUTH · nbts-portal.onrender.com</div>
       </div>
       <div class="rule"></div>
       <div class="toolgrid">
@@ -162,6 +198,7 @@
         <a class="tool" href="/spec-scorecard"><span class="cue">&rsaquo;</span><div class="tt">Spec Scorecard</div><div class="td">Spec + drawings → 28-category go/no-go score.</div></a>
         <a class="tool" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener"><span class="cue">&rsaquo;</span><div class="tt">Install Base Assistant</div><div class="td">Chat over national install-base data — 53 states.</div></a>
       </div>
+      <div style="margin-top:12px;text-align:right;"><span class="badge">HTTP BASIC AUTH · nbts-portal.onrender.com</span></div>
     </div>
     <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
     <div class="lane out">
@@ -185,18 +222,21 @@
       <div class="dcell"><div class="dt">KB vectors — shared brain</div><div class="dd">RAG / chat agents read; the loader writes. text-embedding-3-small.</div></div>
     </div>
   </div>
-  <div class="loops">
-    <div class="lh">FEEDBACK LOOPS</div>
-    <div class="loopgrid">
-      <div><b>Loop A · </b>New Jira comment → product routing → human review → post back to ticket + KB.</div>
-      <div><b>Loop B · </b>Raw Defender logs → AI log analysis → executive health report.</div>
-      <div><b>Learning · </b>Monthly ticket export (AI-answered vs. engineer-needed) → gaps back into KB.</div>
-    </div>
-  </div>
   <div class="ftr">
     <div class="disc">Internal architecture reference. Deterministic logic separated from LLM calls; models tiered by task (embeddings, vision, agents, analysis). One n8n · one Supabase · one Jira. Tiles link to their live portal pages.</div>
     <div class="xy">xylem<sup>°</sup></div>
   </div>
 </div>
+<script>
+  const wfToggle = document.getElementById('wfToggle');
+  function wfFlip() {
+    const on = document.body.classList.toggle('wf-on');
+    wfToggle.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  wfToggle.addEventListener('click', wfFlip);
+  wfToggle.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wfFlip(); }
+  });
+</script>
 </body>
 </html>
