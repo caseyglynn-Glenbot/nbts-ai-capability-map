@@ -415,6 +415,7 @@
 
   /* ---------- Ticket status strip ---------- */
   .status-strip {
+    display: none;
     margin: 0 24px 20px;
     background: #f5f8fa;
     border: 1px solid var(--line);
@@ -467,6 +468,7 @@
     color: var(--ink-soft);
   }
   .loop-note b { color: var(--teal); }
+  body.tech-view .status-strip { display: block; }
 
   /* ---------- D&A expansion ---------- */
   .expansion {
@@ -752,6 +754,23 @@
         <span class="detail">Applications engineers spend time on engineering, not document assembly.</span>
       </div>
     </div>
+    <div class="status-strip">
+      <div class="strip-label">Submittal lifecycle — every quote follows the same path</div>
+      <div class="status-steps">
+        <span class="status-step">Quote Uploaded<small>PDF + job details via the form</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Parsed<small>every line item &amp; model extracted</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Docs Matched<small>cut sheets &amp; schematics per product</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Annotated<small>quoted items highlighted on each page</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Delivered<small>emailed back in ~3-5 minutes</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step loop">Filed to Jira<small>full record of every package sent</small></span>
+      </div>
+      <div class="loop-note"><b>The tracking loop:</b> the quote and the finished package land on the same Jira ticket, so every submittal that goes out has a complete, searchable record of what was generated and when.</div>
+    </div>
   </section>
 
   <!-- Lane 3: Bid Scorecard -->
@@ -787,6 +806,23 @@
         <span class="label">Consistent, faster bid decisions</span>
         <span class="detail">Every bid judged by the same yardstick — no more gut-feel triage.</span>
       </div>
+    </div>
+    <div class="status-strip">
+      <div class="strip-label">Scorecard lifecycle — every bid follows the same path</div>
+      <div class="status-steps">
+        <span class="status-step">Spec Uploaded<small>spec + drawing PDFs via the form</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Vision Read<small>AI reads every page, spec &amp; drawings</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Scored<small>28 categories evaluated in parallel</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Commercial Position<small>A/B/C/D win position formed</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step">Delivered<small>filed to Jira, copy emailed to you</small></span>
+        <span class="status-arrow">→</span>
+        <span class="status-step loop">Registry Updated<small>run saved for consistent scoring</small></span>
+      </div>
+      <div class="loop-note"><b>The consistency loop:</b> every run and per-category result lands in the Supabase scoring registry, so each bid is judged by the same yardstick and past decisions stay queryable as new product lines come online.</div>
     </div>
   </section>
 
