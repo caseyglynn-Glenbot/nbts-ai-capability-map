@@ -657,13 +657,6 @@
   </div>
 </header>
 
-<div class="legend">
-  <span><span class="dot input"></span> Input</span>
-  <span><span class="dot ai"></span> AI processing</span>
-  <span><span class="dot output"></span> Output</span>
-  <span><span class="dot value"></span> Business value</span>
-</div>
-
 <main>
 
   <!-- Lane 1: Technical Support AI -->
@@ -725,6 +718,7 @@
     <div class="lane-header">
       <a class="lane-title" href="/submittal-generator">Submittal Package Generator <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
       <span class="lane-tag">Live</span>
+      <a class="lane-howto" href="https://nbts-portal.onrender.com/submittal-generator">How it works &rsaquo;</a>
     </div>
     <div class="flow">
       <div class="node input">
@@ -778,6 +772,7 @@
     <div class="lane-header">
       <a class="lane-title" href="/spec-scorecard">Bid / Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
       <span class="lane-tag">Live · Scaling</span>
+      <a class="lane-howto" href="https://nbts-portal.onrender.com/spec-scorecard">How it works &rsaquo;</a>
     </div>
     <div class="flow">
       <div class="node input">
@@ -848,8 +843,8 @@
     </a>
 
     <a class="tool-card clickable" href="/parts-lookup">
-      <span class="role">Product truth</span>
-      <h3>Part Number Lookup <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
+      <span class="role">Product SAP number and Information</span>
+      <h3>Part Assistant <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
       <p>Instant search across the full NBTS catalog — 3,832 SKUs from SAP — by part number, description, or fuzzy match. One authoritative answer for every product question.</p>
       <span class="tech">master_product_list in Supabase · full-text + trigram search · parts catalog AI agent</span>
       <div class="feeds">
@@ -861,8 +856,8 @@
     </a>
 
     <a class="tool-card clickable" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener">
-      <span class="role">Customer truth</span>
-      <h3>GoldMine CRM Data <span class="open-cue" aria-hidden="true">↗</span></h3>
+      <span class="role">Goldmine CRM Database</span>
+      <h3>Goldmine Assistant <span class="open-cue" aria-hidden="true">↗</span></h3>
       <p>Decades of Neptune Benson contact and opportunity history, migrated and queryable. The AI knows who's calling, what they own, and what's been quoted before.</p>
       <span class="tech">goldmine schema in Supabase · 6 tables, 3 assembled views · powers platinum caller registry</span>
       <div class="feeds">
@@ -875,7 +870,7 @@
 
     <a class="tool-card clickable" href="/knowledge-base-loader">
       <span class="role">Upload product information</span>
-      <h3>Knowledge Base Vector Store <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
+      <h3>Knowledge Base <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
       <p>Self-serve document loader — add or update product documentation in the AI knowledge base with no engineering needed. Handles PDFs (including scanned drawings), Word, Excel, Google Docs, and more; re-uploading a file replaces the old version instead of duplicating it.</p>
       <span class="tech">n8n form triggers · OCR + GPT-4.1 vision for drawings · chunk + embed to Supabase vector store · record manager for versioning</span>
       <div class="feeds">
