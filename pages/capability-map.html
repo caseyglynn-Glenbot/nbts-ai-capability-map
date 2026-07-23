@@ -661,6 +661,106 @@
   </div>
 </header>
 
+<div class="coverage">
+  <div class="coverage-card">
+    <div class="coverage-title">Product Line Coverage — ~42 Lines Across 7 Brand Families</div>
+    <div class="coverage-sub">How far each brand family has moved through the four platform enablement stages. Every stage a line completes unlocks more of the lanes above.</div>
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Brand family</th>
+          <th>1 · Parts searchable</th>
+          <th>2 · Docs in knowledge base</th>
+          <th>3 · Configurator</th>
+          <th>4 · Document Automation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="brand-name">Neptune Benson</span><span class="brand-lines">Defender RMF, ProStrainer, strainers &amp; filtration</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Lawson Aquatics</span><span class="brand-lines">Main drains, sand filters, aquatics equipment</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live — SOFA + horizontal sand filters"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">ETS UV</span><span class="brand-lines">UV disinfection systems</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Pacific Ozone</span><span class="brand-lines">Ozone generation &amp; treatment</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Wallace &amp; Tiernan</span><span class="brand-lines">Chemical feed &amp; analysis</span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">OSEC</span><span class="brand-lines">On-site hypochlorite generation</span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Water Champ</span><span class="brand-lines">Chemical induction systems</span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="coverage-legend">
+      <span><span class="status live"></span> Live</span>
+      <span><span class="status partial"></span> In progress</span>
+      <span><span class="status planned"></span> Planned</span>
+      <span style="margin-left:auto;">Stage 1 covers all 3,832 SKUs via the master product list</span>
+    </div>
+  </div>
+</div>
+
+<div class="expansion">
+  <div class="expansion-card">
+    <div class="expansion-title">Scaling Across D&amp;A — Proven Playbook, New Teams</div>
+    <div class="expansion-sub">The aquatics project becomes the copy-ready baseline for the rest of the division: one landing page, product-specific entry points, and queues routed to each team's first line of support.</div>
+    <div class="expansion-grid">
+
+      <div class="exp-block">
+        <h4>What each new product group needs to onboard</h4>
+        <ul class="needs-list">
+          <li><b>Product list</b> — which lines the team supports, so entry points and queues can be built per product</li>
+          <li><b>Point of contact</b> — who receives tickets, for manual or automatic assignment</li>
+          <li><b>O&amp;M documentation</b> — manuals and technical data sheets to seed the knowledge base (42 products covered today)</li>
+          <li><b>Copy of the aquatics project</b> — cloned as a starting point; teams test it and flag changes rather than building from scratch</li>
+          <li><b>Entry point preferences</b> — phone AI, email, SMS, web form, or embedded site widget, all funneling to one Jira project</li>
+        </ul>
+        <h4 style="margin-top:16px;">CRM connection</h4>
+        <ul class="needs-list">
+          <li><b>Dynamics 365</b> — Jira triggers updating Dynamics cases; tested in sandbox, moving to live cases now. Same pattern available for Salesforce (Europe).</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <main>
 
   <!-- Lane 1: Technical Support AI -->
@@ -826,204 +926,6 @@
   </section>
 
 </main>
-
-<div class="tools">
-  <div class="tools-header">
-    <span class="tools-title">Connected Data &amp; Tools</span>
-    <span class="tools-sub">The tools and shared data behind the platform — all reading and writing to the same source. Click any tile to open it. <a href="/architecture-map" style="color:var(--orange);font-weight:700;text-decoration:none;white-space:nowrap;">See the architecture map &rsaquo;</a></span>
-  </div>
-  <div class="tools-grid">
-
-    <a class="tool-card clickable" href="/product-configurators">
-      <span class="role">Front of the funnel</span>
-      <h3>Product Configurators <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
-      <p>Guided tools for building correct equipment configurations — SOFA main drains and horizontal sand filters across seven system types — so quotes start with valid part numbers, not guesswork.</p>
-      <span class="tech">Self-contained HTML tools · 174 connection codes · posts to n8n webhooks · validated against master product list</span>
-      <div class="feeds">
-        <span class="feeds-label">Feeds into</span>
-        <span class="feed-tag submittal">Submittal Generator</span>
-        <span class="feed-tag support">Tech Support AI</span>
-      </div>
-    </a>
-
-    <a class="tool-card clickable" href="/parts-lookup">
-      <span class="role">Product SAP number and Information</span>
-      <h3>Part Assistant <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
-      <p>Instant search across the full NBTS catalog — 3,832 SKUs from SAP — by part number, description, or fuzzy match. One authoritative answer for every product question.</p>
-      <span class="tech">master_product_list in Supabase · full-text + trigram search · parts catalog AI agent</span>
-      <div class="feeds">
-        <span class="feeds-label">Feeds into</span>
-        <span class="feed-tag support">Tech Support AI</span>
-        <span class="feed-tag submittal">Submittal Generator</span>
-        <span class="feed-tag bid">Bid Scorecard</span>
-      </div>
-    </a>
-
-    <a class="tool-card clickable" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener">
-      <span class="role">Goldmine CRM Database</span>
-      <h3>Goldmine Assistant <span class="open-cue" aria-hidden="true">↗</span></h3>
-      <p>Decades of Neptune Benson contact and opportunity history, migrated and queryable. The AI knows who's calling, what they own, and what's been quoted before.</p>
-      <span class="tech">goldmine schema in Supabase · 6 tables, 3 assembled views · powers platinum caller registry</span>
-      <div class="feeds">
-        <span class="feeds-label">Feeds into</span>
-        <span class="feed-tag support">Tech Support AI</span>
-        <span class="feed-tag bid">Bid Scorecard</span>
-        <span class="feed-tag submittal">Submittal Generator</span>
-      </div>
-    </a>
-
-    <a class="tool-card clickable" href="/knowledge-base-loader">
-      <span class="role">Upload product information</span>
-      <h3>Knowledge Base <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
-      <p>Self-serve document loader — add or update product documentation in the AI knowledge base with no engineering needed. Handles PDFs (including scanned drawings), Word, Excel, Google Docs, and more; re-uploading a file replaces the old version instead of duplicating it.</p>
-      <span class="tech">n8n form triggers · OCR + GPT-4.1 vision for drawings · chunk + embed to Supabase vector store · record manager for versioning</span>
-      <div class="feeds">
-        <span class="feeds-label">Feeds into</span>
-        <span class="feed-tag support">Tech Support AI</span>
-      </div>
-    </a>
-
-    <a class="tool-card clickable" href="/submittal-generator">
-      <span class="role">Quote &rarr; submittal</span>
-      <h3>Submittal Generator <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
-      <p>Upload a quote PDF and get a finished, annotated submittal package — every quoted item highlighted on its cut sheets and schematics, then filed to Jira.</p>
-      <span class="tech">FastAPI on Render · OCR fallback for image-only PDFs · per-item annotation · multi-pool detection</span>
-      <div class="feeds">
-        <span class="feeds-label">Output</span>
-        <span class="feed-tag submittal">Jira ticket</span>
-        <span class="feed-tag support">Annotated PDF</span>
-      </div>
-    </a>
-
-    <a class="tool-card clickable" href="/spec-scorecard">
-      <span class="role">Bid &rarr; decision</span>
-      <h3>Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></h3>
-      <p>Upload a project spec and drawings — AI reads every page, scores 28 engineering categories plus a commercial position, and files a go/no-go scorecard to Jira.</p>
-      <span class="tech">Claude vision PDF read · Haiku parallel category scoring · Opus commercial position · Supabase scoring registry</span>
-      <div class="feeds">
-        <span class="feeds-label">Output</span>
-        <span class="feed-tag bid">Go / no-go</span>
-        <span class="feed-tag submittal">Jira ticket</span>
-      </div>
-    </a>
-
-  </div>
-</div>
-
-<div class="coverage">
-  <div class="coverage-card">
-    <div class="coverage-title">Product Line Coverage — ~42 Lines Across 7 Brand Families</div>
-    <div class="coverage-sub">How far each brand family has moved through the four platform enablement stages. Every stage a line completes unlocks more of the lanes above.</div>
-    <table class="matrix">
-      <thead>
-        <tr>
-          <th>Brand family</th>
-          <th>1 · Parts searchable</th>
-          <th>2 · Docs in knowledge base</th>
-          <th>3 · Configurator</th>
-          <th>4 · Document Automation</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="brand-name">Neptune Benson</span><span class="brand-lines">Defender RMF, ProStrainer, strainers &amp; filtration</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Lawson Aquatics</span><span class="brand-lines">Main drains, sand filters, aquatics equipment</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live — SOFA + horizontal sand filters"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">ETS UV</span><span class="brand-lines">UV disinfection systems</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Pacific Ozone</span><span class="brand-lines">Ozone generation &amp; treatment</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Wallace &amp; Tiernan</span><span class="brand-lines">Chemical feed &amp; analysis</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">OSEC</span><span class="brand-lines">On-site hypochlorite generation</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Water Champ</span><span class="brand-lines">Chemical induction systems</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="coverage-legend">
-      <span><span class="status live"></span> Live</span>
-      <span><span class="status partial"></span> In progress</span>
-      <span><span class="status planned"></span> Planned</span>
-      <span style="margin-left:auto;">Stage 1 covers all 3,832 SKUs via the master product list</span>
-    </div>
-  </div>
-</div>
-
-<div class="expansion">
-  <div class="expansion-card">
-    <div class="expansion-title">Scaling Across D&amp;A — Proven Playbook, New Teams</div>
-    <div class="expansion-sub">The aquatics project becomes the copy-ready baseline for the rest of the division: one landing page, product-specific entry points, and queues routed to each team's first line of support.</div>
-    <div class="expansion-grid">
-
-      <div class="exp-block">
-        <h4>What each new product group needs to onboard</h4>
-        <ul class="needs-list">
-          <li><b>Product list</b> — which lines the team supports, so entry points and queues can be built per product</li>
-          <li><b>Point of contact</b> — who receives tickets, for manual or automatic assignment</li>
-          <li><b>O&amp;M documentation</b> — manuals and technical data sheets to seed the knowledge base (42 products covered today)</li>
-          <li><b>Copy of the aquatics project</b> — cloned as a starting point; teams test it and flag changes rather than building from scratch</li>
-          <li><b>Entry point preferences</b> — phone AI, email, SMS, web form, or embedded site widget, all funneling to one Jira project</li>
-        </ul>
-        <h4 style="margin-top:16px;">CRM connection</h4>
-        <ul class="needs-list">
-          <li><b>Dynamics 365</b> — Jira triggers updating Dynamics cases; tested in sandbox, moving to live cases now. Same pattern available for Salesforce (Europe).</li>
-        </ul>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<div class="foundation">
-  <div class="foundation-card">
-    <div class="foundation-title">Shared Platform Foundation <small>every lane runs on the same core — build once, reuse everywhere</small></div>
-    <div class="chips">
-      <span class="chip"><b>Orchestration</b> n8n Cloud</span>
-      <span class="chip"><b>Data &amp; Vector Store</b> Supabase</span>
-      <span class="chip"><b>APIs</b> FastAPI on Render</span>
-      <span class="chip"><b>AI Models</b> OpenAI + Copilot</span>
-      <span class="chip"><b>Ticketing</b> Jira Service Mgmt</span>
-      <span class="chip"><b>Voice &amp; SMS</b> ElevenLabs + Twilio</span>
-      <span class="chip migration"><b>Roadmap</b> Re-host to Microsoft Foundry</span>
-    </div>
-  </div>
-</div>
 
 <footer>NBTS AI Platform · Neptune Benson Technical Support · Xylem Disinfection &amp; Aquatics</footer>
 
