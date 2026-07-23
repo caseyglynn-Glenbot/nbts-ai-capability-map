@@ -4,146 +4,153 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NBTS AI Platform — Product Configurators</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#1B3A5C;--navy-deep:#152F4A;--teal:#1B6E8C;--orange:#E0922F;
-    --ink:#213547;--muted:#5A6B78;--line:#E2E8ED;--bg:#F4F6F8;--card:#FFFFFF;
-    --shadow:0 1px 2px rgba(21,47,74,.06),0 8px 24px rgba(21,47,74,.06);
-    --ready:#1E7A46;--ready-bg:#E6F3EC;--prog:#A5670F;--prog-bg:#FBF1E0;
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
   }
-  *{box-sizing:border-box}html,body{margin:0;padding:0}
-  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-  .wrap{max-width:980px;margin:0 auto;padding:0 20px 80px}
-  .backbar{max-width:980px;margin:0 auto;padding:14px 20px 0}
-  .back{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
   .back:hover{color:var(--teal)}
-
-  .hero{background:var(--navy);color:#fff;border-bottom:4px solid var(--orange);margin-top:12px}
-  .hero-inner{max-width:980px;margin:0 auto;padding:32px 20px 28px;display:flex;gap:22px;align-items:center}
-  .hero-icon{flex:none;width:60px;height:60px;color:var(--orange)}
-  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8FB8CC;margin:0 0 8px}
-  .hero h1{font-size:clamp(26px,5vw,38px);font-weight:800;letter-spacing:-.01em;margin:0 0 8px;line-height:1.08}
-  .hero p{max-width:580px;margin:0;color:#C7D6E0;font-size:15px}
-
-  section{margin-top:32px}
-  .sec-label{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin:0 0 6px}
-  .sec-sub{font-size:13.5px;color:var(--muted);margin:0 0 16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
-
-  .how{background:#EFF4F7;border:1px solid var(--line);border-radius:10px;padding:16px 18px}
-  .how h3{margin:0 0 8px;font-size:14px;color:var(--navy)}
-  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--muted)}
-  .step{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 12px;color:var(--ink);font-weight:600}
-  .arrow{color:var(--teal);font-weight:700}
-
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  .tile{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;
-    padding:16px 16px 14px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:4px;
-    box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s,border-left-color .12s;position:relative}
-  a.tile:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(21,47,74,.12);border-left-color:var(--orange)}
-  a.tile:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
-  .tile .brand{font-weight:700;font-size:15.5px;color:var(--navy)}
-  .tile .lines{font-size:12.5px;color:var(--muted)}
-  .tile .badge{position:absolute;top:14px;right:14px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
-    text-transform:uppercase;padding:3px 9px;border-radius:999px}
-  .tile .cue{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--teal)}
-  a.tile:hover .cue{color:var(--orange)}
-  .tile.ready .badge{background:var(--ready-bg);color:var(--ready)}
-
-  .tile.pending{border-left-color:#CBD5DE;cursor:not-allowed;background:#FAFBFC}
-  .tile.pending .brand{color:#7C8B98}
-  .tile.pending .badge{background:var(--prog-bg);color:var(--prog)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .sec-sub{font-size:13.5px;color:var(--ink2);margin:-8px 0 16px}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--ink2)}
+  .step{background:var(--stripe);border-top:2px solid var(--teal);padding:7px 13px;color:var(--ink);font-weight:600}
+  .steparrow{color:var(--teal);font-weight:700}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:var(--stripe);border-top:3px solid var(--teal);padding:15px 16px 13px;display:flex;flex-direction:column;gap:4px;
+    position:relative;transition:border-top-color .12s,background .12s}
+  a.tile:hover{border-top-color:var(--blue);background:#DEE8EE}
+  a.tile:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .tile .brand2{font-weight:700;font-size:15.5px;color:var(--blue)}
+  .tile .lines{font-size:12.5px;color:var(--ink2)}
+  .tile .badge{position:absolute;top:12px;right:13px;font-size:10px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:2px 8px;border:1px solid var(--green);color:var(--green)}
+  .tile .cue{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--teal)}
+  a.tile:hover .cue{color:var(--blue)}
+  .tile.pending{border-top-color:#C9D6DE;background:#F3F6F8;cursor:not-allowed}
+  .tile.pending .brand2{color:#7C8B98}
   .tile.pending .lines{color:#9AA7B2}
+  .tile.pending .badge{border-color:#B7C4CE;color:#8A99A6}
+  .notestrip{margin-top:18px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .howbox{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 20px}
+  .howbox ol{margin:0;padding-left:20px}
+  .howbox li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .howbox li b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
 
-  .note{margin-top:22px;padding:14px 16px;background:#EFF4F7;border-radius:8px;font-size:13px;color:var(--muted);border:1px solid var(--line)}
-  .note b{color:var(--navy)}
-
-  @media (max-width:760px){.grid{grid-template-columns:1fr 1fr}.hero-inner{gap:16px}.hero-icon{width:46px;height:46px}}
-  @media (max-width:480px){.grid{grid-template-columns:1fr}}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+    .grid3{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:620px){.grid3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
-<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">·</span><a class="back" href="/capability-map">Platform map</a></div>
-
-<header class="hero">
-  <div class="hero-inner">
-    <svg class="hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m5 5 1.5 1.5"/><path d="M17.5 17.5 19 19"/><path d="m19 5-1.5 1.5"/><path d="M6.5 17.5 5 19"/>
+<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/home">Platform home</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
     </svg>
-    <div>
-      <p class="eyebrow">NBTS AI Platform</p>
-      <h1>Product Configurators</h1>
-      <p>Guided tools for building correct equipment configurations — so quotes and submittals start with valid part numbers, not guesswork. Every selection is validated against the master product list.</p>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Product Configurators</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
     </div>
   </div>
-</header>
 
-<div class="wrap">
+  <p class="intro">Guided tools for building correct equipment configurations, so quotes and submittals start with valid part numbers, not guesswork. Every selection is validated against the master product list.</p>
 
   <section>
-    <div class="how">
-      <h3>How it works</h3>
-      <div class="steps">
-        <span class="step">Enter project &amp; sizing</span><span class="arrow">&rarr;</span>
-        <span class="step">Configure the equipment</span><span class="arrow">&rarr;</span>
-        <span class="step">Valid part numbers generated</span><span class="arrow">&rarr;</span>
-        <span class="step">Submittal + O&amp;M ready</span>
-      </div>
+    <div class="lbl">HOW IT WORKS</div><div class="rule"></div>
+    <div class="steps">
+      <span class="step">Enter project &amp; sizing</span><span class="steparrow">&rarr;</span>
+      <span class="step">Configure the equipment</span><span class="steparrow">&rarr;</span>
+      <span class="step">Valid part numbers generated</span><span class="steparrow">&rarr;</span>
+      <span class="step">Submittal + O&amp;M ready</span>
     </div>
   </section>
 
   <section>
-    <p class="sec-label">Choose a product line</p>
+    <div class="lbl">CHOOSE A PRODUCT LINE</div><div class="rule"></div>
     <p class="sec-sub">Open a configurator to build a valid equipment configuration. Ready lines are active; the others are being brought online.</p>
-    <div class="grid">
-
-      <a class="tile ready" href="/assets/configurators/sofa/index.html" target="_blank" rel="noopener">
+    <div class="grid3">
+      <a class="tile" href="/assets/configurators/sofa/index.html" target="_blank" rel="noopener">
         <span class="badge">Ready</span>
-        <span class="brand">Lawson Aquatics</span>
-        <span class="lines">MLD-SG SOFA main drains — connection schedule, specs &amp; submittal</span>
+        <span class="brand2">Lawson Aquatics</span>
+        <span class="lines">MLD-SG SOFA main drains: connection schedule, specs &amp; submittal</span>
         <span class="cue">Open configurator &rsaquo;</span>
       </a>
-
-      <span class="tile pending" title="Configurator in development — not ready yet" aria-disabled="true">
+      <span class="tile pending" title="Configurator in development, not ready yet" aria-disabled="true">
         <span class="badge">In progress</span>
-        <span class="brand">Neptune Benson</span>
+        <span class="brand2">Neptune Benson</span>
         <span class="lines">Defender RMF, ProStrainer, horizontal sand filters</span>
       </span>
-
-      <span class="tile pending" title="Configurator in development — not ready yet" aria-disabled="true">
+      <span class="tile pending" title="Configurator in development, not ready yet" aria-disabled="true">
         <span class="badge">In progress</span>
-        <span class="brand">ETS UV</span>
+        <span class="brand2">ETS UV</span>
         <span class="lines">UV disinfection systems</span>
       </span>
-
-      <span class="tile pending" title="Configurator in development — not ready yet" aria-disabled="true">
+      <span class="tile pending" title="Configurator in development, not ready yet" aria-disabled="true">
         <span class="badge">In progress</span>
-        <span class="brand">Pacific Ozone</span>
+        <span class="brand2">Pacific Ozone</span>
         <span class="lines">Ozone generation &amp; treatment</span>
       </span>
-
-      <span class="tile pending" title="Configurator in development — not ready yet" aria-disabled="true">
+      <span class="tile pending" title="Configurator in development, not ready yet" aria-disabled="true">
         <span class="badge">In progress</span>
-        <span class="brand">Wallace &amp; Tiernan</span>
+        <span class="brand2">Wallace &amp; Tiernan</span>
         <span class="lines">Chemical feed &amp; analysis</span>
       </span>
-
-      <span class="tile pending" title="Configurator in development — not ready yet" aria-disabled="true">
+      <span class="tile pending" title="Configurator in development, not ready yet" aria-disabled="true">
         <span class="badge">In progress</span>
-        <span class="brand">OSEC</span>
+        <span class="brand2">OSEC</span>
         <span class="lines">On-site hypochlorite generation</span>
       </span>
-
     </div>
-
-    <div class="note">
-      <b>Lawson Aquatics — MLD-SG SOFA main drain</b> is live: pick the sump size and connections, and the tool produces a valid configuration, a ready-to-file submittal, and the matching O&amp;M / GCC certificate package. The configurator opens in a new tab.
-    </div>
+    <div class="notestrip"><b>Lawson Aquatics MLD-SG SOFA main drain</b> is live: pick the sump size and connections, and the tool produces a valid configuration, a ready-to-file submittal, and the matching O&amp;M / GCC certificate package. The configurator opens in a new tab.</div>
   </section>
 
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
 </div>
-
 </body>
 </html>

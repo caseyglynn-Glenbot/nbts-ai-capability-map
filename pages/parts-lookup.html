@@ -3,60 +3,69 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>NBTS Parts Lookup Assistant</title>
+<title>NBTS AI Platform | Part Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#1B3A5C;--navy-deep:#152F4A;--teal:#1B6E8C;--orange:#E0922F;
-    --ink:#213547;--muted:#5A6B78;--line:#E2E8ED;--bg:#F4F6F8;--card:#FFFFFF;
-    --shadow:0 1px 2px rgba(21,47,74,.06),0 8px 24px rgba(21,47,74,.06);
+    --teal:#0085AD;--blue:#1E4B8C;--navy:#1E4B8C;--navy-deep:#16386B;--orange:#0085AD;
+    --stripe:#E8EEF2;--card:#E8EEF2;--rule:#D0D0D0;--line:#D0D0D0;
+    --ink:#333333;--ink2:#5A5A5A;--muted:#5A5A5A;--bg:#FFFFFF;
+    --shadow:none;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;}
-  .wrap{max-width:1020px;margin:0 auto;padding:0 20px 96px}
-  .backbar{max-width:1020px;margin:0 auto;padding:14px 20px 0}
-  .back{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted)}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2);text-decoration:none}
   .back:hover{color:var(--teal)}
-
-  .hero{background:var(--navy);color:#fff;border-bottom:4px solid var(--orange);margin-top:12px}
-  .hero-inner{max-width:1020px;margin:0 auto;padding:34px 20px 30px}
-  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8FB8CC;margin:0 0 12px}
-  .hero h1{font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-.01em;margin:0 0 12px;line-height:1.05}
-  .hero p{max-width:600px;margin:0;color:#C7D6E0;font-size:16px}
-
-  section{margin-top:38px}
-  .sec-label{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-    color:var(--teal);margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .card{background:var(--card);border-radius:8px;padding:18px 20px;border-left:4px solid var(--teal);box-shadow:var(--shadow)}
-  .card.accent{border-left-color:var(--orange)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 96px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 18px}
+  .card.accent{border-top-color:var(--blue)}
   .card-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-  .card-top h3{margin:0;font-size:16px;font-weight:700;color:var(--navy)}
+  .card-top h3{margin:0;font-size:16px;font-weight:700;color:var(--blue)}
   .stat{font-size:13px;font-weight:700;color:var(--teal);white-space:nowrap}
-  .card.accent .stat{color:var(--orange)}
-  .card p{margin:8px 0 0;font-size:14px;color:var(--muted)}
-
+  .card p{margin:8px 0 0;font-size:13.5px;color:var(--ink2)}
   .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:28px 36px}
-  .qgroup h4{margin:0 0 6px;font-size:15px;font-weight:700;color:var(--navy)}
+  .qgroup h4{margin:0 0 6px;font-size:15px;font-weight:800;color:var(--blue)}
   .qlist{list-style:none;margin:0;padding:0}
   .q{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:none;border:none;
-    cursor:pointer;font:inherit;color:var(--ink);font-size:14.5px;padding:9px 6px 9px 0;
-    border-bottom:1px solid var(--line);transition:color .12s,padding-left .12s}
+    cursor:pointer;font:inherit;color:var(--ink);font-size:14px;padding:9px 6px 9px 0;
+    border-bottom:1px solid var(--rule);transition:color .12s,padding-left .12s}
   .q:last-child{border-bottom:none}
   .q .chev{color:var(--teal);font-weight:800;flex:none;line-height:1.4;transition:transform .12s}
   .q:hover{color:var(--teal);padding-left:6px}
-  .q:hover .chev{color:var(--orange);transform:translateX(2px)}
-  .q:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:4px}
-
-  .note{margin-top:34px;padding:14px 16px;background:#EFF4F7;border-radius:8px;font-size:13.5px;color:var(--muted);border:1px solid var(--line)}
-  .note b{color:var(--navy)}
-
+  .q:hover .chev{color:var(--blue);transform:translateX(2px)}
+  .q:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .notestrip{margin-top:24px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
   .launcher{position:fixed;right:20px;bottom:20px;z-index:40;background:var(--orange);color:#fff;border:none;
     cursor:pointer;font:inherit;font-weight:700;font-size:15px;padding:14px 20px;border-radius:999px;
-    box-shadow:0 6px 20px rgba(224,146,47,.4);display:flex;align-items:center;gap:9px}
-  .launcher:hover{background:#cf831f}
+    box-shadow:0 6px 20px rgba(0,133,173,.4);display:flex;align-items:center;gap:9px}
+  .launcher:hover{background:#006e8f}
   .launcher svg{width:18px;height:18px}
 
   .overlay{position:fixed;inset:0;z-index:50;display:none;background:rgba(21,47,74,.38)}
@@ -117,11 +126,17 @@
   .gate-err{display:none;margin-top:12px;padding:9px 12px;border-radius:8px;background:#FCEDED;border:1px solid #F0C7C7;color:#9B2C2C;font-size:13.5px}
   .gate-err.show{display:block}
 
+  @media (max-width:1100px){
+    .page{padding:24px 28px 96px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+  }
   @media (max-width:720px){
     .grid,.qgrid{grid-template-columns:1fr}
     .qgrid{gap:22px}
     .panel{width:100vw}
-    .hero-inner{padding:26px 20px 24px}
   }
   @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
 </style>
@@ -140,32 +155,39 @@
   </div>
 </div>
 
-<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">·</span><a class="back" href="/capability-map">Platform map</a></div>
-
-<header class="hero">
-  <div class="hero-inner">
-    <p class="eyebrow">NBTS AI Platform</p>
-    <h1>Parts Lookup Assistant</h1>
-    <p>Describe a product in plain English — with a size if you have one — and get the correct NBTS catalog part number back in seconds. Searches the full 3,832-part master list, no SKU memorization required.</p>
+<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/home">Platform home</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Part Assistant</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
   </div>
-</header>
 
-<div class="wrap">
+  <p class="intro">Describe a product in plain English, with a size if you have one, and get the correct NBTS catalog part number back in seconds. Searches the full 3,832-part master list, no SKU memorization required.</p>
 
   <section>
-    <p class="sec-label">What it can do</p>
+    <div class="lbl">WHAT IT CAN DO</div><div class="rule"></div>
     <div class="grid">
       <div class="card">
         <div class="card-top"><h3>Search by plain language</h3><span class="stat">3,832 parts</span></div>
-        <p>Type what the customer described — "10-inch Dominion butterfly valve," "50 lb sand media" — and it finds the matching catalog part numbers by full-text and fuzzy match.</p>
+        <p>Type what the customer described, like "10-inch Dominion butterfly valve" or "50 lb sand media", and it finds the matching catalog part numbers by full-text and fuzzy match.</p>
       </div>
       <div class="card">
         <div class="card-top"><h3>Grouped by size</h3><span class="stat">exact match</span></div>
         <p>Results come back grouped by size with part number, description and type, so you can see the family at a glance.</p>
       </div>
       <div class="card">
-        <div class="card-top"><h3>Handles valve variants</h3><span class="stat">BS · EA · GO · LO · PA</span></div>
-        <p>Many valves exist in several actuation types at one size. It lists the variants — bare stem, electric, gear, lever, pneumatic — instead of guessing which you meant.</p>
+        <div class="card-top"><h3>Handles valve variants</h3><span class="stat">BS &middot; EA &middot; GO &middot; LO &middot; PA</span></div>
+        <p>Many valves exist in several actuation types at one size. It lists the variants (bare stem, electric, gear, lever, pneumatic) instead of guessing which you meant.</p>
       </div>
       <div class="card accent">
         <div class="card-top"><h3>Never invents a number</h3><span class="stat">catalog only</span></div>
@@ -175,7 +197,7 @@
   </section>
 
   <section>
-    <p class="sec-label">Questions you can ask</p>
+    <div class="lbl">QUESTIONS YOU CAN ASK</div><div class="rule"></div>
     <div class="qgrid">
 
       <div class="qgroup">
@@ -213,11 +235,13 @@
 
     </div>
 
-    <div class="note">
-      <b>Always confirm before quoting.</b> The assistant returns catalog matches to speed up your search, but verify the part number against official product documentation before quoting a customer.
-    </div>
+    <div class="notestrip"><b>Always confirm before quoting.</b> The assistant returns catalog matches to speed up your search, but verify the part number against official product documentation before quoting a customer.</div>
   </section>
 
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
 </div>
 
 <button class="launcher" id="launcher" aria-label="Open the Parts Lookup Assistant">
@@ -230,7 +254,7 @@
     <div class="panel-head">
       <div>
         <div class="t">Parts Lookup Assistant</div>
-        <div class="s">Xylem D&amp;A — Neptune Benson Technical Support</div>
+        <div class="s">Xylem D&amp;A &middot; Neptune Benson Technical Support</div>
       </div>
       <button class="close" id="close" aria-label="Close chat">&times;</button>
     </div>
@@ -319,7 +343,7 @@
 
   function openChat(prefill){
     overlay.classList.add("open");
-    if(!greeted){greeted=true;addBot(md("Hi! I'm the **Parts Lookup Assistant**. Describe a product — with a size if you have one — and I'll find the matching NBTS catalog part number. Example: *\"10-inch Dominion butterfly valve.\"*"));}
+    if(!greeted){greeted=true;addBot(md("Hi! I'm the **Parts Lookup Assistant**. Describe a product, with a size if you have one, and I'll find the matching NBTS catalog part number. Example: *\"10-inch Dominion butterfly valve.\"*"));}
     if(prefill){send(prefill);} else {setTimeout(function(){input.focus();},220);}
   }
   function closeChat(){overlay.classList.remove("open");}
