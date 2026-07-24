@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform | Customer Tier Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--navy:#1E4B8C;--navy-deep:#16386B;--orange:#0085AD;
+    --stripe:#E8EEF2;--card:#E8EEF2;--rule:#D0D0D0;--line:#D0D0D0;
+    --ink:#333333;--ink2:#5A5A5A;--muted:#5A5A5A;--bg:#FFFFFF;
+    --shadow:none;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2);text-decoration:none}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 96px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 18px}
+  .card.accent{border-top-color:var(--blue)}
+  .card-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .card-top h3{margin:0;font-size:16px;font-weight:700;color:var(--blue)}
+  .stat{font-size:13px;font-weight:700;color:var(--teal);white-space:nowrap}
+  .card p{margin:8px 0 0;font-size:13.5px;color:var(--ink2)}
+  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:28px 36px}
+  .qgroup h4{margin:0 0 6px;font-size:15px;font-weight:800;color:var(--blue)}
+  .qlist{list-style:none;margin:0;padding:0}
+  .q{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;background:none;border:none;
+    cursor:pointer;font:inherit;color:var(--ink);font-size:14px;padding:9px 6px 9px 0;
+    border-bottom:1px solid var(--rule);transition:color .12s,padding-left .12s}
+  .q:last-child{border-bottom:none}
+  .q .chev{color:var(--teal);font-weight:800;flex:none;line-height:1.4;transition:transform .12s}
+  .q:hover{color:var(--teal);padding-left:6px}
+  .q:hover .chev{color:var(--blue);transform:translateX(2px)}
+  .q:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .notestrip{margin-top:24px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+  .launcher{position:fixed;right:20px;bottom:20px;z-index:40;background:var(--orange);color:#fff;border:none;
+    cursor:pointer;font:inherit;font-weight:700;font-size:15px;padding:14px 20px;border-radius:999px;
+    box-shadow:0 6px 20px rgba(0,133,173,.4);display:flex;align-items:center;gap:9px}
+  .launcher:hover{background:#006e8f}
+  .launcher svg{width:18px;height:18px}
+
+  .overlay{position:fixed;inset:0;z-index:50;display:none;background:rgba(21,47,74,.38)}
+  .overlay.open{display:block}
+  .panel{position:fixed;top:0;right:0;height:100%;width:440px;max-width:100vw;background:#fff;display:flex;
+    flex-direction:column;box-shadow:-8px 0 32px rgba(21,47,74,.24);transform:translateX(100%);transition:transform .22s ease}
+  .overlay.open .panel{transform:translateX(0)}
+  .panel-head{background:var(--navy);color:#fff;padding:16px 18px;display:flex;align-items:center;
+    justify-content:space-between;flex:none;border-bottom:3px solid var(--orange)}
+  .panel-head .t{font-weight:700;font-size:16px}
+  .panel-head .s{font-size:12px;color:#9DBACB;margin-top:2px}
+  .close{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:6px}
+  .close:hover{background:rgba(255,255,255,.12)}
+
+  .msgs{flex:1;overflow-y:auto;padding:18px;background:var(--bg)}
+  .msg{margin-bottom:14px;display:flex}
+  .msg.user{justify-content:flex-end}
+  .bubble{max-width:88%;padding:11px 14px;border-radius:12px;font-size:14.5px;box-shadow:var(--shadow)}
+  .msg.user .bubble{background:var(--navy);color:#fff;border-bottom-right-radius:3px}
+  .msg.bot .bubble{background:#fff;color:var(--ink);border-bottom-left-radius:3px}
+  .bubble p{margin:0 0 8px}.bubble p:last-child{margin-bottom:0}
+  .bubble h1,.bubble h2,.bubble h3{margin:6px 0;font-size:15px;color:var(--navy)}
+  .bubble ul,.bubble ol{margin:6px 0;padding-left:20px}.bubble li{margin:3px 0}
+  .bubble code{background:#EEF2F5;padding:1px 5px;border-radius:4px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .bubble pre{background:#EEF2F5;padding:10px;border-radius:8px;overflow-x:auto;margin:8px 0}
+  .bubble pre code{background:none;padding:0}
+  .bubble blockquote{margin:8px 0;padding:6px 12px;border-left:3px solid var(--orange);background:#FCF6EE;color:var(--muted);border-radius:0 6px 6px 0}
+  .bubble a{color:var(--teal)}
+  .bubble table{border-collapse:collapse;width:100%;margin:8px 0;font-size:13px}
+  .bubble th,.bubble td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+  .bubble th{background:#EEF3F6;color:var(--navy);font-weight:700}
+  .bubble tr:nth-child(even) td{background:#F8FAFB}
+
+  .typing{display:inline-flex;gap:4px;align-items:center;padding:4px 2px}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.4;animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+
+  .composer{flex:none;padding:12px;border-top:1px solid var(--line);background:#fff;display:flex;gap:9px;align-items:flex-end}
+  .composer textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    font:inherit;font-size:14.5px;max-height:120px;color:var(--ink)}
+  .composer textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,110,140,.12)}
+  .send{background:var(--teal);color:#fff;border:none;border-radius:10px;cursor:pointer;font:inherit;font-weight:700;padding:10px 16px;flex:none}
+  .send:hover{background:#155870}.send:disabled{background:#9BB4C0;cursor:not-allowed}
+
+  .gate{position:fixed;inset:0;z-index:100;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:20px}
+  .gate.hidden{display:none}
+  .gate-card{background:#fff;border-radius:10px;width:100%;max-width:380px;padding:28px 26px 24px;box-shadow:0 20px 60px rgba(0,0,0,.3);border-top:4px solid var(--orange)}
+  .gate-card .eyebrow{color:var(--teal);margin-bottom:8px}
+  .gate-card h2{margin:0 0 6px;font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.01em}
+  .gate-card .sub{margin:0 0 20px;font-size:14px;color:var(--muted)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .field input{width:100%;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);border:1px solid var(--line);border-radius:8px;background:#fff}
+  .field input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(27,110,140,.12)}
+  .gate-btn{width:100%;margin-top:6px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:12px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+  .gate-btn:hover{background:var(--navy-deep)}.gate-btn:disabled{background:#8FA3B4;cursor:not-allowed}
+  .gate-err{display:none;margin-top:12px;padding:9px 12px;border-radius:8px;background:#FCEDED;border:1px solid #F0C7C7;color:#9B2C2C;font-size:13.5px}
+  .gate-err.show{display:block}
+
+  @media (max-width:1100px){
+    .page{padding:24px 28px 96px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+  }
+  @media (max-width:720px){
+    .grid,.qgrid{grid-template-columns:1fr}
+    .qgrid{gap:22px}
+    .panel{width:100vw}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <p class="eyebrow">NBTS AI Platform</p>
+    <h2>Customer Tier Assistant</h2>
+    <p class="sub">Sign in to continue. Ask your team lead if you need the credentials.</p>
+    <div class="field"><label for="gu">Username</label><input id="gu" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" /></div>
+    <div class="field"><label for="gp">Password</label><input id="gp" type="password" autocomplete="current-password" /></div>
+    <button class="gate-btn" id="gateBtn">Sign in</button>
+    <div class="gate-err" id="gateErr"></div>
+  </div>
+</div>
+
+<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/home">Platform home</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Customer Tier Assistant</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">Type a customer name and find out instantly whether they are a Platinum, Gold, or Silver account. Fuzzy matching handles spelling differences and aliases, and Platinum results include the preferred rep and phone number.</p>
+
+  <section>
+    <div class="lbl">WHAT IT CAN DO</div><div class="rule"></div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-top"><h3>Search by company name</h3><span class="stat">fuzzy match</span></div>
+        <p>Type the company as the caller says it. Close spellings, shortened names, and known aliases all match against the tier registry.</p>
+      </div>
+      <div class="card">
+        <div class="card-top"><h3>Platinum details</h3><span class="stat">rep + phone</span></div>
+        <p>Platinum matches come back with the preferred rep, their phone number, brand group, and parent account where recorded.</p>
+      </div>
+      <div class="card">
+        <div class="card-top"><h3>Gold &amp; Silver context</h3><span class="stat">region &middot; BU</span></div>
+        <p>Gold and Silver matches can include classification, region, country, and business unit footprint.</p>
+      </div>
+      <div class="card accent">
+        <div class="card-top"><h3>Silver by default</h3><span class="stat">tier rules</span></div>
+        <p>A company on neither the Platinum nor Gold list defaults to Silver under the D&amp;A tier rules. The assistant says so plainly instead of guessing.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">QUESTIONS YOU CAN ASK</div><div class="rule"></div>
+    <div class="qgrid">
+
+      <div class="qgroup">
+        <h4>Tier checks</h4>
+        <ul class="qlist">
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>Is Aquatic Development Group a platinum customer?</span></button></li>
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>What tier is CEM Aquatics?</span></button></li>
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>Check the tier for Landmark Aquatic.</span></button></li>
+        </ul>
+      </div>
+
+      <div class="qgroup">
+        <h4>Rep &amp; routing details</h4>
+        <ul class="qlist">
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>Who is the preferred rep for this platinum account?</span></button></li>
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>What brand group is this customer under?</span></button></li>
+        </ul>
+      </div>
+
+      <div class="qgroup">
+        <h4>Fuzzy lookups</h4>
+        <ul class="qlist">
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>The caller said "Aquatic Source", who is that?</span></button></li>
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>Find customers with "pool" in the name.</span></button></li>
+        </ul>
+      </div>
+
+      <div class="qgroup">
+        <h4>Multiple companies</h4>
+        <ul class="qlist">
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>Check tiers for these three companies at once.</span></button></li>
+          <li><button class="q"><span class="chev">&rsaquo;</span><span>List the closest matches if you can't find an exact one.</span></button></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="notestrip"><b>Gold and Silver lists are still loading.</b> Platinum is fully live (78 accounts). Until the Gold CSV is loaded, a company missing from the registry defaults to Silver, so treat "not found" as the current answer, not a permanent classification.</div>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
+</div>
+
+<button class="launcher" id="launcher" aria-label="Open the Customer Tier Assistant">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+  Look up a part
+</button>
+
+<div class="overlay" id="overlay">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Customer Tier Assistant chat">
+    <div class="panel-head">
+      <div>
+        <div class="t">Customer Tier Assistant</div>
+        <div class="s">Xylem D&amp;A &middot; Neptune Benson Technical Support</div>
+      </div>
+      <button class="close" id="close" aria-label="Close chat">&times;</button>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="Describe the part you need..." aria-label="Type your question"></textarea>
+      <button class="send" id="send">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var WEBHOOK = "https://glenbot.app.n8n.cloud/webhook/9e0e8d39-881c-4c55-9f94-ff177c334e58/chat";
+  var sessionId = "pl-" + Date.now() + "-" + Math.random().toString(36).slice(2,10);
+
+  var AUTH_KEY = "nbts_parts_auth";
+  var authToken = null;
+  try { authToken = sessionStorage.getItem(AUTH_KEY); } catch(e){ authToken = null; }
+  function authHeaders(){ var h = { "Content-Type":"application/json" }; if(authToken) h["Authorization"]="Basic "+authToken; return h; }
+  function clearAuth(){ authToken=null; try{ sessionStorage.removeItem(AUTH_KEY);}catch(e){} }
+
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function inline(s){
+    s=esc(s);
+    s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
+    s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+    s=s.replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<em>$2</em>");
+    s=s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+    return s;
+  }
+  function splitRow(line){var t=line.trim().replace(/^\|/,"").replace(/\|$/,"");return t.split("|").map(function(c){return c.trim();});}
+  function md(src){
+    var lines=src.replace(/\r\n/g,"\n").split("\n"),out=[],i=0;
+    while(i<lines.length){
+      var line=lines[i];
+      if(/^```/.test(line)){var buf=[];i++;while(i<lines.length&&!/^```/.test(lines[i])){buf.push(esc(lines[i]));i++;}i++;out.push("<pre><code>"+buf.join("\n")+"</code></pre>");continue;}
+      if(line.indexOf("|")!==-1&&i+1<lines.length&&/^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(lines[i+1])&&lines[i+1].indexOf("-")!==-1){
+        var head=splitRow(line);i+=2;var body=[];
+        while(i<lines.length&&lines[i].indexOf("|")!==-1&&lines[i].trim()!==""){body.push(splitRow(lines[i]));i++;}
+        var t="<table><thead><tr>";head.forEach(function(h){t+="<th>"+inline(h)+"</th>";});t+="</tr></thead><tbody>";
+        body.forEach(function(r){t+="<tr>";r.forEach(function(c){t+="<td>"+inline(c)+"</td>";});t+="</tr>";});
+        t+="</tbody></table>";out.push(t);continue;
+      }
+      var h=line.match(/^(#{1,6})\s+(.*)$/);
+      if(h){var lv=Math.min(h[1].length,3);out.push("<h"+lv+">"+inline(h[2])+"</h"+lv+">");i++;continue;}
+      if(/^>\s?/.test(line)){var q=[];while(i<lines.length&&/^>\s?/.test(lines[i])){q.push(inline(lines[i].replace(/^>\s?/,"")));i++;}out.push("<blockquote>"+q.join("<br>")+"</blockquote>");continue;}
+      if(/^\s*[-*]\s+/.test(line)){var ul=[];while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i])){ul.push("<li>"+inline(lines[i].replace(/^\s*[-*]\s+/,""))+"</li>");i++;}out.push("<ul>"+ul.join("")+"</ul>");continue;}
+      if(/^\s*\d+\.\s+/.test(line)){var ol=[];while(i<lines.length&&/^\s*\d+\.\s+/.test(lines[i])){ol.push("<li>"+inline(lines[i].replace(/^\s*\d+\.\s+/,""))+"</li>");i++;}out.push("<ol>"+ol.join("")+"</ol>");continue;}
+      if(line.trim()===""){i++;continue;}
+      var para=[];
+      while(i<lines.length&&lines[i].trim()!==""&&!/^```/.test(lines[i])&&!/^(#{1,6})\s/.test(lines[i])&&!/^>\s?/.test(lines[i])&&!/^\s*[-*]\s+/.test(lines[i])&&!/^\s*\d+\.\s+/.test(lines[i])&&lines[i].indexOf("|")===-1){para.push(inline(lines[i]));i++;}
+      if(para.length)out.push("<p>"+para.join("<br>")+"</p>");
+    }
+    return out.join("");
+  }
+
+  var overlay=document.getElementById("overlay"),msgs=document.getElementById("msgs"),
+      input=document.getElementById("input"),sendBtn=document.getElementById("send"),greeted=false;
+  function scrollDown(){msgs.scrollTop=msgs.scrollHeight;}
+  function addUser(t){var d=document.createElement("div");d.className="msg user";d.innerHTML='<div class="bubble"></div>';d.querySelector(".bubble").textContent=t;msgs.appendChild(d);scrollDown();}
+  function addBot(html){var d=document.createElement("div");d.className="msg bot";d.innerHTML='<div class="bubble">'+html+'</div>';msgs.appendChild(d);scrollDown();return d;}
+  function addTyping(){var d=document.createElement("div");d.className="msg bot";d.innerHTML='<div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>';msgs.appendChild(d);scrollDown();return d;}
+
+  function extractReply(data){
+    if(data==null)return "";
+    if(typeof data==="string")return data;
+    if(typeof data.output==="string")return data.output;
+    if(Array.isArray(data)&&data.length){var f=data[0];if(typeof f==="string")return f;if(f&&typeof f.output==="string")return f.output;if(f&&f.json&&typeof f.json.output==="string")return f.json.output;}
+    if(data.text)return data.text;if(data.message)return data.message;
+    return JSON.stringify(data);
+  }
+
+  var busy=false;
+  function send(text){
+    text=(text||"").trim(); if(!text||busy)return;
+    busy=true;sendBtn.disabled=true;addUser(text);input.value="";input.style.height="auto";
+    var typing=addTyping();
+    fetch(WEBHOOK,{method:"POST",headers:authHeaders(),body:JSON.stringify({action:"sendMessage",sessionId:sessionId,chatInput:text})})
+    .then(function(r){if(r.status===401||r.status===403){var e=new Error("unauthorized");e.unauthorized=true;throw e;}if(!r.ok)throw new Error("HTTP "+r.status);return r.text();})
+    .then(function(raw){var data;try{data=JSON.parse(raw);}catch(e){data=raw;}var reply=extractReply(data)||"I didn't get a response back. Please try again.";typing.remove();addBot(md(reply));})
+    .catch(function(err){typing.remove();if(err&&err.unauthorized){clearAuth();closeChat();showGate("Your session expired. Sign in again to continue.");return;}addBot(md("**Couldn't reach the assistant.** The service didn't respond ("+esc(String(err.message||err))+"). Check that the workflow is active in n8n, then try again."));})
+    .then(function(){busy=false;sendBtn.disabled=false;input.focus();});
+  }
+
+  function openChat(prefill){
+    overlay.classList.add("open");
+    if(!greeted){greeted=true;addBot(md("Hi! I'm the **Customer Tier Assistant**. Give me a customer name and I'll tell you whether they're Platinum, Gold, or Silver, plus the preferred rep for Platinum accounts. Example: *\"Is Aquatic Development Group platinum?\"*"));}
+    if(prefill){send(prefill);} else {setTimeout(function(){input.focus();},220);}
+  }
+  function closeChat(){overlay.classList.remove("open");}
+
+  document.getElementById("launcher").addEventListener("click",function(){openChat();});
+  document.getElementById("close").addEventListener("click",closeChat);
+  overlay.addEventListener("click",function(e){if(e.target===overlay)closeChat();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closeChat();});
+  sendBtn.addEventListener("click",function(){send(input.value);});
+  input.addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input.value);}});
+  input.addEventListener("input",function(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px";});
+  Array.prototype.forEach.call(document.querySelectorAll(".q"),function(btn){
+    btn.addEventListener("click",function(){var span=btn.querySelector("span:last-child");var q=(span?span.textContent:btn.textContent).trim();openChat(q);});
+  });
+
+  var gate=document.getElementById("gate"),gu=document.getElementById("gu"),gp=document.getElementById("gp"),
+      gateBtn=document.getElementById("gateBtn"),gateErr=document.getElementById("gateErr");
+  function showGate(msg){gate.classList.remove("hidden");if(msg){gateErr.textContent=msg;gateErr.classList.add("show");}else{gateErr.classList.remove("show");}gp.value="";setTimeout(function(){(gu.value?gp:gu).focus();},60);}
+  function hideGate(){gate.classList.add("hidden");}
+  function signIn(){
+    var u=gu.value.trim(),p=gp.value;
+    if(!u||!p){gateErr.textContent="Enter a username and password.";gateErr.classList.add("show");return;}
+    gateBtn.disabled=true;gateBtn.textContent="Signing in...";gateErr.classList.remove("show");
+    var token=btoa(u+":"+p);
+    fetch(WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Basic "+token},body:JSON.stringify({action:"sendMessage",sessionId:"auth-check-"+Date.now(),chatInput:"ping"})})
+    .then(function(r){
+      if(r.status===401||r.status===403){gateErr.textContent="That username or password isn't right.";gateErr.classList.add("show");gp.value="";gp.focus();return;}
+      authToken=token;try{sessionStorage.setItem(AUTH_KEY,token);}catch(e){}hideGate();
+    })
+    .catch(function(){gateErr.textContent="Couldn't reach the assistant. Check your connection and try again.";gateErr.classList.add("show");})
+    .then(function(){gateBtn.disabled=false;gateBtn.textContent="Sign in";});
+  }
+  gateBtn.addEventListener("click",signIn);
+  [gu,gp].forEach(function(el){el.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();signIn();}});});
+  if(authToken){hideGate();}else{showGate();}
+})();
+</script>
+</body>
+</html>

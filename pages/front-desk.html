@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform | Front Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 12px;line-height:1.6}
+  .livetag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--green);border:1px solid var(--green);padding:3px 12px;border-radius:999px;margin:0 0 26px}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .maingrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .bigcard{background:var(--stripe);border-top:4px solid var(--teal);padding:20px 22px 18px;display:block;
+    position:relative;transition:border-top-color .12s,background .12s}
+  a.bigcard:hover{border-top-color:var(--blue);background:#DEE8EE}
+  .bigcard .cue{position:absolute;top:16px;right:18px;color:var(--teal);font-weight:800;font-size:20px}
+  a.bigcard:hover .cue{color:var(--blue)}
+  .bigcard .role{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+  .bigcard .bt{font-weight:800;font-size:19px;color:var(--blue);margin-top:4px}
+  .bigcard .bd{font-size:13px;color:var(--ink);margin-top:6px;line-height:1.5}
+  .bigcard .bd b{color:var(--blue)}
+  .bigcard.pending{border-top-color:#C9D6DE;background:#F3F6F8;cursor:not-allowed}
+  .bigcard.pending .bt{color:#7C8B98}
+  .bigcard.pending .role{color:#8A99A6}
+  .bigcard.pending .bd{color:#8A99A6}
+  .bigcard .badge{position:absolute;top:16px;right:18px;font-size:10.5px;font-weight:700;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--teal);border:1px solid var(--teal);padding:2px 9px}
+  .bigcard.pending .badge{color:#8A99A6;border-color:#B7C4CE}
+  .notestrip{margin-top:16px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.45}
+  .notestrip b{color:var(--blue)}
+  .askgrid{display:grid;grid-template-columns:1fr 1fr;gap:26px 34px}
+  .askhead{margin:0 0 12px;font-size:15px;font-weight:800;color:var(--blue)}
+  .askfoot{font-size:12px;color:var(--ink2);margin:14px 0 0;line-height:1.5}
+  .cmdlist{display:flex;flex-direction:column;gap:12px}
+  .cmd{background:var(--stripe);border-top:3px solid var(--teal);padding:11px 14px}
+  .cmd .kw{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;
+    font-weight:700;color:#fff;background:var(--teal);padding:3px 10px;letter-spacing:.02em}
+  .cmd .cd{display:block;font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.5}
+  .cmd .cd b{color:var(--ink)}
+  .cmd .cd i{color:var(--ink);font-style:normal;background:#fff;padding:1px 5px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px}
+  .qcat{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin:16px 0 7px}
+  .qcat:first-of-type{margin-top:0}
+  .bubble{background:var(--stripe);border-left:3px solid var(--teal);padding:8px 13px;font-size:13px;
+    color:var(--ink);margin-bottom:7px;display:inline-block;max-width:100%}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+  .flow-svg{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--rule);padding:10px 6px}
+  .flow-svg text{font-family:var(--font)}
+  .flow-svg .flbl{font-size:13.5px;font-weight:600;fill:#fff}
+  .flow-svg .edge{fill:none;stroke:#9AAFC0;stroke-width:1.8;marker-end:url(#arr)}
+  .flow-svg .yn{font-size:11.5px;fill:#5A5A5A;font-weight:700}
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+  }
+  @media (max-width:720px){.maingrid,.askgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/">&larr; Portal home</a><span style="color:#B9C4CD;margin:0 9px;">·</span><a class="back" href="/home">Platform home</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Front Desk</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">One phone line for all of Disinfection &amp; Aquatics. Call and Front Desk Glenbot, the AI receptionist, answers, recognizes your company, and routes you to the right team: technical support, customer experience, warranty, order and part status, or sales. Anything it can't route becomes a tracked Jira ticket with a transcript, summary, and suggested next steps.</p>
+  <span class="livetag">&#9679; Live &middot; 24/7 answering</span>
+
+  <section>
+    <div class="lbl">CHOOSE HOW TO REACH US</div><div class="rule"></div>
+    <div class="maingrid">
+
+      <a class="bigcard" href="tel:+14018212200">
+        <span class="cue">&rsaquo;</span>
+        <div class="role">Phone &middot; Front Desk Glenbot</div>
+        <div class="bt">(401) 821-2200</div>
+        <div class="bd">Call and the AI receptionist takes it from there: identifies your company, answers common questions, and routes you to the right team. Available 24/7. Tap to call.</div>
+      </a>
+
+      <span class="bigcard pending" title="Text intake in development" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <div class="role">Text &middot; SMS</div>
+        <div class="bt">Text the front desk</div>
+        <div class="bd">Text your question to the same number and get answers and routing by SMS. Being brought online.</div>
+      </span>
+
+      <span class="bigcard pending" title="Email intake in development" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <div class="role">Email</div>
+        <div class="bt">Email the front desk</div>
+        <div class="bd">Send details and attachments by email and have them routed and ticketed automatically. Being brought online.</div>
+      </span>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">WHERE YOUR CALL CAN GO</div><div class="rule"></div>
+    <div class="askgrid">
+
+      <div class="askcol">
+        <h4 class="askhead">Routing options</h4>
+        <div class="cmdlist">
+          <div class="cmd">
+            <span class="kw">Technical support</span>
+            <span class="cd">Product troubleshooting, alarms, wiring, operation and maintenance questions.</span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Customer experience</span>
+            <span class="cd">Account help and service follow-ups, handed to the CX team.</span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Warranty requests</span>
+            <span class="cd">Start or check a warranty claim.</span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Order &amp; part status</span>
+            <span class="cd">Where an order or replacement part stands.</span>
+          </div>
+          <div class="cmd">
+            <span class="kw">Sales</span>
+            <span class="cd">New equipment and filter sales inquiries.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="askcol">
+        <h4 class="askhead">Brands covered</h4>
+
+        <p class="qcat">Disinfection &amp; Aquatics</p>
+        <div class="bubble">Aquatics (Neptune Benson &amp; Lawson Aquatics)</div>
+        <div class="bubble">PACO</div>
+        <div class="bubble">Wallace &amp; Tiernan</div>
+        <div class="bubble">ETS</div>
+
+        <p class="qcat">How routing works</p>
+        <div class="bubble">Recognized customers are greeted by company name.</div>
+        <div class="bubble">Direct handoffs go to the service and CX teams.</div>
+        <div class="bubble">Anything unrouted opens a Jira ticket automatically.</div>
+
+        <p class="askfoot">Every unrouted call becomes a tracked ticket with the call transcript, an AI summary, and suggested next steps, so nothing gets lost between teams.</p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <section>
+    <div class="lbl">CALL FLOW, RING TO RESOLUTION</div><div class="rule"></div>
+    <p class="sec-sub" style="font-size:13.5px;color:var(--ink2);margin:-8px 0 16px;">End to end: how Front Desk Glenbot answers, identifies, routes, and tickets every call.</p>
+    <svg class="flow-svg" viewBox="0 -70 1540 790" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z" fill="#9AAFC0"/>
+  </marker>
+</defs>
+
+<!-- ================= EDGES ================= -->
+<path class="edge" d="M182 390 H222"/>
+<path class="edge" d="M392 390 H432"/>
+<path class="edge" d="M520 300 V352"/>
+<path class="edge" d="M520 482 V430"/>
+<path class="edge" d="M608 390 H660"/>
+<path class="edge" d="M745 318 V252"/>
+<text class="yn" x="752" y="292">Yes</text>
+<path class="edge" d="M745 128 C745 92, 765 76, 796 70"/>
+<text class="yn" x="690" y="112">Need captured</text>
+<path class="edge" d="M990 68 H1032"/>
+<path class="edge" d="M1222 68 H1266"/>
+<path class="edge" d="M895 96 C895 220, 925 300, 958 344"/>
+<text class="yn" x="902" y="230">Chose AI</text>
+<path class="edge" d="M830 390 H878"/>
+<text class="yn" x="838" y="382">No</text>
+<path class="edge" d="M965 322 C965 250, 1000 205, 1042 188"/>
+<path class="edge" d="M1232 178 C1290 172, 1310 172, 1336 180"/>
+<text class="yn" x="1250" y="164">Fixed</text>
+<path class="edge" d="M1180 218 C1225 240, 1270 258, 1326 274"/>
+<text class="yn" x="1198" y="246">Not fixed</text>
+<path class="edge" d="M1420 308 C1435 340, 1445 362, 1452 392"/>
+<path class="edge" d="M1010 375 C1040 360, 1050 350, 1076 340"/>
+<path class="edge" d="M1050 390 H1076"/>
+<path class="edge" d="M1010 405 C1040 420, 1050 430, 1076 440"/>
+<path class="edge" d="M988 438 C1020 460, 1040 472, 1076 488"/>
+<path class="edge" d="M1266 490 C1330 486, 1370 466, 1400 452"/>
+<path class="edge" d="M965 458 C965 530, 1000 552, 1042 560"/>
+<path class="edge" d="M1266 340 C1330 350, 1360 380, 1390 408"/>
+<path class="edge" d="M1266 390 C1310 392, 1330 404, 1356 416"/>
+<path class="edge" d="M1266 440 C1330 436, 1360 430, 1390 428"/>
+<path class="edge" d="M1232 560 C1330 552, 1400 500, 1432 462"/>
+
+<!-- ================= NODES ================= -->
+<!-- Start -->
+<rect x="40" y="360" width="142" height="60" rx="10" fill="#16386B"/>
+<text class="flbl" x="111" y="386" text-anchor="middle">Customer calls</text>
+<text class="flbl" x="111" y="404" text-anchor="middle">the single line</text>
+
+<!-- AI answers -->
+<rect x="222" y="360" width="170" height="60" rx="10" fill="#0085ad"/>
+<text class="flbl" x="307" y="386" text-anchor="middle">AI answers 24/7</text>
+<text class="flbl" x="307" y="404" text-anchor="middle">+ recording notice</text>
+
+<!-- feeder top -->
+<rect x="432" y="242" width="176" height="58" rx="10" fill="#0085ad"/>
+<text class="flbl" x="520" y="266" text-anchor="middle">Caller ID +</text>
+<text class="flbl" x="520" y="284" text-anchor="middle">account match</text>
+
+<!-- identified -->
+<rect x="432" y="352" width="176" height="78" rx="10" fill="#0085ad"/>
+<text class="flbl" x="520" y="380" text-anchor="middle">Name + reason</text>
+<text class="flbl" x="520" y="398" text-anchor="middle">for calling,</text>
+<text class="flbl" x="520" y="416" text-anchor="middle">customer identified</text>
+
+<!-- feeder bottom -->
+<rect x="432" y="482" width="176" height="58" rx="10" fill="#0085ad"/>
+<text class="flbl" x="520" y="506" text-anchor="middle">Platinum registry &middot;</text>
+<text class="flbl" x="520" y="524" text-anchor="middle">recent tickets</text>
+
+<!-- Platinum diamond -->
+<polygon points="745,318 830,390 745,462 660,390" fill="#e0922f"/>
+<text class="flbl" x="745" y="384" text-anchor="middle">Platinum</text>
+<text class="flbl" x="745" y="402" text-anchor="middle">account?</text>
+
+<!-- Duplicated needs diamond (platinum path) -->
+<polygon points="745,128 817,190 745,252 673,190" fill="#e0922f"/>
+<text class="flbl" x="745" y="178" text-anchor="middle">What does</text>
+<text class="flbl" x="745" y="196" text-anchor="middle">the caller</text>
+<text class="flbl" x="745" y="214" text-anchor="middle">need?</text>
+
+<!-- 8x8 phone tree live-transfer path -->
+<rect x="1010" y="-58" width="210" height="48" rx="10" fill="#3060A8"/>
+<text class="flbl" x="1115" y="-38" text-anchor="middle">Live transfer:</text>
+<text class="flbl" x="1115" y="-20" text-anchor="middle">8x8 phone tree</text>
+<path class="edge" d="M905 40 C920 -10, 960 -30, 1006 -34"/>
+<text class="yn" x="912" y="-2">Rep available now</text>
+<path class="edge" d="M1224 -34 C1280 -30, 1320 10, 1341 36"/>
+
+<!-- VIP rail (top row) -->
+<rect x="800" y="40" width="190" height="56" rx="10" fill="#3060A8"/>
+<text class="flbl" x="895" y="64" text-anchor="middle">Choice offered:</text>
+<text class="flbl" x="895" y="82" text-anchor="middle">person or AI?</text>
+
+<rect x="1032" y="40" width="190" height="56" rx="10" fill="#5a9e3d"/>
+<text class="flbl" x="1127" y="64" text-anchor="middle">Priority callback:</text>
+<text class="flbl" x="1127" y="82" text-anchor="middle">preferred rep, flagged</text>
+
+<rect x="1266" y="40" width="150" height="56" rx="10" fill="#16386B"/>
+<text class="flbl" x="1341" y="64" text-anchor="middle">Rep calls the</text>
+<text class="flbl" x="1341" y="82" text-anchor="middle">customer</text>
+
+<!-- AI troubleshoot row -->
+<rect x="1042" y="152" width="190" height="66" rx="10" fill="#5a9e3d"/>
+<text class="flbl" x="1137" y="190" text-anchor="middle">Troubleshooting</text>
+
+<rect x="1336" y="157" width="164" height="56" rx="10" fill="#16386B"/>
+<text class="flbl" x="1418" y="181" text-anchor="middle">Closed:</text>
+<text class="flbl" x="1418" y="199" text-anchor="middle">AI resolved + SMS</text>
+
+<!-- NBTS queue -->
+<rect x="1330" y="252" width="190" height="56" rx="10" fill="#6b7f92"/>
+<text class="flbl" x="1425" y="276" text-anchor="middle">NBTS engineer</text>
+<text class="flbl" x="1425" y="294" text-anchor="middle">queue</text>
+
+<!-- Routing diamond -->
+<polygon points="965,322 1050,390 965,458 880,390" fill="#e0922f"/>
+<text class="flbl" x="965" y="378" text-anchor="middle">What does</text>
+<text class="flbl" x="965" y="396" text-anchor="middle">the caller</text>
+<text class="flbl" x="965" y="414" text-anchor="middle">need?</text>
+
+<!-- Branches -->
+<rect x="1076" y="312" width="190" height="52" rx="10" fill="#6b7f92"/>
+<text class="flbl" x="1171" y="334" text-anchor="middle">POC drop-off:</text>
+<text class="flbl" x="1171" y="352" text-anchor="middle">other product lines</text>
+
+<rect x="1076" y="368" width="190" height="46" rx="10" fill="#5a9e3d"/>
+<text class="flbl" x="1171" y="396" text-anchor="middle">Warranty claim capture</text>
+
+<rect x="1076" y="418" width="190" height="46" rx="10" fill="#5a9e3d"/>
+<text class="flbl" x="1171" y="446" text-anchor="middle">Sales / billing</text>
+
+<rect x="1076" y="468" width="190" height="46" rx="10" fill="#5a9e3d"/>
+<text class="flbl" x="1171" y="490" text-anchor="middle">Purchase parts:</text>
+<text class="flbl" x="1171" y="506" text-anchor="middle">catalog lookup + quote</text>
+
+<rect x="1042" y="534" width="190" height="52" rx="10" fill="#6b7f92"/>
+<text class="flbl" x="1137" y="556" text-anchor="middle">Callback case:</text>
+<text class="flbl" x="1137" y="574" text-anchor="middle">no details given</text>
+
+<!-- Final -->
+<rect x="1390" y="396" width="130" height="66" rx="10" fill="#16386B"/>
+<text class="flbl" x="1455" y="420" text-anchor="middle">Ticket</text>
+<text class="flbl" x="1455" y="438" text-anchor="middle">tracked ·</text>
+<text class="flbl" x="1455" y="456" text-anchor="middle">contact made</text>
+
+<!-- Legend -->
+<g transform="translate(40,640)">
+  <rect x="0" y="0" width="16" height="16" rx="4" fill="#16386B"/><text x="24" y="13" font-size="12" fill="#5A5A5A">Start / end</text>
+  <rect x="120" y="0" width="16" height="16" rx="4" fill="#0085ad"/><text x="144" y="13" font-size="12" fill="#5A5A5A">Intake &amp; identification</text>
+  <polygon points="310,0 326,8 310,16 294,8" fill="#e0922f"/><text x="334" y="13" font-size="12" fill="#5A5A5A">Decision</text>
+  <rect x="420" y="0" width="16" height="16" rx="4" fill="#5a9e3d"/><text x="444" y="13" font-size="12" fill="#5A5A5A">AI acts / resolves</text>
+  <rect x="560" y="0" width="16" height="16" rx="4" fill="#6b7f92"/><text x="584" y="13" font-size="12" fill="#5A5A5A">Human hand-off</text>
+</g>
+</svg>
+    <div class="notestrip"><b>Every path ends in a tracked ticket.</b> Green stages are resolved or advanced by the AI; slate stages hand off to a person with a complete record. Nothing reaches a voicemail box.</div>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>°</sup></div>
+  </div>
+</div>
+</body>
+</html>
