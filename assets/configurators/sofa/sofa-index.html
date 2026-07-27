@@ -211,7 +211,7 @@
       <div class="label"><span>Suction Connections</span><span id="connCount" style="font-weight:400;color:var(--ink-soft);font-size:10px;"></span></div>
       <div class="conns" id="conns"></div>
       <button class="addbtn" onclick="addConn()">+ Add Connection</button>
-      <div class="hint">Add a port, then <strong>drag it on the diagram</strong> to place it. Drag onto an edge to snap to that face; drag into the middle for a floor (bottom) port. Drag vertically in the elevation to set height. The NSF certified Design Flow Rate is the governing max regardless of port count.</div>
+      <div class="hint">Add a port, then <strong>drag it on the diagram</strong> to place it. Drag onto an edge to snap to that face; drag into the middle for a floor (bottom) port. Drag vertically in the elevation to set height. The NSF certified Design Flow Rate is the governing max regardless of port count. Wall ports travel down from edge 1 toward edge 2: top of connection held &ge;16&quot; from edge 1 (NSF-50) and &ge;2&quot; clear of edge 2. All ports are female Sch 40 PVC sockets.</div>
     </div>
   </aside>
 
@@ -274,22 +274,6 @@
 
         <div class="warnbox hide" id="warnbox"><div class="wh">⚠ Configuration Checks</div><ul id="warnlist"></ul></div>
 
-        <div class="proj">
-          <h3 class="sec-h">Project Information</h3>
-          <div class="pg">
-            <div class="cell"><span>Project Name</span><input data-key="project_name" type="text" placeholder="—"></div>
-            <div class="cell"><span>Location</span><input data-key="location" type="text" placeholder="—"></div>
-            <div class="cell"><span>Pool / Spa No.</span><input data-key="pool_no" type="text" placeholder="—"></div>
-            <div class="cell"><span>Date</span><input data-key="date" type="text" id="dateField"></div>
-            <div class="cell"><span>Submitted By</span><input data-key="submitted_by" type="text" placeholder="—"></div>
-            <div class="cell"><span>Quantity</span><input data-key="quantity" type="text" placeholder="—"></div>
-          </div>
-        </div>
-
-        <div class="notes-area"><h3 class="sec-h">Notes</h3>
-          <textarea id="notes">Furnish &amp; install Neptune-Benson MLD-SG suction outlet fitting assembly with anti-entrapment cover/grate. Total system flow through the assembly shall not exceed the NSF certified Design Flow Rate for the selected size and mounting orientation. Provide a minimum of two suction outlets per pump or an approved unblockable single-outlet / SVRS configuration. Install per ANSI/APSP/ICC-16 and manufacturer instructions. All fasteners 316 stainless steel.</textarea>
-        </div>
-
         <div class="compliance" id="compliance"></div>
         <div class="foot"><span>Neptune-Benson MLD-SG SOFA Submittal</span><span id="footMeta"></span></div>
       </div>
@@ -299,7 +283,15 @@
 
 <script>
 const OD  = {3:3.5,4:4.5,6:6.625,8:8.625,10:10.75,12:12.75,14:14.0,16:16.0};
-const ID80= {3:2.900,4:3.826,6:5.761,8:7.565,10:9.493,12:11.294,14:12.814,16:14.940};
+const ID40= {3:3.068,4:4.026,6:6.065,8:7.981,10:10.020,12:11.938,14:13.124,16:15.000};
+const WALL40={3:0.216,4:0.237,6:0.280,8:0.322,10:0.365,12:0.406,14:0.438,16:0.500};
+const NSF_TOP_MIN=16; /* in — NSF-50: min top-of-connection to top-of-sump */
+/* h = C/L distance measured DOWN from edge 1 (drawn top edge). Guardrails:
+   top of connection >= 16" from edge 1  ->  h >= 16 + OD/2
+   pipe edge >= 2" clear of edge 2       ->  h <= depth - 2 - OD/2 */
+const EDGE2_CLR=2;
+const hLoFor=c=>NSF_TOP_MIN+OD[c.size]/2;
+const hHiFor=c=>Math.max(hLoFor(c),cfg.depth-EDGE2_CLR-OD[c.size]/2);
 const SIZES=[3,4,6,8,10,12,14,16];
 const FACES=[["front","Front (long)"],["back","Back (long)"],["left","Left (end)"],["right","Right (end)"],["bottom","Bottom (floor)"]];
 
@@ -318,7 +310,7 @@ const CERT_GENERAL = 'Lawson_O_M_and_GCCS.zip'; // full O&M + GCC certificate pa
 
 let cfg = {
   L:54, depth:33, vel:6, orient:'floor', basis:'nsf', cover:'grate',
-  conns:[{id:1,size:14,face:'left',p:9,h:9},{id:2,size:14,face:'right',p:9,h:9}]
+  conns:[{id:1,size:14,face:'left',p:9,h:24},{id:2,size:14,face:'right',p:9,h:24}]
 };
 let uid=3, dragging=null;
 
@@ -356,12 +348,12 @@ function connRowHTML(c){
   const faceOpts=FACES.map(f=>`<option value="${f[0]}" ${f[0]===c.face?'selected':''}>${f[1]}</option>`).join('');
   let f1lab,f2lab,f1val,f2val;
   if(isBottom){f1lab='X from Left (in)';f2lab='Y from Front (in)';f1val=c.p;f2val=(c.y??9);}
-  else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;f1lab=`C/L offset · 0–${len}`;f2lab='C/L height';f1val=c.p;f2val=c.h;}
+  else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;f1lab=`C/L offset · 0–${len}`;f2lab='C/L fr. edge 1';f1val=c.p;f2val=c.h;}
   return `<div class="conn ${over?'over':''}" data-id="${c.id}">
     <div class="top"><span class="tag"><span class="pill ${over?'warn':''}">${c.size}"</span> &nbsp;${faceLabel(c.face)}</span>
       <button class="del" title="Remove" onclick="delConn(${c.id})">✕</button></div>
     <div class="mini">
-      <div class="field"><span>Size (Sch 80)</span><select onchange="upd(${c.id},'size',this.value)">${sizeOpts}</select></div>
+      <div class="field"><span>Size (Sch 40 &middot; F socket)</span><select onchange="upd(${c.id},'size',this.value)">${sizeOpts}</select></div>
       <div class="field"><span>Face / Side</span><select onchange="upd(${c.id},'face',this.value)">${faceOpts}</select></div>
     </div>
     <div class="mini" style="margin-top:8px;">
@@ -374,20 +366,21 @@ function buildConns(){
   document.getElementById('conns').innerHTML=cfg.conns.map(connRowHTML).join('');
   document.getElementById('connCount').textContent=cfg.conns.length+(cfg.conns.length===1?' port':' ports');
 }
-window.addConn=()=>{const p=rated()?rated().pipe:8;cfg.conns.push({id:uid++,size:p,face:'front',p:Math.round(cfg.L/2),h:Math.round(cfg.depth/2)});render();};
+window.addConn=()=>{const p=rated()?rated().pipe:8;const c={id:uid++,size:p,face:'front',p:Math.round(cfg.L/2),h:Math.round(cfg.depth/2)};c.h=clamp(c.h,hLoFor(c),hHiFor(c));cfg.conns.push(c);render();};
 window.delConn=id=>{cfg.conns=cfg.conns.filter(c=>c.id!==id);render();};
 window.upd=(id,key,val)=>{
   const c=cfg.conns.find(x=>x.id===id);if(!c)return;
   if(['size','p','h','y'].includes(key))val=+val;
   c[key]=val;
   if(key==='face'){if(val==='bottom'){c.p=Math.round(cfg.L/2);c.y=9;}else{c.h=c.h??Math.round(cfg.depth/2);}}
+  if(c.face!=='bottom'&&(key==='h'||key==='size'||key==='face')){c.h=clamp(c.h,hLoFor(c),hHiFor(c));}
   clampAll();render();
 };
 function clampAll(){
   cfg.depth=+document.getElementById('depth').value||33;
   cfg.conns.forEach(c=>{
     if(c.face==='bottom'){c.p=clamp(c.p,0,cfg.L);c.y=clamp(c.y??9,0,18);}
-    else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;c.p=clamp(c.p,0,len);c.h=clamp(c.h??Math.round(cfg.depth/2),0,cfg.depth);}
+    else{const len=(c.face==='front'||c.face==='back')?cfg.L:18;c.p=clamp(c.p,0,len);c.h=clamp(c.h??Math.round(cfg.depth/2),hLoFor(c),hHiFor(c));}
   });
 }
 
@@ -460,24 +453,25 @@ function renderPlan(){
   });
 }
 function renderElev(){
-  /* Flipped orientation: sump BASE at top, RIM/COVER at bottom (right-side-up per std convention).
-     Port height h is measured above the sump base, so on screen it reads downward from the top. */
+  /* COSMETIC orientation: SUMP BASE drawn along the TOP of the view, SUMP TOP (cover/grate, pool floor)
+     drawn along the BOTTOM. The DATUM is still the SUMP TOP edge — all port depths and the NSF-50
+     top-of-connection clearance are measured from it (reading upward from the bottom edge on screen). */
   const svg=document.getElementById('svgElev');svg.innerHTML='';
   const L=cfg.L,D=cfg.depth,VBW=1000,VBH=420,stub=40,pad=58;
   const topRoom=58,botRoom=78;
   const scale=Math.min((VBW-2*pad-2*stub)/L,(VBH-topRoom-botRoom)/D);
   const bw=L*scale,bh=D*scale,x0=(VBW-bw)/2,y0=topRoom;
   elevGeom={x0,y0,bw,bh,scale,L,D};
-  const yBase=y0, yRim=y0+bh;            // base at top, rim/cover at bottom
-  svg.appendChild(txt(x0,y0-10,'FRONT ELEVATION',{'font-size':10,'font-family':'Archivo,sans-serif','font-weight':700,fill:'#475560','letter-spacing':'1'}));
+  const yBase=y0, yTop=y0+bh;            // base drawn at top edge; sump top (datum) drawn at bottom edge
   svg.appendChild(el('rect',{x:x0,y:y0,width:bw,height:bh,fill:'#f4faf9',stroke:'#16202a','stroke-width':2}));
-  // sump base (top, heavy)
+  // sump base (drawn top edge, heavy)
   svg.appendChild(el('line',{x1:x0-10,y1:yBase,x2:x0+bw+10,y2:yBase,stroke:'#16202a','stroke-width':2}));
   svg.appendChild(txt(x0+bw,y0-2,'SUMP BASE',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'end',fill:'#475560','letter-spacing':'1'}));
-  // cover/grate indication (bottom) — slot ticks
-  svg.appendChild(el('line',{x1:x0,y1:yRim,x2:x0+bw,y2:yRim,stroke:'#0a5b63','stroke-width':2.4}));
+  // sump top / datum (drawn bottom edge) — cover/grate slot ticks
+  svg.appendChild(el('line',{x1:x0,y1:yTop,x2:x0+bw,y2:yTop,stroke:'#0a5b63','stroke-width':2.4}));
+  svg.appendChild(txt(x0+bw,yTop+12,'SUMP TOP · POOL FLOOR (DATUM)',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'end',fill:'#0a5b63','letter-spacing':'1'}));
   const slots=Math.max(6,Math.round(bw/16));
-  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yRim-6,x2:gx,y2:yRim,stroke:'#0a5b63','stroke-width':1.3}));}
+  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yTop-6,x2:gx,y2:yTop,stroke:'#0a5b63','stroke-width':1.3}));}
   // depth dim (left)
   const dlx=Math.max(16,x0-stub-58);
   svg.appendChild(el('line',{x1:dlx,y1:y0,x2:dlx,y2:y0+bh,stroke:'#16202a','stroke-width':1}));
@@ -485,10 +479,10 @@ function renderElev(){
   const dt=txt(dlx-7,y0+bh/2,D+'"',{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600});
   dt.setAttribute('transform',`rotate(-90 ${dlx-7} ${y0+bh/2})`);svg.appendChild(dt);
   // length dim (below the rim label)
-  dimLine(svg,x0,yRim+botRoom-26,x0+bw,yRim+botRoom-26,L+'"',13);
+  dimLine(svg,x0,yTop+botRoom-26,x0+bw,yTop+botRoom-26,L+'"',13);
   cfg.conns.forEach(c=>{
     const od=Math.max(OD[c.size]*scale,9),[fill,stroke]=portColor(c);let cx,cy;
-    if(c.face==='bottom'){              // sump-base face: now at top, stubs upward
+    if(c.face==='bottom'){              // sump-base face (drawn top edge), stubs upward
       cx=x0+c.p*scale;cy=yBase;
       svg.appendChild(el('rect',{x:cx-od/2,y:yBase-stub,width:od,height:stub,fill,stroke,'stroke-width':1.2}));
       svg.appendChild(txt(cx,yBase-stub-5,c.size+'"',{'font-size':10,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#16202a'}));
@@ -503,26 +497,38 @@ function renderElev(){
     }
     hit(svg,cx,cy,od/2,c.id,'elev');
   });
+  // NSF-50 clearance dimension: sump top (datum) -> top of shallowest wall connection
+  const walls=cfg.conns.filter(c=>c.face!=='bottom');
+  if(walls.length){
+    const cMin=walls.reduce((a,b)=>(a.h-OD[a.size]/2)<=(b.h-OD[b.size]/2)?a:b);
+    const clr=cMin.h-OD[cMin.size]/2, ok=clr>=NSF_TOP_MIN-1e-9, col=ok?'#0a5b63':'#b3261e';
+    const dx=x0+bw+80, y2c=yBase+clr*scale; // outboard of port stubs + size labels
+    svg.appendChild(el('line',{x1:dx,y1:yBase,x2:dx,y2:y2c,stroke:col,'stroke-width':1}));
+    [yBase,y2c].forEach(yy=>svg.appendChild(el('line',{x1:dx-4,y1:yy,x2:dx+4,y2:yy,stroke:col,'stroke-width':1})));
+    const ct=txt(dx+13,(yBase+y2c)/2,`${r1(clr)}" TOP CLR (≥${NSF_TOP_MIN}")`,{'font-size':13,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:col,'font-weight':700});
+    ct.setAttribute('transform',`rotate(-90 ${dx+10} ${(yBase+y2c)/2})`);svg.appendChild(ct);
+  }
 }
 
 function renderSide(){
   /* End / side cross-section: 18" width (horizontal, FRONT at left → BACK at right) x depth.
-     Same flip as the elevation: sump BASE at top, cover/grate at bottom. Reference view (not draggable). */
+     COSMETIC orientation: SUMP BASE at top of view; SUMP TOP (cover/grate, the datum) at bottom.
+     Reference view (not draggable). */
   const svg=document.getElementById('svgSide');svg.innerHTML='';
   const W=18,D=cfg.depth,VBW=460,VBH=340,stub=24;
   const topG=48,botG=58;
   const scale=Math.min((VBH-topG-botG)/D,(VBW*0.55)/W);
   const bw=W*scale,bh=D*scale,x0=(VBW-bw)/2,y0=topG;
-  const yBase=y0,yRim=y0+bh;
+  const yBase=y0,yTop=y0+bh;
   svg.appendChild(txt(x0-58,y0-30,'END / SIDE VIEW — cross-section',{'font-size':10,'font-family':'Archivo,sans-serif','font-weight':700,fill:'#475560','letter-spacing':'1'}));
   svg.appendChild(el('rect',{x:x0,y:y0,width:bw,height:bh,fill:'#f4faf9',stroke:'#16202a','stroke-width':2}));
-  // sump base (top, heavy)
+  // sump base (drawn top edge, heavy)
   svg.appendChild(el('line',{x1:x0-10,y1:yBase,x2:x0+bw+10,y2:yBase,stroke:'#16202a','stroke-width':2}));
   svg.appendChild(txt(x0+bw+14,y0-2,'SUMP BASE',{'font-size':8,'font-family':'IBM Plex Mono,monospace',fill:'#475560','letter-spacing':'1'}));
-  // cover/grate slots (bottom)
-  svg.appendChild(el('line',{x1:x0,y1:yRim,x2:x0+bw,y2:yRim,stroke:'#0a5b63','stroke-width':2.4}));
+  // sump top / datum (drawn bottom edge) — cover/grate slots
+  svg.appendChild(el('line',{x1:x0,y1:yTop,x2:x0+bw,y2:yTop,stroke:'#0a5b63','stroke-width':2.4}));
   const slots=Math.max(4,Math.round(bw/16));
-  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yRim-6,x2:gx,y2:yRim,stroke:'#0a5b63','stroke-width':1.3}));}
+  for(let i=0;i<=slots;i++){const gx=x0+bw*i/slots;svg.appendChild(el('line',{x1:gx,y1:yTop-6,x2:gx,y2:yTop,stroke:'#0a5b63','stroke-width':1.3}));}
   // depth dim (left, outboard of any front-wall stubs)
   const dlx=x0-64;
   svg.appendChild(el('line',{x1:dlx,y1:y0,x2:dlx,y2:y0+bh,stroke:'#16202a','stroke-width':1}));
@@ -530,13 +536,13 @@ function renderSide(){
   const dt=txt(dlx-7,y0+bh/2,D+'"',{'font-size':12,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#16202a','font-weight':600});
   dt.setAttribute('transform',`rotate(-90 ${dlx-7} ${y0+bh/2})`);svg.appendChild(dt);
   // width dim (below) with FRONT / BACK end labels
-  const wy=yRim+botG-30;
+  const wy=yTop+botG-30;
   dimLine(svg,x0,wy,x0+bw,wy,W+'"',12);
   svg.appendChild(txt(x0,wy+16,'FRONT',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#475560','letter-spacing':'1'}));
   svg.appendChild(txt(x0+bw,wy+16,'BACK',{'font-size':8,'font-family':'IBM Plex Mono,monospace','text-anchor':'middle',fill:'#475560','letter-spacing':'1'}));
   cfg.conns.forEach(c=>{
     const od=Math.max(OD[c.size]*scale,9),[fill,stroke]=portColor(c);
-    if(c.face==='bottom'){                 // base face (top), positioned across width by Y-from-front
+    if(c.face==='bottom'){                 // base face (drawn top edge), positioned across width by Y-from-front
       const cx=x0+(c.y??9)*scale;
       svg.appendChild(el('rect',{x:cx-od/2,y:yBase-stub,width:od,height:stub,fill,stroke,'stroke-width':1.2}));
       svg.appendChild(txt(cx,yBase-stub-5,c.size+'"',{'font-size':9.5,'font-weight':700,'text-anchor':'middle','font-family':'IBM Plex Mono,monospace',fill:'#16202a'}));
@@ -576,8 +582,8 @@ window.addEventListener('pointermove',ev=>{
   }else{
     const g=elevGeom,p=svgPt(document.getElementById('svgElev'),ev);
     if(c.face==='bottom'){c.p=clamp((p.x-g.x0)/g.scale,0,g.L);}
-    else if(c.face==='front'||c.face==='back'){c.p=clamp((p.x-g.x0)/g.scale,0,g.L);c.h=clamp((p.y-g.y0)/g.scale,0,cfg.depth);}
-    else{c.h=clamp((p.y-g.y0)/g.scale,0,cfg.depth);}
+    else if(c.face==='front'||c.face==='back'){c.p=clamp((p.x-g.x0)/g.scale,0,g.L);c.h=clamp((p.y-g.y0)/g.scale,hLoFor(c),hHiFor(c));}
+    else{c.h=clamp((p.y-g.y0)/g.scale,hLoFor(c),hHiFor(c));}
     c.p=Math.round(c.p*2)/2;if(c.h!=null)c.h=Math.round(c.h*2)/2;
   }
   render();
@@ -585,7 +591,7 @@ window.addEventListener('pointermove',ev=>{
 window.addEventListener('pointerup',()=>{dragging=null;});
 
 /* ---------- flow / schedule / specs ---------- */
-function pipeCapTotal(){let s=0;cfg.conns.forEach(c=>s+=gpm(ID80[c.size],cfg.vel));return s;}
+function pipeCapTotal(){let s=0;cfg.conns.forEach(c=>s+=gpm(ID40[c.size],cfg.vel));return s;}
 function governingFlow(cap){
   if(cfg.basis==='nsf'){
     const r=rated();const val=r?r[cfg.orient]:0;
@@ -602,20 +608,21 @@ function renderFlowband(gov){
     : `<div class="fb"><div class="fl">Flow</div><div class="fv">${r0(gov.val)}<small> GPM</small></div></div>`;
 }
 function renderSchedule(){
-  let rows=`<tr><th>Mark</th><th>Size</th><th>Face</th><th>C/L Location</th><th style="text-align:right">Pipe cap.*</th></tr>`;
+  let rows=`<tr><th>Mark</th><th>Size</th><th>OD &times; Wall</th><th>Face</th><th>C/L Location</th><th style="text-align:right">Pipe cap.*</th></tr>`;
   let cap=0;
   cfg.conns.forEach((c,i)=>{
-    const g=gpm(ID80[c.size],cfg.vel);cap+=g;
+    const g=gpm(ID40[c.size],cfg.vel);cap+=g;
     const over=rated()&&c.size>rated().pipe;
     let loc;
     if(c.face==='bottom')loc=`X ${r1(c.p)}", Y ${r1(c.y??9)}"`;
-    else if(c.face==='front'||c.face==='back')loc=`${r1(c.p)}" fr.L · h ${r1(c.h)}"`;
-    else loc=`${r1(c.p)}" fr.F · h ${r1(c.h)}"`;
-    rows+=`<tr><td>P${i+1}</td><td><span class="pill ${over?'warn':''}">${c.size}"</span></td><td>${faceLabel(c.face).replace(/ \(.*\)/,'')}</td><td>${loc}</td><td class="num">${r0(g)}</td></tr>`;
+    else if(c.face==='front'||c.face==='back')loc=`${r1(c.p)}" fr.L · ${r1(c.h)}" fr.E1`;
+    else loc=`${r1(c.p)}" fr.F · ${r1(c.h)}" fr.E1`;
+    rows+=`<tr><td>P${i+1}</td><td><span class="pill ${over?'warn':''}">${c.size}"</span></td><td>${OD[c.size]}" &times; ${WALL40[c.size].toFixed(3)}"</td><td>${faceLabel(c.face).replace(/ \(.*\)/,'')}</td><td>${loc}</td><td class="num">${r0(g)}</td></tr>`;
   });
   const gov=governingFlow(cap);
-  if(gov.nsf) rows+=`<tr class="sub"><td colspan="4">Configured pipe capacity @ ${cfg.vel} ft/s</td><td class="num">${r0(cap)} GPM</td></tr>`;
-  rows+=`<tr class="tot"><td colspan="4">${gov.label}</td><td class="num">${r0(gov.val)} GPM</td></tr>`;
+  if(gov.nsf) rows+=`<tr class="sub"><td colspan="5">Configured pipe capacity @ ${cfg.vel} ft/s</td><td class="num">${r0(cap)} GPM</td></tr>`;
+  rows+=`<tr class="tot"><td colspan="5">${gov.label}</td><td class="num">${r0(gov.val)} GPM</td></tr>`;
+  rows+=`<tr class="sub"><td colspan="6">All connections female Sch 40 PVC socket; OD &amp; wall per ASTM D1785 Sch 40. Wall ports: &ge;${NSF_TOP_MIN}" top of connection to top of sump (NSF-50).</td></tr>`;
   document.getElementById('schedule').innerHTML=rows;
   return gov;
 }
@@ -625,7 +632,7 @@ function renderSpecs(gov){
     <tr><th>NSF model · SKU</th><td>${r?`${r.model} · ${r.sku}`:'—'}</td></tr>
     <tr><th>Sump footprint</th><td>18" × ${L}"</td></tr>
     <tr><th>Sump depth</th><td>${D}"</td></tr>
-    <tr><th>Listed connection</th><td>${r?(r.pipe+'" Sch 80 or smaller connection (certified)'):'—'}</td></tr>
+    <tr><th>Listed connection</th><td>${r?(r.pipe+'" Sch 40 or smaller, female PVC socket (certified)'):'—'}</td></tr>
     <tr><th>Mounting</th><td>${cfg.orient.charAt(0).toUpperCase()+cfg.orient.slice(1)}</td></tr>
     <tr><th>Cover / grate</th><td>${cfg.cover==='aegis'?'Anti-entrapment cover &mdash; Aegis':'Certified grate'}</td></tr>
     <tr><th>Standard</th><td>ANSI/APSP/ICC-16 · NSF Listed</td></tr>
@@ -647,8 +654,9 @@ function renderWarnings(gov){
       if(gap<2)w.push(`Two ports on ${faceLabel(f)} have <2" clear between pipe walls.`);}
   }
   cfg.conns.forEach(c=>{if(c.face!=='bottom'){
-    if((c.h-OD[c.size]/2)<1)w.push(`A ${c.size}" port on ${faceLabel(c.face)} sits within 1" of the floor.`);
-    if((cfg.depth-c.h-OD[c.size]/2)<1)w.push(`A ${c.size}" port on ${faceLabel(c.face)} sits within 1" of the top — may foul grate/frame.`);}});
+    if((cfg.depth-c.h-OD[c.size]/2)<EDGE2_CLR)w.push(`A ${c.size}" port on ${faceLabel(c.face)} is within ${EDGE2_CLR}" of edge 2.`);
+    const topClr=c.h-OD[c.size]/2;
+    if(topClr<NSF_TOP_MIN)w.push(`A ${c.size}" port on ${faceLabel(c.face)} has ${r1(topClr)}" from top of connection to edge 1 — needs ${NSF_TOP_MIN}" minimum (NSF-50). Lower the port or reduce pipe size.`);}});
   if(r){
     const big=cfg.conns.filter(c=>c.size>r.pipe);
     if(big.length)w.push(`Port size exceeds the NSF-listed connection (${r.pipe}") for ${r.model} — outside the certified configuration; confirm with manufacturer / NSF listing.`);
@@ -659,7 +667,7 @@ function renderWarnings(gov){
   if(w.length){box.classList.remove('hide');list.innerHTML=w.map(x=>`<li>${x}</li>`).join('');}else box.classList.add('hide');
 }
 function renderMeta(){
-  document.getElementById('compliance').innerHTML=`<strong>Compliance &amp; references:</strong> Neptune-Benson MLD-SG suction outlet fitting assembly, NSF listed and certified to ANSI/APSP/ICC-16; install per the Virginia Graeme Baker Pool &amp; Spa Safety Act. The Design Flow Rate shown is the NSF certified maximum for the selected size and mounting orientation — total system flow through the assembly must not exceed it. Pipe-capacity figures (*) are velocity × Sch 80 bore for plumbing-design reference only. Port sizes/locations beyond the listed configuration are field plumbing variations; confirm against the NSF listing and manufacturer instructions.`;
+  document.getElementById('compliance').innerHTML=`<strong>Compliance &amp; references:</strong> Neptune-Benson MLD-SG suction outlet fitting assembly, NSF listed and certified to ANSI/APSP/ICC-16; install per the Virginia Graeme Baker Pool &amp; Spa Safety Act. The Design Flow Rate shown is the NSF certified maximum for the selected size and mounting orientation — total system flow through the assembly must not exceed it. Pipe-capacity figures (*) are velocity × Sch 40 bore for plumbing-design reference only. All connections are female Sch 40 PVC sockets; wall ports maintain a minimum 16" from top of connection to top of sump per NSF-50. Port sizes/locations beyond the listed configuration are field plumbing variations; confirm against the NSF listing and manufacturer instructions.`;
   document.getElementById('footMeta').textContent=`Generated ${new Date().toLocaleDateString()} · 18×${cfg.L}×${r0(cfg.depth)} · ${cfg.orient} · ${cfg.conns.length} port(s)`;
 }
 function render(){
@@ -673,7 +681,7 @@ function render(){
   const m=document.getElementById('model');if(!m.dataset.touched)m.value=r?r.model:'MLD-SG';
 }
 window.resetCfg=()=>{cfg={L:54,depth:33,vel:6,orient:'floor',basis:'nsf',cover:'grate',
-  conns:[{id:uid++,size:14,face:'left',p:9,h:9},{id:uid++,size:14,face:'right',p:9,h:9}]};
+  conns:[{id:uid++,size:14,face:'left',p:9,h:24},{id:uid++,size:14,face:'right',p:9,h:24}]};
   document.getElementById('model').dataset.touched='';render();};
 
 /* ============ n8n WEBHOOK AUTOMATION ============
@@ -755,7 +763,6 @@ function toast(msg){
 }
 document.getElementById('depth').addEventListener('input',()=>{clampAll();render();});
 document.getElementById('model').addEventListener('input',e=>{e.target.dataset.touched='1';});
-document.getElementById('dateField').value=new Date().toLocaleDateString();
 render();
 </script>
 </body>
