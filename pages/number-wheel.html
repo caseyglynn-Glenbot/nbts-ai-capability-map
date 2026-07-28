@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBTS Random Drawing Wheel</title>
+<style>
+  :root {
+    --navy: #14304f;
+    --teal: #0085ad;
+    --orange: #e0922f;
+    --bg: #f4f7fa;
+    --card: #ffffff;
+    --line: #d8e1ea;
+    --ink: #1b3a5c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  header .brand { display: flex; align-items: baseline; gap: 12px; }
+  header h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: .3px; }
+  header .tag {
+    font-size: .8rem;
+    background: var(--teal);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  header a.back {
+    color: #cfe3ee;
+    font-size: .85rem;
+    text-decoration: none;
+  }
+  header a.back:hover { color: #fff; text-decoration: underline; }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 28px 16px 48px;
+    display: grid;
+    grid-template-columns: minmax(300px, 480px) minmax(240px, 1fr);
+    gap: 28px;
+    align-items: start;
+    justify-content: center;
+  }
+  @media (max-width: 720px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(20,48,79,.08);
+  }
+
+  .wheel-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .wheel-wrap canvas { width: 100%; height: auto; display: block; }
+  .pointer {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-top: 26px solid var(--orange);
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));
+    z-index: 2;
+  }
+  .hub-btn {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background: var(--navy);
+    color: #fff;
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(20,48,79,.35);
+    transition: background .15s;
+  }
+  .hub-btn:hover:not(:disabled) { background: var(--teal); }
+  .hub-btn:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+  .hub-btn:disabled { cursor: default; opacity: .85; }
+
+  .result {
+    text-align: center;
+    margin-top: 18px;
+    min-height: 74px;
+  }
+  .result .label {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .result .value {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.1;
+  }
+  .result .value.win { animation: pop .4s ease; color: var(--orange); }
+  @keyframes pop {
+    0% { transform: scale(.6); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .result .value.win { animation: none; }
+  }
+
+  .side h2 {
+    font-size: 1rem;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    border-bottom: 2px solid var(--teal);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .95rem;
+    margin-bottom: 14px;
+  }
+  .opt input { accent-color: var(--teal); width: 16px; height: 16px; }
+  .history {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .history li {
+    background: var(--navy);
+    color: #fff;
+    font-weight: 700;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+  .history li:first-child { background: var(--orange); }
+  .history-empty { font-size: .9rem; color: #6c7f92; }
+  .btn-secondary {
+    margin-top: 16px;
+    background: #fff;
+    border: 1.5px solid var(--teal);
+    color: var(--teal);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: .9rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .btn-secondary:hover { background: var(--teal); color: #fff; }
+  .btn-secondary:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+  footer {
+    text-align: center;
+    font-size: .8rem;
+    color: #6c7f92;
+    padding: 12px 0 28px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>NBTS Random Drawing Wheel</h1>
+    <span class="tag">1&ndash;13</span>
+  </div>
+  <a class="back" href="/">&larr; Back to portal</a>
+</header>
+
+<main>
+  <section class="card">
+    <div class="wheel-wrap">
+      <div class="pointer"></div>
+      <canvas id="wheel" width="880" height="880" aria-label="Prize wheel with numbers 1 through 13"></canvas>
+      <button id="spinBtn" class="hub-btn" aria-live="polite">SPIN</button>
+    </div>
+    <div class="result" aria-live="polite">
+      <div class="label" id="resultLabel"></div>
+      <div class="value" id="resultValue"></div>
+    </div>
+  </section>
+
+  <aside class="card side">
+    <h2>Drawing Options</h2>
+    <label class="opt">
+      <input type="checkbox" id="removeWinner">
+      Remove winner after each draw
+    </label>
+    <h2>Draw History</h2>
+    <ul class="history" id="history"></ul>
+    <p class="history-empty" id="historyEmpty">No draws yet. Hit SPIN.</p>
+    <button class="btn-secondary" id="resetBtn">Reset wheel</button>
+  </aside>
+</main>
+
+<footer>NBTS AI Platform &middot; Internal tool &middot; Results are cryptographically random</footer>
+
+<script>
+(function () {
+  const NAVY = '#14304f', TEAL = '#0085ad', ORANGE = '#e0922f';
+  const SEG_COLORS = [NAVY, TEAL, ORANGE];
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.getElementById('spinBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const removeWinnerBox = document.getElementById('removeWinner');
+  const historyEl = document.getElementById('history');
+  const historyEmpty = document.getElementById('historyEmpty');
+  const resultLabel = document.getElementById('resultLabel');
+  const resultValue = document.getElementById('resultValue');
+
+  let numbers = [];
+  let rotation = 0;          // current wheel rotation in radians
+  let spinning = false;
+  const history = [];
+
+  function initNumbers() {
+    numbers = Array.from({ length: 13 }, (_, i) => i + 1);
+  }
+
+  function segColor(i, total) {
+    // Avoid same color touching at the wrap point
+    let c = SEG_COLORS[i % SEG_COLORS.length];
+    if (i === total - 1 && c === SEG_COLORS[0] && total > 1) c = SEG_COLORS[1];
+    return c;
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const cx = W / 2, cy = H / 2;
+    const r = W / 2 - 14;
+    const n = numbers.length;
+    ctx.clearRect(0, 0, W, H);
+
+    if (n === 0) {
+      ctx.fillStyle = '#d8e1ea';
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = NAVY;
+      ctx.font = '700 44px Calibri, Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('All drawn — reset', cx, cy - 120);
+      return;
+    }
+
+    const seg = (Math.PI * 2) / n;
+    for (let i = 0; i < n; i++) {
+      const start = rotation + i * seg - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, start, start + seg);
+      ctx.closePath();
+      ctx.fillStyle = segColor(i, n);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Number label
+      const mid = start + seg / 2;
+      ctx.save();
+      ctx.translate(cx + Math.cos(mid) * r * 0.72, cy + Math.sin(mid) * r * 0.72);
+      ctx.rotate(mid + Math.PI / 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 64px Calibri, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(numbers[i]), 0, 0);
+      ctx.restore();
+    }
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = NAVY;
+    ctx.stroke();
+  }
+
+  function secureRandomIndex(n) {
+    const buf = new Uint32Array(1);
+    const max = Math.floor(0xFFFFFFFF / n) * n;
+    let v;
+    do { crypto.getRandomValues(buf); v = buf[0]; } while (v >= max);
+    return v % n;
+  }
+
+  function spin() {
+    if (spinning || numbers.length === 0) return;
+    spinning = true;
+    spinBtn.disabled = true;
+    spinBtn.textContent = '...';
+    resultLabel.textContent = '';
+    resultValue.textContent = '';
+    resultValue.classList.remove('win');
+
+    const n = numbers.length;
+    const seg = (Math.PI * 2) / n;
+    const winnerIdx = secureRandomIndex(n);
+
+    // Pointer is at top (-90deg). Segment i center sits at rotation + i*seg + seg/2 - 90deg.
+    // We need rotation such that winner center aligns with -90deg => rotation = -(i*seg + seg/2) (mod 2pi)
+    const targetBase = ((-(winnerIdx * seg + seg / 2)) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    const current = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const extraTurns = 5 + secureRandomIndex(3); // 5-7 full turns
+    let delta = targetBase - current;
+    if (delta <= 0) delta += Math.PI * 2;
+    delta += extraTurns * Math.PI * 2;
+
+    const startRotation = rotation;
+    const duration = 4600;
+    const startTime = performance.now();
+    const easeOutQuart = t => 1 - Math.pow(1 - t, 4);
+
+    function frame(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      rotation = startRotation + delta * easeOutQuart(t);
+      draw();
+      if (t < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        finish(winnerIdx);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function finish(winnerIdx) {
+    const winner = numbers[winnerIdx];
+    history.unshift(winner);
+    renderHistory();
+    resultLabel.textContent = 'Winner';
+    resultValue.textContent = winner;
+    resultValue.classList.add('win');
+
+    if (removeWinnerBox.checked) {
+      numbers.splice(winnerIdx, 1);
+      rotation = 0;
+      draw();
+    }
+    spinning = false;
+    spinBtn.disabled = numbers.length === 0;
+    spinBtn.textContent = numbers.length === 0 ? 'DONE' : 'SPIN';
+  }
+
+  function renderHistory() {
+    historyEl.innerHTML = '';
+    historyEmpty.style.display = history.length ? 'none' : 'block';
+    history.forEach(v => {
+      const li = document.createElement('li');
+      li.textContent = v;
+      historyEl.appendChild(li);
+    });
+  }
+
+  function reset() {
+    if (spinning) return;
+    initNumbers();
+    rotation = 0;
+    history.length = 0;
+    renderHistory();
+    resultLabel.textContent = '';
+    resultValue.textContent = '';
+    resultValue.classList.remove('win');
+    spinBtn.disabled = false;
+    spinBtn.textContent = 'SPIN';
+    draw();
+  }
+
+  spinBtn.addEventListener('click', spin);
+  resetBtn.addEventListener('click', reset);
+
+  initNumbers();
+  renderHistory();
+  draw();
+})();
+</script>
+</body>
+</html>
