@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBTS AI - Keypad Programming</title>
+<style>
+  :root{
+    --ink:#3a3226; --pencil:#8d8474;
+    --black:#1f1f1f; --btn:#8f939a; --lcd:#b8bfb6; --lcd-dk:#7d8a80;
+    --teal:#0085AD; --navy:#1E4B8C; --stripe:#E8EEF2;
+    --orange:#e8862c; --white-w:#f4f1e8; --led:#6fd44a; --red:#d4483c;
+  }
+  html,body{margin:0;padding:0;background:#FFFFFF;color:#333;font-family:'Open Sans',-apple-system,'Segoe UI',Arial,sans-serif;}
+  .hdr{position:relative;overflow:hidden;border-bottom:3px solid #0085AD;background:#FFFFFF;}
+  .hdr-swoosh{position:absolute;right:0;top:0;height:100%;width:52%;pointer-events:none;}
+  .hdr-inner{position:relative;max-width:1280px;margin:0 auto;padding:26px 24px 18px;}
+  .kicker{color:#0085AD;font-weight:700;letter-spacing:2.5px;font-size:13px;text-transform:uppercase;}
+  .hdr-inner h1{color:#1E4B8C;margin:4px 0 3px;font-size:30px;font-weight:700;}
+  .contact{color:#5B6770;font-size:13px;}
+  .navlinks{max-width:1280px;margin:10px auto 0;padding:0 24px;font-size:13px;}
+  .navlinks a{color:#0085AD;text-decoration:none;font-weight:600;margin-right:18px;}
+  .navlinks a:hover{text-decoration:underline;}
+  .sec{max-width:1280px;margin:22px auto 0;padding:0 24px;}
+  .seclabel{color:#0085AD;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;font-size:14px;padding-bottom:6px;border-bottom:3px solid #0085AD;display:inline-block;}
+  .intro{color:#444;max-width:940px;line-height:1.55;margin:14px 0 18px;font-size:15px;}
+  .stageband{background:#E8EEF2;padding:22px 0;margin-top:4px;}
+  .stage{max-width:1280px;aspect-ratio:1800/1600;margin:0 auto;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(20,48,79,.14);background:#FFFFFF;}
+  svg{display:block;width:100%;height:100%;}
+  text{user-select:none;}
+  .pfoot{max-width:1280px;margin:0 auto;padding:18px 24px 28px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E8EEF2;color:#5B6770;font-size:13px;}
+  .xylem{color:#0085AD;font-style:italic;font-weight:700;font-size:22px;}
+
+  /* ---- in-stage series styles ---- */
+  .t-eyebrow{font:800 20px 'Trebuchet MS',sans-serif;fill:var(--teal);letter-spacing:5px;}
+  .t-title{font:900 46px 'Arial Rounded MT Bold','Trebuchet MS','Arial Black',sans-serif;fill:var(--ink);letter-spacing:1px;}
+  .t-sub{font:700 20px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-btn{font:800 8px 'Trebuchet MS',sans-serif;fill:#1f1f1f;}
+  .t-cap{font:700 30px 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;fill:#5f564a;text-anchor:middle;}
+  .t-scr{font:700 13px 'Trebuchet MS',sans-serif;fill:#25352b;}
+  .t-scr-sm{font:600 9px 'Trebuchet MS',sans-serif;fill:#41544a;}
+  .t-card{font:800 34px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+  .t-card-name{font:800 24px 'Trebuchet MS',sans-serif;fill:#5f564a;}
+  .t-note{font:600 20px 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;fill:var(--pencil);}
+  .t-badge{font:900 40px 'Trebuchet MS',sans-serif;fill:#fff;text-anchor:middle;}
+  .t-stepof{font:800 15px 'Trebuchet MS',sans-serif;fill:var(--teal);letter-spacing:2px;}
+  .t-val{font:800 26px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+  .t-chk{font:700 19px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+
+  .fade{opacity:0;transition:opacity .45s ease;}
+  .fade.on{opacity:1;}
+  .keyglow{opacity:0;}
+  .keyglow.press{opacity:1;animation:kpress .5s ease;}
+  @keyframes kpress{0%{transform:scale(.7)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .valband.edit rect{fill:#2f3d34;}
+  .valband.edit text{fill:#cfe3d4;}
+  .tick{opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;transition:all .35s cubic-bezier(.2,1.5,.4,1);}
+  .tick.on{opacity:1;transform:scale(1);}
+  .dot-act{fill:#e8862c !important;}
+  @media (prefers-reduced-motion: reduce){
+    .keyglow.press{animation:none;}
+  }
+</style>
+</head>
+<body>
+<header class="hdr">
+  <svg class="hdr-swoosh" viewBox="0 0 700 120" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M700 0 L700 120 L120 120 C 330 108 520 74 700 0 Z" fill="#0085AD" opacity="0.14"/>
+    <path d="M700 14 C 520 84 340 112 150 120 L 700 120 Z" fill="#1E4B8C" opacity="0.10"/>
+    <path d="M700 34 C 540 96 400 114 260 120 L 700 120 Z" fill="#0085AD" opacity="0.55"/>
+  </svg>
+  <div class="hdr-inner">
+    <div class="kicker">NBTS AI</div>
+    <h1>Keypad Programming</h1>
+    <div class="contact">Contact: Casey Glynn, Lead Engineer</div>
+  </div>
+</header>
+<div class="navlinks">
+  <a href="/home">Back to Portal</a>
+  <a href="/drive-wiring-story">Drive Wiring Story</a>
+</div>
+<div class="sec">
+  <span class="seclabel">Programming Animation</span>
+  <p class="intro">Programming steps 1 to 7 of the GreenDrive VFD on the Danfoss LCP keypad, from the RMF12 / GreenDrive (no bypass) commissioning instructions: speed units, regional settings, the five display lines, and Configuration Mode set to Closed Loop. Watch the key presses on the keypad and the parameter card on the right. The loop runs about 45 seconds and repeats.</p>
+</div>
+<div class="stageband">
+<div class="stage">
+<svg viewBox="0 0 1800 1600" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Animation of programming steps 1 to 7 on the Danfoss LCP keypad: parameters 0-02, 0-03, 0-20 through 0-24, and 1-00 Configuration Mode set to Closed Loop.">
+
+  <rect width="1800" height="1600" fill="#FFFFFF"/>
+  <g id="gridmarks" opacity="0.7"></g>
+
+  <!-- in-stage title -->
+  <text class="t-eyebrow" x="70" y="80">NBTS ENGINEERING SERIES</text>
+  <text class="t-title" x="66" y="134">PROGRAMMING THE GREENDRIVE</text>
+  <text class="t-sub" x="70" y="170">DANFOSS LCP  &#183;  MENU TREE 1: VFD WITH FLOW METER  &#183;  STEPS 1&#8211;7</text>
+  <path d="M70 186 q260 12 520 0" stroke="var(--red)" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+  <!-- ================= LCP KEYPAD (series style, enlarged) ================= -->
+  <g transform="translate(120,260) scale(2.35)">
+    <rect x="0" y="0" width="190" height="420" rx="20" fill="var(--black)" stroke="var(--ink)" stroke-width="5"/>
+    <rect x="6" y="6" width="178" height="408" rx="16" fill="#2b2b2b"/>
+    <rect x="52" y="16" width="86" height="26" rx="4" fill="var(--red)" stroke="var(--ink)" stroke-width="3"/>
+    <text x="63" y="35" style="font:900 15px 'Trebuchet MS',sans-serif;fill:#fff;font-style:italic">Danfoss</text>
+    <!-- screen -->
+    <rect x="12" y="46" width="166" height="150" rx="6" fill="#8f939a" stroke="var(--ink)" stroke-width="3.5"/>
+    <rect x="18" y="53" width="154" height="136" rx="3" fill="var(--lcd)" stroke="var(--ink)" stroke-width="2.5"/>
+    <!-- dynamic screen content -->
+    <text id="scrTop" class="t-scr-sm" x="24" y="67">0.000 RPM&#160;&#160;&#160;0.00 A&#160;&#160;&#160;0.0 Hz</text>
+    <line x1="23" y1="73" x2="167" y2="73" stroke="#7d8a80" stroke-width="1.4"/>
+    <text id="scrL1" class="t-scr" x="24" y="94" style="font-size:15px"></text>
+    <text id="scrL2" class="t-scr-sm" x="24" y="112" style="font-size:11.5px;font-weight:700"></text>
+    <g id="valband" class="valband">
+      <rect x="22" y="122" width="146" height="24" rx="2" fill="#a6b3a8"/>
+      <text id="scrVal" class="t-scr" x="28" y="139" style="font-size:12px"></text>
+    </g>
+    <text id="scrHint" class="t-scr-sm" x="24" y="162" style="font-size:8.5px"></text>
+    <!-- row 1 keys -->
+    <g id="rowTop"></g>
+    <!-- nav cluster -->
+    <g id="navCl" transform="translate(95,300)"></g>
+    <!-- bottom keys -->
+    <g id="rowBot"></g>
+  </g>
+
+  <!-- ================= PARAMETER CARD ================= -->
+  <g id="cardG" class="fade">
+    <circle id="badgeC" cx="760" cy="430" r="46" fill="var(--orange)" stroke="var(--ink)" stroke-width="5"/>
+    <text id="badgeN" class="t-badge" x="760" y="444">1</text>
+    <text id="stepOf" class="t-stepof" x="830" y="404">STEP 1 OF 7</text>
+    <rect x="828" y="418" width="740" height="120" rx="10" fill="var(--white-w)" stroke="var(--ink)" stroke-width="5"/>
+    <text id="cardParam" class="t-card" x="852" y="466">0-02</text>
+    <text id="cardName" class="t-card-name" x="852" y="510"></text>
+    <!-- value chip -->
+    <g id="chipG">
+      <rect id="chipR" x="852" y="566" width="380" height="56" rx="12" fill="#FFFFFF" stroke="var(--ink)" stroke-width="4" stroke-dasharray="8 6"/>
+      <text id="chipT" class="t-val" x="874" y="602"></text>
+      <g id="chipTick" class="tick">
+        <circle cx="1198" cy="594" r="17" fill="var(--led)" stroke="var(--ink)" stroke-width="3.5"/>
+        <path d="M1190 594 l6 7 l12 -14" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+    <text id="cardNote" class="t-note" x="852" y="668"></text>
+    <!-- press legend -->
+    <g id="pressLegend" transform="translate(852,712)">
+      <text class="t-stepof" x="0" y="0" style="letter-spacing:1px">KEY PRESSES</text>
+      <g id="pressRow"></g>
+    </g>
+  </g>
+
+  <!-- ================= FINALE CHECKLIST ================= -->
+  <g id="checkG" class="fade">
+    <rect x="700" y="360" width="900" height="560" rx="14" fill="var(--white-w)" stroke="var(--ink)" stroke-width="5"/>
+    <text class="t-card" x="736" y="424" style="font-size:30px">BASIC SETUP COMPLETE</text>
+    <path d="M736 440 h340" stroke="var(--teal)" stroke-width="5"/>
+    <g id="checkList"></g>
+    <text class="t-note" x="736" y="890">steps 8 to 53 carry on from here: motor data, terminals, references and PID</text>
+  </g>
+
+  <!-- caption + step dots -->
+  <text id="cap" class="t-cap fade" x="900" y="1490"></text>
+  <g id="dots"></g>
+
+  <script><![CDATA[
+  (function(){
+    const NS="http://www.w3.org/2000/svg";
+    const $=id=>document.getElementById(id);
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function el(n,a,p){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+    function tx(p,x,y,s,cls,st){const t=el("text",{x:x,y:y,"class":cls||"t-btn"},p);if(st)t.setAttribute("style",st);t.textContent=s;return t;}
+
+    /* portal-tint drafting grid */
+    (function(){
+      const g=$("gridmarks");
+      for(let x=100;x<=1750;x+=115) el("path",{d:"M"+x+" 220 V 1560",stroke:"#E8EEF2","stroke-width":1.6,fill:"none"},g);
+      for(let y=260;y<=1560;y+=115) el("path",{d:"M60 "+y+" H 1740",stroke:"#E8EEF2","stroke-width":1.6,fill:"none"},g);
+    })();
+
+    /* ---------- LCP keys (series-style, with glow overlays) ---------- */
+    const keyGlows={};
+    function key(parent,id,x,y,w,h,rx,lines){
+      el("rect",{x:x,y:y,width:w,height:h,rx:rx,fill:"#8f939a",stroke:"#3a3226","stroke-width":2.6},parent);
+      if(lines.length===1) tx(parent,x+w/2,y+h/2+3.5,lines[0],"t-btn","text-anchor:middle;font-size:7.5px");
+      else lines.forEach((l,j)=>tx(parent,x+w/2,y+h/2-2+j*10,l,"t-btn","text-anchor:middle;font-size:7px"));
+      const g=el("rect",{x:x-3,y:y-3,width:w+6,height:h+6,rx:rx+3,fill:"none",stroke:"#e8862c","stroke-width":4,"class":"keyglow"},parent);
+      g.style.transformBox="fill-box";g.style.transformOrigin="center";
+      keyGlows[id]=g;
+    }
+    (function(){
+      const g=$("rowTop");
+      key(g,"status",14,206,38,34,6,["Status"]);
+      key(g,"quick",56,206,38,34,6,["Quick","Menu"]);
+      key(g,"main",98,206,38,34,6,["Main","Menu"]);
+      key(g,"alarm",140,206,38,34,6,["Alarm","Log"]);
+    })();
+    (function(){
+      const g=$("navCl");
+      el("path",{d:"M-72 -22 q-14 18 0 42 l 26 -6 q-8 -14 0 -30 z",fill:"#8f939a",stroke:"#3a3226","stroke-width":2.6},g);
+      tx(g,-62,3,"Back","t-btn","text-anchor:middle;font-size:6.5px");
+      el("path",{d:"M72 -22 q14 18 0 42 l -26 -6 q8 -14 0 -30 z",fill:"#8f939a",stroke:"#3a3226","stroke-width":2.6},g);
+      tx(g,61,-4,"Cancel","t-btn","text-anchor:middle;font-size:6px");
+      tx(g,61,12,"Info","t-btn","text-anchor:middle;font-size:6px");
+      el("circle",{cx:0,cy:0,r:40,fill:"#3a3a3a",stroke:"#3a3226","stroke-width":3},g);
+      const dirs=[["up",0,-24,0],["right",24,0,90],["down",0,24,180],["left",-24,0,270]];
+      dirs.forEach(function(d){
+        el("path",{d:"M0 -8 l7 10 l-14 0 z",fill:"#c9cccd",stroke:"#3a3226","stroke-width":2,
+                   transform:"translate("+d[1]+","+d[2]+") rotate("+d[3]+")"},g);
+        const gl=el("circle",{cx:d[1],cy:d[2],r:11,fill:"none",stroke:"#e8862c","stroke-width":4,"class":"keyglow"},g);
+        gl.style.transformBox="fill-box";gl.style.transformOrigin="center";
+        keyGlows[d[0]]=gl;
+      });
+      el("circle",{cx:0,cy:0,r:15,fill:"#8f939a",stroke:"#3a3226","stroke-width":3},g);
+      tx(g,0,4,"OK","t-btn","text-anchor:middle;font-size:9px;font-weight:900");
+      const okg=el("circle",{cx:0,cy:0,r:19,fill:"none",stroke:"#e8862c","stroke-width":4,"class":"keyglow"},g);
+      okg.style.transformBox="fill-box";okg.style.transformOrigin="center";
+      keyGlows["ok"]=okg;
+    })();
+    (function(){
+      const g=$("rowBot");
+      key(g,"hand",14,362,38,30,14,["Hand","On"]);
+      key(g,"off",56,362,38,30,14,["Off"]);
+      key(g,"auto",98,362,38,30,14,["Auto","On"]);
+      key(g,"reset",140,362,38,30,14,["Reset"]);
+    })();
+
+    /* ---------- scene data (doc steps 1-7; step 2 covers two parameters per the source PDF) ---------- */
+    const KEYSYM={main:"Main Menu",ok:"OK",up:"\u25B2",down:"\u25BC",back:"Back",status:"Status"};
+    const scenes=[
+      {kind:"intro", cap:"start at the Main Menu. tip: run a copy ALL TO LCP first as a backup",
+       scr:["Main Menu","0-** Operation / Display","1-** Load and Motor"], presses:["main","ok"]},
+      {step:"1", of:"STEP 1 OF 7", param:"0-02", name:"Motor Speed Unit", val:"[1]  Hz",
+       note:"speed readouts in Hz", cap:"step 1: 0-02 Motor Speed Unit, set to Hz",
+       presses:["down","ok","up","ok"]},
+      {step:"2", of:"STEP 2 OF 7", param:"0-03", name:"Regional Settings", val:"[1]  North America",
+       note:"NA defaults for the drive", cap:"step 2: 0-03 Regional Settings, North America",
+       presses:["down","ok","up","ok"]},
+      {step:"2", of:"STEP 2 OF 7", param:"0-20", name:"Display Line 1.1 Small", val:"[1617]  Speed [RPM]",
+       note:"first small readout", cap:"still step 2: 0-20 Display Line 1.1, Speed in RPM",
+       presses:["down","down","ok","up","ok"]},
+      {step:"3", of:"STEP 3 OF 7", param:"0-21", name:"Display Line 1.2 Small", val:"[1501]  Running Hours",
+       note:"second small readout", cap:"step 3: 0-21 Display Line 1.2, Running Hours",
+       presses:["down","ok","up","ok"]},
+      {step:"4", of:"STEP 4 OF 7", param:"0-22", name:"Display Line 1.3 Small", val:"[1664]  Analog Input 54",
+       note:"the flow meter signal", cap:"step 4: 0-22 Display Line 1.3, Analog Input 54",
+       presses:["down","ok","up","ok"]},
+      {step:"5", of:"STEP 5 OF 7", param:"0-23", name:"Display Line 2 Large", val:"[1613]  Frequency",
+       note:"big line: output Hz", cap:"step 5: 0-23 Display Line 2, Frequency",
+       presses:["down","ok","up","ok"]},
+      {step:"6", of:"STEP 6 OF 7", param:"0-24", name:"Display Line 3 Large", val:"[1654]  Feedback 1 [Unit]",
+       note:"big line: flow feedback", cap:"step 6: 0-24 Display Line 3, Feedback 1",
+       presses:["down","ok","up","ok"]},
+      {step:"7", of:"STEP 7 OF 7", param:"1-00", name:"Configuration Mode", val:"[3]  Closed Loop",
+       note:"the big one: PID flow control", cap:"step 7: 1-00 Configuration Mode, Closed Loop",
+       presses:["back","down","ok","down","ok","up","up","up","ok"]},
+      {kind:"finale", cap:"basic setup done and the drive is in Closed Loop. back to Status",
+       presses:["back","back","status"]}
+    ];
+
+    /* step dots */
+    const dots=[], dg=$("dots");
+    scenes.forEach(function(s,i){
+      const c=el("circle",{cx:900-(scenes.length-1)*13+i*26,cy:1540,r:8,fill:"#C9D4DB",stroke:"#3a3226","stroke-width":2},dg);
+      dots.push(c);
+    });
+
+    /* finale checklist */
+    (function(){
+      const g=$("checkList");
+      const items=[["1","0-02 Motor Speed Unit","Hz"],["2","0-03 Regional Settings","North America"],
+        ["2","0-20 Display 1.1","1617 Speed RPM"],["3","0-21 Display 1.2","1501 Running Hours"],
+        ["4","0-22 Display 1.3","1664 AI 54"],["5","0-23 Display 2","1613 Frequency"],
+        ["6","0-24 Display 3","1654 Feedback 1"],["7","1-00 Configuration Mode","Closed Loop"]];
+      items.forEach(function(it,i){
+        const y=486+i*48;
+        el("circle",{cx:756,cy:y-7,r:13,fill:"#6fd44a",stroke:"#3a3226","stroke-width":3},g);
+        el("path",{d:"M"+(750)+" "+(y-7)+" l4 5 l9 -11",fill:"none",stroke:"#fff","stroke-width":3.6,"stroke-linecap":"round","stroke-linejoin":"round"},g);
+        tx(g,786,y,it[1],"t-chk");
+        tx(g,1230,y,it[2],"t-chk","fill:#0085AD;font-weight:800");
+      });
+    })();
+
+    /* ---------- screen + card renderers ---------- */
+    function setScreen(lines, val, hint){
+      $("scrL1").textContent = lines[0]||"";
+      $("scrL2").textContent = lines[1]||"";
+      $("scrVal").textContent = val||lines[2]||"";
+      $("scrHint").textContent = hint||"";
+    }
+    function fit(id,max){
+      const e=$(id);let fs=parseFloat(e.style.fontSize)||13;
+      while(e.getComputedTextLength()>max && fs>7){fs-=0.5;e.style.fontSize=fs+"px";}
+    }
+    function showCard(s){
+      $("cardG").classList.add("on");
+      $("checkG").classList.remove("on");
+      $("badgeN").textContent=s.step;
+      $("stepOf").textContent=s.of;
+      $("cardParam").textContent=s.param;
+      $("cardName").textContent=s.name;
+      $("chipT").textContent=s.val;
+      $("chipR").setAttribute("stroke-dasharray","8 6");
+      $("chipR").setAttribute("fill","#FFFFFF");
+      $("chipTick").classList.remove("on");
+      $("cardNote").textContent=s.note;
+      const pr=$("pressRow"); while(pr.firstChild) pr.removeChild(pr.firstChild);
+      s.presses.forEach(function(k,i){
+        const x=i*86;
+        el("rect",{x:x,y:14,width:76,height:34,rx:8,fill:"#FFFFFF",stroke:"#3a3226","stroke-width":3,id:"pk"+i},pr);
+        tx(pr,x+38,36,KEYSYM[k]||k,"t-chk","text-anchor:middle;font-size:15px");
+      });
+    }
+    function press(k, cardIdx){
+      const g=keyGlows[k];
+      if(g){g.classList.remove("press");void g.getBoundingClientRect();g.classList.add("press");}
+      const pk=document.getElementById("pk"+cardIdx);
+      if(pk){pk.setAttribute("fill","#FBE7CF");pk.setAttribute("stroke","#e8862c");}
+    }
+    function saveChip(){
+      $("chipR").setAttribute("stroke-dasharray","0");
+      $("chipR").setAttribute("fill","#EAF7EC");
+      $("chipTick").classList.add("on");
+    }
+
+    /* ---------- engine ---------- */
+    const SC=4400, cap=$("cap");
+    let timers=[];
+    function run(){
+      timers.forEach(clearTimeout);timers=[];
+      scenes.forEach(function(s,i){
+        const t0=i*SC+300;
+        timers.push(setTimeout(function(){
+          dots.forEach((d,j)=>d.classList.toggle("dot-act", j<=i));
+          cap.classList.remove("on");
+          setTimeout(function(){cap.textContent=s.cap;cap.classList.add("on");},180);
+          if(s.kind==="intro"){
+            $("cardG").classList.remove("on");$("checkG").classList.remove("on");
+            setScreen(["Main Menu","0-** Operation / Display","1-** Load and Motor"],"","");
+          } else if(s.kind==="finale"){
+            $("cardG").classList.remove("on");$("checkG").classList.add("on");
+            setScreen(["Status","0 RPM  0.0 Hz  0 GPM","Feedback 1: 0 GPM"],"","closed loop  ·  ready");
+          } else {
+            showCard(s);
+            setScreen([s.param, s.name], s.val.replace(/\s+/g," "), "");
+            $("scrL1").style.fontSize="15px";$("scrL2").style.fontSize="11.5px";$("scrVal").style.fontSize="12px";
+            fit("scrL2",142);fit("scrVal",136);
+            $("valband").classList.remove("edit");
+          }
+          // key presses
+          s.presses.forEach(function(k,pi){
+            timers.push(setTimeout(function(){
+              press(k,pi);
+              if(!s.kind){
+                if(pi===s.presses.length-2) $("valband").classList.add("edit");
+                if(pi===s.presses.length-1){$("valband").classList.remove("edit");saveChip();}
+              }
+            }, 900+pi*420));
+          });
+        }, t0));
+      });
+      timers.push(setTimeout(run, scenes.length*SC+1200));
+    }
+    if(reduced){
+      dots.forEach(d=>d.classList.add("dot-act"));
+      $("checkG").classList.add("on");
+      cap.textContent="programming steps 1 to 7 complete: the drive is in Closed Loop";
+      cap.classList.add("on");
+      setScreen(["Status","0 RPM  0.0 Hz  0 GPM","Feedback 1: 0 GPM"],"","closed loop  ·  ready");
+    } else {
+      run();
+    }
+  })();
+  ]]></script>
+</svg>
+</div>
+</div>
+<footer class="pfoot">
+  <span>NBTS AI Support Platform &#183; Neptune Benson Technical Support</span>
+  <span class="xylem">xylem</span>
+</footer>
+</body>
+</html>
