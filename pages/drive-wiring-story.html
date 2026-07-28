@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Drive Wiring Story - Run Confirm / Start-Stop / Jog</title>
+<title>Drive Wiring Animation - Run Confirm / Start-Stop / Jog</title>
 <style>
 
   :root{
@@ -46,6 +46,18 @@
   .intro{color:#444;max-width:940px;line-height:1.55;margin:14px 0 18px;font-size:15px;}
   .stageband{background:#E8EEF2;padding:22px 0;margin-top:4px;}
   .pfoot{max-width:1280px;margin:0 auto;padding:18px 24px 28px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #E8EEF2;color:#5B6770;font-size:13px;}
+  .warnbox{max-width:940px;margin:16px 0 0;border:2px solid #d4483c;border-left-width:8px;background:#fdf1f0;padding:14px 18px;border-radius:6px;}
+  .warnbox .warntitle{color:#d4483c;font-weight:800;font-size:16px;letter-spacing:.5px;text-transform:uppercase;margin:0 0 4px;}
+  .warnbox p{margin:0;color:#7a2c25;font-weight:600;font-size:15px;}
+  .notes{max-width:940px;margin:12px 0 0;padding-left:22px;color:#444;line-height:1.55;font-size:15px;}
+  .notes li{margin-bottom:8px;}
+  .doc-table{border-collapse:collapse;margin:16px 0 6px;font-size:14px;background:#fff;}
+  .doc-table th{background:#1E4B8C;color:#fff;font-weight:700;padding:8px 14px;text-align:left;border:1px solid #1E4B8C;}
+  .doc-table td{border:1px solid #C9D6E2;padding:7px 14px;color:#333;}
+  .doc-table td.rowlabel{font-weight:700;color:#1E4B8C;background:#F2F6FA;}
+  .doc-table tr:nth-child(even) td:not(.rowlabel){background:#FAFCFE;}
+  .tablenote{color:#5B6770;font-size:13px;margin:6px 0 0;max-width:940px;}
+  .doc-table .spancell{text-align:center;font-weight:600;color:#0b7e88;}
   .xylem{color:#0085AD;font-style:italic;font-weight:700;font-size:22px;}
   .stage{
     max-width:640px;margin:0 auto;
@@ -109,13 +121,13 @@
   </svg>
   <div class="hdr-inner">
     <div class="kicker">NBTS AI</div>
-    <h1>Drive Wiring Story</h1>
+    <h1>Drive Wiring Animation</h1>
     <div class="contact">Contact: Casey Glynn, Lead Engineer &middot; <a href="/" style="color:#0085AD;text-decoration:none;font-weight:700;">&larr; Back to portal</a></div>
   </div>
 </header>
 <div class="sec">
   <span class="seclabel">Wiring Animation</span>
-  <p class="intro">Three wiring stories between the S7-1200 control panel and the VLT drive, played in sequence: the run confirm signal back from the drive relays, the motor start and stop circuit on terminals 12 and 18, then the jumper and the jog speed input on terminal 19. The loop runs about 43 seconds and repeats.</p>
+  <p class="intro">Three wiring stories connecting the Defender RMF12 panel and the GreenDrive VFD, played in sequence: the run confirm signal back from the drive's Relay 1 to B-24+ and T-17, the pump start/stop circuit from T-39 and T-40 to drive terminals 12 and 18, then the T-40 to T-58 jumper and the jog speed for precoat from T-57 to terminal 19. The loop runs about 43 seconds and repeats.</p>
 </div>
 <div class="stageband">
 <div class="stage">
@@ -1063,6 +1075,54 @@
 </svg>
 </div>
 </div>
+
+<div class="sec">
+  <span class="seclabel">Before You Start</span>
+  <div class="warnbox">
+    <p class="warntitle">Warning</p>
+    <p>Unit must be de-energized while working in the panel.</p>
+  </div>
+  <ol class="notes">
+    <li>These instructions assume that power has been supplied to each panel in accordance with application specific power requirements.</li>
+    <li>The flow meter should be properly grounded per flow meter instructions.</li>
+    <li>Ensure that switch S202 is in the "On" position (flip A53 and A54 switch to the right). This is located behind the keypad; carefully remove the LCP to access the switches. See Appendix B in the source document.</li>
+    <li>Before entering any parameters, perform a copy ALL TO LCP function to back up the VFD program into the LCP display. If the program in the VFD has a problem, perform a copy ALL FROM LCP to overwrite any errors. This also applies to backing up a good program verified to meet application specific requirements.</li>
+  </ol>
+</div>
+
+<div class="sec">
+  <span class="seclabel">Control Wiring Instructions</span>
+  <p class="intro">Terminal-to-terminal wiring between the Defender RMF12 panel, the GreenDrive VFD (no bypass panel), and the GF Signet Magmeter. The first four signal groups are the three stories animated above.</p>
+  <table class="doc-table">
+    <tr><th></th><th>RMF12*</th><th>GreenDrive**</th><th>Magmeter***</th></tr>
+    <tr><td class="rowlabel" rowspan="2">Run Confirm</td><td>B-24+</td><td>Relay 1 01</td><td></td></tr>
+    <tr><td>T-17</td><td>Relay 1 02</td><td></td></tr>
+    <tr><td class="rowlabel" rowspan="2">Pump Start/Stop</td><td>T-39</td><td>12 (24VDC)</td><td></td></tr>
+    <tr><td>T-40</td><td>18</td><td></td></tr>
+    <tr><td class="rowlabel">Jumper</td><td>T-40 to T-58</td><td></td><td></td></tr>
+    <tr><td class="rowlabel">Jog Speed for Precoat</td><td>T-57</td><td>19</td><td></td></tr>
+    <tr><td class="rowlabel">Precoat Jog Speed Programming in RMF12</td><td colspan="3" class="spancell">Set parameter 45 in the RMF12 to OP2</td></tr>
+    <tr><td class="rowlabel">Power for Magmeter</td><td></td><td>13 (24VDC)</td><td>1</td></tr>
+    <tr><td class="rowlabel">Analog Input from Magmeter</td><td></td><td>54</td><td>3</td></tr>
+  </table>
+  <p class="tablenote">*See Appendix A in the source document for the RMF12 field wiring guide. &nbsp;**See Appendix B for the GreenDrive field wiring guide. &nbsp;***See Appendix C for Magmeter calibration data.</p>
+</div>
+
+<div class="sec">
+  <span class="seclabel">Magmeter Calibration Data</span>
+  <p class="intro">20mA output "high" range (parameter 6-25) by installed flow meter and pipe size.</p>
+  <table class="doc-table">
+    <tr><th>Mfr. Part Number</th><th>Pipe Size</th><th>GPM at 20mA</th></tr>
+    <tr><td class="rowlabel" rowspan="3">3-2551-P0-12</td><td>2"</td><td>151</td></tr>
+    <tr><td>3"</td><td>338</td></tr>
+    <tr><td>4"</td><td>588</td></tr>
+    <tr><td class="rowlabel" rowspan="2">3-2551-P1-12</td><td>6"</td><td>1333</td></tr>
+    <tr><td>8"</td><td>2335</td></tr>
+    <tr><td class="rowlabel" rowspan="2">3-2551-P2-12</td><td>10"</td><td>3673</td></tr>
+    <tr><td>12"</td><td>5197</td></tr>
+  </table>
+</div>
+
 <footer class="pfoot">
   <span>NBTS AI Support Platform &#183; Neptune Benson Technical Support</span>
   <span class="xylem">xylem</span>
