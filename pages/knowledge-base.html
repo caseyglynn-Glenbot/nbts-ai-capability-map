@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBTS Knowledge Base</title>
+<style>
+  :root { --navy:#14304f; --teal:#0085ad; --orange:#e0922f; --light:#eef4f8; --grey:#58595b; }
+  * { box-sizing:border-box; }
+  body { font-family:Calibri,Segoe UI,Arial,sans-serif; margin:0; background:#f5f7f9; color:#222; }
+  .topbar { background:var(--navy); color:#fff; padding:14px 22px; display:flex; align-items:center; justify-content:space-between; }
+  .topbar .brand { font-weight:bold; letter-spacing:1px; font-size:14px; }
+  .topbar a { color:#9fd4e4; text-decoration:none; font-size:13px; }
+  .topbar a:hover { color:#fff; }
+  .wrap { max-width:640px; margin:40px auto; padding:0 16px; }
+  h1 { color:var(--navy); margin:0 0 4px; font-size:26px; }
+  .sub { color:var(--grey); font-style:italic; border-bottom:3px solid var(--orange); padding-bottom:10px; margin-bottom:22px; }
+  .card { background:#fff; border:1px solid #dfe7ee; border-radius:8px; padding:24px; box-shadow:0 1px 3px rgba(20,48,79,.06); }
+  .card p { margin:0 0 12px; font-size:15px; line-height:1.5; }
+  ul { margin:0 0 16px; padding-left:20px; font-size:14.5px; }
+  li { margin-bottom:5px; }
+  .go {
+    display:inline-block; background:var(--teal); color:#fff; text-decoration:none;
+    padding:13px 28px; border-radius:6px; font-weight:bold; font-size:16px;
+  }
+  .go:hover { background:#006d8f; }
+  .signin { margin-top:14px; padding:12px 14px; background:var(--light); border-left:5px solid var(--teal); font-size:13.5px; color:var(--navy); border-radius:0 6px 6px 0; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">NEPTUNE BENSON | NBTS AI PLATFORM</span>
+  <a href="/home">&larr; Back to portal</a>
+</div>
+<div class="wrap">
+  <h1>NBTS Knowledge Base</h1>
+  <div class="sub">The living support knowledge vault: product notes, alarm tables, wiring references, and procedures with full search, backlinks, and a knowledge graph.</div>
+  <div class="card">
+    <p>What you will find inside:</p>
+    <ul>
+      <li>Defender RMF product hub: controllers, drives, alarms with fixes, operating limits</li>
+      <li>Field procedures: cleans, jumper installs, communication recovery</li>
+      <li>Drive references: GreenDrive programming, magmeter scaling, ABB crosswalk</li>
+      <li>Platform and tool documentation</li>
+    </ul>
+    <p>The knowledge base updates automatically as support notes are added, usually live within about 15 minutes of an edit.</p>
+    <a class="go" href="https://docs.nbtsai.com" target="_blank" rel="noopener">Open the Knowledge Base</a>
+    <div class="signin">First visit: enter your xylem.com email and the one time PIN sent to it. Access stays signed in for a week per device.</div>
+  </div>
+</div>
+</body>
+</html>
