@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBTS Procedure Guide Generator</title>
+<style>
+  :root { --navy:#14304f; --teal:#0085ad; --orange:#e0922f; --light:#eef4f8; --grey:#58595b; }
+  * { box-sizing:border-box; }
+  body { font-family:Calibri,Segoe UI,Arial,sans-serif; margin:0; background:#f5f7f9; color:#222; }
+  .topbar { background:var(--navy); color:#fff; padding:14px 22px; display:flex; align-items:center; justify-content:space-between; }
+  .topbar .brand { font-weight:bold; letter-spacing:1px; font-size:14px; color:#fff; }
+  .topbar a { color:#9fd4e4; text-decoration:none; font-size:13px; }
+  .topbar a:hover { color:#fff; }
+  .wrap { max-width:760px; margin:26px auto; padding:0 16px; }
+  h1 { color:var(--navy); margin:0 0 4px; font-size:26px; }
+  .sub { color:var(--grey); font-style:italic; border-bottom:3px solid var(--orange); padding-bottom:10px; margin-bottom:20px; }
+  .card { background:#fff; border:1px solid #dfe7ee; border-radius:8px; padding:22px; box-shadow:0 1px 3px rgba(20,48,79,.06); }
+  label { display:block; font-weight:bold; color:var(--navy); margin:14px 0 5px; font-size:14px; }
+  label:first-child { margin-top:0; }
+  .hint { font-weight:normal; color:var(--grey); font-size:12px; }
+  input[type=text], select, textarea {
+    width:100%; padding:10px 12px; border:1px solid #c4d2dd; border-radius:6px;
+    font-family:inherit; font-size:15px; background:#fff;
+  }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--teal); border-color:var(--teal); }
+  textarea { min-height:70px; resize:vertical; }
+  .btn {
+    margin-top:20px; background:var(--teal); color:#fff; border:0; border-radius:6px;
+    padding:12px 26px; font-size:16px; font-weight:bold; cursor:pointer; width:100%;
+  }
+  .btn:hover:not(:disabled) { background:#006d8f; }
+  .btn:disabled { background:#9bb7c4; cursor:wait; }
+  .status { display:none; margin-top:18px; padding:14px; border-radius:6px; font-size:14px; }
+  .status.working { display:block; background:var(--light); border-left:5px solid var(--teal); color:var(--navy); }
+  .status.error { display:block; background:#fdecec; border-left:5px solid #c0392b; color:#7a2318; }
+  .result { display:none; margin-top:18px; padding:18px; border-radius:6px; background:var(--light); border-left:5px solid var(--orange); }
+  .result h2 { margin:0 0 6px; color:var(--navy); font-size:17px; }
+  .result a.dl {
+    display:inline-block; margin-top:10px; background:var(--orange); color:#fff; text-decoration:none;
+    padding:10px 20px; border-radius:6px; font-weight:bold; font-size:15px;
+  }
+  .result a.dl:hover { background:#c47c1e; }
+  .unv { margin-top:10px; font-size:13px; color:#9a5b00; }
+  .spin { display:inline-block; width:14px; height:14px; border:3px solid #9fd4e4; border-top-color:var(--teal); border-radius:50%; animation:sp 0.9s linear infinite; vertical-align:-2px; margin-right:8px; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation:none; } }
+  .note { margin-top:22px; font-size:12.5px; color:var(--grey); }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="brand">NEPTUNE BENSON | NBTS AI PLATFORM</span>
+  <a href="/home">&larr; Back to portal</a>
+</div>
+<div class="wrap">
+  <h1>Procedure Guide Generator</h1>
+  <div class="sub">Describe the procedure you need. The platform searches the NBTS knowledge base and builds a branded PDF guide with wiring, parameters, and a startup checklist.</div>
+
+  <div class="card">
+    <label for="procedure">What procedure do you need? <span class="hint">Be specific: model, task, variant</span></label>
+    <input type="text" id="procedure" placeholder="Example: RMF12 GreenDrive no bypass startup wiring and parameters" maxlength="300">
+
+    <label for="product">Product line</label>
+    <select id="product">
+      <option value="GENERAL">Not sure / General</option>
+      <option value="DEFENDER" selected>Defender RMF</option>
+      <option value="LAWSON_AQUATICS">Lawson Aquatics</option>
+      <option value="ETS_UV">ETS UV</option>
+      <option value="PACIFIC_OZONE">Pacific Ozone</option>
+      <option value="WALLACE_TIERNAN">Wallace &amp; Tiernan</option>
+    </select>
+
+    <label for="context">Site context <span class="hint">Optional: equipment on hand, controller version, site conditions</span></label>
+    <textarea id="context" placeholder="Example: RMF12 controller, bench unit, EU panel" maxlength="500"></textarea>
+
+    <button class="btn" id="go">Generate guide</button>
+
+    <div class="status" id="status"></div>
+
+    <div class="result" id="result">
+      <h2 id="rTitle"></h2>
+      <div>Your guide is ready. The link stays available for future reference.</div>
+      <div class="unv" id="rUnv"></div>
+      <a class="dl" id="rLink" href="#" target="_blank" rel="noopener">Open PDF guide</a>
+    </div>
+  </div>
+
+  <div class="note">Guides are generated from the NBTS knowledge base only. Details the knowledge base cannot confirm are listed in the guide under "Unverified Items, Confirm On Site" instead of being guessed. Review every guide before customer use.</div>
+</div>
+
+<script>
+(function () {
+  var WEBHOOK = 'https://glenbot.app.n8n.cloud/webhook/procedure-guide';
+  var btn = document.getElementById('go');
+  var statusEl = document.getElementById('status');
+  var resultEl = document.getElementById('result');
+
+  function setStatus(cls, html) {
+    statusEl.className = 'status ' + cls;
+    statusEl.innerHTML = html;
+  }
+
+  btn.addEventListener('click', function () {
+    var procedure = document.getElementById('procedure').value.trim();
+    if (!procedure) {
+      setStatus('error', 'Enter the procedure you need before generating.');
+      return;
+    }
+    resultEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    setStatus('working', '<span class="spin"></span>Searching the knowledge base and building your guide. This takes 20 to 40 seconds.');
+
+    fetch(WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        procedure: procedure,
+        product: document.getElementById('product').value,
+        context: document.getElementById('context').value.trim()
+      })
+    })
+    .then(function (r) {
+      if (!r.ok) { throw new Error('Server responded ' + r.status); }
+      return r.json();
+    })
+    .then(function (data) {
+      if (!data || !data.ok || !data.url) { throw new Error('Generation did not complete.'); }
+      statusEl.className = 'status';
+      document.getElementById('rTitle').textContent = data.title || 'Procedure guide';
+      document.getElementById('rLink').href = data.url;
+      var unv = Number(data.unverified_items || 0);
+      document.getElementById('rUnv').textContent = unv > 0
+        ? unv + ' item(s) could not be confirmed from the knowledge base. Check the orange section in the guide before starting work.'
+        : 'All content in this guide was backed by the knowledge base.';
+      resultEl.style.display = 'block';
+    })
+    .catch(function (err) {
+      setStatus('error', 'Guide generation failed: ' + err.message + '. Try again, or narrow the procedure description. If it keeps failing, open a ticket through the portal.');
+    })
+    .finally(function () {
+      btn.disabled = false;
+      btn.textContent = 'Generate guide';
+    });
+  });
+})();
+</script>
+</body>
+</html>
