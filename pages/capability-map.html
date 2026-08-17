@@ -470,6 +470,32 @@
   .loop-note b { color: var(--teal); }
   body.tech-view .status-strip { display: block; }
 
+  /* ---------- Video block ---------- */
+  .video-block {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-top: 22px;
+    overflow: hidden;
+  }
+  .video-head {
+    padding: 16px 22px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .video-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--navy);
+  }
+  .video-sub { font-size: 13px; color: var(--ink-soft); margin-top: 2px; }
+  .video-block video {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #0d1b28;
+  }
+
   /* ---------- D&A expansion ---------- */
   .expansion {
     max-width: 1180px;
@@ -661,80 +687,6 @@
   </div>
 </header>
 
-<div class="coverage">
-  <div class="coverage-card">
-    <div class="coverage-title">Product Line Coverage — ~42 Lines Across 7 Brand Families</div>
-    <div class="coverage-sub">How far each brand family has moved through the four platform enablement stages. Every stage a line completes unlocks more of the lanes above.</div>
-    <table class="matrix">
-      <thead>
-        <tr>
-          <th>Brand family</th>
-          <th>1 · Parts searchable</th>
-          <th>2 · Docs in knowledge base</th>
-          <th>3 · Configurator</th>
-          <th>4 · Document Automation</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="brand-name">Neptune Benson</span><span class="brand-lines">Defender RMF, ProStrainer, strainers &amp; filtration</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Lawson Aquatics</span><span class="brand-lines">Main drains, sand filters, aquatics equipment</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live — SOFA + horizontal sand filters"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">ETS UV</span><span class="brand-lines">UV disinfection systems</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Pacific Ozone</span><span class="brand-lines">Ozone generation &amp; treatment</span></td>
-          <td><span class="status live" title="Live"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Wallace &amp; Tiernan</span><span class="brand-lines">Chemical feed &amp; analysis</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">OSEC</span><span class="brand-lines">On-site hypochlorite generation</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-        <tr>
-          <td><span class="brand-name">Water Champ</span><span class="brand-lines">Chemical induction systems</span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status partial" title="In progress"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-          <td><span class="status planned" title="Planned"></span></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="coverage-legend">
-      <span><span class="status live"></span> Live</span>
-      <span><span class="status partial"></span> In progress</span>
-      <span><span class="status planned"></span> Planned</span>
-      <span style="margin-left:auto;">Stage 1 covers all 3,832 SKUs via the master product list</span>
-    </div>
-  </div>
-</div>
 
 <div class="expansion">
   <div class="expansion-card">
@@ -745,15 +697,17 @@
       <div class="exp-block">
         <h4>What each new product group needs to onboard</h4>
         <ul class="needs-list">
-          <li><b>Product list</b> — which lines the team supports, so entry points and queues can be built per product</li>
           <li><b>Point of contact</b> — who receives tickets, for manual or automatic assignment</li>
-          <li><b>O&amp;M documentation</b> — manuals and technical data sheets to seed the knowledge base (42 products covered today)</li>
-          <li><b>Copy of the aquatics project</b> — cloned as a starting point; teams test it and flag changes rather than building from scratch</li>
+          <li><b>Product list</b> — which lines the team supports, so entry points and queues can be built per product</li>
+          <li><b>IOM and technical documentation</b> — manuals, installation guides, and technical data sheets to seed the knowledge base (42 products covered today)</li>
+          <li><b>Choose your aquatics template</b> — start from a proven aquatics build; teams test it and flag changes rather than building from scratch</li>
           <li><b>Entry point preferences</b> — phone AI, email, SMS, web form, or embedded site widget, all funneling to one Jira project</li>
         </ul>
-        <h4 style="margin-top:16px;">CRM connection</h4>
+        <h4 style="margin-top:16px;">System outputs — where would you like to share the information?</h4>
         <ul class="needs-list">
-          <li><b>Dynamics 365</b> — Jira triggers updating Dynamics cases; tested in sandbox, moving to live cases now. Same pattern available for Salesforce (Europe).</li>
+          <li><b>InSkill copilots</b> — answers and procedures published to a product copilot for field and customer self-service</li>
+          <li><b>CRM, Dynamics 365 or Salesforce</b> — cases updated from Jira triggers; Dynamics tested in sandbox and moving to live cases now, with the same pattern available for Salesforce (Europe).</li>
+          <li><b>NBTS standard options</b> — Jira Service Management as system of record, the shared knowledge base, and the NBTS portal tool pages</li>
         </ul>
       </div>
 
@@ -763,57 +717,69 @@
 
 <main>
 
-  <!-- Lane 1: Technical Support AI -->
+  <!-- Walkthrough video -->
+  <div class="video-block">
+    <div class="video-head">
+      <div class="video-title">Opportunity Pipeline Walkthrough</div>
+      <div class="video-sub">A short overview of the workflow in action.</div>
+    </div>
+    <video controls preload="metadata" playsinline src="/assets/opp_pipeline_2.mp4">
+      Your browser does not support embedded video.
+      <a href="/assets/opp_pipeline_2.mp4">Download the recording</a>.
+    </video>
+  </div>
+
+  <!-- Lane 1: Bid Scorecard -->
   <section class="lane">
     <div class="lane-header">
-      <a class="lane-title" href="/technical-support">Technical Support AI <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
-      <span class="lane-tag">Live · 24/7</span>
-      <a class="lane-howto" href="https://nbts-portal.onrender.com/technical-support">How it works &rsaquo;</a>
+      <a class="lane-title" href="/spec-scorecard">Bid / Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
+      <span class="lane-tag">Live · Scaling</span>
+      <a class="lane-howto" href="https://nbts-portal.onrender.com/spec-scorecard">How it works &rsaquo;</a>
     </div>
     <div class="flow">
       <div class="node input">
         <span class="stage">Input</span>
-        <span class="label">Customer calls &amp; texts</span>
-        <span class="detail">Phone calls and SMS from customers and field techs, any hour.</span>
-        <span class="tech">Twilio SMS routing · ElevenLabs voice agent · platinum customer registry lookup</span>
+        <span class="label">Project spec document</span>
+        <span class="detail">The bid specification for an aquatics or disinfection project.</span>
+        <span class="tech">n8n Cloud workflow trigger · document intake</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node ai">
         <span class="stage">AI Processing</span>
-        <span class="label">Answers from the knowledge base</span>
-        <span class="detail">Understands the question, identifies the product, and pulls the right answer from NBTS documentation and past tickets.</span>
-        <span class="tech">Jira RAG Agent · Supabase vector store (match_documents) · parts catalog agent on master_product_list</span>
+        <span class="label">Scores 28 categories in parallel</span>
+        <span class="detail">Evaluates fit against every scoring category at once, then forms an overall commercial position.</span>
+        <span class="tech">Haiku parallel category scoring · Opus commercial position · Supabase scoring registry (multi-product-line)</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node output">
         <span class="stage">Output</span>
-        <span class="label">Instant answer + Jira ticket</span>
-        <span class="detail">Customer gets a direct answer; a ticket is created automatically for anything needing follow-up.</span>
-        <span class="tech">Jira Service Management auto-create · SMS reply branch · call transcript attached</span>
+        <span class="label">Go / no-go scorecard</span>
+        <span class="detail">A structured scorecard with per-category results and a clear recommendation.</span>
+        <span class="tech">scorecard_runs + scorecard_category_results tables · full run history</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node value">
         <span class="stage">Value</span>
-        <span class="label">24/7 coverage, 3.7× throughput</span>
-        <span class="detail">265 tickets in June vs. a 5-year average of ~71/month — with ~1,300 tickets through the platform to date.</span>
+        <span class="label">Consistent, faster bid decisions</span>
+        <span class="detail">Every bid judged by the same yardstick — no more gut-feel triage.</span>
       </div>
     </div>
     <div class="status-strip">
-      <div class="strip-label">Ticket lifecycle — every request follows the same path</div>
+      <div class="strip-label">Scorecard lifecycle — every bid follows the same path</div>
       <div class="status-steps">
-        <span class="status-step">Intake<small>call / email / SMS / web form</small></span>
+        <span class="status-step">Spec Uploaded<small>spec + drawing PDFs via the form</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">AI Triaged<small>product ID'd, KB answer attached</small></span>
+        <span class="status-step">Vision Read<small>AI reads every page, spec &amp; drawings</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Assigned<small>routed to the right engineer</small></span>
+        <span class="status-step">Scored<small>28 categories evaluated in parallel</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">In Progress<small>customer &amp; Xylem collaborate on ticket</small></span>
+        <span class="status-step">Commercial Position<small>A/B/C/D win position formed</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Resolved<small>engineer documents resolution</small></span>
+        <span class="status-step">Delivered<small>filed to Jira, copy emailed to you</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step loop">KB Updated<small>gap closed for next month</small></span>
+        <span class="status-step loop">Registry Updated<small>run saved for consistent scoring</small></span>
       </div>
-      <div class="loop-note"><b>The learning loop:</b> monthly export of every ticket shows what AI answered vs. what needed an engineer — those gaps go back into the knowledge base, so the same question gets answered automatically next time.</div>
+      <div class="loop-note"><b>The consistency loop:</b> every run and per-category result lands in the Supabase scoring registry, so each bid is judged by the same yardstick and past decisions stay queryable as new product lines come online.</div>
     </div>
   </section>
 
@@ -871,61 +837,137 @@
     </div>
   </section>
 
-  <!-- Lane 3: Bid Scorecard -->
+  <!-- Lane 3: Technical Support and After Market -->
   <section class="lane">
     <div class="lane-header">
-      <a class="lane-title" href="/spec-scorecard">Bid / Spec Scorecard <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
-      <span class="lane-tag">Live · Scaling</span>
-      <a class="lane-howto" href="https://nbts-portal.onrender.com/spec-scorecard">How it works &rsaquo;</a>
+      <a class="lane-title" href="/technical-support">Technical Support and After Market <span class="open-cue" aria-hidden="true">&rsaquo;</span></a>
+      <span class="lane-tag">Live · 24/7</span>
+      <a class="lane-howto" href="https://nbts-portal.onrender.com/technical-support">How it works &rsaquo;</a>
     </div>
     <div class="flow">
       <div class="node input">
         <span class="stage">Input</span>
-        <span class="label">Project spec document</span>
-        <span class="detail">The bid specification for an aquatics or disinfection project.</span>
-        <span class="tech">n8n Cloud workflow trigger · document intake</span>
+        <span class="label">Customer calls &amp; texts</span>
+        <span class="detail">Phone calls and SMS from customers and field techs, any hour.</span>
+        <span class="tech">Twilio SMS routing · ElevenLabs voice agent · platinum customer registry lookup</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node ai">
         <span class="stage">AI Processing</span>
-        <span class="label">Scores 28 categories in parallel</span>
-        <span class="detail">Evaluates fit against every scoring category at once, then forms an overall commercial position.</span>
-        <span class="tech">Haiku parallel category scoring · Opus commercial position · Supabase scoring registry (multi-product-line)</span>
+        <span class="label">Answers from the knowledge base</span>
+        <span class="detail">Understands the question, identifies the product, and pulls the right answer from NBTS documentation and past tickets.</span>
+        <span class="tech">Jira RAG Agent · Supabase vector store (match_documents) · parts catalog agent on master_product_list</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node output">
         <span class="stage">Output</span>
-        <span class="label">Go / no-go scorecard</span>
-        <span class="detail">A structured scorecard with per-category results and a clear recommendation.</span>
-        <span class="tech">scorecard_runs + scorecard_category_results tables · full run history</span>
+        <span class="label">Instant answer + Jira ticket</span>
+        <span class="detail">Customer gets a direct answer; a ticket is created automatically for anything needing follow-up.</span>
+        <span class="tech">Jira Service Management auto-create · SMS reply branch · call transcript attached</span>
       </div>
       <div class="pipe" aria-hidden="true"></div>
       <div class="node value">
         <span class="stage">Value</span>
-        <span class="label">Consistent, faster bid decisions</span>
-        <span class="detail">Every bid judged by the same yardstick — no more gut-feel triage.</span>
+        <span class="label">24/7 coverage, 3.7× throughput</span>
+        <span class="detail">265 tickets in June vs. a 5-year average of ~71/month — with ~1,300 tickets through the platform to date.</span>
       </div>
     </div>
     <div class="status-strip">
-      <div class="strip-label">Scorecard lifecycle — every bid follows the same path</div>
+      <div class="strip-label">Ticket lifecycle — every request follows the same path</div>
       <div class="status-steps">
-        <span class="status-step">Spec Uploaded<small>spec + drawing PDFs via the form</small></span>
+        <span class="status-step">Intake<small>call / email / SMS / web form</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Vision Read<small>AI reads every page, spec &amp; drawings</small></span>
+        <span class="status-step">AI Triaged<small>product ID'd, KB answer attached</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Scored<small>28 categories evaluated in parallel</small></span>
+        <span class="status-step">Assigned<small>routed to the right engineer</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Commercial Position<small>A/B/C/D win position formed</small></span>
+        <span class="status-step">In Progress<small>customer &amp; Xylem collaborate on ticket</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step">Delivered<small>filed to Jira, copy emailed to you</small></span>
+        <span class="status-step">Resolved<small>engineer documents resolution</small></span>
         <span class="status-arrow">→</span>
-        <span class="status-step loop">Registry Updated<small>run saved for consistent scoring</small></span>
+        <span class="status-step loop">KB Updated<small>gap closed for next month</small></span>
       </div>
-      <div class="loop-note"><b>The consistency loop:</b> every run and per-category result lands in the Supabase scoring registry, so each bid is judged by the same yardstick and past decisions stay queryable as new product lines come online.</div>
+      <div class="loop-note"><b>The learning loop:</b> monthly export of every ticket shows what AI answered vs. what needed an engineer — those gaps go back into the knowledge base, so the same question gets answered automatically next time.</div>
     </div>
   </section>
 
 </main>
+
+<div class="coverage">
+  <div class="coverage-card">
+    <div class="coverage-title">Product Line Coverage — ~42 Lines Across 7 Brand Families</div>
+    <div class="coverage-sub">How far each brand family has moved through the four platform enablement stages. Every stage a line completes unlocks more of the lanes above.</div>
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>Brand family</th>
+          <th>1 · Docs uploaded to knowledge base</th>
+          <th>2 · Product list and IOM agents</th>
+          <th>3 · Eng document automation</th>
+          <th>4 · Product configurators</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="brand-name">Neptune Benson</span><span class="brand-lines">Defender RMF 11 / RMF 12 / FP-Series, ProStrainer and strainers, sand filters, valves &amp; actuators, VFDs, pumps, surge tanks, flowmeters</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Lawson Aquatics</span><span class="brand-lines">SOFA and MLD-FG main drains, grates &amp; frames, sand filters, ladders and aquatics fittings</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live — SOFA + horizontal sand filters"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">ECF / ETS UV</span><span class="brand-lines">Barrier Ti, SW, SX, VX and Wafer series, UVLA TOC and VT TOC</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Pacific Ozone</span><span class="brand-lines">MG / G / GS ozone generators, PGS packaged ozone systems, PC portable ozone cart</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Wallace &amp; Tiernan</span><span class="brand-lines">Rivo 1 chemical feed, gas feed and chemical analysis</span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">OSEC</span><span class="brand-lines">On-site electrochlorination, sold under Wallace &amp; Tiernan</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+        <tr>
+          <td><span class="brand-name">Water Champ</span><span class="brand-lines">Chemical induction systems and F-series induction units</span></td>
+          <td><span class="status live" title="Live"></span></td>
+          <td><span class="status partial" title="In progress"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+          <td><span class="status planned" title="Planned"></span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="coverage-legend">
+      <span><span class="status live"></span> Live</span>
+      <span><span class="status partial"></span> In progress</span>
+      <span><span class="status planned"></span> Planned</span>
+      <span style="margin-left:auto;">Stage 2 covers all 3,832 SKUs via the master product list</span>
+    </div>
+  </div>
+</div>
+
 
 <footer>NBTS AI Platform · Neptune Benson Technical Support · Xylem Disinfection &amp; Aquatics</footer>
 
