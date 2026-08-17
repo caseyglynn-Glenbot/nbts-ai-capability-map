@@ -470,6 +470,33 @@
   .loop-note b { color: var(--teal); }
   body.tech-view .status-strip { display: block; }
 
+  /* ---------- Templates CTA ---------- */
+  .cta-row {
+    max-width: 1180px;
+    margin: 26px auto 0;
+    padding: 0 32px;
+    display: flex;
+    justify-content: center;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--teal);
+    color: #fff;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: .3px;
+    text-decoration: none;
+    padding: 13px 26px;
+    border-radius: 10px;
+    border: 1px solid var(--teal);
+    transition: background .12s, border-color .12s, transform .12s;
+  }
+  .cta-btn:hover { background: var(--navy); border-color: var(--navy); transform: translateY(-1px); }
+  .cta-btn .cue { color: var(--orange); font-size: 18px; font-weight: 800; }
+
   /* ---------- Video block ---------- */
   .video-block {
     background: var(--card);
@@ -892,6 +919,10 @@
   </section>
 
 </main>
+
+<div class="cta-row">
+  <a class="cta-btn" href="/">Aquatics templates <span class="cue" aria-hidden="true">&rsaquo;</span></a>
+</div>
 
 <div class="coverage">
   <div class="coverage-card">
