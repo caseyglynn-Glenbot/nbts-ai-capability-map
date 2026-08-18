@@ -222,7 +222,8 @@ function fail(where, e){
 
 /* ---------- sidebar ---------- */
 async function loadList(){
-  allNotes = await api({action:'list'});
+  const listed = await api({action:'list'});
+  allNotes = Array.isArray(listed) ? listed : (listed && listed.items) || [];
   const folders = [...new Set(allNotes.map(n => n.folder || 'Root'))].sort();
   folders.forEach((f,i) => folderColor[f] = PALETTE[i % PALETTE.length]);
 
@@ -256,7 +257,8 @@ $('search').addEventListener('input', e => {
   if(q.length < 2){ drawTree(allNotes); return; }
   timer = setTimeout(async () => {
     try{
-      const hits = await api({action:'search', q, limit:30});
+      const found = await api({action:'search', q, limit:30});
+      const hits = Array.isArray(found) ? found : (found && found.items) || [];
       showTab('notepane');
       $('notepane').innerHTML = hits.length
         ? hits.map(h => '<div class="hit" data-slug="' + esc(h.slug) + '"><b>' + esc(h.title) +
