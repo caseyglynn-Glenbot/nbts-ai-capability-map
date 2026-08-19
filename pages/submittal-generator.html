@@ -77,6 +77,98 @@
   }
   @media (max-width:620px){.grid3{grid-template-columns:1fr}}
 </style>
+
+<style id="xd-style">
+  /* Executive process content - additive block, scoped to .xd- classes */
+  .xd{--xd-blue:#1E4B8C;--xd-mid:#3060A8;--xd-light:#5A8FD0;--xd-shadow:#16386B;}
+  table.xd-steps{width:100%;border-collapse:collapse;margin-top:2px}
+  table.xd-steps th{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink);text-align:left;padding:0 12px 8px;border-bottom:1px solid var(--rule)}
+  table.xd-steps tr{border-bottom:1px solid var(--rule)}
+  table.xd-steps tbody tr:nth-child(odd){background:var(--stripe)}
+  table.xd-steps td{padding:12px;vertical-align:top;font-size:13.5px;color:var(--ink)}
+  table.xd-steps td.n{width:42px;font-weight:800;color:var(--blue);font-size:15px}
+  table.xd-steps td.stage{width:200px;font-weight:700;color:var(--blue)}
+  table.xd-steps .sub{display:block;margin-top:5px;font-size:12.5px;color:var(--ink2)}
+  table.xd-steps .sub b{color:var(--teal)}
+
+  .xd-figure{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:16px}
+  .xd-cap{margin:0 0 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink2)}
+  .xd-note{margin:11px 0 0;font-size:12.5px;color:var(--ink2)}
+
+  .xd-sheet{border:1px solid var(--rule);padding:15px;max-width:320px;background:#fff}
+  .xd-sheet .t{height:8px;width:58%;background:var(--blue);margin-bottom:5px}
+  .xd-sheet .s{height:4px;width:32%;background:var(--teal);margin-bottom:14px}
+  .xd-row{display:flex;gap:5px;padding:2px;margin-bottom:4px}
+  .xd-row i{display:block;height:7px;flex:1;background:var(--stripe)}
+  .xd-row i.w{flex:2}
+  .xd-row.marked{outline:1.5px solid #B03A2E;outline-offset:1px}
+  .xd-tag{display:inline-block;margin-top:14px;background:#F2C744;border:1px solid #C9A51F;
+    padding:4px 8px;font-family:Consolas,"Courier New",monospace;font-size:10.5px;
+    font-weight:700;color:#3A2F00;letter-spacing:.03em}
+  ul.xd-legend{margin:0;padding:0;list-style:none}
+  ul.xd-legend li{display:flex;gap:11px;align-items:flex-start;margin-bottom:13px;font-size:13.5px;color:var(--ink)}
+  ul.xd-legend .sw{flex:none;width:16px;height:16px;margin-top:2px}
+  ul.xd-legend .sw.red{border:1.5px solid #B03A2E}
+  ul.xd-legend .sw.yel{background:#F2C744;border:1px solid #C9A51F}
+  ul.xd-legend b{color:var(--blue)}
+
+  .xd-matrix{display:grid;grid-template-columns:86px 1fr 1fr}
+  .xd-matrix .h{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink2);padding:0 0 8px;text-align:center}
+  .xd-matrix .s{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink2);display:flex;align-items:center;justify-content:flex-end;padding-right:12px}
+  .xd-matrix .c{border:1px solid var(--rule);padding:14px 8px;text-align:center;margin:-0.5px 0 0 -0.5px}
+  .xd-matrix .c b{display:block;font-size:21px;font-weight:800;color:var(--blue);line-height:1.1}
+  .xd-matrix .c span{display:block;font-size:12px;color:var(--ink2);margin-top:4px}
+  .xd-matrix .c.on{background:var(--blue);border-color:var(--blue)}
+  .xd-matrix .c.on b,.xd-matrix .c.on span{color:#fff}
+
+  .xd-mark{position:relative;height:22px}
+  .xd-mark span{position:absolute;bottom:0;left:43%;transform:translateX(-50%);
+    font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;text-align:center}
+  .xd-mark span:after{content:"";display:block;width:1.5px;height:6px;background:var(--blue);margin:3px auto 0}
+  .xd-scale{display:flex;gap:3px}
+  .xd-scale i{display:block;flex:1;height:15px}
+  .xd-scale i:nth-child(1){background:#5A8FD0}
+  .xd-scale i:nth-child(2){background:#3060A8}
+  .xd-scale i:nth-child(3){background:#1E4B8C}
+  .xd-scale i:nth-child(4){background:#16386B}
+  .xd-ticks{display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--ink2)}
+
+  table.xd-data{width:100%;border-collapse:collapse}
+  table.xd-data th{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink);text-align:left;padding:0 12px 8px;border-bottom:1px solid var(--rule)}
+  table.xd-data tr{border-bottom:1px solid var(--rule)}
+  table.xd-data tbody tr:nth-child(odd){background:var(--stripe)}
+  table.xd-data td{padding:12px;font-size:13.5px;vertical-align:top;color:var(--ink)}
+  table.xd-data td.k{font-weight:700;color:var(--blue);width:170px}
+  table.xd-data td.v{text-align:right;font-weight:800;color:var(--blue);white-space:nowrap;width:110px}
+  table.xd-data code{font-family:Consolas,"Courier New",monospace;font-weight:700;color:var(--blue);font-size:13px}
+
+  .xd-ask{border-left:3px solid var(--teal);padding:3px 0 3px 14px;margin:0 0 18px;font-size:14px;color:var(--ink)}
+  .xd-ask em{font-style:normal;display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink2);margin-bottom:3px}
+  ul.xd-value{margin:0;padding-left:19px}
+  ul.xd-value li{font-size:13.5px;color:var(--ink);margin:0 0 9px}
+  ul.xd-value li b{color:var(--blue)}
+  ul.xd-value li::marker{color:var(--teal)}
+
+  @media (max-width:1100px){
+    .xd-figure{grid-template-columns:1fr;gap:26px}
+    .xd-sheet{max-width:none}
+  }
+  @media (max-width:620px){
+    table.xd-steps thead{display:none}
+    table.xd-steps tbody tr{display:block;padding:11px 10px}
+    table.xd-steps td{display:block;width:auto;padding:3px 0}
+    table.xd-steps td.n{font-size:10.5px;letter-spacing:.12em;color:var(--ink2);font-weight:700}
+    table.xd-steps td.stage{font-size:15px;padding-bottom:4px}
+    .xd-matrix{grid-template-columns:64px 1fr 1fr}
+    table.xd-data td.k{width:auto}
+  }
+</style>
 </head>
 <body>
 <div class="backbar"><a class="back" href="/home" style="color:var(--teal);">&larr; Home</a></div>
@@ -163,6 +255,58 @@
       <source src="/assets/videos/submittal-bid.mp4" type="video/mp4">
       Your browser can't play this video. <a href="/assets/videos/submittal-bid.mp4" style="color:var(--teal)">Download it instead</a>.
     </video>
+  </section>
+
+  <section class="xd">
+    <div class="lbl">HOW IT WORKS</div><div class="rule"></div>
+    <p class="sec-sub">The process end to end, in plain terms.</p>
+    <table class="xd-steps">
+      <thead><tr><th>Step</th><th>Stage</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td class="stage">Quote comes in</td><td>A sales engineer submits the quote through the form and names the project.<span class="sub"><b>Needs:</b> the quote PDF. Nothing else to fill out.</span></td></tr>
+        <tr><td class="n">2</td><td class="stage">The order is read</td><td>Every line item is pulled off the quote: part number, description, size and quantity, including multi system projects.<span class="sub"><b>Produces:</b> a clean list of what was actually sold.</span></td></tr>
+        <tr><td class="n">3</td><td class="stage">Documents are matched</td><td>Each part is looked up against the product library and paired with its correct cut sheet, data sheet or drawing.<span class="sub"><b>Produces:</b> the exact set of pages this project needs, in order.</span></td></tr>
+        <tr><td class="n">4</td><td class="stage">Selections are marked</td><td>Every sheet is annotated to show what the customer bought, so the engineer reviewing it never has to guess which row applies.<span class="sub"><b>Produces:</b> red boxes on the ordered rows, yellow callouts on quantities and options.</span></td></tr>
+        <tr><td class="n">5</td><td class="stage">Package is assembled</td><td>Cover sheet, table of contents, tab dividers and all annotated pages merge into one submittal ready to send.<span class="sub"><b>Produces:</b> a single finished PDF, typically 25 to 40 pages.</span></td></tr>
+        <tr><td class="n">6</td><td class="stage">A person approves it</td><td>The package is reviewed and released by our team. The generator prepares the work, it does not send anything to a customer on its own.<span class="sub"><b>Control point:</b> nothing reaches the customer without sign off.</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="xd">
+    <div class="lbl">WHAT THE CUSTOMER RECEIVES</div><div class="rule"></div>
+    <p class="sec-sub">Standard factory literature, marked up so the ordered configuration is obvious at a glance.</p>
+    <div class="xd-figure">
+      <div>
+        <p class="xd-cap">Annotated cut sheet</p>
+        <div class="xd-sheet" role="img" aria-label="A cut sheet with the ordered size row outlined in red and a yellow quantity callout beneath the table.">
+          <div class="t"></div><div class="s"></div>
+          <div class="xd-row"><i class="w"></i><i></i><i></i></div>
+          <div class="xd-row marked"><i class="w"></i><i></i><i></i></div>
+          <div class="xd-row"><i class="w"></i><i></i><i></i></div>
+          <div class="xd-row"><i class="w"></i><i></i><i></i></div>
+          <div class="xd-tag">(2) 30 IN. UNITS REQ'D</div>
+        </div>
+        <p class="xd-note">The page itself is unchanged factory literature. Only the markings are added.</p>
+      </div>
+      <div>
+        <p class="xd-cap">Legend</p>
+        <ul class="xd-legend">
+          <li><span class="sw red"></span><span><b>Red box.</b> Outlines the size or model row that was ordered, so the reviewer never scans the table looking for it.</span></li>
+          <li><span class="sw yel"></span><span><b>Yellow callout.</b> States the quantity and any option selections in plain language beside the item.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <section class="xd">
+    <div class="lbl">WHY IT MATTERS</div><div class="rule"></div>
+    <p class="sec-sub">What this changes for the business.</p>
+    <ul class="xd-value">
+      <li><b>Faster response.</b> Submittals that took an engineer half a day are ready in minutes.</li>
+      <li><b>Consistent output.</b> The same rules apply to every quote, so packages do not vary by who built them.</li>
+      <li><b>Fewer misses.</b> Items get flagged when no document exists for them, instead of quietly dropping off the package.</li>
+      <li><b>Engineering time back.</b> Support engineers spend their day on customer problems, not assembling PDFs.</li>
+    </ul>
+    <div class="notestrip"><b>Human release required.</b> Generated packages are reviewed before they go to a customer. Missing documents are reported on the run rather than silently skipped.</div>
   </section>
 
   <div class="ftr">
