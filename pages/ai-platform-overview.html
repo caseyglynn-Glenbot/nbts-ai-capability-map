@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Platform Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --xylem-teal:#0085AD;
+  --defender-blue:#1E4B8C;
+  --defender-blue-mid:#3060A8;
+  --defender-blue-light:#5A8FD0;
+  --rule-grey:#D0D0D0;
+  --text-primary:#333333;
+  --text-secondary:#5A5A5A;
+  --font-sans:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  --ease:cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#eef1f4;font-family:var(--font-sans);color:var(--text-primary)}
+body{display:flex;justify-content:center;align-items:flex-start;padding:20px}
+
+.frame{width:100%;max-width:1600px;overflow:hidden}
+.stage{
+  width:1600px;height:900px;background:#fff;
+  transform-origin:top left;
+  position:relative;overflow:hidden;
+  padding:40px 60px 34px;
+  display:flex;flex-direction:column
+}
+
+/* header */
+@keyframes draw{to{stroke-dashoffset:0}}
+.eyebrow{position:relative;z-index:2;font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--xylem-teal);text-transform:uppercase}
+h1{position:relative;z-index:2;font-size:34px;font-weight:800;color:var(--defender-blue);text-transform:uppercase;letter-spacing:-.01em;line-height:1.08;margin-top:7px}
+.rule{height:3px;width:0;background:var(--xylem-teal);margin-top:12px;animation:sweep 420ms var(--ease) 420ms forwards}
+@keyframes sweep{to{width:430px}}
+
+/* proof */
+.proof{display:flex;margin-top:16px;border-top:1px solid var(--rule-grey);border-bottom:1px solid var(--rule-grey)}
+.stat{flex:1;padding:10px 22px 10px 0}
+.stat+.stat{padding-left:26px;border-left:1px solid var(--rule-grey)}
+.stat b{display:block;font-size:24px;font-weight:800;color:var(--defender-blue);line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.stat span{display:block;font-size:10.5px;color:var(--text-secondary);margin-top:6px;letter-spacing:.04em}
+
+/* stack */
+.stack{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:14px}
+.layer{flex:1 1 0;min-height:0;display:flex;align-items:stretch}
+.label{width:320px;padding-right:28px;display:flex;flex-direction:column;justify-content:center}
+.lnum{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--xylem-teal)}
+.label h2{font-size:19px;font-weight:800;color:var(--defender-blue);text-transform:uppercase;line-height:1.1;margin-top:4px}
+.label p{font-size:12px;color:var(--text-secondary);margin-top:7px;line-height:1.45}
+.pill{align-self:flex-start;margin-top:9px;font-size:9px;font-weight:700;letter-spacing:.13em;padding:3px 9px}
+.pill.live{background:var(--xylem-teal);color:#fff}
+.pill.horizon{border:1px solid var(--rule-grey);color:var(--text-secondary)}
+
+.band{flex:1;display:flex;align-items:center;padding:14px 6px}
+.band.l1{background:var(--defender-blue-light)}
+.band.l2{background:var(--defender-blue-mid)}
+.band.l3{background:var(--defender-blue)}
+.band.l4{background:linear-gradient(to right,#16386B 0%,#134F7F 55%,var(--xylem-teal) 100%)}
+.chip{flex:1;padding:0 28px;border-left:1px solid rgba(255,255,255,.3)}
+.chip:first-child{border-left:none}
+.band.l4 .chip{border-left:1px solid rgba(255,255,255,.3)}
+.band.l4 .chip:first-child{border-left:none}
+.chip h3{font-size:15px;font-weight:700;color:#fff;line-height:1.25}
+.chip p{font-size:11.5px;color:rgba(255,255,255,.82);margin-top:6px;line-height:1.4;font-variant-numeric:lining-nums}
+.band.l4 .chip h3{color:#fff}
+.band.l4 .chip p{color:rgba(255,255,255,.82)}
+
+/* connectors */
+.conn{flex:0 0 30px;display:flex;align-items:center}
+.conn .spacer{width:320px}
+.conn .line{flex:1;display:flex;align-items:center;justify-content:center;gap:14px}
+.conn em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--xylem-teal)}
+.conn.plain em{color:var(--text-secondary);font-weight:600}
+
+/* asks */
+.asks{display:flex;align-items:flex-start;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-grey);flex:0 0 auto}
+.asks .title{width:320px;padding-right:28px}
+.asks .title h2{font-size:16px;font-weight:800;color:var(--defender-blue);text-transform:uppercase;line-height:1.15}
+.asks .title i{display:block;height:2px;width:96px;background:var(--xylem-teal);margin-top:8px}
+.asklist{flex:1;display:flex}
+.ask{flex:1;padding:0 24px;border-left:1px solid var(--rule-grey)}
+.ask:first-child{border-left:none;padding-left:0}
+.ask h4{font-size:13.5px;font-weight:700;color:var(--defender-blue)}
+.ask p{font-size:11.5px;color:var(--text-secondary);margin-top:5px;line-height:1.4}
+.ask:last-child{padding-right:96px}
+
+.wordmark{position:absolute;right:60px;bottom:24px;font-size:23px;font-weight:700;color:var(--xylem-teal);letter-spacing:-.02em}
+
+.reveal{opacity:0;transform:translateY(8px);animation:rise 500ms var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .reveal{animation:none;opacity:1;transform:none}
+    .rule{animation:none;width:430px}
+}
+
+.pagenav{width:100%;max-width:1600px;margin:0 auto 14px;display:flex;align-items:center;gap:14px;font-family:var(--font-sans)}
+.pagenav a{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--xylem-teal);text-decoration:none}
+.pagenav a:hover{text-decoration:underline}
+.pagenav button{margin-left:auto;font-family:var(--font-sans);font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--defender-blue);background:#fff;border:1px solid var(--rule-grey);padding:7px 14px;cursor:pointer}
+.pagenav button:hover{border-color:var(--xylem-teal);color:var(--xylem-teal)}
+body{flex-direction:column}
+@media print{
+  @page{size:1600px 900px;margin:0}
+  html,body{background:#fff;padding:0}
+  .pagenav{display:none}
+  .frame{max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="pagenav">
+  <a href="/home">&larr; Back to portal</a>
+  <button onclick="window.print()">Print / save as PDF</button>
+</div>
+<div class="frame" id="frame">
+  <div class="stage" id="stage">
+
+    <div class="eyebrow reveal" style="animation-delay:100ms">Disinfection &amp; Aquatics &middot; Neptune Benson Technical Support</div>
+    <h1 class="reveal" style="animation-delay:160ms">From operational data to autonomous service</h1>
+    <div class="rule"></div>
+
+    <div class="proof reveal" style="animation-delay:280ms">
+      <div class="stat"><b data-count="1416">0</b><span>SUPPORT TICKETS HANDLED TO DATE</span></div>
+      <div class="stat"><b data-count="260">0</b><span>TICKETS PER MONTH, 1 ENGINEER PLUS AI, UP FROM 79 ACROSS 4 ENGINEERS</span></div>
+      <div class="stat"><b data-count="42">0</b><span>PRODUCTS SUPPORTED, UP FROM 3</span></div>
+      <div class="stat"><b data-count="25" data-prefix="~" data-suffix="%">0</b><span>OF CALLS RESOLVED BY AI</span></div>
+    </div>
+
+    <div class="stack">
+
+      <div class="layer reveal" style="animation-delay:400ms">
+        <div class="label">
+          <div class="lnum">LAYER 01</div>
+          <h2>Operational data</h2>
+          <p>What the plants, service teams, and systems of record already generate.</p>
+          <span class="pill live">LIVE</span>
+        </div>
+        <div class="band l1">
+          <div class="chip"><h3>Systems of record</h3><p>Jira and SAP</p></div>
+          <div class="chip"><h3>Product and install base</h3><p>9,703 projects, 3,832 parts</p></div>
+          <div class="chip"><h3>Service history</h3><p>Manuals, drawings, support calls</p></div>
+        </div>
+      </div>
+
+      <div class="conn plain reveal" style="animation-delay:450ms">
+        <div class="spacer"></div>
+        <div class="line">
+          <svg width="16" height="28" viewBox="0 0 16 28"><path d="M8 0 V20" stroke="#D0D0D0" stroke-width="1.5"/><path d="M3 18 L8 25 L13 18" fill="none" stroke="#D0D0D0" stroke-width="1.5"/></svg>
+          <em>Structured into meaning</em>
+        </div>
+      </div>
+
+      <div class="layer reveal" style="animation-delay:500ms">
+        <div class="label">
+          <div class="lnum">LAYER 02</div>
+          <h2>Semantic spine</h2>
+          <p>Meaning is fixed before any agent runs, so the same question returns the same answer.</p>
+          <span class="pill live">LIVE</span>
+        </div>
+        <div class="band l2">
+          <div class="chip"><h3>Canonical definitions</h3><p>One name per brand, product, part</p></div>
+          <div class="chip"><h3>Knowledge graph</h3><p>Verified specs, faults, procedures</p></div>
+          <div class="chip"><h3>Rules and constraints</h3><p>Deterministic logic before AI</p></div>
+        </div>
+      </div>
+
+      <div class="conn reveal" style="animation-delay:550ms">
+        <div class="spacer"></div>
+        <div class="line">
+          <svg width="16" height="30" viewBox="0 0 16 30"><path d="M8 2 V28" stroke="#0085AD" stroke-width="1.8"/><path d="M3 7 L8 1 L13 7" fill="none" stroke="#0085AD" stroke-width="1.8"/><path d="M3 23 L8 29 L13 23" fill="none" stroke="#0085AD" stroke-width="1.8"/></svg>
+          <em>Agents query the spine &middot; the spine constrains the agents</em>
+        </div>
+      </div>
+
+      <div class="layer reveal" style="animation-delay:600ms">
+        <div class="label">
+          <div class="lnum">LAYER 03</div>
+          <h2>Agent mesh</h2>
+          <p>AI agents and human judgment working over the same knowledge.</p>
+          <span class="pill live">LIVE</span>
+        </div>
+        <div class="band l3">
+          <div class="chip"><h3>One shared retrieval path</h3><p>Every agent, same source of truth</p></div>
+          <div class="chip"><h3>Support and commercial agents</h3><p>Voice, tickets, submittals, bids</p></div>
+          <div class="chip"><h3>Human judgment nodes</h3><p>Engineer review before release</p></div>
+        </div>
+      </div>
+
+      <div class="conn plain reveal" style="animation-delay:650ms">
+        <div class="spacer"></div>
+        <div class="line">
+          <svg width="16" height="28" viewBox="0 0 16 28"><path d="M8 0 V20" stroke="#D0D0D0" stroke-width="1.5"/><path d="M3 18 L8 25 L13 18" fill="none" stroke="#D0D0D0" stroke-width="1.5"/></svg>
+          <em>Compounds into the operating model</em>
+        </div>
+      </div>
+
+      <div class="layer reveal" style="animation-delay:700ms">
+        <div class="label">
+          <div class="lnum">LAYER 04</div>
+          <h2>AI-native operations</h2>
+          <p>Intelligence as a property of the operating model, not a feature of tools.</p>
+          <span class="pill live">LIVE</span>
+        </div>
+        <div class="band l4">
+          <div class="chip"><h3>Autonomous workflows</h3><p>Quote to order to submittal</p></div>
+          <div class="chip"><h3>Traceable decisions</h3><p>Every answer sourced</p></div>
+          <div class="chip"><h3>Portable to other businesses</h3><p>Re-host the pattern, do not rebuild</p></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="asks reveal" style="animation-delay:780ms">
+      <div class="title"><h2>What we need to scale it</h2><i></i></div>
+      <div class="asklist">
+        <div class="ask"><h4>Embedded engineering</h4><p>Two engineers on the team. Today the platform is one person deep.</p></div>
+        <div class="ask"><h4>A sanctioned hosting path</h4><p>A decision on enterprise hosting and migration timing.</p></div>
+        <div class="ask"><h4>Security governance</h4><p>Access and credential work finished to your standards, with your team.</p></div>
+      </div>
+    </div>
+
+    <div class="wordmark">xylem</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var frame=document.getElementById('frame'),stage=document.getElementById('stage');
+  function fit(){
+    var s=Math.min(frame.clientWidth/1600,1);
+    stage.style.transform='scale('+s+')';
+    frame.style.height=(900*s)+'px';
+  }
+  fit();
+  window.addEventListener('resize',fit);
+
+  var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  document.querySelectorAll('[data-count]').forEach(function(el){
+    var target=+el.getAttribute('data-count'),suffix=el.getAttribute('data-suffix')||'',prefix=el.getAttribute('data-prefix')||'';
+    if(reduce){el.textContent=prefix+target.toLocaleString()+suffix;return;}
+    var start=null;
+    function step(t){
+      if(!start)start=t;
+      var p=Math.min((t-start)/900,1),e=1-Math.pow(1-p,3);
+      el.textContent=prefix+Math.round(target*e).toLocaleString()+suffix;
+      if(p<1)requestAnimationFrame(step);
+    }
+    setTimeout(function(){requestAnimationFrame(step);},320);
+  });
+})();
+</script>
+</body>
+</html>
