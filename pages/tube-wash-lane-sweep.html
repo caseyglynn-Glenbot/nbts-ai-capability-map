@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform | Tube Wash, Lane Coverage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .sec-sub{font-size:13.5px;color:var(--ink2);margin:-8px 0 16px}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--ink2)}
+  .step{background:var(--stripe);border-top:2px solid var(--teal);padding:7px 13px;color:var(--ink);font-weight:600}
+  .steparrow{color:var(--teal);font-weight:700}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:var(--stripe);border-top:3px solid var(--teal);padding:15px 16px 13px;display:flex;flex-direction:column;gap:4px;
+    position:relative;transition:border-top-color .12s,background .12s}
+  a.tile:hover{border-top-color:var(--blue);background:#DEE8EE}
+  a.tile:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .tile .brand2{font-weight:700;font-size:15.5px;color:var(--blue)}
+  .tile .lines{font-size:12.5px;color:var(--ink2)}
+  .tile .badge{position:absolute;top:12px;right:13px;font-size:10px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:2px 8px;border:1px solid var(--green);color:var(--green)}
+  .tile .cue{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--teal)}
+  a.tile:hover .cue{color:var(--blue)}
+  .tile.pending{border-top-color:#C9D6DE;background:#F3F6F8;cursor:not-allowed}
+  .tile.pending .brand2{color:#7C8B98}
+  .tile.pending .lines{color:#9AA7B2}
+  .tile.pending .badge{border-color:#B7C4CE;color:#8A99A6}
+  .notestrip{margin-top:18px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .howbox{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 20px}
+  .howbox ol{margin:0;padding-left:20px}
+  .howbox li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .howbox li b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+    .grid3{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:620px){.grid3{grid-template-columns:1fr}}
+
+  /* ---------- animation stage ---------- */
+  .stagewrap{background:var(--stripe);border-top:3px solid var(--teal);padding:18px}
+  .stage{max-width:600px;margin:0 auto;aspect-ratio:9/16;background:var(--parch);
+    border:1px solid #D6DEE4;overflow:hidden}
+  .stage svg{display:block;width:100%;height:100%}
+
+  .stage{
+    --ink:#3a3226;
+    --parch:#f6efe0;
+    --parch-dk:#ece2cc;
+    --pencil:#8d8474;
+
+    --vessel:#efe4c6;
+    --vessel-lt:#f9f2dc;
+    --vessel-dk:#d9caa4;
+    --vessel-sh:#c4b287;
+    --rust:#b9964f;
+
+    --frame:#2b4a8f;
+    --frame-dk:#1f3768;
+
+    --bore:#24282b;
+    --tube:#5a6064;
+    --tube-lt:#7b8287;
+    --tube-dk:#3d4246;
+
+    --media:#f5f2e7;
+    --media-dk:#ddd7c5;
+
+    --steel:#bcc1c5;
+    --steel-dk:#8e9498;
+    --lever:#7cc142;
+    --lever-dk:#5da22c;
+
+    --teal:#0d9aa6;
+    --teal-dk:#0b7e88;
+    --water:#dceef7;
+  }
+  text{user-select:none;}
+
+  .t-eyebrow{font:800 20px 'Trebuchet MS',sans-serif;fill:var(--teal-dk);letter-spacing:5px;}
+  .t-title{font:900 78px 'Arial Rounded MT Bold','Trebuchet MS','Arial Black',sans-serif;fill:var(--ink);letter-spacing:1px;}
+  .t-sub{font:700 23px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-hand{font:600 21px 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;fill:var(--pencil);}
+  .t-hand-dk{font:700 23px 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;fill:#5f564a;}
+  .t-step{font:800 25px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+  .t-body{font:600 19px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-num{font:900 27px 'Trebuchet MS',sans-serif;fill:#f6efe0;}
+  .t-tick{font:800 17px 'Trebuchet MS',sans-serif;fill:var(--pencil);letter-spacing:3px;}
+
+  /* ---- master 11s cycle ---- */
+  .tube-flex{transform-box:fill-box;transform-origin:50% 50%;animation:bow 11s linear infinite;}
+  @keyframes bow{
+    0%,3%   {transform:skewX(0deg);}
+    5%      {transform:skewX(-7deg);}
+    8.5%    {transform:skewX(6deg);}
+    12%     {transform:skewX(-2.5deg);}
+    16%,100%{transform:skewX(0deg);}
+  }
+
+  .wipe{transform-box:fill-box;transform-origin:0% 50%;animation:wipe 11s linear infinite;}
+  @keyframes wipe{
+    0%,6%      {transform:scaleX(0);}
+    68%,89.9%  {transform:scaleX(1);}
+    90%,100%   {transform:scaleX(0);}
+  }
+  #dirt{animation:recoat 11s linear infinite;}
+  @keyframes recoat{
+    0%,88%  {opacity:1;}
+    90%     {opacity:0;}
+    100%    {opacity:1;}
+  }
+
+  .rig{animation:sweep 11s ease-in-out infinite;}
+  @keyframes sweep{
+    0%,6%   {transform:translateX(-232px);}
+    68%,78% {transform:translateX(232px);}
+    90%,100%{transform:translateX(-232px);}
+  }
+  .jet{animation:jet 11s linear infinite;}
+  @keyframes jet{
+    0%,5.5%  {opacity:0;}
+    7%,67%   {opacity:1;}
+    68.5%,100%{opacity:0;}
+  }
+  .jet-flick{animation:flick .55s ease-in-out infinite;}
+  @keyframes flick{0%,100%{opacity:.85;}50%{opacity:.5;}}
+  .drop{animation:drop 1.15s linear infinite;}
+  .drop.b{animation-delay:.38s}
+  .drop.c{animation-delay:.76s}
+  @keyframes drop{
+    0%{transform:translate(0,0) scale(.6);opacity:0;}
+    18%{opacity:1;}
+    100%{transform:translate(120px,-150px) scale(1.15);opacity:0;}
+  }
+  .flake{animation:fall 2.6s linear infinite;}
+  .flake.b{animation-delay:.9s}
+  .flake.c{animation-delay:1.7s}
+  @keyframes fall{
+    0%{transform:translate(0,0);opacity:0;}
+    15%{opacity:.9;}
+    100%{transform:translate(-14px,190px);opacity:0;}
+  }
+  .runner{animation:run 11s ease-in-out infinite;}
+  @keyframes run{
+    0%,6%   {transform:translateX(0px);}
+    68%,78% {transform:translateX(464px);}
+    90%,100%{transform:translateX(0px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .tube-flex,.wipe,#dirt,.rig,.jet,.jet-flick,.drop,.flake,.runner{animation:none;}
+    .wipe{transform:scaleX(.55);}
+  }
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/home" style="color:var(--teal);">&larr; Home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/product-animations">Product Animations</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Tube Wash: Lane Coverage</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">A flattened view of the same wash, built to show coverage rather than bundle motion. The pass runs left to right across the bundle, one lane at a time, so it is easy to point at where a miss happens and what it leaves behind.</p>
+
+  <section>
+    <div class="lbl">COVERAGE, LANE BY LANE</div><div class="rule"></div>
+    <p class="sec-sub">Use this one to talk through technique and skipped lanes. For the way the bundle actually moves, use the rotation page.</p>
+    <div class="stagewrap">
+      <div class="stage">
+<svg viewBox="0 0 900 1600" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Cartoon technical illustration of the tube wash procedure: a spray lance washes the flex tube bundle inside a flanged vessel, sweeping from left to right while the tubes are parted lane by lane.">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fbf6ea"/>
+    <stop offset="1" stop-color="#efe6d2"/>
+  </linearGradient>
+  <radialGradient id="vig" cx="50%" cy="42%" r="72%">
+    <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#5a4c33" stop-opacity=".16"/>
+  </radialGradient>
+  <linearGradient id="flange" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f9f2dc"/>
+    <stop offset="55%" stop-color="#efe4c6"/>
+    <stop offset="100%" stop-color="#dccda6"/>
+  </linearGradient>
+  <linearGradient id="throat" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#c9b88f"/>
+    <stop offset="30%" stop-color="#e7dbba"/>
+    <stop offset="72%" stop-color="#f6efd9"/>
+    <stop offset="100%" stop-color="#d3c299"/>
+  </linearGradient>
+  <radialGradient id="cav" cx="50%" cy="42%" r="70%">
+    <stop offset="0" stop-color="#33393d"/>
+    <stop offset="100%" stop-color="#1c2023"/>
+  </radialGradient>
+  <linearGradient id="tubeG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#3d4246"/>
+    <stop offset="30%" stop-color="#7b8287"/>
+    <stop offset="62%" stop-color="#5a6064"/>
+    <stop offset="100%" stop-color="#33383b"/>
+  </linearGradient>
+  <linearGradient id="lance" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#6f767b"/>
+    <stop offset="35%" stop-color="#c3c9cd"/>
+    <stop offset="100%" stop-color="#7d8489"/>
+  </linearGradient>
+  <linearGradient id="fan" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+    <stop offset="100%" stop-color="#dceef7" stop-opacity="0"/>
+  </linearGradient>
+  <clipPath id="boreClip"><circle cx="450" cy="700" r="234"/></clipPath>
+  <clipPath id="rigClip"><rect x="0" y="260" width="900" height="830"/></clipPath>
+  <mask id="wipeMask">
+    <rect x="0" y="0" width="900" height="1600" fill="#fff"/>
+    <rect class="wipe" x="206" y="430" width="500" height="560" fill="#000"/>
+  </mask>
+</defs>
+
+<!-- background -->
+<rect width="900" height="1600" fill="url(#bg)"/>
+<g opacity=".5" stroke="#e2d7bd" stroke-width="1">
+  <path d="M0 0V1600M150 0V1600M300 0V1600M450 0V1600M600 0V1600M750 0V1600M900 0V1600"/>
+  <path d="M0 0H900M0 150H900M0 300H900M0 450H900M0 600H900M0 750H900M0 900H900M0 1050H900M0 1200H900M0 1350H900M0 1500H900"/>
+</g>
+<rect width="900" height="1600" fill="url(#vig)"/>
+
+<!-- header -->
+<text class="t-eyebrow" x="60" y="96">NBTS FIELD PROCEDURE</text>
+<text class="t-title" x="58" y="176">Tube Wash</text>
+<text class="t-sub" x="60" y="216">Wash the flex tube bundle in lanes, left to right</text>
+<path d="M60 240H840" stroke="#d8cbae" stroke-width="4" stroke-linecap="round"/>
+
+<!-- ============ VESSEL ============ -->
+<g>
+  <!-- blue support frame behind -->
+  <rect x="46" y="330" width="52" height="760" rx="10" fill="var(--frame)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="60" y="346" width="16" height="728" rx="8" fill="#3a5da8" opacity=".8"/>
+  <rect x="802" y="330" width="52" height="760" rx="10" fill="var(--frame)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="816" y="346" width="16" height="728" rx="8" fill="#3a5da8" opacity=".8"/>
+  <rect x="150" y="1044" width="600" height="46" rx="12" fill="var(--frame-dk)" stroke="var(--ink)" stroke-width="6"/>
+
+  <!-- flange face -->
+  <circle cx="450" cy="700" r="332" fill="url(#flange)" stroke="var(--ink)" stroke-width="8"/>
+  <circle cx="450" cy="700" r="332" fill="none" stroke="#c9b88f" stroke-width="2" opacity=".7"/>
+
+  <!-- bolt holes -->
+  <g fill="#2f3437" stroke="var(--ink)" stroke-width="5">
+    <circle cx="450" cy="410" r="25"/><circle cx="655" cy="495" r="25"/>
+    <circle cx="740" cy="700" r="25"/><circle cx="655" cy="905" r="25"/>
+    <circle cx="450" cy="990" r="25"/><circle cx="245" cy="905" r="25"/>
+    <circle cx="160" cy="700" r="25"/><circle cx="245" cy="495" r="25"/>
+  </g>
+  <g fill="#575d60" opacity=".85">
+    <circle cx="450" cy="404" r="16"/><circle cx="651" cy="489" r="16"/>
+    <circle cx="734" cy="700" r="16"/><circle cx="651" cy="899" r="16"/>
+    <circle cx="450" cy="984" r="16"/><circle cx="249" cy="899" r="16"/>
+    <circle cx="166" cy="700" r="16"/><circle cx="249" cy="489" r="16"/>
+  </g>
+
+  <!-- rust wash ring on the face -->
+  <path d="M450 428a272 272 0 0 1 268 226" fill="none" stroke="var(--rust)" stroke-width="14" stroke-linecap="round" opacity=".28"/>
+  <path d="M182 654a272 272 0 0 1 250 -226" fill="none" stroke="var(--rust)" stroke-width="12" stroke-linecap="round" opacity=".22"/>
+
+  <!-- throat / bore wall -->
+  <circle cx="450" cy="700" r="268" fill="none" stroke="var(--ink)" stroke-width="7"/>
+  <circle cx="450" cy="700" r="252" fill="url(#throat)" stroke="var(--ink)" stroke-width="7"/>
+
+  <!-- cavity -->
+  <circle cx="450" cy="700" r="234" fill="url(#cav)" stroke="var(--ink)" stroke-width="6"/>
+
+  <!-- ===== tube bundle ===== -->
+  <g clip-path="url(#boreClip)">
+    <g id="tubes"></g>
+    <g id="dirt" mask="url(#wipeMask)"></g>
+    <!-- spray and media, kept inside the bore -->
+    <g class="rig">
+      <!-- spray fan, kept inside the bore -->
+    <g class="jet">
+      <g class="jet-flick">
+        <path d="M452 712 L612 566 L648 620 L500 742 Z" fill="url(#fan)"/>
+        <path d="M452 712 L588 592 L604 628 Z" fill="#ffffff" opacity=".75"/>
+      </g>
+      <ellipse cx="614" cy="588" rx="46" ry="30" fill="#ffffff" opacity=".35"/>
+      <g fill="#ffffff" opacity=".9">
+        <circle class="drop" cx="470" cy="700" r="5"/>
+        <circle class="drop b" cx="478" cy="712" r="4"/>
+        <circle class="drop c" cx="462" cy="690" r="4.5"/>
+      </g>
+    </g>
+      <g class="jet" fill="var(--media)" stroke="var(--ink)" stroke-width="2">
+        <ellipse class="flake" cx="436" cy="742" rx="7" ry="5"/>
+        <ellipse class="flake b" cx="462" cy="726" rx="5.5" ry="4"/>
+        <ellipse class="flake c" cx="448" cy="758" rx="6" ry="4.5"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- perlite crust on the upper rim, stays put -->
+  <path d="M318 512q40 -26 96 -34 62 -9 122 6 42 10 72 30 -14 20 -40 12 -50 -16 -108 -18 -66 -3 -118 20 -22 10 -24 -16z"
+        fill="var(--media)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <g fill="var(--media-dk)" opacity=".9">
+    <ellipse cx="392" cy="500" rx="16" ry="8"/><ellipse cx="470" cy="490" rx="20" ry="9"/><ellipse cx="536" cy="504" rx="14" ry="7"/>
+  </g>
+  <path d="M690 690q16 46 6 96" fill="none" stroke="var(--media)" stroke-width="14" stroke-linecap="round" opacity=".85"/>
+  <path d="M690 690q16 46 6 96" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" opacity=".35"/>
+
+  <!-- water beads on the face -->
+  <g fill="var(--water)" stroke="var(--ink)" stroke-width="2.5" opacity=".9">
+    <ellipse cx="676" cy="880" rx="7" ry="9"/><ellipse cx="700" cy="918" rx="5" ry="7"/>
+    <ellipse cx="652" cy="928" rx="6" ry="8"/><ellipse cx="238" cy="806" rx="5" ry="7"/>
+  </g>
+
+  <!-- ===== wash rig (lance + valve + glove) ===== -->
+  <g clip-path="url(#rigClip)">
+  <g class="rig">
+    <!-- lance -->
+    <path d="M446 1240 L452 726" stroke="var(--ink)" stroke-width="30" stroke-linecap="round"/>
+    <path d="M446 1240 L452 726" stroke="url(#lance)" stroke-width="20" stroke-linecap="round"/>
+    <!-- ball valve -->
+    <g transform="translate(450,790)">
+      <rect x="-30" y="-46" width="60" height="92" rx="14" fill="var(--steel)" stroke="var(--ink)" stroke-width="6"/>
+      <rect x="-30" y="-46" width="24" height="92" rx="12" fill="#dfe4e7" opacity=".55"/>
+      <circle cx="0" cy="0" r="15" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="5"/>
+      <rect x="10" y="-16" width="62" height="32" rx="9" fill="var(--lever)" stroke="var(--ink)" stroke-width="6"/>
+      <rect x="18" y="-9" width="46" height="9" rx="4" fill="#a3dd6f" opacity=".8"/>
+      <rect x="-24" y="-64" width="48" height="24" rx="8" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="6"/>
+    </g>
+    <!-- nozzle tip -->
+    <g transform="translate(452,726)">
+      <rect x="-16" y="-26" width="32" height="34" rx="8" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="6"/>
+      <rect x="-9" y="-38" width="18" height="18" rx="6" fill="var(--steel)" stroke="var(--ink)" stroke-width="5"/>
+    </g>
+    <!-- knit glove and forearm -->
+    <g transform="translate(432,1002)">
+      <path d="M-6 22 L-150 236" stroke="var(--ink)" stroke-width="58" stroke-linecap="round"/>
+      <path d="M-6 22 L-150 236" stroke="#f0d3b8" stroke-width="46" stroke-linecap="round"/>
+      <g transform="rotate(-56)">
+        <rect x="-104" y="-42" width="76" height="84" rx="18" fill="#efeade" stroke="var(--ink)" stroke-width="7"/>
+        <g stroke="#d6d0c0" stroke-width="5" stroke-linecap="round">
+          <path d="M-90 -30V30"/><path d="M-74 -30V30"/><path d="M-58 -30V30"/><path d="M-42 -30V30"/>
+        </g>
+        <rect x="-42" y="-48" width="108" height="96" rx="42" fill="#f7f4ec" stroke="var(--ink)" stroke-width="7"/>
+        <g fill="none" stroke="#d6d0c0" stroke-width="5" stroke-linecap="round">
+          <path d="M-8 -36 q10 36 0 72"/><path d="M20 -38 q10 38 0 76"/><path d="M46 -34 q8 34 0 68"/>
+        </g>
+        <path d="M-18 -46 q42 -32 78 -6 22 16 6 32 -20 -20 -48 -14 -28 6 -36 -12z"
+              fill="#f7f4ec" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+      </g>
+    </g>
+  </g>
+  </g>
+
+  <!-- arm passes behind the support beam -->
+  <rect x="150" y="1044" width="600" height="46" rx="12" fill="var(--frame-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="166" y="1056" width="568" height="12" rx="6" fill="#3a5da8" opacity=".7"/>
+</g>
+
+<!-- lane runner -->
+<g transform="translate(218,1128)">
+  <path d="M0 0H464" stroke="#d8cbae" stroke-width="10" stroke-linecap="round"/>
+  <g stroke="var(--pencil)" stroke-width="4" stroke-linecap="round" opacity=".55">
+    <path d="M0 -10V10"/><path d="M116 -8V8"/><path d="M232 -8V8"/><path d="M348 -8V8"/><path d="M464 -10V10"/>
+  </g>
+  <g class="runner">
+    <circle cx="0" cy="0" r="16" fill="var(--teal)" stroke="var(--ink)" stroke-width="6"/>
+    <path d="M-6 -6 L6 0 L-6 6 Z" fill="#f6efe0"/>
+  </g>
+</g>
+<text class="t-tick" x="218" y="1176" text-anchor="start">START LEFT</text>
+<text class="t-tick" x="682" y="1176" text-anchor="end">END RIGHT</text>
+
+<!-- steps -->
+<g transform="translate(60,1218)">
+  <rect x="0" y="0" width="780" height="104" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="52" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="62" text-anchor="middle">1</text>
+  <text class="t-step" x="102" y="44">Set the fan on the first row</text>
+  <text class="t-body" x="102" y="76">Tip against the left wall, valve open, fan flat to the tube faces.</text>
+</g>
+<g transform="translate(60,1338)">
+  <rect x="0" y="0" width="780" height="104" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="52" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="62" text-anchor="middle">2</text>
+  <text class="t-step" x="102" y="44">Move the tubes as you sweep</text>
+  <text class="t-body" x="102" y="76">Part each lane with your free hand so the back rows get washed too.</text>
+</g>
+<g transform="translate(60,1458)">
+  <rect x="0" y="0" width="780" height="104" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="52" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="62" text-anchor="middle">3</text>
+  <text class="t-step" x="102" y="44">Finish at the right wall</text>
+  <text class="t-body" x="102" y="76">One continuous pass. No skipped lanes, no media left on the faces.</text>
+</g>
+
+<text class="t-hand-dk" x="450" y="1584" text-anchor="middle">left to right, one lane at a time</text>
+</svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">WHAT YOU ARE LOOKING AT</div><div class="rule"></div>
+    <div class="howbox">
+      <ol>
+        <li><b>Start left.</b> Tip against the first row, valve open, fan flat to the tube faces.</li>
+        <li><b>Work across.</b> Part each lane so the back rows get washed, not just the faces you can see.</li>
+        <li><b>Finish right.</b> One continuous pass, no skipped lanes.</li>
+        <li><b>Why it matters.</b> A skipped lane does not show up at the vessel. It shows up later as carryover and short runs.</li>
+      </ol>
+    </div>
+    <div class="notestrip"><b>Two views of the same job.</b> This page is a coverage diagram. The bundle in the vessel rotates around its center, shown on <a href="/tube-wash-rotation" style="color:var(--teal);font-weight:700;">Tube Wash: Rotating Bundle</a>.</div>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
+</div>
+<script>
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  var tubes = document.getElementById("tubes");
+  var dirt  = document.getElementById("dirt");
+  var COLS = 15, X0 = 222, STEP = 32.6, CY = 700, H = 560;
+  var SWEEP_START = 0.66, SWEEP_SPAN = 6.82, BOW_LEAD = 0.55;
+
+  function el(n, attrs){
+    var e = document.createElementNS(NS, n);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  // deterministic pseudo random so the poster renders the same every time
+  function rnd(i){ var s = Math.sin(i * 12.9898) * 43758.5453; return s - Math.floor(s); }
+
+  for (var i = 0; i < COLS; i++){
+    var x = X0 + i * STEP;
+    var delay = (SWEEP_START + (i / (COLS - 1)) * SWEEP_SPAN) - BOW_LEAD;
+
+    /* ---- clean tube ---- */
+    var wrap = el("g", {transform: "translate(" + x + "," + CY + ")"});
+    var flex = el("g", {"class": "tube-flex"});
+    flex.style.animationDelay = delay.toFixed(2) + "s";
+
+    flex.appendChild(el("rect", {x:-12, y:-H/2, width:24, height:H, rx:11,
+      fill:"url(#tubeG)", stroke:"#23272a", "stroke-width":3}));
+    for (var y = -H/2 + 12; y < H/2 - 8; y += 16){
+      flex.appendChild(el("path", {d:"M-11 " + y + " q11 6 22 0",
+        fill:"none", stroke:"#22262a", "stroke-width":2.4, opacity:.75}));
+      flex.appendChild(el("path", {d:"M-8 " + (y - 3) + " q8 5 16 0",
+        fill:"none", stroke:"#9aa1a6", "stroke-width":1.6, opacity:.35}));
+    }
+    wrap.appendChild(flex);
+    tubes.appendChild(wrap);
+
+    /* ---- media crust on the same tube ---- */
+    var dwrap = el("g", {transform: "translate(" + x + "," + CY + ")"});
+    var dflex = el("g", {"class": "tube-flex"});
+    dflex.style.animationDelay = delay.toFixed(2) + "s";
+
+    dflex.appendChild(el("rect", {x:-12, y:-H/2, width:24, height:H, rx:11,
+      fill:"#e7e0cd", opacity:.92}));
+    dflex.appendChild(el("path", {d:"M-12 " + (-H/2 + 6) + " q12 -18 24 0 v40 q-12 14 -24 0 z",
+      fill:"var(--media)", stroke:"#23272a", "stroke-width":3, "stroke-linejoin":"round"}));
+    for (var b = 0; b < 9; b++){
+      var by = -H/2 + 40 + rnd(i * 9 + b) * (H - 70);
+      var bx = -9 + rnd(i * 31 + b * 7) * 14;
+      var br = 4 + rnd(i * 5 + b * 3) * 5;
+      dflex.appendChild(el("ellipse", {cx:bx, cy:by, rx:br, ry:br * 0.72,
+        fill: (b % 3 === 0 ? "var(--media-dk)" : "var(--media)"),
+        stroke:"#23272a", "stroke-width":2.4}));
+    }
+    dwrap.appendChild(dflex);
+    dirt.appendChild(dwrap);
+  }
+})();
+</script>
+</body>
+</html>
