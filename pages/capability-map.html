@@ -54,25 +54,31 @@
   }
   .subtitle { margin-top: 10px; font-size: 15px; color: #c6d5e2; max-width: 560px; }
 
+  .toggle-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 22px;
+  }
   .view-toggle {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.25);
+    background: var(--card);
+    border: 1px solid var(--line);
     border-radius: 999px;
     padding: 8px 16px;
     cursor: pointer;
     user-select: none;
     font-size: 14px;
     font-weight: 500;
-    transition: background 0.2s ease;
+    color: var(--ink);
+    transition: background 0.2s ease, border-color 0.2s ease;
   }
-  .view-toggle:hover { background: rgba(255,255,255,0.15); }
+  .view-toggle:hover { background: #eef3f7; border-color: var(--teal-bright); }
   .view-toggle:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   .toggle-track {
     width: 38px; height: 20px;
-    background: rgba(255,255,255,0.25);
+    background: #c3ced8;
     border-radius: 999px;
     position: relative;
     transition: background 0.2s ease;
@@ -470,33 +476,6 @@
   .loop-note b { color: var(--teal); }
   body.tech-view .status-strip { display: block; }
 
-  /* ---------- Templates CTA ---------- */
-  .cta-row {
-    max-width: 1180px;
-    margin: 26px auto 0;
-    padding: 0 32px;
-    display: flex;
-    justify-content: center;
-  }
-  .cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--teal);
-    color: #fff;
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 17px;
-    letter-spacing: .3px;
-    text-decoration: none;
-    padding: 13px 26px;
-    border-radius: 10px;
-    border: 1px solid var(--teal);
-    transition: background .12s, border-color .12s, transform .12s;
-  }
-  .cta-btn:hover { background: var(--navy); border-color: var(--navy); transform: translateY(-1px); }
-  .cta-btn .cue { color: var(--orange); font-size: 18px; font-weight: 800; }
-
   /* ---------- Video block ---------- */
   .video-block {
     background: var(--card);
@@ -707,10 +686,6 @@
       <h1>NBTS AI Platform — What It Does</h1>
       <p class="subtitle">Three AI workstreams powered by shared data and tools, on one platform. Each lane reads left to right: what goes in, what the AI does, what comes out, and why it matters.</p>
     </div>
-    <div class="view-toggle" role="switch" aria-checked="false" tabindex="0" id="techToggle">
-      <span>Technical view</span>
-      <span class="toggle-track"><span class="toggle-knob"></span></span>
-    </div>
   </div>
 </header>
 
@@ -754,6 +729,13 @@
       Your browser does not support embedded video.
       <a href="/assets/opp_pipeline_2.mp4">Download the recording</a>.
     </video>
+  </div>
+
+  <div class="toggle-row">
+    <div class="view-toggle" role="switch" aria-checked="false" tabindex="0" id="techToggle">
+      <span>Technical view</span>
+      <span class="toggle-track"><span class="toggle-knob"></span></span>
+    </div>
   </div>
 
   <!-- Lane 1: Bid Scorecard -->
@@ -919,10 +901,6 @@
   </section>
 
 </main>
-
-<div class="cta-row">
-  <a class="cta-btn" href="/">Aquatics templates <span class="cue" aria-hidden="true">&rsaquo;</span></a>
-</div>
 
 <div class="coverage">
   <div class="coverage-card">
