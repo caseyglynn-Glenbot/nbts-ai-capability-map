@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform | Pneumatic Actuator, Open and Close</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .sec-sub{font-size:13.5px;color:var(--ink2);margin:-8px 0 16px}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--ink2)}
+  .step{background:var(--stripe);border-top:2px solid var(--teal);padding:7px 13px;color:var(--ink);font-weight:600}
+  .steparrow{color:var(--teal);font-weight:700}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:var(--stripe);border-top:3px solid var(--teal);padding:15px 16px 13px;display:flex;flex-direction:column;gap:4px;
+    position:relative;transition:border-top-color .12s,background .12s}
+  a.tile:hover{border-top-color:var(--blue);background:#DEE8EE}
+  a.tile:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .tile .brand2{font-weight:700;font-size:15.5px;color:var(--blue)}
+  .tile .lines{font-size:12.5px;color:var(--ink2)}
+  .tile .badge{position:absolute;top:12px;right:13px;font-size:10px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:2px 8px;border:1px solid var(--green);color:var(--green)}
+  .tile .cue{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--teal)}
+  a.tile:hover .cue{color:var(--blue)}
+  .tile.pending{border-top-color:#C9D6DE;background:#F3F6F8;cursor:not-allowed}
+  .tile.pending .brand2{color:#7C8B98}
+  .tile.pending .lines{color:#9AA7B2}
+  .tile.pending .badge{border-color:#B7C4CE;color:#8A99A6}
+  .notestrip{margin-top:18px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .howbox{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 20px}
+  .howbox ol{margin:0;padding-left:20px}
+  .howbox li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .howbox li b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+    .grid3{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:620px){.grid3{grid-template-columns:1fr}}
+
+  /* ---------- animation stage ---------- */
+  .stagewrap{background:var(--stripe);border-top:3px solid var(--teal);padding:18px}
+  .stage{max-width:600px;margin:0 auto;aspect-ratio:9/16;background:var(--parch);
+    border:1px solid #D6DEE4;overflow:hidden}
+  .stage svg{display:block;width:100%;height:100%}
+
+  .stage{
+    --ink:#3a3226;
+    --parch:#f6efe0;
+    --parch-dk:#ece2cc;
+    --pencil:#8d8474;
+
+    --alu:#c6cbd0;
+    --alu-lt:#e6e9ec;
+    --alu-dk:#8f959b;
+    --cap:#6b4fd6;
+    --cap-dk:#4a33a8;
+
+    --pipe:#b3b9be;
+    --pipe-dk:#7d848a;
+    --bore:#23282b;
+    --band:#1f6fc4;
+    --band-dk:#14508f;
+
+    --tube:#e9ecee;
+    --tube-dk:#9aa1a7;
+
+    --air:#25b7c9;
+    --air-dk:#0b7e88;
+    --water:#bcdcef;
+
+    --teal:#0d9aa6;
+    --teal-dk:#0b7e88;
+    --amber:#e0922f;
+  }
+  text{user-select:none;}
+
+  .t-eyebrow{font:800 20px 'Trebuchet MS',sans-serif;fill:var(--teal-dk);letter-spacing:5px;}
+  .t-title{font:900 66px 'Arial Rounded MT Bold','Trebuchet MS','Arial Black',sans-serif;fill:var(--ink);letter-spacing:1px;}
+  .t-sub{font:700 23px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-hand-dk{font:700 22px 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;fill:#5f564a;}
+  .t-tick{font:800 16px 'Trebuchet MS',sans-serif;fill:var(--pencil);letter-spacing:2px;}
+  .t-port{font:800 18px 'Trebuchet MS',sans-serif;letter-spacing:2px;}
+  .t-step{font:800 24px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+  .t-body{font:600 19px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-num{font:900 26px 'Trebuchet MS',sans-serif;fill:#f6efe0;}
+  .t-chip{font:800 24px 'Trebuchet MS',sans-serif;letter-spacing:3px;}
+
+  /* ---- 12s stroke cycle ---- */
+  .turn{transform-origin:0px 0px;animation:stroke 12s ease-in-out infinite;}
+  @keyframes stroke{
+    0%,12%   {transform:rotate(0deg);}
+    22%,58%  {transform:rotate(-90deg);}
+    68%,100% {transform:rotate(0deg);}
+  }
+  .piston{animation:piston 12s ease-in-out infinite;}
+  @keyframes piston{
+    0%,12%   {transform:translateX(0px);}
+    22%,58%  {transform:translateX(26px);}
+    68%,100% {transform:translateX(0px);}
+  }
+  .piston2{animation:piston2 12s ease-in-out infinite;}
+  @keyframes piston2{
+    0%,12%   {transform:translateX(0px);}
+    22%,58%  {transform:translateX(-26px);}
+    68%,100% {transform:translateX(0px);}
+  }
+  .air-open{animation:airopen 12s linear infinite;}
+  @keyframes airopen{
+    0%,11%  {opacity:0;}
+    13%,22% {opacity:1;}
+    26%,100%{opacity:0;}
+  }
+  .air-close{animation:airclose 12s linear infinite;}
+  @keyframes airclose{
+    0%,57%  {opacity:0;}
+    59%,68% {opacity:1;}
+    72%,100%{opacity:0;}
+  }
+  .flow{animation:flowon 12s linear infinite;}
+  @keyframes flowon{
+    0%,21%  {opacity:0;}
+    25%,57% {opacity:1;}
+    61%,100%{opacity:0;}
+  }
+  .dash{stroke-dasharray:22 18;animation:run .6s linear infinite;}
+  @keyframes run{to{stroke-dashoffset:-40;}}
+  .dash-rev{stroke-dasharray:22 18;animation:runrev .6s linear infinite;}
+  @keyframes runrev{to{stroke-dashoffset:40;}}
+  .chip-closed{animation:onclosed 12s linear infinite;}
+  @keyframes onclosed{
+    0%,14%  {opacity:1;}
+    20%,62% {opacity:0;}
+    72%,100%{opacity:1;}
+  }
+  .chip-open{animation:onopen 12s linear infinite;}
+  @keyframes onopen{
+    0%,18%  {opacity:0;}
+    26%,58% {opacity:1;}
+    68%,100%{opacity:0;}
+  }
+  .arcflow{stroke-dasharray:16 12;animation:arc 1.3s linear infinite;}
+  @keyframes arc{to{stroke-dashoffset:-28;}}
+  @media (prefers-reduced-motion: reduce){
+    .turn,.piston,.piston2,.air-open,.air-close,.flow,.dash,.dash-rev,.chip-closed,.chip-open,.arcflow{animation:none;}
+    .turn{transform:rotate(-90deg);}
+    .air-open,.air-close,.chip-closed{opacity:0;}
+    .flow,.chip-open{opacity:1;}
+  }
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/home" style="color:var(--teal);">&larr; Home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/product-animations">Product Animations</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Pneumatic Actuator: Open and Close</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">The pneumatic actuator is a double acting quarter turn device. Air fed to one port drives the disc out of the bore, air fed to the other port brings it back, and a flow control valve on each line sets how fast it gets there. The animation strokes the valve both ways and lights the line that is pressurized.</p>
+
+  <section>
+    <div class="lbl">AIR TO OPEN, AIR TO CLOSE</div><div class="rule"></div>
+    <p class="sec-sub">The lit line is the one being fed. The cutaway in the middle is the disc in the bore, and the indicator on top of the actuator reads the same position.</p>
+    <div class="stagewrap">
+      <div class="stage">
+<svg viewBox="0 0 900 1600" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Cartoon technical illustration of a pneumatic actuator on a butterfly valve: air to the open port strokes the actuator and swings the disc out of the bore, air to the close port brings it back, with flow control valves on both port lines.">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fbf6ea"/><stop offset="1" stop-color="#efe6d2"/>
+  </linearGradient>
+  <radialGradient id="vig" cx="50%" cy="42%" r="72%">
+    <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#5a4c33" stop-opacity=".16"/>
+  </radialGradient>
+  <linearGradient id="aluG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#eef1f3"/><stop offset="45%" stop-color="#c6cbd0"/>
+    <stop offset="100%" stop-color="#8f959b"/>
+  </linearGradient>
+  <linearGradient id="capG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8f79ea"/><stop offset="55%" stop-color="#6b4fd6"/>
+    <stop offset="100%" stop-color="#432e9b"/>
+  </linearGradient>
+  <linearGradient id="pipeG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#dfe3e6"/><stop offset="42%" stop-color="#b3b9be"/>
+    <stop offset="100%" stop-color="#70777d"/>
+  </linearGradient>
+  <linearGradient id="bandG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3f8fd8"/><stop offset="55%" stop-color="#1f6fc4"/>
+    <stop offset="100%" stop-color="#11447c"/>
+  </linearGradient>
+  <linearGradient id="tubeG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="55%" stop-color="#e2e6e9"/>
+    <stop offset="100%" stop-color="#a7aeb4"/>
+  </linearGradient>
+  <marker id="tip" viewBox="0 0 12 12" refX="7" refY="6" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M1 1 L11 6 L1 11 z" fill="var(--teal-dk)"/>
+  </marker>
+</defs>
+
+<rect width="900" height="1600" fill="url(#bg)"/>
+<g opacity=".5" stroke="#e2d7bd" stroke-width="1">
+  <path d="M0 0V1600M150 0V1600M300 0V1600M450 0V1600M600 0V1600M750 0V1600M900 0V1600"/>
+  <path d="M0 0H900M0 150H900M0 300H900M0 450H900M0 600H900M0 750H900M0 900H900M0 1050H900M0 1200H900M0 1350H900M0 1500H900"/>
+</g>
+<rect width="900" height="1600" fill="url(#vig)"/>
+
+<text class="t-eyebrow" x="60" y="92">NBTS FIELD PROCEDURE</text>
+<text class="t-title" x="58" y="164">Pneumatic Actuator</text>
+<text class="t-sub" x="60" y="204">Double acting, air is fed in to open and to close</text>
+<path d="M60 226H840" stroke="#d8cbae" stroke-width="4" stroke-linecap="round"/>
+
+<!-- ============ ASSEMBLY ============ -->
+<g transform="translate(0,-96)">
+  <!-- pipe -->
+  <rect x="96" y="814" width="708" height="132" rx="22" fill="url(#pipeG)" stroke="var(--ink)" stroke-width="8"/>
+  <ellipse cx="100" cy="880" rx="16" ry="58" fill="var(--bore)" stroke="var(--ink)" stroke-width="7"/>
+  <ellipse cx="800" cy="880" rx="16" ry="58" fill="#8f959b" stroke="var(--ink)" stroke-width="7"/>
+
+  <!-- valve body -->
+  <rect x="330" y="792" width="240" height="176" rx="26" fill="url(#pipeG)" stroke="var(--ink)" stroke-width="8"/>
+  <rect x="330" y="792" width="26" height="176" rx="12" fill="var(--pipe-dk)" stroke="var(--ink)" stroke-width="7"/>
+  <rect x="544" y="792" width="26" height="176" rx="12" fill="var(--pipe-dk)" stroke="var(--ink)" stroke-width="7"/>
+  <rect x="428" y="792" width="44" height="176" fill="url(#bandG)" stroke="var(--ink)" stroke-width="7"/>
+
+  <!-- bore cutaway with the disc -->
+  <rect x="366" y="826" width="168" height="108" rx="12" fill="var(--bore)" stroke="var(--ink)" stroke-width="7"/>
+  <g class="flow">
+    <g stroke="var(--water)" stroke-width="11" stroke-linecap="round" opacity=".95">
+      <path class="dash" d="M120 852 H380"/><path class="dash" d="M120 908 H380"/>
+      <path class="dash" d="M520 852 H780"/><path class="dash" d="M520 908 H780"/>
+    </g>
+    <path d="M520 842 L556 852 L520 862z" fill="var(--water)"/>
+    <path d="M520 898 L556 908 L520 918z" fill="var(--water)"/>
+  </g>
+  <g transform="translate(450,880)">
+    <g class="turn">
+      <rect x="-11" y="-56" width="22" height="112" rx="9" fill="#d5dade" stroke="var(--ink)" stroke-width="6"/>
+    </g>
+    <circle cx="0" cy="0" r="12" fill="#7d848a" stroke="var(--ink)" stroke-width="5"/>
+  </g>
+  <text class="t-tick" x="450" y="1002" text-anchor="middle">DISC IN THE BORE</text>
+
+  <!-- stem up to the actuator -->
+  <rect x="432" y="704" width="36" height="96" rx="8" fill="url(#aluG)" stroke="var(--ink)" stroke-width="7"/>
+  <rect x="404" y="742" width="92" height="30" rx="8" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="7"/>
+
+  <!-- actuator -->
+  <g>
+    <!-- end caps -->
+    <g>
+      <rect x="252" y="572" width="76" height="132" rx="22" fill="url(#capG)" stroke="var(--ink)" stroke-width="8"/>
+      <circle cx="290" cy="638" r="22" fill="var(--cap-dk)" stroke="var(--ink)" stroke-width="6"/>
+    </g>
+    <g>
+      <rect x="572" y="572" width="76" height="132" rx="22" fill="url(#capG)" stroke="var(--ink)" stroke-width="8"/>
+      <circle cx="610" cy="638" r="22" fill="var(--cap-dk)" stroke="var(--ink)" stroke-width="6"/>
+    </g>
+    <!-- body -->
+    <rect x="312" y="560" width="276" height="156" rx="18" fill="url(#aluG)" stroke="var(--ink)" stroke-width="8"/>
+    <g stroke="var(--alu-dk)" stroke-width="5" opacity=".7">
+      <path d="M330 596 H570"/><path d="M330 680 H570"/>
+    </g>
+    <!-- position indicator -->
+    <rect x="414" y="512" width="72" height="52" rx="10" fill="#2b2f32" stroke="var(--ink)" stroke-width="7"/>
+    <g transform="translate(450,512)">
+      <circle cx="0" cy="0" r="30" fill="#3a3f43" stroke="var(--ink)" stroke-width="7"/>
+      <g class="turn">
+        <rect x="-7" y="-26" width="14" height="52" rx="6" fill="#f0e3c4" stroke="var(--ink)" stroke-width="5"/>
+      </g>
+    </g>
+    <text class="t-tick" x="450" y="452" text-anchor="middle">DISC POSITION INDICATOR</text>
+
+    <!-- travel stops -->
+    <g>
+      <rect x="359" y="578" width="30" height="34" rx="6" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="6"/>
+      <rect x="367" y="560" width="14" height="24" rx="5" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="5"/>
+      <rect x="511" y="578" width="30" height="34" rx="6" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="6"/>
+      <rect x="519" y="560" width="14" height="24" rx="5" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="5"/>
+    </g>
+    <text class="t-tick" x="330" y="500" text-anchor="end">OPEN STOP</text>
+    <text class="t-tick" x="570" y="500">CLOSED STOP</text>
+    <path d="M336 506 L368 570" stroke="#bdb29a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M564 506 L532 570" stroke="#bdb29a" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- ===== port tubing, close side (left) ===== -->
+  <path d="M356 716 q-46 12 -60 44 q-14 34 -52 40 H176" fill="none" stroke="var(--ink)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M356 716 q-46 12 -60 44 q-14 34 -52 40 H176" fill="none" stroke="url(#tubeG)" stroke-width="18" stroke-linecap="round"/>
+  <g class="air-close">
+    <path class="dash" d="M176 800 H244 q38 -6 52 -40 q14 -32 60 -44"
+          fill="none" stroke="var(--air)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M340 694 L374 712 L344 732 Z" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <!-- flow control valve, close side -->
+  <g transform="translate(176,800)">
+    <rect x="-56" y="-30" width="62" height="60" rx="10" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
+    <rect x="-40" y="-56" width="30" height="30" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <rect x="-32" y="-74" width="14" height="24" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
+    <path d="M-56 0 H-92" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-56 0 H-92" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+  </g>
+  <text class="t-port" x="96" y="990" fill="#6d6252">AIR TO CLOSE</text>
+  <circle class="air-close" cx="78" cy="984" r="10" fill="var(--air)" stroke="var(--ink)" stroke-width="5"/>
+
+  <!-- ===== port tubing, open side (right) ===== -->
+  <path d="M544 716 q46 12 60 44 q14 34 52 40 H724" fill="none" stroke="var(--ink)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M544 716 q46 12 60 44 q14 34 52 40 H724" fill="none" stroke="url(#tubeG)" stroke-width="18" stroke-linecap="round"/>
+  <g class="air-open">
+    <path class="dash" d="M724 800 H656 q-38 -6 -52 -40 q-14 -32 -60 -44"
+          fill="none" stroke="var(--air)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M560 694 L526 712 L556 732 Z" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <!-- flow control valve, open side -->
+  <g transform="translate(724,800)">
+    <rect x="-6" y="-30" width="62" height="60" rx="10" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
+    <rect x="10" y="-56" width="30" height="30" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <rect x="18" y="-74" width="14" height="24" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
+    <path d="M56 0 H92" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M56 0 H92" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+  </g>
+  <text class="t-port" x="660" y="990" fill="#6d6252">AIR TO OPEN</text>
+  <circle class="air-open" cx="822" cy="984" r="10" fill="var(--air)" stroke="var(--ink)" stroke-width="5"/>
+  <text class="t-tick" x="754" y="726" text-anchor="middle">FLOW CONTROL</text>
+  <text class="t-tick" x="146" y="726" text-anchor="middle">FLOW CONTROL</text>
+</g>
+
+<!-- state chips -->
+<g transform="translate(276,972)">
+  <rect x="0" y="0" width="164" height="56" rx="16" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-chip" x="82" y="38" text-anchor="middle" fill="#8d8474">CLOSED</text>
+  <g class="chip-closed">
+    <rect x="0" y="0" width="164" height="56" rx="16" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <text class="t-chip" x="82" y="38" text-anchor="middle" fill="#f6efe0">CLOSED</text>
+  </g>
+</g>
+<g transform="translate(464,972)">
+  <rect x="0" y="0" width="150" height="56" rx="16" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-chip" x="75" y="38" text-anchor="middle" fill="#8d8474">OPEN</text>
+  <g class="chip-open">
+    <rect x="0" y="0" width="150" height="56" rx="16" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <text class="t-chip" x="75" y="38" text-anchor="middle" fill="#f6efe0">OPEN</text>
+  </g>
+</g>
+
+<!-- steps -->
+<g transform="translate(60,1122)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="54" cy="50" r="27" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="54" y="60" text-anchor="middle">1</text>
+  <text class="t-step" x="98" y="42">Air off before any tubing moves</text>
+  <text class="t-body" x="98" y="74">Shut the supply, then move the closed port line to the switch supply.</text>
+</g>
+<g transform="translate(60,1238)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="54" cy="50" r="27" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="54" y="60" text-anchor="middle">2</text>
+  <text class="t-step" x="98" y="42">Both ports on the air switch</text>
+  <text class="t-body" x="98" y="74">Move the open port line too, feed the switch to both ports, open the air.</text>
+</g>
+<g transform="translate(60,1354)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="54" cy="50" r="27" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="54" y="60" text-anchor="middle">3</text>
+  <text class="t-step" x="98" y="42">Stroke it, then set the speed</text>
+  <text class="t-body" x="98" y="74">Lock nut loose, needles closed clockwise, then open 1.5 turns each.</text>
+</g>
+
+<text class="t-hand-dk" x="450" y="1520" text-anchor="middle">air moves it, the needle valves set how fast</text>
+</svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">WHAT YOU ARE LOOKING AT</div><div class="rule"></div>
+    <div class="howbox">
+      <ol>
+        <li><b>Know your ports before you pull tubing.</b> The tubing connection drawing tells you which port is the closed port. Guessing swaps the action.</li>
+        <li><b>Air off first.</b> Shut the supply before any line comes off the actuator, then move the closed port line to the supply in on the air switch.</li>
+        <li><b>Both ports on the switch.</b> Move the open port line as well, feed the switch to both ports, then open the air and work the switch back and forth to check the stroke.</li>
+        <li><b>Set the speed, not the travel.</b> Loosen the lock nut, close each flow control valve clockwise, then open it 1.5 turns counterclockwise and trim until the operation is smooth.</li>
+        <li><b>The stops are travel limits.</b> Open stop and closed stop set where the disc lands, not how fast it moves. Leave them alone when you are chasing speed.</li>
+      </ol>
+    </div>
+    <div class="notestrip"><b>Built from the actuator tubing and adjustment documents.</b> Port sides and stop positions follow the Pneumatic Actuator Tubing Connections figure. If your build is plumbed opposite, flag it and the page gets corrected.</div>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
+</div>
+</body>
+</html>
