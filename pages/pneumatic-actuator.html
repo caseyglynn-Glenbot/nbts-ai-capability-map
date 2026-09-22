@@ -340,15 +340,19 @@
   <g class="air-close">
     <path class="dash" d="M176 800 H244 q38 -6 52 -40 q14 -32 60 -44"
           fill="none" stroke="var(--air)" stroke-width="10" stroke-linecap="round"/>
-    <path d="M340 694 L374 712 L344 732 Z" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M340 694 L374 712 L344 732 Z" transform="translate(-62,52) rotate(-38 357 712)" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
   </g>
-  <!-- flow control valve, close side -->
+  <!-- line fitting, close side -->
   <g transform="translate(176,800)">
-    <rect x="-56" y="-30" width="62" height="60" rx="10" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
-    <rect x="-40" y="-56" width="30" height="30" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
-    <rect x="-32" y="-74" width="14" height="24" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
-    <path d="M-56 0 H-92" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
-    <path d="M-56 0 H-92" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+    <rect x="-14" y="-17" width="28" height="34" rx="6" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <path d="M-14 0 H-56" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M-14 0 H-56" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+  </g>
+  <!-- flow control valve, close side (mounted at the actuator port) -->
+  <g transform="translate(356,716)">
+    <rect x="-26" y="-2" width="52" height="46" rx="9" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
+    <rect x="-15" y="42" width="30" height="22" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <rect x="-7" y="62" width="14" height="16" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
   </g>
   <text class="t-port" x="96" y="990" fill="#6d6252">AIR TO CLOSE</text>
   <circle class="air-close" cx="78" cy="984" r="10" fill="var(--air)" stroke="var(--ink)" stroke-width="5"/>
@@ -359,20 +363,26 @@
   <g class="air-open">
     <path class="dash" d="M724 800 H656 q-38 -6 -52 -40 q-14 -32 -60 -44"
           fill="none" stroke="var(--air)" stroke-width="10" stroke-linecap="round"/>
-    <path d="M560 694 L526 712 L556 732 Z" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M560 694 L526 712 L556 732 Z" transform="translate(62,52) rotate(38 543 712)" fill="var(--air)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
   </g>
-  <!-- flow control valve, open side -->
+  <!-- line fitting, open side -->
   <g transform="translate(724,800)">
-    <rect x="-6" y="-30" width="62" height="60" rx="10" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
-    <rect x="10" y="-56" width="30" height="30" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
-    <rect x="18" y="-74" width="14" height="24" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
-    <path d="M56 0 H92" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
-    <path d="M56 0 H92" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+    <rect x="-14" y="-17" width="28" height="34" rx="6" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <path d="M14 0 H56" stroke="var(--ink)" stroke-width="22" stroke-linecap="round"/>
+    <path d="M14 0 H56" stroke="#e6eaed" stroke-width="15" stroke-linecap="round"/>
+  </g>
+  <!-- flow control valve, open side (mounted at the actuator port) -->
+  <g transform="translate(544,716)">
+    <rect x="-26" y="-2" width="52" height="46" rx="9" fill="var(--alu-lt)" stroke="var(--ink)" stroke-width="7"/>
+    <rect x="-15" y="42" width="30" height="22" rx="7" fill="var(--alu-dk)" stroke="var(--ink)" stroke-width="6"/>
+    <rect x="-7" y="62" width="14" height="16" rx="5" fill="#8f959b" stroke="var(--ink)" stroke-width="5"/>
   </g>
   <text class="t-port" x="660" y="990" fill="#6d6252">AIR TO OPEN</text>
   <circle class="air-open" cx="822" cy="984" r="10" fill="var(--air)" stroke="var(--ink)" stroke-width="5"/>
-  <text class="t-tick" x="754" y="726" text-anchor="middle">FLOW CONTROL</text>
-  <text class="t-tick" x="146" y="726" text-anchor="middle">FLOW CONTROL</text>
+  <text class="t-tick" x="236" y="692" text-anchor="end">FLOW CONTROL</text>
+  <text class="t-tick" x="664" y="692">FLOW CONTROL</text>
+  <path d="M238 700 L328 724" stroke="#bdb29a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M662 700 L572 724" stroke="#bdb29a" stroke-width="4" stroke-linecap="round"/>
 </g>
 
 <!-- state chips -->
