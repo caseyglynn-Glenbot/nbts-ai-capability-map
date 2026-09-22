@@ -357,7 +357,7 @@
   <circle cx="0" cy="0" r="56" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
   <circle cx="0" cy="0" r="7" fill="var(--ink)"/>
   <g id="dial"></g>
-  <path class="arrowflow" d="M-38 -26 a46 46 0 0 1 76 0" fill="none" stroke="var(--teal-dk)"
+  <path class="arrowflow" d="M38 -26 a46 46 0 0 0 -76 0" fill="none" stroke="var(--teal-dk)"
         stroke-width="6" stroke-linecap="round" marker-end="url(#tip)"/>
   <g transform="translate(0,58)">
     <path d="M-13 14 L0 -8 L13 14 Z" fill="var(--steel)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
@@ -498,7 +498,7 @@
 
     for (var m = 0; m < DOTS.length; m++){
       var dth = DOTS[m].th0 + theta;
-      DOTS[m].e.setAttribute("cx", (Math.sin(dth) * 37).toFixed(1));
+      DOTS[m].e.setAttribute("cx", (-Math.sin(dth) * 37).toFixed(1));
       DOTS[m].e.setAttribute("cy", (-Math.cos(dth) * 37).toFixed(1));
     }
   }
