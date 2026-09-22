@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform | Defender: Exploded View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .sec-sub{font-size:13.5px;color:var(--ink2);margin:-8px 0 16px}
+  .notestrip{margin-top:18px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .howbox{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 20px}
+  .howbox ol{margin:0;padding-left:20px}
+  .howbox li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .howbox li b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+  }
+
+  /* ---------- animation stage ---------- */
+  .stagewrap{background:var(--stripe);border-top:3px solid var(--teal);padding:18px}
+  .stage{max-width:600px;margin:0 auto;aspect-ratio:9/16;background:var(--parch);
+    border:1px solid #D6DEE4;overflow:hidden}
+  .stage svg{display:block;width:100%;height:100%}
+
+  .stage{
+    --ink:#3a3226;
+    --parch:#f6efe0;
+    --parch-dk:#ece2cc;
+    --pencil:#8d8474;
+
+    --tank:#2f7ad0;
+    --tank-dk:#1d5aa6;
+    --tank-lt:#6aa3e4;
+
+    --steel:#bcc1c5;
+    --steel-lt:#d9dde0;
+    --steel-dk:#8e9498;
+    --rubber:#24262a;
+    --felt:#e6dcc0;
+    --shaft:#d6c14a;
+
+    --teal:#0d9aa6;
+    --teal-dk:#0b7e88;
+  }
+  text{user-select:none;}
+
+  .t-eyebrow{font:800 20px 'Trebuchet MS',sans-serif;fill:var(--teal-dk);letter-spacing:5px;}
+  .t-title{font:900 60px 'Arial Rounded MT Bold','Trebuchet MS','Arial Black',sans-serif;fill:var(--ink);letter-spacing:1px;}
+  .t-sub{font:700 22px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-step{font:800 25px 'Trebuchet MS',sans-serif;fill:var(--ink);}
+  .t-body{font:600 19px 'Trebuchet MS',sans-serif;fill:#6d6252;}
+  .t-num{font:900 27px 'Trebuchet MS',sans-serif;fill:#f6efe0;}
+  .t-lbl{font:800 15px 'Trebuchet MS',sans-serif;fill:var(--pencil);letter-spacing:2px;
+    paint-order:stroke;stroke:var(--parch);stroke-width:6px;stroke-linejoin:round;}
+  .t-phase{font:800 17px 'Trebuchet MS',sans-serif;fill:var(--teal-dk);letter-spacing:3px;}
+  .leader{stroke:#bdb29a;stroke-width:3;stroke-linecap:round;fill:none;}
+  #labels{opacity:0;}
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/home" style="color:var(--teal);">&larr; Home</a><span style="color:#B9C4CD;margin:0 9px;">&middot;</span><a class="back" href="/product-animations">Product Animations</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Defender: Exploded View</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">The Defender regenerative media filter as it ships, then every major part pulled apart in the order it comes off the unit. Bump assembly and upper head first, the tube sheet assembly out as one piece, and the viewing window off the front. Use it to name a part on the phone, or to show a customer what is behind the head before they open it.</p>
+
+  <section>
+    <div class="lbl">BASE UNIT TO FULL EXPLODED VIEW</div><div class="rule"></div>
+    <p class="sec-sub">The unit starts assembled, comes apart, holds with every part labeled, then goes back together. The loop runs about 16 seconds.</p>
+    <div class="stagewrap">
+      <div class="stage">
+<svg viewBox="0 0 900 1600" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Cartoon technical illustration of a Defender filter vessel that starts assembled and separates into its exploded view: bump assembly, upper head, head gasket, hold down plate, felt gasket, tube sheet plate, tube elements, lift shaft, and the viewing window cover, acrylic and gasket.">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fbf6ea"/>
+    <stop offset="1" stop-color="#efe6d2"/>
+  </linearGradient>
+  <radialGradient id="vig" cx="50%" cy="42%" r="72%">
+    <stop offset="60%" stop-color="#000" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#5a4c33" stop-opacity=".16"/>
+  </radialGradient>
+  <linearGradient id="tankG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#1d5aa6"/>
+    <stop offset="28%" stop-color="#3d87d8"/>
+    <stop offset="60%" stop-color="#2f7ad0"/>
+    <stop offset="100%" stop-color="#184c8e"/>
+  </linearGradient>
+  <linearGradient id="headG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6aa3e4"/>
+    <stop offset="100%" stop-color="#2f7ad0"/>
+  </linearGradient>
+  <linearGradient id="steelG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#e3e6e8"/>
+    <stop offset="55%" stop-color="#bcc1c5"/>
+    <stop offset="100%" stop-color="#8e9498"/>
+  </linearGradient>
+  <linearGradient id="tubeG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#3a3f43"/>
+    <stop offset="35%" stop-color="#858c91"/>
+    <stop offset="70%" stop-color="#585e62"/>
+    <stop offset="100%" stop-color="#303538"/>
+  </linearGradient>
+  <linearGradient id="shaftG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#a8952e"/>
+    <stop offset="40%" stop-color="#eadb7a"/>
+    <stop offset="100%" stop-color="#b09c33"/>
+  </linearGradient>
+  <linearGradient id="tireG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4a4d52"/>
+    <stop offset="100%" stop-color="#1c1e21"/>
+  </linearGradient>
+  <pattern id="holes" width="12" height="12" patternUnits="userSpaceOnUse">
+    <circle cx="6" cy="6" r="2.4" fill="#5f666b"/>
+  </pattern>
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+    <path d="M60 0 H0 V60" fill="none" stroke="#d9cfb6" stroke-width="1.2" opacity=".5"/>
+  </pattern>
+</defs>
+
+<rect width="900" height="1600" fill="url(#bg)"/>
+<rect width="900" height="1600" fill="url(#grid)"/>
+<rect width="900" height="1600" fill="url(#vig)"/>
+
+<!-- title block -->
+<text class="t-eyebrow" x="840" y="70" text-anchor="end">DEFENDER RMF</text>
+<text class="t-title" x="842" y="126" text-anchor="end">Exploded View</text>
+<text class="t-sub" x="840" y="160" text-anchor="end">Every part, in the order it comes off</text>
+<text id="phase" class="t-phase" x="60" y="70">ASSEMBLED</text>
+
+<!-- ===== rear legs (static) ===== -->
+<g>
+  <rect x="332" y="1090" width="20" height="130" rx="4" fill="#163f75" stroke="var(--ink)" stroke-width="5"/>
+  <rect x="548" y="1090" width="20" height="130" rx="4" fill="#163f75" stroke="var(--ink)" stroke-width="5"/>
+</g>
+
+<!-- ===== tube sheet assembly (behind the shell when assembled) ===== -->
+<g class="part" data-dx="-270" data-dy="-340" data-o="10">
+  <g id="tubes"></g>
+  <rect x="296" y="762" width="308" height="16" rx="4" fill="url(#steelG)" stroke="var(--ink)" stroke-width="5"/>
+  <rect x="302" y="765" width="296" height="10" fill="url(#holes)"/>
+</g>
+<g class="part" data-dx="-270" data-dy="-380" data-o="8">
+  <rect x="300" y="756" width="300" height="7" rx="3" fill="var(--felt)" stroke="var(--ink)" stroke-width="4"/>
+</g>
+<g class="part" data-dx="-270" data-dy="-410" data-o="7">
+  <rect x="300" y="744" width="300" height="12" rx="4" fill="url(#steelG)" stroke="var(--ink)" stroke-width="5"/>
+  <rect x="306" y="746" width="288" height="8" fill="url(#holes)" opacity=".8"/>
+</g>
+<!-- lift shaft -->
+<g class="part" data-dx="-270" data-dy="-510" data-o="9">
+  <rect x="444" y="600" width="12" height="180" rx="4" fill="url(#shaftG)" stroke="var(--ink)" stroke-width="4"/>
+  <rect x="430" y="774" width="40" height="10" rx="3" fill="url(#shaftG)" stroke="var(--ink)" stroke-width="4"/>
+  <rect x="436" y="784" width="8" height="10" rx="2" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="3"/>
+  <rect x="456" y="784" width="8" height="10" rx="2" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="3"/>
+  <ellipse cx="450" cy="628" rx="11" ry="4" fill="none" stroke="var(--ink)" stroke-width="4"/>
+  <ellipse cx="450" cy="648" rx="11" ry="4" fill="none" stroke="var(--ink)" stroke-width="4"/>
+</g>
+
+<!-- ===== tank shell and base (static) ===== -->
+<g>
+  <!-- front legs -->
+  <rect x="296" y="1060" width="26" height="160" rx="5" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="578" y="1060" width="26" height="160" rx="5" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="282" y="1214" width="54" height="16" rx="4" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="564" y="1214" width="54" height="16" rx="4" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <!-- bottom head + drain -->
+  <path d="M280 1140 Q450 1218 620 1140 Z" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+  <rect x="438" y="1186" width="24" height="30" rx="4" fill="var(--steel)" stroke="var(--ink)" stroke-width="5"/>
+  <rect x="426" y="1212" width="48" height="12" rx="4" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="5"/>
+  <!-- effluent nozzle, left -->
+  <rect x="616" y="842" width="84" height="34" rx="6" fill="url(#steelG)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="696" y="832" width="16" height="54" rx="4" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <!-- influent nozzle, right -->
+  <rect x="616" y="1042" width="84" height="34" rx="6" fill="url(#steelG)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="696" y="1032" width="16" height="54" rx="4" fill="var(--steel-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <!-- shell -->
+  <rect x="280" y="780" width="340" height="364" rx="8" fill="url(#tankG)" stroke="var(--ink)" stroke-width="7"/>
+  <rect x="268" y="772" width="364" height="22" rx="6" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <!-- lifting lugs -->
+  <path d="M292 772 L300 748 L316 748 L324 772 Z" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M576 772 L584 748 L600 748 L608 772 Z" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="5" stroke-linejoin="round"/>
+  <!-- programmer bracket -->
+  <rect x="592" y="880" width="20" height="120" rx="4" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="5"/>
+  <!-- viewing window opening -->
+  <circle cx="450" cy="960" r="54" fill="#15263a" stroke="var(--ink)" stroke-width="5"/>
+  <!-- davit -->
+  <rect x="628" y="782" width="36" height="28" rx="5" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="636" y="560" width="22" height="236" rx="6" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <rect x="500" y="556" width="160" height="18" rx="6" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <path d="M646 640 L560 574" stroke="var(--ink)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M646 640 L560 574" stroke="var(--tank-dk)" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="512" cy="590" r="9" fill="none" stroke="var(--ink)" stroke-width="5"/>
+</g>
+
+<!-- ===== head gasket ===== -->
+<g class="part" data-dx="0" data-dy="-70" data-o="6">
+  <ellipse cx="450" cy="770" rx="184" ry="8" fill="var(--steel-lt)" stroke="var(--ink)" stroke-width="5"/>
+</g>
+
+<!-- ===== upper head ===== -->
+<g class="part" data-dx="200" data-dy="-240" data-o="5">
+  <g id="bolts"></g>
+  <path d="M290 741 Q450 688 610 741 Z" fill="url(#headG)" stroke="var(--ink)" stroke-width="7" stroke-linejoin="round"/>
+  <rect x="268" y="740" width="364" height="30" rx="8" fill="var(--tank)" stroke="var(--ink)" stroke-width="7"/>
+  <rect x="512" y="712" width="12" height="20" rx="3" fill="var(--tank-dk)" stroke="var(--ink)" stroke-width="4"/>
+  <circle cx="518" cy="708" r="8" fill="none" stroke="var(--ink)" stroke-width="5"/>
+</g>
+
+<!-- ===== bump assembly ===== -->
+<g class="part" data-dx="200" data-dy="-290" data-o="4">
+  <ellipse cx="450" cy="706" rx="46" ry="9" fill="var(--rubber)" stroke="var(--ink)" stroke-width="4"/>
+</g>
+<g class="part" data-dx="200" data-dy="-325" data-o="3">
+  <rect x="434" y="668" width="32" height="40" rx="5" fill="#4b3fc0" stroke="var(--ink)" stroke-width="5"/>
+  <ellipse cx="450" cy="668" rx="16" ry="5" fill="#7a6fe0" stroke="var(--ink)" stroke-width="4"/>
+</g>
+<g class="part" data-dx="200" data-dy="-352" data-o="2">
+  <ellipse cx="450" cy="662" rx="20" ry="6" fill="none" stroke="var(--rubber)" stroke-width="6"/>
+</g>
+<g class="part" data-dx="200" data-dy="-378" data-o="1">
+  <path d="M436 652 a14 4.5 0 1 1 28 0" fill="none" stroke="#6a6f74" stroke-width="5" stroke-linecap="round"/>
+</g>
+<g class="part" data-dx="200" data-dy="-420" data-o="0">
+  <ellipse cx="450" cy="642" rx="56" ry="15" fill="url(#tireG)" stroke="var(--ink)" stroke-width="6"/>
+  <ellipse cx="450" cy="630" rx="44" ry="11" fill="#33363b" stroke="var(--ink)" stroke-width="5"/>
+  <g fill="#9aa0a5" stroke="var(--ink)" stroke-width="2.5">
+    <circle cx="416" cy="630" r="3.5"/><circle cx="484" cy="630" r="3.5"/>
+    <circle cx="432" cy="623" r="3.5"/><circle cx="468" cy="623" r="3.5"/>
+    <circle cx="432" cy="637" r="3.5"/><circle cx="468" cy="637" r="3.5"/>
+  </g>
+  <rect x="441" y="608" width="18" height="20" rx="4" fill="var(--steel)" stroke="var(--ink)" stroke-width="4"/>
+</g>
+
+<!-- ===== viewing window ===== -->
+<g class="part" data-dx="-340" data-dy="110" data-o="11">
+  <path d="M370 960 a80 80 0 1 0 160 0 a80 80 0 1 0 -160 0 Z M394 960 a56 56 0 1 0 112 0 a56 56 0 1 0 -112 0 Z"
+        fill="var(--tank)" fill-rule="evenodd" stroke="var(--ink)" stroke-width="6"/>
+  <g id="wbolts"></g>
+</g>
+<g class="part" data-dx="-260" data-dy="60" data-o="12">
+  <circle cx="450" cy="960" r="62" fill="#dfeaf0" fill-opacity=".85" stroke="var(--ink)" stroke-width="4"/>
+  <path d="M418 932 q14 -12 30 -10" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+</g>
+<g class="part" data-dx="-180" data-dy="10" data-o="13">
+  <circle cx="450" cy="960" r="58" fill="none" stroke="var(--rubber)" stroke-width="10"/>
+</g>
+
+<!-- ===== labels, exploded state only ===== -->
+<g id="labels">
+  <!-- bump stack (exploded center x 650) -->
+  <text class="t-lbl" x="716" y="192">LIFT SHAFT NUT</text>
+  <path class="leader" d="M712 188 L662 196"/>
+  <text class="t-lbl" x="716" y="240">BUMP TIRE</text>
+  <path class="leader" d="M712 236 L706 226"/>
+  <text class="t-lbl" x="712" y="278">SNAP RING</text>
+  <path class="leader" d="M708 274 L666 274"/>
+  <text class="t-lbl" x="712" y="314">BUSHING O-RING</text>
+  <path class="leader" d="M708 310 L672 310"/>
+  <text class="t-lbl" x="712" y="368">BUMP BUSHING</text>
+  <path class="leader" d="M708 364 L668 364"/>
+  <text class="t-lbl" x="712" y="420">BUMP GASKET</text>
+  <path class="leader" d="M708 416 L698 416"/>
+  <text class="t-lbl" x="690" y="564">UPPER HEAD</text>
+  <path class="leader" d="M704 550 L704 532"/>
+  <text class="t-lbl" x="672" y="612">DAVIT</text>
+  <path class="leader" d="M668 606 L650 640"/>
+  <text class="t-lbl" x="450" y="668" text-anchor="middle">HEAD GASKET</text>
+  <path class="leader" d="M450 674 L450 692"/>
+  <!-- tube sheet assembly (exploded x 30..334) -->
+  <text class="t-lbl" x="352" y="340">HOLD DOWN PLATE</text>
+  <path class="leader" d="M348 336 L332 340"/>
+  <text class="t-lbl" x="352" y="384">FELT GASKET</text>
+  <path class="leader" d="M348 380 L332 380"/>
+  <text class="t-lbl" x="352" y="434">TUBE SHEET PLATE</text>
+  <path class="leader" d="M348 430 L336 430"/>
+  <text class="t-lbl" x="352" y="600">TUBE ELEMENTS</text>
+  <path class="leader" d="M348 596 L322 596"/>
+  <text class="t-lbl" x="204" y="212">LIFT SHAFT O-RING</text>
+  <path class="leader" d="M200 206 L190 142"/>
+  <text class="t-lbl" x="204" y="250">LIFT SHAFT</text>
+  <path class="leader" d="M200 246 L188 246"/>
+  <!-- window (gasket at 270,970 / acrylic 190,1020 / cover 110,1070) -->
+  <text class="t-lbl" x="60" y="900">VIEWING WINDOW GASKET</text>
+  <path class="leader" d="M236 906 L258 916"/>
+  <text class="t-lbl" x="120" y="982" text-anchor="end">ACRYLIC</text>
+  <path class="leader" d="M124 986 L142 998"/>
+  <text class="t-lbl" x="40" y="1184">VIEWING WINDOW COVER</text>
+  <path class="leader" d="M104 1172 L108 1152"/>
+</g>
+
+<!-- steps -->
+<g transform="translate(60,1250)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="50" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="60" text-anchor="middle">1</text>
+  <text class="t-step" x="102" y="42">Head off first</text>
+  <text class="t-body" x="102" y="74">Bump parts off the lift shaft, then the davit swings the head clear.</text>
+</g>
+<g transform="translate(60,1366)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="50" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="60" text-anchor="middle">2</text>
+  <text class="t-step" x="102" y="42">Bundle out as one assembly</text>
+  <text class="t-body" x="102" y="74">Plate, felt gasket, tube sheet and elements come out together.</text>
+</g>
+<g transform="translate(60,1482)">
+  <rect x="0" y="0" width="780" height="100" rx="20" fill="var(--parch-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <circle cx="56" cy="50" r="28" fill="var(--teal-dk)" stroke="var(--ink)" stroke-width="6"/>
+  <text class="t-num" x="56" y="60" text-anchor="middle">3</text>
+  <text class="t-step" x="102" y="42">Window comes apart from the front</text>
+  <text class="t-body" x="102" y="74">Cover, acrylic, gasket. Check both every time the cover is off.</text>
+</g>
+
+<script><![CDATA[
+(function(){
+  var NS = "http://www.w3.org/2000/svg";
+  function el(n, a){ var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); return e; }
+
+  // tube elements
+  var tubes = document.getElementById("tubes");
+  for (var i = 0; i < 22; i++){
+    var x = 306 + i * 13.3;
+    tubes.appendChild(el("rect", {x:x.toFixed(1), y:778, width:9, height:342, rx:3.5,
+      fill:"url(#tubeG)", stroke:"#1e2225", "stroke-width":2}));
+  }
+  // head bolts
+  var bolts = document.getElementById("bolts");
+  for (var b = 0; b < 9; b++){
+    var bx = 284 + b * 40;
+    bolts.appendChild(el("rect", {x:bx, y:722, width:12, height:22, rx:3,
+      fill:"var(--steel)", stroke:"var(--ink)", "stroke-width":4}));
+  }
+  // window cover bolts
+  var wb = document.getElementById("wbolts");
+  for (var w = 0; w < 8; w++){
+    var a = w * Math.PI / 4 + Math.PI / 8;
+    wb.appendChild(el("circle", {cx:(450 + Math.cos(a) * 68).toFixed(1), cy:(960 + Math.sin(a) * 68).toFixed(1), r:6,
+      fill:"var(--steel)", stroke:"var(--ink)", "stroke-width":3}));
+  }
+
+  var parts = Array.prototype.slice.call(document.querySelectorAll(".part")).map(function(g){
+    return {g:g, dx:+g.getAttribute("data-dx"), dy:+g.getAttribute("data-dy"), o:+g.getAttribute("data-o")};
+  });
+  var N = 14;
+  var labels = document.getElementById("labels");
+  var phase = document.getElementById("phase");
+
+  var T_HOLD0 = 1.5, STAG = 0.18, DUR = 2.0;
+  var T_EXP = T_HOLD0;                         // explode starts
+  var T_LBL = T_EXP + (N - 1) * STAG + DUR;    // ~5.84, labels in
+  var T_COL = 11.5;                            // collapse starts
+  var T_LOOP = 16.0;
+
+  function ease(p){ return p < .5 ? 4*p*p*p : 1 - Math.pow(-2*p + 2, 3) / 2; }
+  function clamp(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+  function setParts(fn){
+    for (var i = 0; i < parts.length; i++){
+      var P = parts[i], p = fn(P.o);
+      P.g.setAttribute("transform", "translate(" + (P.dx * p).toFixed(1) + "," + (P.dy * p).toFixed(1) + ")");
+    }
+  }
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce){
+    setParts(function(){ return 1; });
+    labels.style.opacity = "1";
+    phase.textContent = "EXPLODED";
+    return;
+  }
+
+  var t0 = null;
+  function frame(now){
+    if (t0 === null) t0 = now;
+    var t = ((now - t0) / 1000) % T_LOOP;
+    var lab = 0, ph = "ASSEMBLED";
+
+    if (t < T_EXP){
+      setParts(function(){ return 0; });
+    } else if (t < T_COL){
+      setParts(function(o){ return ease(clamp((t - T_EXP - o * STAG) / DUR)); });
+      ph = t < T_LBL ? "COMING APART" : "EXPLODED";
+      lab = clamp((t - T_LBL) / 0.6) * (1 - clamp((t - (T_COL - 0.6)) / 0.6));
+    } else {
+      setParts(function(o){ return 1 - ease(clamp((t - T_COL - (N - 1 - o) * STAG) / DUR)); });
+      ph = t < T_COL + (N - 1) * STAG + DUR ? "GOING BACK" : "ASSEMBLED";
+    }
+    labels.style.opacity = lab.toFixed(2);
+    if (phase.textContent !== ph) phase.textContent = ph;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+]]></script>
+</svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">WHAT YOU ARE LOOKING AT</div><div class="rule"></div>
+    <div class="howbox">
+      <ol>
+        <li><b>Bump assembly.</b> Lift shaft nut, bump tire, snap ring, bushing o-ring, bump bushing and bump gasket stack on the lift shaft at the top of the upper head. These come off before the head.</li>
+        <li><b>Upper head.</b> Bolted to the shell flange on a head gasket. The davit on the shell carries the head so it swings clear without a lift.</li>
+        <li><b>Tube sheet assembly.</b> Hold down plate, felt gasket, tube sheet plate and the tube elements lift out as one piece on the lift shaft. The lift shaft o-rings seal where the shaft passes through the head.</li>
+        <li><b>Viewing window.</b> Cover, acrylic and gasket on the front of the shell. Any time the cover is off, look at the acrylic for crazing and the gasket for a set.</li>
+        <li><b>Base unit.</b> Shell, lower head, drain valve, influent and effluent connections and the legs stay where they are. Legs ship collapsed and extend on site.</li>
+      </ol>
+    </div>
+    <div class="notestrip"><b>Source.</b> Part names follow the Defender exploded view drawing and the SP-55-48-2076 submittal template. For the bump cycle itself, see <a href="/bump-cycle" style="color:var(--teal);font-weight:700;">Bump Cycle &amp; Regeneration</a>.</div>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
+</div>
+</body>
+</html>
