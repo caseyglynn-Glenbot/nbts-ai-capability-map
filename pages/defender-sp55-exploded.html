@@ -24,7 +24,7 @@
   #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1}
   #overlay line, #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
   #overlay circle{fill:var(--leader)}
-  #overlay text{font:500 13px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay text{font:500 clamp(9.5px, 0.7vw + 5px, 13px)/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
   #overlay .lbl{transition:opacity .2s linear}
   #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
   /* title block, like the sheet's lower strip */
@@ -75,12 +75,11 @@
     #panel.open{transform:none}
     #bar{grid-template-columns:1fr;gap:8px}
     .btns{justify-content:flex-start}
-    #overlay text{font-size:10px}
   }
   @media (prefers-reduced-motion: reduce){ #overlay .lbl{transition:none} }
 
   /* portal chrome */
-  #pbar{flex:none;background:var(--panel);padding:10px 20px calc(10px);display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
     padding-top:calc(10px + env(safe-area-inset-top,0px))}
   #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
   #pbar .brand span{color:#0085AD}
@@ -183,14 +182,55 @@
 
   // orbit state (spherical about target)
   const target=new THREE.Vector3(260,450,-260);
+  // Framing: fit the fully exploded assembly into the band between the two
+  // label columns, so nothing is cropped and no callout sits over the model.
+  const _m=new THREE.Matrix4(), _v=new THREE.Vector3(), _r=new THREE.Vector3(), _u=new THREE.Vector3();
+  function explodedMatrix(c){
+    if(c.swing){
+      const cs=Math.cos(SWING), sn=Math.sin(SWING);
+      const rx=POST.x*cs+POST.z*sn, rz=-POST.x*sn+POST.z*cs;
+      return _m.makeRotationY(SWING).setPosition(POST.x-rx, LIFT+(c.dy||0), POST.z-rz);
+    }
+    return _m.makeRotationY(0).setPosition(c.off[0], c.off[1], c.off[2]);
+  }
+  function contentExtent(right, up){
+    let minR=1e9,maxR=-1e9,minU=1e9,maxU=-1e9,any=false;
+    for(const p of Object.values(parts)){
+      const bb=p.bb; if(!bb || (bb[3]-bb[0])+(bb[4]-bb[1])+(bb[5]-bb[2])<=0) continue;
+      const m=explodedMatrix(p.cfg);
+      for(let k=0;k<8;k++){
+        _v.set(bb[k&1?3:0], bb[k&2?4:1], bb[k&4?5:2]).applyMatrix4(m);
+        const dr=_v.dot(right), du=_v.dot(up);
+        if(dr<minR)minR=dr; if(dr>maxR)maxR=dr; if(du<minU)minU=du; if(du>maxU)maxU=du; any=true;
+      }
+    }
+    return any?{w:maxR-minR,h:maxU-minU,cr:(minR+maxR)/2,cu:(minU+maxU)/2}:null;
+  }
+  function columnPx(w){
+    if(!labelsOn) return 8;
+    let mx=0; for(const el of Object.values(labelEls)) if(el.tw) mx=Math.max(mx,el.tw);
+    if(!mx) mx=Math.min(190, w*0.22);
+    return Math.min(mx+26, w*0.24);
+  }
   const DRAW={theta:Math.atan2(-1,-1), phi:Math.acos(0.5)}; // camera on the (-x,+y,-z) side: viewing window front-left as on the sheet
   let theta=DRAW.theta, phi=DRAW.phi, zoom=1, pan=new THREE.Vector3();
   const FIT_W=5700, FIT_H=4800; // mm across / down the sheet at zoom 1
   function updateCamera(){
     const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h;
-    const halfW=Math.max(FIT_W/2, FIT_H/2*asp)/zoom, halfH=halfW/asp;
-    camera.left=-halfW; camera.right=halfW; camera.top=halfH; camera.bottom=-halfH;
     const dir=new THREE.Vector3(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
+    _r.set(0,1,0).cross(dir).normalize(); if(!isFinite(_r.x)||_r.lengthSq()<1e-6) _r.set(1,0,0);
+    _u.copy(dir).cross(_r).normalize();
+    const ext=contentExtent(_r,_u);
+    let halfW;
+    if(ext){
+      const col=columnPx(w), availW=Math.max(140, w-1.7*col), availH=Math.max(140, h-26);
+      halfW=Math.max(ext.w/2*(w/availW), ext.h/2*(h/availH)*asp)*1.05/zoom;
+      target.set(0,0,0).addScaledVector(_r, ext.cr).addScaledVector(_u, ext.cu);
+    } else {
+      halfW=Math.max(FIT_W/2, FIT_H/2*asp)/zoom;
+    }
+    const halfH=halfW/asp;
+    camera.left=-halfW; camera.right=halfW; camera.top=halfH; camera.bottom=-halfH;
     const t=target.clone().add(pan);
     camera.position.copy(t).add(dir.multiplyScalar(8000));
     camera.up.set(0,1,0); camera.lookAt(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
@@ -198,7 +238,7 @@
     const bar=document.getElementById('scaletxt'); const mm=Math.round(60*px/50)*50||50; bar.textContent=mm+' mm';
     document.querySelector('#scale i').style.width=(mm/px)+'px';
   }
-  function resize(){ renderer.setSize(view.clientWidth, view.clientHeight,false); updateCamera(); }
+  function resize(){ renderer.setSize(view.clientWidth, view.clientHeight,false); updateCamera(); measuredAt=0; needRender=true; }
   addEventListener('resize', resize);
 
   // pointer orbit / pan / zoom
@@ -283,8 +323,8 @@
   }
   const panel=document.getElementById('panel'), partsBtn=document.getElementById('partsbtn');
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function openPanel(){ panel.classList.add('open'); partsBtn.setAttribute('aria-pressed','true'); }
-  function closePanel(){ panel.classList.remove('open'); partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; needRender=true; } }
+  function openPanel(){ panel.classList.add('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
+  function closePanel(){ panel.classList.remove('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; needRender=true; } }
   function showIndex(){
     const info=window.SP55_PARTS||{};
     const order=Object.keys(GROUPS).filter(k=>info[k]);
@@ -321,7 +361,7 @@
     for(const [n,p] of Object.entries(parts)){
       if(!p.cfg.label) continue;
       const grp=document.createElementNS(ns,'g'); grp.setAttribute('class','lbl'); grp.style.opacity=0; grp.dataset.part=n;
-      const ln=document.createElementNS(ns,'line'); const dot=document.createElementNS(ns,'circle'); dot.setAttribute('r','2.2');
+      const ln=document.createElementNS(ns,'polyline'); const dot=document.createElementNS(ns,'circle'); dot.setAttribute('r','2.2');
       const halo=document.createElementNS(ns,'text'); halo.setAttribute('class','halo'); const tx=document.createElementNS(ns,'text'); tx.setAttribute('class','tx');
       halo.textContent=p.cfg.label; tx.textContent=p.cfg.label;
       grp.append(ln,dot,halo,tx); overlay.appendChild(grp);
@@ -344,22 +384,65 @@
   prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
 
   const v3=new THREE.Vector3();
+  // Callouts are laid out in two margin columns: each label keeps its anchor's
+  // vertical order, is pushed apart to a minimum line height, and is clamped to
+  // the view, so leaders never cross labels or run off the page at any size.
+  const RIGHT_COL=new Set(['head_gasket','upper_head','davit','bump_gasket','bump_bushing','bushing_oring','snap_ring','bump_tire','lift_shaft_nut']);
+  let measuredAt=0;
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{measuredAt=0; needRender=true;});
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight;
     overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const items=[];
     for(const [n,el] of Object.entries(labelEls)){
       const p=parts[n], c=p.cfg, bb=p.bb;
-      const show=labelsOn && p.k>0.92 ? 1 : 0;
-      el.grp.style.opacity=show? Math.min(1,(p.k-0.92)/0.08) : 0;
+      const vis=labelsOn && p.k>0.92;
+      el.grp.style.opacity=vis? Math.min(1,(p.k-0.92)/0.08) : 0;
       el.grp.classList.toggle('sel', selected===n);
-      if(!show) continue;
-      v3.set(bb[0]+(bb[3]-bb[0])*c.at[0], bb[1]+(bb[4]-bb[1])*c.at[1], bb[2]+(bb[5]-bb[2])*c.at[2]).applyMatrix4(p.obj.matrixWorld).project(camera);
-      const x=(v3.x+1)/2*w, y=(1-v3.y)/2*h;
-      const sc=Math.max(0.55,Math.min(1,w/1500)), dir=c.lab[0]<0?-1:1;
-      const lx=x+c.lab[0]*sc, ly=y+c.lab[1]*sc;
-      el.ln.setAttribute('x1',x); el.ln.setAttribute('y1',y); el.ln.setAttribute('x2',lx); el.ln.setAttribute('y2',ly);
-      el.dot.setAttribute('cx',x); el.dot.setAttribute('cy',y);
-      for(const t of [el.halo,el.tx]){ t.setAttribute('x',lx+dir*4); t.setAttribute('y',ly+4); t.setAttribute('text-anchor',dir<0?'end':'start'); }
+      if(!vis) continue;
+      const right=RIGHT_COL.has(n);
+      // anchor on the face of the part that looks at its own column, so the
+      // leader reaches the part from outside instead of crossing over it
+      let best=null, cx=0, cy=0;
+      for(let k=0;k<8;k++){
+        v3.set(bb[k&1?3:0], bb[k&2?4:1], bb[k&4?5:2]).applyMatrix4(p.obj.matrixWorld).project(camera);
+        const px=(v3.x+1)/2*w, py=(1-v3.y)/2*h;
+        cx+=px/8; cy+=py/8;
+        if(!best || (right ? px>best.x : px<best.x)) best={x:px,y:py};
+      }
+      items.push({el, x:best.x+(cx-best.x)*0.18, y:best.y+(cy-best.y)*0.18, right});
+    }
+    if(!items.length) return;
+    if(measuredAt!==w){ measuredAt=w; for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){ it.el.tw=90; } } updateCamera(); }
+    for(const it of items) if(!it.el.tw){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){ it.el.tw=90; } }
+
+    const fs=parseFloat(getComputedStyle(overlay).fontSize)||13;
+    const lh=Math.max(15, fs+5), pad=12, top=lh*0.7, bottom=h-lh*0.4;
+    const panelW=(panel.classList.contains('open') && w>640) ? panel.offsetWidth : 0;
+
+    for(const right of [false,true]){
+      const col=items.filter(i=>i.right===right).sort((a,b)=>a.y-b.y);
+      if(!col.length) continue;
+      const maxW=Math.min(Math.max(...col.map(i=>i.el.tw)), Math.max(70, w*0.28));
+      // stack: keep order, enforce spacing, clamp inside the view
+      const ys=col.map(i=>i.y);
+      ys[0]=Math.max(ys[0], top);
+      for(let i=1;i<ys.length;i++) ys[i]=Math.max(ys[i], ys[i-1]+lh);
+      if(ys[ys.length-1]>bottom){
+        ys[ys.length-1]=bottom;
+        for(let i=ys.length-2;i>=0;i--) ys[i]=Math.min(ys[i], ys[i+1]-lh);
+      }
+      const edge = right ? (w-pad-panelW-maxW) : (pad+maxW);   // inner edge of the text column
+      for(let i=0;i<col.length;i++){
+        const it=col[i], ly=Math.round(ys[i]), dir=right?-1:1;
+        const sx=edge+dir*8, kx=sx+dir*16;
+        it.el.ln.setAttribute('points', `${sx},${ly} ${kx},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+        it.el.dot.setAttribute('cx', it.x); it.el.dot.setAttribute('cy', it.y);
+        for(const t of [it.el.halo, it.el.tx]){
+          t.setAttribute('x', edge); t.setAttribute('y', ly+fs*0.34);
+          t.setAttribute('text-anchor', right?'start':'end');
+        }
+      }
     }
   }
 
@@ -370,7 +453,7 @@
   function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
   playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
   loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
-  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); measuredAt=0; updateCamera(); needRender=true; });
   document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
 
   function frame(now){
