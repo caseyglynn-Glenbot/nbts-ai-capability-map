@@ -31,6 +31,19 @@ if (!USER || !PASS) {
   process.exit(1);
 }
 
+// --- Limited "configurators only" account (optional) ---------------------
+// Set CONFIG_USER / CONFIG_PASS in Render to enable. This account can open the
+// Product Configurators page and the configurator tools under
+// /assets/configurators/ only. Quote submissions post straight to the n8n
+// webhook, so they work as normal with no extra routes allowed here.
+const CONFIG_USER = process.env.CONFIG_USER;
+const CONFIG_PASS = process.env.CONFIG_PASS;
+const LIMITED_ALLOW = [
+  /^\/product-configurators\/?$/,
+  /^\/assets\/configurators\//,
+  /^\/favicon\.ico$/,
+];
+
 app.disable("x-powered-by");
 
 // Health check — MUST be above the auth gate so Render's probe (which sends
@@ -50,13 +63,28 @@ app.use((req, res, next) => {
 // --- Auth gate. Everything below this line requires credentials. ---
 app.use(
   basicAuth({
-    users: { [USER]: PASS },
+    users: CONFIG_USER && CONFIG_PASS
+      ? { [USER]: PASS, [CONFIG_USER]: CONFIG_PASS }
+      : { [USER]: PASS },
     challenge: true, // makes the browser show its native sign-in prompt
     realm: "NBTS Internal Portal",
     unauthorizedResponse: () =>
       "401 Unauthorized — NBTS Internal Portal. Contact Casey Glynn for access.",
   })
 );
+
+// --- Scope the limited account ------------------------------------------
+app.use((req, res, next) => {
+  if (!CONFIG_USER || req.auth.user !== CONFIG_USER) return next();
+  if (LIMITED_ALLOW.some((rx) => rx.test(req.path))) return next();
+  // Send the index / home links back to the configurators page.
+  if (req.method === "GET" && (req.path === "/" || req.path === "/home")) {
+    return res.redirect(302, "/product-configurators");
+  }
+  res.status(403).type("text").send(
+    "403 Forbidden — this account has access to Product Configurators only."
+  );
+});
 
 // --- Authenticated static assets ---------------------------------------
 // Files under ./assets are served (behind the auth gate above) at /assets/*.

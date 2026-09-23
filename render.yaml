@@ -11,3 +11,7 @@ services:
         sync: false        # set in the Render dashboard
       - key: PORTAL_PASS
         sync: false        # set in the Render dashboard
+      - key: CONFIG_USER
+        sync: false        # limited configurators-only login; set in the Render dashboard
+      - key: CONFIG_PASS
+        sync: false        # set in the Render dashboard
