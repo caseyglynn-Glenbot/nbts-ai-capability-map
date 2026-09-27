@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Defender SP-55: Tube Wash</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --media:#efe9d8; --clean:#5b626b; --water:#2f8fc9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas.gl{display:block;width:100%;height:100%}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  /* procedure steps, top left */
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  #steps li{counter-increment:s;border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  /* plan view, top right */
+  #planbox{position:absolute;right:16px;top:14px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 10px 6px;backdrop-filter:blur(4px);pointer-events:none}
+  #planbox .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);display:flex;justify-content:space-between;gap:10px}
+  #planbox .kicker b{color:var(--ink);font-weight:600}
+  #plan{display:block;width:150px;height:150px;margin-top:4px}
+  #planbox .you{font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:center}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #planbox{right:8px;top:8px;padding:6px 8px 4px}
+    #plan{width:96px;height:96px}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Defender SP-55 Tube Wash</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <div id="loading">Loading SP-55 geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Flexible tube element wash</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="planbox" aria-hidden="true">
+      <div class="kicker"><span>Plan view</span><b id="turn">0°</b></div>
+      <canvas id="plan" width="300" height="300"></canvas>
+      <div class="you">&#9650; you, at the window</div>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>Defender SP-55 · Tube Wash<small>Looking in through the viewing window. Built from the SP-55 Auto STEP model.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Procedure timeline">
+      <span class="tick" id="tend">0:44</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="ghost" aria-pressed="false" title="Make the tank see-through to watch the whole bundle turn">See-through</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), ghostBtn=document.getElementById('ghost');
+  const tnow=document.getElementById('tnow'), turnEl=document.getElementById('turn');
+
+  // ---- procedure timeline (seconds) -------------------------------------------
+  // Steps follow the O&M Flexible Tube Element Wash Procedure.
+  const T_END=44;
+  const STEPS=[
+    {t:0,    h:'Drain, rinse, power off', d:'Drain and rinse the filter, then shut off the RMF breaker before opening anything.'},
+    {t:3.5,  h:'Remove the viewing window', d:'Pull the twelve window bolts, lift off the cover, then the acrylic and the gasket.'},
+    {t:11,   h:'Set the nozzle at the opening', d:'Fan-pattern power washer or straight hose nozzle, tip just inside the opening, fan standing vertical.'},
+    {t:15,   h:'Rinse and rotate the tube sheet', d:'Hold the fan on the tubes in front of you and turn the tube sheet so every element passes through the spray. One full turn back to your start mark.'},
+    {t:34,   h:'Refit the window', d:'Gasket, acrylic, cover and bolts back on. Then vacuum transfer the media back in.'}
+  ];
+  const WASH0=15, WASH1=34;              // bundle turning
+  const SPRAY0=15.3, SPRAY1=33.6;        // trigger held
+  const TURNS=1.05;                      // one full turn plus a little overlap
+  const WIN=[ // [part, out start, out end, refit start, refit end, pull-out distance mm]
+    ['window_hardware',6.2,7.8, 39.6,41.2, 380],
+    ['window_cover',   7.4,9.2, 38.6,40.2, 320],
+    ['acrylic',        8.6,10.2,37.8,39.2, 260],
+    ['window_gasket',  9.6,11,  37.0,38.4, 200]
+  ];
+
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  // trapezoid speed profile: ramps in and out, constant speed in the middle
+  function trap(u,r){ u=clamp(u,0,1); const v=1/(1-r); if(u<r) return v*u*u/(2*r); if(u>1-r) return 1-v*(1-u)*(1-u)/(2*r); return v*(u-r/2); }
+  const theta=t=>TURNS*Math.PI*2*trap((t-WASH0)/(WASH1-WASH0),0.07);
+  const pitch=t=>0.19*Math.sin(2*Math.PI*(t-WASH0)/3.2);   // wand rocks up and down ~11 deg
+  const sprayOn=t=>t>=SPRAY0 && t<=SPRAY1;
+  function lanceIn(t){ if(t<13.5||t>35.3) return 0; if(t<15) return ease((t-13.5)/1.5); if(t>33.8) return 1-ease((t-33.8)/1.5); return 1; }
+  function winK(w,t){ if(t<w[3]) return ease((t-w[1])/(w[2]-w[1])); return 1-ease((t-w[3])/(w[4]-w[3])); }
+
+  // ---- three.js scene -----------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.domElement.className='gl';
+  view.insertBefore(renderer.domElement, view.firstChild);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(40,1,8,40000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(0.6,1,-0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.25); fill.position.set(-1,0.3,0.6); scene.add(fill);
+  // work light shining in through the opening
+  const lamp=new THREE.PointLight(0xfff4e0,0,2600,1.4); lamp.position.set(120,420,-1100); scene.add(lamp);
+
+  const BLUE=0x2b6cc4, DARKBLUE=0x1d3f9a, GREY=0x8b9199, LIGHT=0xb7bcc3, BLACK=0x1f2124, YELLOW=0xd9c92e, FELT=0xcfc9b6, TUBE=0x5b626b, HOLE=0x2c3138, ACR=0xe6ecf2;
+  const COLORS={body:BLUE, upper_head:BLUE, davit:BLUE, davit_arm:BLUE, head_gasket:GREY, bump_gasket:BLACK, bump_bushing:DARKBLUE, bushing_oring:BLACK, snap_ring:BLACK, bump_tire:BLACK, lift_shaft_nut:GREY,
+    tube_sheet:LIGHT, tube_sheet_holes:HOLE, tube_elements:TUBE, tube_elements_edges:TUBE, felt_gasket:FELT, hold_down_plate:LIGHT, hold_down_holes:HOLE, tube_sheet_hardware:GREY,
+    lift_shaft:YELLOW, lift_shaft_hardware:GREY, lift_shaft_oring:BLACK, window_gasket:BLACK, acrylic:ACR, window_cover:BLUE, window_hardware:GREY};
+  const ALPHA={acrylic:0.45};
+  // everything fixed to the tube sheet turns with it about the lift shaft axis
+  const BUNDLE=new Set(['tube_sheet','tube_sheet_holes','tube_elements','tube_elements_edges','felt_gasket','hold_down_plate','hold_down_holes','tube_sheet_hardware','lift_shaft','lift_shaft_hardware','lift_shaft_oring']);
+  const GHOSTABLE=new Set(['body','upper_head','davit','davit_arm','head_gasket','bump_gasket','bump_bushing','bushing_oring','snap_ring','bump_tire','lift_shaft_nut']);
+  const bundle=new THREE.Group(); scene.add(bundle);
+  const parts={};
+
+  // ---- media on the tubes: one texel column per tube, NB bands up its length ------
+  const NB=64, Y0=-380, Y1=940;           // element length in the model (mm)
+  let NT=0, tubeC=null;                    // tube count and centres (x,z) in the tube sheet frame
+  let dirtTex=null, dirtData=null, tStart=null, tEnd=null, tubeAvg=null;
+  const MEDIA=new THREE.Color(0xddd5bf);
+
+  function tubeMaterial(){
+    const m=new THREE.MeshPhongMaterial({color:TUBE, shininess:22, specular:0x333333, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
+    m.onBeforeCompile=sh=>{
+      sh.uniforms.dirtMap={value:dirtTex}; sh.uniforms.mediaCol={value:MEDIA};
+      sh.vertexShader=sh.vertexShader
+        .replace('#include <common>','#include <common>\nattribute float tubeId;\nattribute vec2 tubeOff;\nvarying vec2 vDUV;\nvarying vec2 vOff;')
+        .replace('#include <begin_vertex>',`#include <begin_vertex>\nvOff=tubeOff;\nvDUV=vec2((tubeId+0.5)/${NT.toFixed(1)}, clamp((position.y-(${Y0.toFixed(1)}))/${(Y1-Y0).toFixed(1)},0.0,1.0));`);
+      sh.fragmentShader=sh.fragmentShader
+        .replace('#include <common>','#include <common>\nuniform sampler2D dirtMap;\nuniform vec3 mediaCol;\nvarying vec2 vDUV;\nvarying vec2 vOff;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}')
+        .replace('#include <color_fragment>',`#include <color_fragment>
+          float dv=texture2D(dirtMap,vDUV).r;
+          float ang=floor((atan(vOff.y,vOff.x)+3.1416)*0.95);
+          float cell=h21(vec2(floor(vDUV.x*${NT.toFixed(1)})+ang*0.173, floor(vDUV.y*${(NB*2).toFixed(1)}+ang*0.37)));
+          float cov=smoothstep(cell*0.8, cell*0.8+0.14, dv);
+          diffuseColor.rgb=mix(diffuseColor.rgb, mediaCol*(0.9+0.1*cell), cov);`);
+    };
+    return m;
+  }
+
+  // Precompute when each band of each tube gets washed, by stepping the spray
+  // against the turning bundle once. Scrubbing then reads the result directly.
+  const TIP={y:100, z:-765};               // nozzle tip, just inside the window opening
+  const HALF_V=1.36, LAT=Math.tan(6*Math.PI/180), TUBE_R=12, RATE=9;
+  function precomputeWash(){
+    tStart=new Float32Array(NT*NB).fill(Infinity); tEnd=new Float32Array(NT*NB).fill(Infinity);
+    const dose=new Float32Array(NT*NB), dt=1/60;
+    for(let t=WASH0; t<=WASH1+0.01; t+=dt){
+      if(!sprayOn(t)) continue;
+      const th=theta(t), cs=Math.cos(th), sn=Math.sin(th), ph=pitch(t);
+      const hits=[];
+      for(let i=0;i<NT;i++){
+        const cx=tubeC[2*i], cz=tubeC[2*i+1];
+        const wx=cx*cs+cz*sn, wz=-cx*sn+cz*cs, dz=wz-TIP.z;
+        if(dz<=0 || Math.abs(wx)>dz*LAT+TUBE_R) continue;
+        hits.push([i,wx,dz]);
+      }
+      // tubes nearer the nozzle shadow the ones behind them in the same lane
+      hits.sort((a,b)=>a[2]-b[2]);
+      const lane={};
+      for(const [i,wx,dz] of hits){
+        const ln=Math.round(wx/(1.6*TUBE_R)), rank=(lane[ln]||0); lane[ln]=rank+1; lane[ln-1]=(lane[ln-1]||0)+0.5; lane[ln+1]=(lane[ln+1]||0)+0.5;
+        const fall=clamp(1.15-dz/900,0.3,1)*Math.max(0.12,Math.pow(0.62,rank))*(1-smooth((Math.abs(wx)-dz*LAT)/TUBE_R*0.5+0.5)*0.5);
+        for(let b=0;b<NB;b++){
+          const yb=Y0+(b+0.5)*(Y1-Y0)/NB, d=Math.abs(Math.atan2(yb-TIP.y,dz)-ph);
+          if(d>HALF_V) continue;
+          const k=i*NB+b, before=dose[k];
+          dose[k]+=RATE*dt*fall*(1-smooth((d-1.18)/(HALF_V-1.18)));
+          if(before<0.06 && dose[k]>=0.06) tStart[k]=t;
+          if(before<1 && dose[k]>=1) tEnd[k]=t;
+        }
+      }
+    }
+    // anything that started clearing but never finished keeps a partial coat
+    for(let k=0;k<NT*NB;k++) if(tStart[k]<Infinity && tEnd[k]===Infinity) tEnd[k]=-dose[k];
+  }
+  let lastDirtT=-1;
+  function updateDirt(t){
+    if(!dirtData || t===lastDirtT) return; lastDirtT=t;
+    for(let i=0;i<NT;i++){
+      let sum=0;
+      for(let b=0;b<NB;b++){
+        const k=i*NB+b, s=tStart[k], e=tEnd[k];
+        let d=1;
+        if(t>s){
+          if(e>=0){ d= e===Infinity?1 : 1-clamp((t-s)/Math.max(0.05,e-s),0,1); }
+          else { d=1-clamp(-e,0,1)*clamp((t-s)/0.6,0,1); }
+        }
+        dirtData[(b*NT+i)*4]=Math.round(d*255); sum+=d;
+      }
+      tubeAvg[i]=sum/NB;
+    }
+    dirtTex.needsUpdate=true;
+  }
+
+  // ---- load geometry -------------------------------------------------------------------
+  let ready=false;
+  fetch('/assets/sp55-exploded/sp55-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl;
+    for(const e of hdr){
+      const col=COLORS[e.name]; if(col===undefined) continue;
+      const g=new THREE.Group();
+      if(e.nv){
+        const q=new Int16Array(buf, base+e.V[0], e.nv*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+        geo.computeVertexNormals();
+        let mat;
+        if(e.name==='tube_elements'){
+          // the model stores each element as a 22-vertex prism: tube i owns vertices 22i..22i+21
+          NT=Math.round(e.nv/22); tubeC=new Float32Array(NT*2);
+          const tid=new Float32Array(e.nv);
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); tid[v]=i; tubeC[2*i]+=pos[3*v]/22; tubeC[2*i+1]+=pos[3*v+2]/22; }
+          geo.setAttribute('tubeId', new THREE.BufferAttribute(tid,1));
+          const off=new Float32Array(e.nv*2);
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); off[2*v]=(pos[3*v]-tubeC[2*i])/12; off[2*v+1]=(pos[3*v+2]-tubeC[2*i+1])/12; }
+          geo.setAttribute('tubeOff', new THREE.BufferAttribute(off,2));
+          dirtData=new Uint8Array(NT*NB*4).fill(255); tubeAvg=new Float32Array(NT).fill(1);
+          dirtTex=new THREE.DataTexture(dirtData,NT,NB,THREE.RGBAFormat,THREE.UnsignedByteType);
+          dirtTex.magFilter=dirtTex.minFilter=THREE.NearestFilter; dirtTex.needsUpdate=true;
+          mat=tubeMaterial();
+        } else {
+          const a=ALPHA[e.name];
+          mat=new THREE.MeshPhongMaterial({color:col, shininess:18, specular:0x222222, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
+            transparent:true, opacity:a||1, depthWrite:!a, side: a?THREE.DoubleSide:THREE.FrontSide});
+          mat.userData.base=a||1;
+        }
+        g.add(new THREE.Mesh(geo,mat));
+      }
+      if(e.nl){
+        const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const lg=new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        const dark=(col===BLACK||col===HOLE||col===DARKBLUE);
+        const lm=new THREE.LineBasicMaterial({color: dark?0x6a6f76:0x101214, transparent:true, opacity: dark?0.6:0.7});
+        lm.userData.base=lm.opacity;
+        g.add(new THREE.LineSegments(lg, lm));
+      }
+      (BUNDLE.has(e.name)?bundle:scene).add(g);
+      parts[e.name]={obj:g, name:e.name};
+    }
+    precomputeWash();
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- wash wand, fan spray and particles -------------------------------------------------------
+  const PIVOT=new THREE.Vector3(0,TIP.y,-800);
+  const lance=new THREE.Group(); lance.position.copy(PIVOT); scene.add(lance);
+  const lanceBody=new THREE.Group(); lance.add(lanceBody);
+  const steel=new THREE.MeshPhongMaterial({color:0x8f959c, shininess:40, specular:0x555555});
+  const dark=new THREE.MeshPhongMaterial({color:0x2a2d31, shininess:30});
+  const green=new THREE.MeshPhongMaterial({color:0x7cc142, shininess:30});
+  function cyl(r,len,mat,z){ const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,20),mat); m.rotation.x=Math.PI/2; m.position.z=z; return m; }
+  lanceBody.add(cyl(9,1500,steel,35-750-40));          // wand
+  lanceBody.add(cyl(15,46,dark,35-23));                 // quick-connect nozzle, tip at +35
+  lanceBody.add(cyl(11,10,green,35-2));                 // coloured fan tip
+  const gun=new THREE.Group(); gun.position.z=-1560; lanceBody.add(gun);
+  gun.add(new THREE.Mesh(new THREE.BoxGeometry(46,70,210),dark));
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(40,170,54),green); grip.position.set(0,-110,-60); grip.rotation.x=-0.3; gun.add(grip);
+
+  function canvasTex(draw,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); const t=new THREE.CanvasTexture(c); return t; }
+  const fanTex=canvasTex((g,w,h)=>{ const gr=g.createLinearGradient(0,0,w,0); gr.addColorStop(0,'rgba(255,255,255,0.95)'); gr.addColorStop(0.55,'rgba(225,240,250,0.55)'); gr.addColorStop(1,'rgba(210,232,246,0)'); g.fillStyle=gr; g.fillRect(0,0,w,h); for(let i=0;i<40;i++){ g.fillStyle='rgba(255,255,255,'+(0.1+Math.random()*0.25)+')'; g.fillRect(Math.random()*w,Math.floor(Math.random()*h),20+Math.random()*60,1.5);} },256,64);
+  // vertical fan: a flat sheet in the nozzle's Y-Z plane
+  const FAN_R=330, fanGeo=new THREE.BufferGeometry(); {
+    const seg=40, P=[0,0,0], UV=[0,0.5], I=[];
+    for(let s=0;s<=seg;s++){ const a=-HALF_V+2*HALF_V*s/seg; P.push(0,Math.sin(a)*FAN_R,Math.cos(a)*FAN_R); UV.push(1,s/seg); if(s) I.push(0,s,s+1); }
+    fanGeo.setAttribute('position',new THREE.Float32BufferAttribute(P,3)); fanGeo.setAttribute('uv',new THREE.Float32BufferAttribute(UV,2)); fanGeo.setIndex(I);
+  }
+  const fanMat=new THREE.MeshBasicMaterial({map:fanTex, transparent:true, opacity:0.55, side:THREE.DoubleSide, depthWrite:false});
+  const fan=new THREE.Mesh(fanGeo,fanMat); fan.position.z=35; lanceBody.add(fan);
+
+  const splashTex=canvasTex((g,w,h)=>{ const gr=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2); gr.addColorStop(0,'rgba(255,255,255,.95)'); gr.addColorStop(0.35,'rgba(214,236,250,.7)'); gr.addColorStop(1,'rgba(200,228,248,0)'); g.fillStyle=gr; g.fillRect(0,0,w,h); },64,64);
+  const splash=new THREE.Mesh(new THREE.PlaneGeometry(1,1), new THREE.MeshBasicMaterial({map:splashTex, transparent:true, depthWrite:false, opacity:0.85}));
+  splash.visible=false; scene.add(splash);
+  function placeSplash(t){
+    splash.visible=sprayOn(t); if(!splash.visible) return;
+    const ph=pitch(t), dz=118, yc=TIP.y+dz*Math.tan(ph);
+    splash.position.set(0,yc,TIP.z+dz-14); splash.scale.set(95+10*Math.sin(t*31),2*dz*Math.tan(HALF_V*0.9),1);
+    splash.quaternion.copy(camera.quaternion); splash.material.opacity=0.7+0.2*Math.sin(t*53);
+  }
+  const dotTex=canvasTex((g,w)=>{ const gr=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.5,'rgba(255,255,255,.8)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,w,w); },32,32);
+  function pointCloud(n,size,color){
+    const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e5),3));
+    const m=new THREE.PointsMaterial({size, color, map:dotTex, transparent:true, depthWrite:false, sizeAttenuation:true});
+    const p=new THREE.Points(geo,m); p.frustumCulled=false; scene.add(p);
+    return {p, pos:geo.attributes.position, n, v:new Float32Array(n*3), life:new Float32Array(n), next:0};
+  }
+  const drops=pointCloud(520,11,0xeaf6ff), flakes=pointCloud(520,11,0xf3eee0);
+  function emit(c,x,y,z,vx,vy,vz,life){ const i=c.next; c.next=(c.next+1)%c.n; c.pos.array.set([x,y,z],3*i); c.v.set([vx,vy,vz],3*i); c.life[i]=life; }
+  function stepParticles(c,dt,g){
+    const a=c.pos.array;
+    for(let i=0;i<c.n;i++){
+      if(c.life[i]<=0){ a[3*i+1]=1e5; continue; }
+      c.life[i]-=dt; c.v[3*i+1]-=g*dt;
+      a[3*i]+=c.v[3*i]*dt; a[3*i+1]+=c.v[3*i+1]*dt; a[3*i+2]+=c.v[3*i+2]*dt;
+      if(a[3*i+1]<-1500) c.life[i]=0;
+    }
+    c.pos.needsUpdate=true;
+  }
+  function clearParticles(){ for(const c of [drops,flakes]){ c.life.fill(0); stepParticles(c,0,0); } }
+  const _tip=new THREE.Vector3();
+  function spawn(t,dt){
+    if(!sprayOn(t)) return;
+    const ph=pitch(t); lance.updateMatrixWorld(); _tip.set(0,0,35).applyMatrix4(lanceBody.matrixWorld);
+    for(let k=0;k<Math.ceil(dt*1400);k++){
+      const a=ph+(Math.random()*2-1)*HALF_V*0.95, sp=1400+Math.random()*700, lat=(Math.random()*2-1)*0.05;
+      emit(drops,_tip.x,_tip.y,_tip.z, sp*lat, Math.sin(a)*sp, Math.cos(a)*sp, 0.07+Math.random()*0.1);
+    }
+    // media knocked loose from bands that are clearing right now
+    const th=theta(t), cs=Math.cos(th), sn=Math.sin(th);
+    let budget=Math.ceil(dt*260);
+    for(let tries=0; tries<400 && budget>0; tries++){
+      const i=(Math.random()*NT)|0, b=(Math.random()*NB)|0, k=i*NB+b;
+      if(!(t>tStart[k] && (tEnd[k]<0 || t<tEnd[k]+0.15))) continue;
+      const cx=tubeC[2*i], cz=tubeC[2*i+1], wx=cx*cs+cz*sn, wz=-cx*sn+cz*cs;
+      emit(flakes, wx-Math.sign(wx||1)*6, Y0+(b+Math.random())*(Y1-Y0)/NB, wz-10, (Math.random()-0.5)*260, 80+Math.random()*200, 120+Math.random()*260, 0.9+Math.random()*0.8);
+      budget--;
+    }
+  }
+
+  // ---- camera: scripted path plus the viewer's own look offset ---------------------------------
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const KA={p:V(-3500,2850,-3900), t:V(0,250,0), f:34};   // drawing-style three-quarter view
+  const KB={p:V(0,170,-2750), t:V(0,110,-780), f:30};     // standing at the window
+  const KC={p:V(235,300,-1640), t:V(0,95,-560), f:38};    // looking in through the opening
+  const PATH=[[0,KA],[3.5,KA],[6,KB],[11,KB],[13.5,KC],[34.6,KC],[37,KB],[41.6,KB],[44,KA]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k;
+    if(t<3.5){ const yaw=-0.12*(1-t/3.5); const d=out.p.clone().sub(out.t).applyAxisAngle(V(0,1,0),yaw); out.p.copy(out.t).add(d); }
+    return out;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1, ghost=false;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:40};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    // with the tank see-through, stand further back from the opening so the whole bundle fits
+    const near=ghost? clamp((2100-d.length())/900,0,1) : 0;
+    d.multiplyScalar(zoomOff*(1+1.4*near));
+    // on tall phone screens widen the lens so the opening still fits across
+    const asp=camera.aspect, f=asp<1? Math.min(80, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.9)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t); camera.updateProjectionMatrix();
+    lamp.position.copy(camera.position).add(V(60,160,0));
+  }
+  function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{ if(!drag) return; yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.35,3); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+
+  // ---- see-through tank ---------------------------------------------------------------------------
+  function applyGhost(){
+    for(const n of GHOSTABLE){ const p=parts[n]; if(!p) continue;
+      p.obj.children.forEach(c=>{ const m=c.material; m.opacity=ghost?(c.isMesh?0.14:0.18):m.userData.base; m.depthWrite=c.isMesh && !ghost; });
+    }
+    needRender=true;
+  }
+  ghostBtn.addEventListener('click',()=>{ ghost=!ghost; ghostBtn.setAttribute('aria-pressed',String(ghost)); applyGhost(); });
+
+  // ---- steps list -----------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const t=STEPS[+b.dataset.i].t+0.01; clearParticles(); setTime(t); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(t>=T_END-0.01) s=STEPS.length-1;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); });
+  }
+
+  // ---- plan view ----------------------------------------------------------------------------------------
+  const plan=document.getElementById('plan'), pg=plan.getContext('2d');
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function drawPlan(t){
+    const W=plan.width, c=W/2, s=(W/2-14)/800, ink=css('--ink'), ink2=css('--ink-2');
+    pg.clearRect(0,0,W,W);
+    pg.lineWidth=3; pg.strokeStyle=ink; pg.beginPath(); pg.arc(c,c,784*s,0,7); pg.stroke();
+    // window opening on the near (bottom) side
+    const open=WIN.every(w=>winK(w,t)>0.95);
+    pg.lineWidth=7; pg.strokeStyle=open?'#d1202b':'#2b6cc4'; pg.beginPath(); pg.arc(c,c,784*s,Math.PI/2-0.21,Math.PI/2+0.21); pg.stroke();
+    const th=theta(t), cs=Math.cos(th), sn=Math.sin(th), mc='#e9e2cc', cc=[91,98,107];
+    for(let i=0;i<NT;i++){
+      const cx=tubeC[2*i], cz=tubeC[2*i+1], wx=cx*cs+cz*sn, wz=-cx*sn+cz*cs, d=tubeAvg[i];
+      pg.fillStyle= d>0.98? mc : `rgb(${Math.round(cc[0]+(233-cc[0])*d)},${Math.round(cc[1]+(226-cc[1])*d)},${Math.round(cc[2]+(204-cc[2])*d)})`;
+      pg.beginPath(); pg.arc(c-wx*s, c-wz*s, 13*s+0.9, 0, 7); pg.fill();
+    }
+    // start mark on the tube sheet rim
+    const mx=-650*sn, mz=-650*cs;
+    pg.fillStyle='#d1202b'; pg.beginPath(); pg.arc(c-mx*s,c-mz*s,5,0,7); pg.fill();
+    if(sprayOn(t)){
+      const ty=c+765*s; pg.fillStyle='rgba(47,143,201,.35)'; pg.beginPath(); pg.moveTo(c,ty); pg.lineTo(c-40,ty-240*s*1.6); pg.lineTo(c+40,ty-240*s*1.6); pg.closePath(); pg.fill();
+    }
+    // turning direction
+    if(t>WASH0-1 && t<WASH1+1){ pg.strokeStyle=ink2; pg.lineWidth=2.5; pg.beginPath(); pg.arc(c,c,300*s,Math.PI*0.62,Math.PI*0.38,true); pg.stroke();
+      const ax=c+300*s*Math.cos(Math.PI*0.38), ay=c+300*s*Math.sin(Math.PI*0.38); pg.fillStyle=ink2; pg.beginPath(); pg.moveTo(ax+9,ay-5); pg.lineTo(ax-4,ay-8); pg.lineTo(ax+1,ay+6); pg.fill(); }
+    turnEl.textContent=Math.round(th*180/Math.PI)+'°';
+  }
+
+  // ---- apply a point in time to the scene -----------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    if(!ready){ needRender=true; return; }
+    bundle.rotation.y=theta(T);
+    for(const w of WIN){
+      const p=parts[w[0]]; if(!p) continue; const k=winK(w,T);
+      const k1=ease(k/0.55), k2=ease((k-0.55)/0.45);
+      p.obj.position.set(1100*k2, -260*k2, -w[5]*k1);
+      p.obj.visible=k<0.999;
+      p.obj.children.forEach(c=>{ c.material.opacity=c.material.userData.base*(1-clamp((k-0.6)/0.35,0,1)); });
+    }
+    const li=lanceIn(T); lance.visible=li>0.001;
+    lance.position.set(PIVOT.x, PIVOT.y-260*(1-li), PIVOT.z-900*(1-li));
+    lance.rotation.x= T>=WASH0-0.5 && T<=WASH1+0.5 ? -pitch(T)*smooth((T-WASH0+0.5)/0.8)*smooth((WASH1+0.5-T)/0.8) : 0;
+    fan.visible=sprayOn(T); placeSplash(T);
+    fanMat.opacity=0.45+0.12*Math.sin(T*47);
+    lamp.intensity= smooth((T-11)/2)*smooth((36-T)/1.5)*0.18;
+    updateDirt(T); updateSteps(T); drawPlan(T);
+    updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); clearParticles(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback --------------------------------------------------------------------------------------------
+  let playing=false, loop=false, last=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=24;
+  function startPlay(){ if(T>=T_END) { T=0; clearParticles(); } playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+
+  let particlesLive=false;
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(playing){
+      let t=T+dt;
+      if(t>=T_END){ if(loop){ t=0; clearParticles(); } else { t=T_END; stopPlay(); } }
+      setTime(t);
+      if(!reduced) spawn(T,dt);
+    }
+    if(playing || particlesLive){
+      stepParticles(drops,dt,400); stepParticles(flakes,dt,1600);
+      particlesLive=drops.life.some(x=>x>0)||flakes.life.some(x=>x>0);
+      needRender=true;
+    }
+    if(needRender){ needRender=false; updateCamera(); renderer.render(scene,camera); }
+  }
+  requestAnimationFrame(frame);
+  resize();
+})();
+</script>
+
+</body>
+</html>
