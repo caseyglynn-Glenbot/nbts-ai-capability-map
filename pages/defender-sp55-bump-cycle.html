@@ -334,6 +334,7 @@
   // water: in through the influent nozzle below the viewing window, across to a tube face,
   // through the cake into the tube, up the tube and out above the tube sheet
   const INF={x:0, y:-615, z:-701, r:150};          // influent nozzle face, from the body model
+  const EFF={x:0, y:1022, z:-466, r:150};          // effluent connection on the upper head
   let F=null, flowPhase=0;
   function buildFlow(){
     flow=cloud(FLOW_N,55,0x1597c9,0.9);
@@ -343,12 +344,14 @@
     for(let i=0;i<FLOW_N;i++){
       let tb=0; for(let n=0;n<12;n++){ tb=(h1(i*11.3+n*5.1)*NT)|0; if(tubeC[2*tb+1]>0) break; }
       const ja=h1(i*2.3)*6.283, jr=Math.sqrt(h1(i*3.7))*INF.r*0.8;
-      F.push({ph:h1(i*13.7), tb, jx:Math.cos(ja)*jr, jy:Math.sin(ja)*jr, y0:-340+h1(i*4.4)*1000, ex:h1(i*6.6)*6.283});
+      const ea=h1(i*6.6)*6.283, er=Math.sqrt(h1(i*8.9))*EFF.r*0.75;
+      F.push({ph:h1(i*13.7), tb, jx:Math.cos(ja)*jr, jy:Math.sin(ja)*jr, y0:-340+h1(i*4.4)*1000, ex:Math.cos(ea)*er, ez:Math.sin(ea)*er});
     }
   }
   // outline of the influent nozzle, left in place when the front half is cut away
   const infRing=new THREE.Mesh(new THREE.TorusGeometry(INF.r,9,10,48), new THREE.MeshBasicMaterial({color:0x2b6cc4, transparent:true, opacity:0.55, depthWrite:false}));
   infRing.position.set(INF.x,INF.y,INF.z); scene.add(infRing);
+  const effRing=infRing.clone(); effRing.rotation.x=Math.PI/2; effRing.position.set(EFF.x,EFF.y+6,EFF.z); scene.add(effRing);
   function placeFlow(t){
     const a=flow.geometry.attributes.position.array, sy=sheetOffset(t), on=pumpSpeed(t);
     flow.material.opacity=0.8*smooth(on*4);
@@ -363,10 +366,12 @@
         const k=smooth((p-0.14)/0.31), u=1-k;
         const cx=ix*0.4+tx*0.2, cy=iy*0.3+f.y0*0.7-120, cz=-420;       // bezier control point
         x=u*u*ix+2*u*k*cx+k*k*tx; y=u*u*iy+2*u*k*cy+k*k*(f.y0+sy); z=u*u*(INF.z+30)+2*u*k*cz+k*k*tz;
-      } else if(p<0.85){ // up inside the tube
-        const k=(p-0.45)/0.4; x=tx; z=tz; y=f.y0+sy+(960-f.y0)*k;
-      } else { // out above the tube sheet toward the effluent
-        const k=(p-0.85)/0.15; x=tx*(1-k)+Math.cos(f.ex)*120*k; z=tz*(1-k)+Math.sin(f.ex)*120*k; y=960+sy+k*80;
+      } else if(p<0.76){ // up inside the tube
+        const k=(p-0.45)/0.31; x=tx; z=tz; y=f.y0+sy+(990-f.y0)*k;
+      } else if(p<0.87){ // across the space under the head to the effluent connection
+        const k=smooth((p-0.76)/0.11); x=tx+(EFF.x+f.ex-tx)*k; z=tz+(EFF.z+f.ez-tz)*k; y=990+sy*(1-k)+12*k;
+      } else { // up and out through the effluent connection
+        const k=(p-0.87)/0.13; x=EFF.x+f.ex; z=EFF.z+f.ez; y=1002+k*520;
       }
       a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
     }
@@ -416,7 +421,8 @@
     {txt:'Tube sheet', p:V(-520,985,4), move:true, show:t=>true},
     {txt:'Tube elements', p:V(-420,420,30), move:true, show:t=>true},
     {txt:'Loose media', p:null, move:false, show:t=>t>BUMP0+0.8 && t<PRECOAT+3},
-    {txt:'Influent', p:V(0,-615,-701), move:false, show:t=>pumpSpeed(t)>0.05}
+    {txt:'Influent', p:V(0,-615,-701), move:false, show:t=>pumpSpeed(t)>0.05},
+    {txt:'Effluent', p:V(0,1030,-466-150), move:false, show:t=>pumpSpeed(t)>0.05}
   ];
   let labelsOn=true;
   labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
@@ -491,6 +497,7 @@
     const tire=parts.bump_tire; if(tire){ const s=(TIRE_H+off)/TIRE_H, bulge=1+(1-s)*0.35; tire.obj.scale.set(bulge,s,bulge); tire.obj.position.y=TIRE_Y0*(1-s); }
     clip.constant=cutAt(T);
     infRing.visible=cutOn && clip.constant<INF.z*-1-20;
+    effRing.visible=cutOn && clip.constant<EFF.z*-1-20;
     cakeU.uLevel.value=cakeLevel(T); cakeU.uFresh.value=T>=PRECOAT?1:0;
     placeMedia(T);
     updateReadout(T);
