@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Defender SP-55: Bump Cycle</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas.gl{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:500 12px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:190px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.stop{color:var(--leader)} #readout dd.mid{color:var(--warn)}
+  #readout .pips{display:flex;gap:4px;justify-content:flex-end;padding-top:6px}
+  #readout .pips i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-2)}
+  #readout .pips i.on{background:var(--ink);border-color:var(--ink)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:188px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #overlay{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Defender SP-55 Bump Cycle</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading SP-55 geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Bump cycle &amp; regeneration</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">Filter status</div>
+      <dl>
+        <dt>Pump</dt><dd id="r-pump">Running</dd>
+        <dt>Bump tire</dt><dd id="r-tire">Inflated</dd>
+        <dt>Tube sheet</dt><dd id="r-sheet">Up</dd>
+        <dt>Media</dt><dd id="r-media">On tubes</dd>
+      </dl>
+      <div class="pips" id="pips"></div>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>Defender SP-55 · Bump Cycle<small>Half-section through the filter. Built from the SP-55 Auto STEP model.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Procedure timeline">
+      <span class="tick" id="tend">0:42</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="cut" aria-pressed="true" title="Show the filter cut in half">Cutaway</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const cutBtn=document.getElementById('cut'), labelsBtn=document.getElementById('labels');
+  const tnow=document.getElementById('tnow');
+
+  // ---- procedure timeline (seconds) ------------------------------------------------
+  const T_END=42;
+  const STEPS=[
+    {t:0,  h:'Filtering', d:'Bump tire inflated, tube sheet held up. Water passes from outside the tubes in through the perlite cake, up through the tube sheet and out the top.'},
+    {t:9,  h:'Pump stops', d:'The controller stops the pump so there is no flow holding the cake against the tubes.'},
+    {t:11, h:'Bump the tube sheet', d:'Air vents from the bump tire, the lift shaft and tube sheet drop onto their stop and the tubes flex. The cake breaks loose. The tire refills, lifts the sheet, and the bump repeats.'},
+    {t:24, h:'Media in suspension', d:'Loose perlite and the dirt it caught are mixed through the water around the tubes.'},
+    {t:28, h:'Precoat, then filter', d:'The pump restarts at precoat speed and the media redeposits evenly on the tubes, turned to a clean face. Then back to full flow.'}
+  ];
+  const PUMP_OFF=9, PRECOAT=28, FULL=35;
+  const NBUMP=5, BUMP0=11.6, BUMP_DT=2.55;        // bump k vents at BUMP0+k*BUMP_DT
+  const DROP=52;                                    // tube sheet drop, mm (exaggerated so it reads)
+  const TIRE_Y0=1079, TIRE_H=172;                   // bump tire base and height in the model
+  const LEVEL=[0.5,0.26,0.12,0.05,0.0];             // cake left on the tubes after each bump
+
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const h1=i=>{ const s=Math.sin(i*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // tube sheet position: 0 = up (tire full), 1 = dropped (tire vented), plus a small bounce on landing
+  function sheetOffset(t){
+    let off=0;
+    for(let k=0;k<NBUMP;k++){
+      const a=t-(BUMP0+k*BUMP_DT); if(a<0) break;
+      if(a<0.18){ off=-DROP*smooth(a/0.18)*smooth(a/0.18); }
+      else if(a<1.15){ const b=a-0.18; off=-DROP+9*Math.exp(-b*7)*Math.sin(b*38); }
+      else if(a<2.1){ off=-DROP*(1-ease((a-1.15)/0.95)); }
+      else off=0;
+    }
+    return off;
+  }
+  const bumpsDone=t=>{ let n=0; for(let k=0;k<NBUMP;k++) if(t>=BUMP0+k*BUMP_DT) n++; return n; };
+  function cakeLevel(t){
+    if(t<PRECOAT){
+      let L=1;
+      for(let k=0;k<NBUMP;k++){ const a=t-(BUMP0+k*BUMP_DT)-0.1; if(a<0) break; const prev=k?LEVEL[k-1]:1; L=prev+(LEVEL[k]-prev)*smooth(a/0.9); }
+      return L;
+    }
+    return ease((t-PRECOAT-0.8)/6);
+  }
+  // 0 = running full, 0.45 = precoat speed, 0 = off
+  function pumpSpeed(t){ if(t<PUMP_OFF) return 1-smooth((t-PUMP_OFF+0.8)/0.8); if(t<PRECOAT) return 0; if(t<FULL) return 0.45*smooth((t-PRECOAT)/1); return 0.45+0.55*smooth((t-FULL)/1.2); }
+
+  // ---- scene ------------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled=true;
+  renderer.domElement.className='gl';
+  view.insertBefore(renderer.domElement, view.firstChild);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(34,1,10,40000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(-0.5,1,-0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.3,-0.6); scene.add(fill);
+
+  // section plane: keeps z >= -cut. Swept from the front of the tank back to the centreline.
+  const CUT_OPEN=0, CUT_SHUT=1200;
+  const clip=new THREE.Plane(new THREE.Vector3(0,0,1), CUT_SHUT);
+  let cutOn=true;
+
+  const BLUE=0x2b6cc4, DARKBLUE=0x1d3f9a, GREY=0x8b9199, LIGHT=0xb7bcc3, BLACK=0x1f2124, YELLOW=0xd9c92e, FELT=0xcfc9b6, TUBE=0x5b626b, HOLE=0x2c3138, ACR=0xe6ecf2, INNER=0x9fb6d6;
+  const COLORS={body:BLUE, upper_head:BLUE, davit:BLUE, davit_arm:BLUE, head_gasket:GREY, bump_gasket:BLACK, bump_bushing:DARKBLUE, bushing_oring:BLACK, snap_ring:BLACK, bump_tire:BLACK, lift_shaft_nut:GREY,
+    tube_sheet:LIGHT, tube_sheet_holes:HOLE, tube_elements:TUBE, tube_elements_edges:TUBE, felt_gasket:FELT, hold_down_plate:LIGHT, hold_down_holes:HOLE, tube_sheet_hardware:GREY,
+    lift_shaft:YELLOW, lift_shaft_hardware:GREY, lift_shaft_oring:BLACK, window_gasket:BLACK, acrylic:ACR, window_cover:BLUE, window_hardware:GREY};
+  const ALPHA={acrylic:0.45};
+  // parts that ride on the lift shaft and drop with the tube sheet
+  const MOVING=new Set(['tube_sheet','tube_sheet_holes','tube_elements','tube_elements_edges','felt_gasket','hold_down_plate','hold_down_holes','tube_sheet_hardware','lift_shaft','lift_shaft_hardware','lift_shaft_nut']);
+  const sheet=new THREE.Group(); scene.add(sheet);
+  const parts={};
+
+  // ---- perlite cake on the tubes ---------------------------------------------------------------
+  const Y0=-380, Y1=940;
+  let NT=0, tubeC=null;
+  const cakeU={uLevel:{value:1}, uFresh:{value:0}, uLoaded:{value:new THREE.Color(0xc9b891)}, uNew:{value:new THREE.Color(0xeee8d6)}};
+  function tubeMaterial(){
+    const m=new THREE.MeshPhongMaterial({color:TUBE, shininess:22, specular:0x333333, side:THREE.DoubleSide, clippingPlanes:[clip], polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
+    m.onBeforeCompile=sh=>{
+      Object.assign(sh.uniforms,cakeU);
+      sh.vertexShader=sh.vertexShader
+        .replace('#include <common>','#include <common>\nattribute float tubeId;\nattribute vec2 tubeOff;\nvarying vec3 vTube;\nvarying vec2 vOff;')
+        .replace('#include <begin_vertex>',`#include <begin_vertex>\nvOff=tubeOff;\nvTube=vec3(tubeId, clamp((position.y-(${Y0.toFixed(1)}))/${(Y1-Y0).toFixed(1)},0.0,1.0), 0.0);`);
+      sh.fragmentShader=sh.fragmentShader
+        .replace('#include <common>','#include <common>\nuniform float uLevel; uniform float uFresh; uniform vec3 uLoaded; uniform vec3 uNew;\nvarying vec3 vTube;\nvarying vec2 vOff;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}')
+        .replace('#include <color_fragment>',`#include <color_fragment>
+          float ang=floor((atan(vOff.y,vOff.x)+3.1416)*0.95);
+          float cell=h21(vec2(vTube.x+ang*0.173, floor(vTube.y*128.0+ang*0.37)));
+          float tubeBias=h21(vec2(vTube.x,7.0))*0.25;
+          float cov=smoothstep(cell*0.75+tubeBias, cell*0.75+tubeBias+0.12, uLevel*1.25);
+          vec3 cake=mix(uLoaded, uNew, uFresh)*(0.9+0.1*cell);
+          diffuseColor.rgb=mix(diffuseColor.rgb, cake, cov);`);
+    };
+    return m;
+  }
+
+  let ready=false;
+  fetch('/assets/sp55-exploded/sp55-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl;
+    for(const e of hdr){
+      const col=COLORS[e.name]; if(col===undefined) continue;
+      const g=new THREE.Group();
+      if(e.nv){
+        const q=new Int16Array(buf, base+e.V[0], e.nv*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+        geo.computeVertexNormals();
+        let mat;
+        if(e.name==='tube_elements'){
+          // each element is a 22-vertex prism: tube i owns vertices 22i..22i+21
+          NT=Math.round(e.nv/22); tubeC=new Float32Array(NT*2);
+          const tid=new Float32Array(e.nv), off=new Float32Array(e.nv*2);
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); tid[v]=i; tubeC[2*i]+=pos[3*v]/22; tubeC[2*i+1]+=pos[3*v+2]/22; }
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); off[2*v]=(pos[3*v]-tubeC[2*i])/12; off[2*v+1]=(pos[3*v+2]-tubeC[2*i+1])/12; }
+          geo.setAttribute('tubeId', new THREE.BufferAttribute(tid,1));
+          geo.setAttribute('tubeOff', new THREE.BufferAttribute(off,2));
+          mat=tubeMaterial();
+        } else {
+          const a=ALPHA[e.name];
+          mat=new THREE.MeshPhongMaterial({color:col, shininess:18, specular:0x222222, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
+            transparent:!!a, opacity:a||1, depthWrite:!a, side:THREE.DoubleSide, clippingPlanes:[clip]});
+          // inside faces of the shell read lighter, so the cut reads as a section
+          if(e.name==='body'||e.name==='upper_head'){
+            mat.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nif(!gl_FrontFacing) diffuseColor.rgb=vec3('+[0.62,0.71,0.84].join(',')+');'); };
+          }
+        }
+        g.add(new THREE.Mesh(geo,mat));
+      }
+      if(e.nl){
+        const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const lg=new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        const dark=(col===BLACK||col===HOLE||col===DARKBLUE);
+        g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color: dark?0x6a6f76:0x101214, transparent:true, opacity: dark?0.6:0.7, clippingPlanes:[clip]})));
+      }
+      (MOVING.has(e.name)?sheet:scene).add(g);
+      parts[e.name]={obj:g};
+    }
+    buildMedia(); buildFlow();
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- particles: loose media and water flow, both pure functions of time so scrubbing works ----
+  function canvasTex(draw,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); return new THREE.CanvasTexture(c); }
+  const dotTex=canvasTex((g,w)=>{ const gr=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,w,w); },32,32);
+  function cloud(n,size,color,opacity){
+    const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e5),3));
+    const m=new THREE.PointsMaterial({size, color, map:dotTex, transparent:true, opacity, depthWrite:false, clippingPlanes:[clip]});
+    const p=new THREE.Points(geo,m); p.frustumCulled=false; scene.add(p); return p;
+  }
+  const MEDIA_N=1400, FLOW_N=420;
+  let media, flow, M=null;
+  function buildMedia(){
+    media=cloud(MEDIA_N,70,0xd9c89c,1);
+    M=[];
+    for(let i=0;i<MEDIA_N;i++){
+      // pick tubes on the kept half so the flakes are seen
+      let tb=0; for(let n=0;n<12;n++){ tb=(h1(i*3.1+n*17.3)*NT)|0; if(tubeC[2*tb+1]>-60) break; }
+      const tb2=(h1(i*5.3+2)*NT)|0, a=h1(i*1.7)*6.283, a2=h1(i*2.9)*6.283;
+      M.push({
+        k:i%NBUMP, t0:h1(i*4.1)*0.8,
+        x:tubeC[2*tb]+Math.cos(a)*14, z:tubeC[2*tb+1]+Math.sin(a)*14, y:Y0+30+h1(i*6.7)*(Y1-Y0-120),
+        fall:120+h1(i*8.3)*560, tau:1.2+h1(i*9.1)*1.8, sw:h1(i*1.3)*6.283, sr:30+h1(i*2.1)*90,
+        tx:tubeC[2*tb2]+Math.cos(a2)*14, tz:tubeC[2*tb2+1]+Math.sin(a2)*14, ty:Y0+30+h1(i*3.9)*(Y1-Y0-120),
+        tp:PRECOAT+0.6+h1(i*5.9)*5.2
+      });
+    }
+  }
+  function placeMedia(t){
+    const a=media.geometry.attributes.position.array, sy=sheetOffset(t);
+    for(let i=0;i<MEDIA_N;i++){
+      const m=M[i], ts=BUMP0+m.k*BUMP_DT+0.12+m.t0*0.5;
+      if(t<ts || t>m.tp+1.3){ a[3*i+1]=1e5; continue; }
+      const u=t-ts, d=m.fall*(1-Math.exp(-u/m.tau));
+      const sw=m.sw+u*0.35, drift=Math.min(1,u/2.5)*m.sr;
+      let x=m.x+Math.cos(sw)*drift*0.6, y=m.y-d+ (t<PRECOAT?0:0), z=m.z+Math.sin(sw)*drift*0.6;
+      y=Math.max(y,-640+ (i%7)*14);
+      if(t>m.tp){ const k=ease((t-m.tp)/1.3); x+= (m.tx-x)*k; y+=(m.ty+sy-y)*k; z+=(m.tz-z)*k; }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+    }
+    media.geometry.attributes.position.needsUpdate=true;
+  }
+  // water: in from the wall, through the cake into a tube, up the tube, out above the tube sheet
+  let F=null, flowPhase=0;
+  function buildFlow(){
+    flow=cloud(FLOW_N,55,0x1597c9,0.9); flow.material.depthTest=false; flow.renderOrder=5; // drawn over the tubes as a flow diagram
+    F=[];
+    for(let i=0;i<FLOW_N;i++){
+      const tb=(h1(i*11.3)*NT)|0, a=Math.atan2(tubeC[2*tb+1],tubeC[2*tb]), r=Math.hypot(tubeC[2*tb],tubeC[2*tb+1]);
+      F.push({ph:h1(i*13.7), tb, a0:a+(h1(i*2.3)-0.5)*0.5, r, y0:-300+h1(i*4.4)*900, ex:h1(i*6.6)*6.283});
+    }
+  }
+  function placeFlow(t){
+    const a=flow.geometry.attributes.position.array, sy=sheetOffset(t), on=pumpSpeed(t);
+    flow.material.opacity=0.75*smooth(on*4);
+    flow.visible=on>0.01;
+    for(let i=0;i<FLOW_N;i++){
+      const f=F[i], p=(f.ph+flowPhase)%1, tx=tubeC[2*f.tb], tz=tubeC[2*f.tb+1];
+      let x,y,z;
+      if(p<0.45){ // across from the shell wall to the tube face
+        const k=p/0.45, rr=740+(f.r-740)*k, aa=f.a0+(Math.atan2(tz,tx)-f.a0)*k;
+        x=Math.cos(aa)*rr; z=Math.sin(aa)*rr; y=f.y0;
+      } else if(p<0.85){ // up inside the tube
+        const k=(p-0.45)/0.4; x=tx; z=tz; y=f.y0+(960+sy-f.y0)*k;
+      } else { // out above the tube sheet toward the effluent
+        const k=(p-0.85)/0.15; x=tx*(1-k)+Math.cos(f.ex)*120*k; z=tz*(1-k)+Math.sin(f.ex)*120*k; y=960+sy+k*80;
+      }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+    }
+    flow.geometry.attributes.position.needsUpdate=true;
+  }
+
+  // ---- camera ---------------------------------------------------------------------------------------
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const KA={p:V(-3500,2850,-3900), t:V(0,250,0), f:34};    // drawing-style three-quarter view
+  const KS={p:V(-1300,560,-3900), t:V(-300,190,0), f:38};   // on the section
+  const KH={p:V(-760,1520,-1950), t:V(0,1010,0), f:32};     // head, bump tire and tube sheet
+  const PATH=[[0,KA],[3,KA],[6,KS],[10.2,KS],[11.8,KH],[18.5,KH],[20.6,KS],[39,KS],[42,KA]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k;
+    return out;
+  }
+  const cutAt=t=>cutOn? CUT_SHUT+(CUT_OPEN-CUT_SHUT)*ease((t-3.2)/2.6) : CUT_SHUT;
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:34};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    d.multiplyScalar(zoomOff);
+    const asp=camera.aspect, f=asp<1? Math.min(80, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.8)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
+  function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{ if(!drag) return; yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.35,3); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+  cutBtn.addEventListener('click',()=>{ cutOn=!cutOn; cutBtn.setAttribute('aria-pressed',String(cutOn)); setTime(T); });
+
+  // ---- callouts: a right-hand column, leaders to points on the section face ------------------------
+  const LABELS=[
+    {txt:'Bump tire', p:V(-150,1160,4), move:false, show:t=>true},
+    {txt:'Lift shaft', p:V(0,1290,4), move:true, show:t=>true},
+    {txt:'Tube sheet', p:V(-520,985,4), move:true, show:t=>true},
+    {txt:'Tube elements', p:V(-420,420,30), move:true, show:t=>true},
+    {txt:'Loose media', p:null, move:false, show:t=>t>BUMP0+0.8 && t<PRECOAT+3}
+  ];
+  let labelsOn=true;
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  const NS='http://www.w3.org/2000/svg';
+  for(const L of LABELS){
+    const g=document.createElementNS(NS,'g'), ln=document.createElementNS(NS,'polyline'), dot=document.createElementNS(NS,'circle'), halo=document.createElementNS(NS,'text'), tx=document.createElementNS(NS,'text');
+    dot.setAttribute('r','2.4'); halo.setAttribute('class','halo'); halo.textContent=tx.textContent=L.txt;
+    g.append(ln,dot,halo,tx); overlay.appendChild(g); L.el={g,ln,dot,halo,tx};
+  }
+  const pv=V(0,0,0);
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const sy=sheetOffset(T), vis=labelsOn && T>5.2 && cutOn && w>760;
+    const items=[];
+    for(const L of LABELS){
+      const on=vis && L.show(T); L.el.g.style.opacity=on?1:0; if(!on) continue;
+      if(L.p) pv.copy(L.p); else pv.set(-260,-470,160);
+      if(L.move) pv.y+=sy;
+      pv.project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      if(x<0||x>w||y<0||y>h||pv.z>1){ L.el.g.style.opacity=0; continue; }
+      items.push({L,x,y});
+    }
+    items.sort((a,b)=>a.y-b.y);
+    const lh=20, colX=w-16-210-18, top=190;
+    let prev=top-lh;
+    for(const it of items){
+      const ly=Math.max(it.y, prev+lh, top); prev=ly;
+      const e=it.L.el;
+      e.ln.setAttribute('points',`${colX-6},${ly} ${colX-20},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+      e.dot.setAttribute('cx',it.x); e.dot.setAttribute('cy',it.y);
+      for(const t of [e.halo,e.tx]){ t.setAttribute('x',colX); t.setAttribute('y',ly+4); }
+    }
+  }
+
+  // ---- steps and readout ------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s || t>=T_END-0.01); });
+  }
+  const R={pump:document.getElementById('r-pump'), tire:document.getElementById('r-tire'), sheet:document.getElementById('r-sheet'), media:document.getElementById('r-media')};
+  const pips=document.getElementById('pips'); pips.innerHTML=Array.from({length:NBUMP},()=>'<i></i>').join(''); const pipEls=[...pips.children];
+  function set(el,txt,cls){ if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; }
+  function updateReadout(t){
+    const ps=pumpSpeed(t);
+    set(R.pump, ps>0.9?'Running':ps>0.02&&t>=PRECOAT&&t<FULL+0.6?'Precoat speed':ps>0.02?'Running':'Off', ps>0.9?'go':ps>0.02?'mid':'stop');
+    const off=sheetOffset(t), falling=off<-2;
+    let tire='Inflated', tc='go';
+    for(let k=0;k<NBUMP;k++){ const a=t-(BUMP0+k*BUMP_DT); if(a>=0&&a<1.15){tire='Vented';tc='stop';} else if(a>=1.15&&a<2.1){tire='Refilling';tc='mid';} }
+    set(R.tire,tire,tc);
+    set(R.sheet, falling? (off<-DROP*0.8?'Dropped':'Moving') : 'Up', falling?'stop':'');
+    const L=cakeLevel(t);
+    set(R.media, t<BUMP0? 'On tubes, loaded' : t<PRECOAT? (L>0.1?'Shedding':'In suspension') : L<0.97? 'Precoating':'Fresh coat', t<BUMP0?'mid':t<PRECOAT?'stop':'go');
+    const n=bumpsDone(t); pipEls.forEach((p,i)=>p.classList.toggle('on',i<n));
+  }
+
+  // ---- apply a point in time --------------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(!ready){ needRender=true; return; }
+    const off=sheetOffset(T);
+    sheet.position.y=off;
+    const tire=parts.bump_tire; if(tire){ const s=(TIRE_H+off)/TIRE_H, bulge=1+(1-s)*0.35; tire.obj.scale.set(bulge,s,bulge); tire.obj.position.y=TIRE_Y0*(1-s); }
+    clip.constant=cutAt(T);
+    cakeU.uLevel.value=cakeLevel(T); cakeU.uFresh.value=T>=PRECOAT?1:0;
+    placeMedia(T);
+    updateReadout(T);
+    updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback -----------------------------------------------------------------------------------------
+  let playing=false, loop=false, last=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=BUMP0+0.5;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(playing){
+      let t=T+dt;
+      if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } }
+      setTime(t);
+    }
+    const ps=pumpSpeed(T);
+    if(ps>0.01 && !reduced){ flowPhase=(flowPhase+dt*0.22*(0.35+ps))%1; needRender=true; }
+    if(needRender){ needRender=false; placeFlow(T); updateCamera(); renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  resize();
+})();
+</script>
+
+</body>
+</html>
