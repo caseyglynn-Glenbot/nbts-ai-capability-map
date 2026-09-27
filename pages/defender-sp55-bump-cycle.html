@@ -224,13 +224,15 @@
         .replace('#include <common>','#include <common>\nattribute float tubeId;\nattribute vec2 tubeOff;\nvarying vec3 vTube;\nvarying vec2 vOff;')
         .replace('#include <begin_vertex>',`#include <begin_vertex>\nvOff=tubeOff;\nvTube=vec3(tubeId, clamp((position.y-(${Y0.toFixed(1)}))/${(Y1-Y0).toFixed(1)},0.0,1.0), 0.0);`);
       sh.fragmentShader=sh.fragmentShader
-        .replace('#include <common>','#include <common>\nuniform float uLevel; uniform float uFresh; uniform vec3 uLoaded; uniform vec3 uNew;\nvarying vec3 vTube;\nvarying vec2 vOff;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}')
+        .replace('#include <common>','#include <common>\nuniform float uLevel; uniform float uFresh; uniform vec3 uLoaded; uniform vec3 uNew;\nvarying vec3 vTube;\nvarying vec2 vOff;\nfloat h31(vec3 p){p=fract(p*0.3183099+0.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}\nfloat vnoise(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.0-2.0*f);return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}')
         .replace('#include <color_fragment>',`#include <color_fragment>
-          float ang=floor((atan(vOff.y,vOff.x)+3.1416)*0.95);
-          float cell=h21(vec2(vTube.x+ang*0.173, floor(vTube.y*128.0+ang*0.37)));
-          float tubeBias=h21(vec2(vTube.x,7.0))*0.25;
-          float cov=smoothstep(cell*0.75+tubeBias, cell*0.75+tubeBias+0.12, uLevel*1.25);
-          vec3 cake=mix(uLoaded, uNew, uFresh)*(0.9+0.1*cell);
+          // smooth value noise wrapped around each tube, so the cake breaks off in soft patches
+          vec3 np=vec3(vOff*0.9+vec2(vTube.x*3.17, vTube.x*1.71), vTube.y*22.0);
+          float n=vnoise(np)*0.65+vnoise(np*2.3+11.0)*0.35;
+          float tubeBias=h21(vec2(vTube.x,7.0))*0.2;
+          float th=n*0.8+tubeBias;
+          float cov=smoothstep(th-0.09, th+0.09, uLevel*1.2);
+          vec3 cake=mix(uLoaded, uNew, uFresh)*(0.93+0.07*n);
           diffuseColor.rgb=mix(diffuseColor.rgb, cake, cov);`);
     };
     return m;
