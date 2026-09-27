@@ -331,28 +331,40 @@
     }
     media.geometry.attributes.position.needsUpdate=true;
   }
-  // water: in from the wall, through the cake into a tube, up the tube, out above the tube sheet
+  // water: in through the influent nozzle below the viewing window, across to a tube face,
+  // through the cake into the tube, up the tube and out above the tube sheet
+  const INF={x:0, y:-615, z:-701, r:150};          // influent nozzle face, from the body model
   let F=null, flowPhase=0;
   function buildFlow(){
-    flow=cloud(FLOW_N,55,0x1597c9,0.9); flow.material.depthTest=false; flow.renderOrder=5; // drawn over the tubes as a flow diagram
+    flow=cloud(FLOW_N,55,0x1597c9,0.9);
+    // drawn over everything as a flow diagram, and not cut by the section so the inlet stays visible
+    flow.material.depthTest=false; flow.material.clippingPlanes=[]; flow.renderOrder=5;
     F=[];
     for(let i=0;i<FLOW_N;i++){
-      const tb=(h1(i*11.3)*NT)|0, a=Math.atan2(tubeC[2*tb+1],tubeC[2*tb]), r=Math.hypot(tubeC[2*tb],tubeC[2*tb+1]);
-      F.push({ph:h1(i*13.7), tb, a0:a+(h1(i*2.3)-0.5)*0.5, r, y0:-300+h1(i*4.4)*900, ex:h1(i*6.6)*6.283});
+      let tb=0; for(let n=0;n<12;n++){ tb=(h1(i*11.3+n*5.1)*NT)|0; if(tubeC[2*tb+1]>0) break; }
+      const ja=h1(i*2.3)*6.283, jr=Math.sqrt(h1(i*3.7))*INF.r*0.8;
+      F.push({ph:h1(i*13.7), tb, jx:Math.cos(ja)*jr, jy:Math.sin(ja)*jr, y0:-340+h1(i*4.4)*1000, ex:h1(i*6.6)*6.283});
     }
   }
+  // outline of the influent nozzle, left in place when the front half is cut away
+  const infRing=new THREE.Mesh(new THREE.TorusGeometry(INF.r,9,10,48), new THREE.MeshBasicMaterial({color:0x2b6cc4, transparent:true, opacity:0.55, depthWrite:false}));
+  infRing.position.set(INF.x,INF.y,INF.z); scene.add(infRing);
   function placeFlow(t){
     const a=flow.geometry.attributes.position.array, sy=sheetOffset(t), on=pumpSpeed(t);
-    flow.material.opacity=0.75*smooth(on*4);
+    flow.material.opacity=0.8*smooth(on*4);
     flow.visible=on>0.01;
     for(let i=0;i<FLOW_N;i++){
       const f=F[i], p=(f.ph+flowPhase)%1, tx=tubeC[2*f.tb], tz=tubeC[2*f.tb+1];
+      const ix=INF.x+f.jx, iy=INF.y+f.jy;
       let x,y,z;
-      if(p<0.45){ // across from the shell wall to the tube face
-        const k=p/0.45, rr=740+(f.r-740)*k, aa=f.a0+(Math.atan2(tz,tx)-f.a0)*k;
-        x=Math.cos(aa)*rr; z=Math.sin(aa)*rr; y=f.y0;
+      if(p<0.14){ // down the influent pipe into the nozzle
+        const k=p/0.14; x=ix; y=iy; z=INF.z-520+(520+30)*k;
+      } else if(p<0.45){ // from the nozzle up and across to the outside of a tube
+        const k=smooth((p-0.14)/0.31), u=1-k;
+        const cx=ix*0.4+tx*0.2, cy=iy*0.3+f.y0*0.7-120, cz=-420;       // bezier control point
+        x=u*u*ix+2*u*k*cx+k*k*tx; y=u*u*iy+2*u*k*cy+k*k*(f.y0+sy); z=u*u*(INF.z+30)+2*u*k*cz+k*k*tz;
       } else if(p<0.85){ // up inside the tube
-        const k=(p-0.45)/0.4; x=tx; z=tz; y=f.y0+(960+sy-f.y0)*k;
+        const k=(p-0.45)/0.4; x=tx; z=tz; y=f.y0+sy+(960-f.y0)*k;
       } else { // out above the tube sheet toward the effluent
         const k=(p-0.85)/0.15; x=tx*(1-k)+Math.cos(f.ex)*120*k; z=tz*(1-k)+Math.sin(f.ex)*120*k; y=960+sy+k*80;
       }
@@ -403,7 +415,8 @@
     {txt:'Lift shaft', p:V(0,1290,4), move:true, show:t=>true},
     {txt:'Tube sheet', p:V(-520,985,4), move:true, show:t=>true},
     {txt:'Tube elements', p:V(-420,420,30), move:true, show:t=>true},
-    {txt:'Loose media', p:null, move:false, show:t=>t>BUMP0+0.8 && t<PRECOAT+3}
+    {txt:'Loose media', p:null, move:false, show:t=>t>BUMP0+0.8 && t<PRECOAT+3},
+    {txt:'Influent', p:V(0,-615,-701), move:false, show:t=>pumpSpeed(t)>0.05}
   ];
   let labelsOn=true;
   labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
@@ -477,6 +490,7 @@
     sheet.position.y=off;
     const tire=parts.bump_tire; if(tire){ const s=(TIRE_H+off)/TIRE_H, bulge=1+(1-s)*0.35; tire.obj.scale.set(bulge,s,bulge); tire.obj.position.y=TIRE_Y0*(1-s); }
     clip.constant=cutAt(T);
+    infRing.visible=cutOn && clip.constant<INF.z*-1-20;
     cakeU.uLevel.value=cakeLevel(T); cakeU.uFresh.value=T>=PRECOAT?1:0;
     placeMedia(T);
     updateReadout(T);
