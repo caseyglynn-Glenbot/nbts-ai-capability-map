@@ -124,7 +124,7 @@
     <div class="ctrl">
       <span class="tick" id="tnow">0:00</span>
       <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
-      <span class="tick" id="tend">0:55</span>
+      <span class="tick" id="tend">1:06</span>
     </div>
     <div class="btns">
       <button id="play" aria-pressed="false">Play</button>
@@ -151,7 +151,7 @@
   const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
 
   // ---- timeline (seconds) --------------------------------------------------------------------------------
-  const T_END=55;
+  const T_END=66;
   const STEPS=[
     {t:0,  h:'Set up for precoat', marks:['D7','D8'], d:'After a bump the perlite is back in suspension in the tank. With the pump stopped, the controller closes the D7 effluent valve so nothing goes to the pool, then opens the D8 precoat valve. Then the pump starts.'},
     {t:10, h:'Pump to the filter', marks:['F33','F32'], d:'The F33 pump sends the water, still carrying the loose perlite, up the discharge riser and into the filter through the influent nozzle.'},
@@ -159,7 +159,8 @@
     {t:29, h:'Effluent to the precoat line', marks:[], d:'With D7 closed the effluent header is dead-ended at the precoat tee, so the water turns down the precoat line.'},
     {t:34, h:'Sight glass and precoat valve', marks:['D11','D8','D9'], d:'The water passes the D11 in-line sight glass, where it can be watched from the control panel, then the open D8 precoat valve and the D9 system fill valve.'},
     {t:40, h:'Back into the pump', marks:['F31','F33'], d:'The precoat line joins the pump suction at the F31 precoat tee and F33 sends the water round again. The pool suction line is idle while the loop is closed.'},
-    {t:46, h:'Clear in the sight glass', marks:['D11'], d:'As the media builds up on the tubes the water in the sight glass runs clear. The controller then opens D7 and closes D8 to return to filter mode.'}
+    {t:46, h:'Clear in the sight glass', marks:['D11'], d:'As the media builds up on the tubes the water in the sight glass runs clear. The precoat is done.'},
+    {t:52.2, h:'Back to filter mode', marks:['D7','D8'], d:'The controller opens the D7 effluent valve first, so filtered water starts back to the pool, then closes the D8 precoat valve. Closing D8 second keeps a path open for the pump the whole time, which prevents water hammer.'}
   ];
 
   // ---- renderer and camera --------------------------------------------------------------------------------
@@ -185,7 +186,7 @@
     d7:     {th:80, ph:74, pad:1.6, nodes:[620,619,621]},        // looking along the pipe: open = edge on, shut = face on
     d8:     {th:150, ph:30, pad:1.6, nodes:[598,597]}            // looking down the pipe
   };
-  const PATH=[[0,'all'],[1.2,'all'],[2.6,'d7'],[4.9,'d7'],[6.1,'d8'],[8.2,'d8'],[9.6,'pump'],[15,'pump'],[16.8,'filter'],[28,'filter'],[29.8,'header'],[33.2,'header'],[34.8,'glass'],[39,'glass'],[40.6,'suction'],[45.6,'suction'],[47.4,'glass'],[51.4,'glass'],[53.4,'all'],[55,'all']];
+  const PATH=[[0,'all'],[1.2,'all'],[2.6,'d7'],[4.9,'d7'],[6.1,'d8'],[8.2,'d8'],[9.6,'pump'],[15,'pump'],[16.8,'filter'],[28,'filter'],[29.8,'header'],[33.2,'header'],[34.8,'glass'],[39,'glass'],[40.6,'suction'],[45.6,'suction'],[47.4,'glass'],[51.6,'glass'],[53.2,'d7'],[56,'d7'],[57.1,'d8'],[59.8,'d8'],[61.6,'all'],[66,'all']];
   const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
   function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
   function fitKey(k){
@@ -219,6 +220,7 @@
     camera.position.copy(t).addScaledVector(dir,20000); camera.up.set(0,1,0); camera.lookAt(t);
     camera.updateProjectionMatrix(); camera.updateMatrixWorld();
     if(flow) flow.material.size=clamp(WATER_D*h/(camera.top-camera.bottom),2.5,13);
+    if(flowF) flowF.material.size=flow.material.size;
   }
   function resize(){ renderer.setSize(view.clientWidth,view.clientHeight,false); updateCamera(); needRender=true; }
   addEventListener('resize',resize);
@@ -235,7 +237,7 @@
   // Centrelines taken from the pipe geometry in Schematic.stp (world mm, y up), all in the x=0 plane. A closed
   // loop: pump -> influent -> through the filter -> effluent riser and header to the precoat tee (D7 is shut past
   // it) -> down the precoat line through D11, D8 and D9 -> F31 tee -> back into the pump.
-  const SUCT_Y=-1706, INF_Y=-635, EFF_Y=1329, RISER_Z=-342, PUMP_Z=-1802, PRE_Z=-2082;
+  const SUCT_Y=-1706, INF_Y=-635, EFF_Y=1329, RISER_Z=-342, PUMP_Z=-1802, PRE_Z=-2082, INTAKE_Z=-4726;
   const PRE=[ // pump -> F32 -> influent nozzle (r = spread of the water in the pipe)
     {p:V(0,SUCT_Y,PUMP_Z), r:40, at:'Pump'},
     {p:V(0,-1326,PUMP_Z), r:50, at:'Discharge'},
@@ -303,6 +305,41 @@
     }
   }
   // how far the water has got along the path (in "G" units: suction length + nominal tank length + effluent length)
+  // ---- after the switch back: filter mode route, pool -> strainer -> pump -> filter -> D7 -> F26 -> pool ----------
+  const PRE_F=prepPath([
+    {p:V(0,-2700,INTAKE_Z), r:62}, {p:V(0,-2231,INTAKE_Z), r:62}, {p:V(0,SUCT_Y-80,INTAKE_Z), r:62}, {p:V(0,SUCT_Y,INTAKE_Z+90), r:62},
+    {p:V(0,SUCT_Y,-3330), r:62}, {p:V(0,SUCT_Y-150,-3190), r:95}, {p:V(0,SUCT_Y-150,-3100), r:95}, {p:V(0,SUCT_Y,-2960), r:62},
+    {p:V(0,SUCT_Y,-1974), r:62}, {p:V(0,SUCT_Y,PUMP_Z), r:40}, {p:V(0,-1326,PUMP_Z), r:50}, {p:V(0,INF_Y-80,PUMP_Z), r:52},
+    {p:V(0,INF_Y,PUMP_Z+90), r:52}, {p:V(0,INF_Y,-560), r:52}]);
+  const SUF_F=prepPath([
+    {p:V(0,1100,RISER_Z), r:50}, {p:V(0,EFF_Y-80,RISER_Z), r:50}, {p:V(0,EFF_Y,RISER_Z-90), r:50}, {p:V(0,EFF_Y,PRE_Z), r:50, key:'tee'},
+    {p:V(0,EFF_Y,-3928), r:50}, {p:V(0,EFF_Y,-4783), r:50}, {p:V(0,EFF_Y,-5060), r:50}]);
+  const FLOWF_N=1300, T_D7=54.6, T_D8=59;
+  let flowF=null, WF=null;
+  function buildFlowF(){
+    flowF=new THREE.Points(new THREE.BufferGeometry(), flow.material.clone());
+    flowF.geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(FLOWF_N*3).fill(1e6),3));
+    const c=new Float32Array(FLOWF_N*3); for(let i=0;i<FLOWF_N;i++){ c[3*i]=BLUE.r; c[3*i+1]=BLUE.g; c[3*i+2]=BLUE.b; }
+    flowF.geometry.setAttribute('color',new THREE.BufferAttribute(c,3));
+    flowF.frustumCulled=false; flowF.renderOrder=10; flowF.visible=false; scene.add(flowF);
+    WF=[]; for(let i=0;i<FLOWF_N;i++){ const w=W[i%W.length]; WF.push({ph:h1(i*5.9+3), a:w.a, b:w.b, br:w.br, L:PRE_F.L+w.br.L+SUF_F.L}); }
+  }
+  // D7 open: water heads past the tee to the pool; D8 shut: the precoat loop empties into the filter route
+  function placeFlowF(t){
+    flowF.visible=t>=T_D7; if(!flowF.visible){ flow.material.opacity=0.92; flow.visible=true; return; }
+    const out=1-smooth((t-T_D8)/1.2); flow.material.opacity=0.92*out; flow.visible=out>0.01;
+    const arr=flowF.geometry.attributes.position.array, tee=SUF_F.find(q=>q.key==='tee').s, reach=tee+(t-T_D7)*SPEED;
+    for(let i=0;i<FLOWF_N;i++){
+      const f=WF[i], s=(f.ph*f.L+flowClock*SPEED)%f.L;
+      let ok=t>=T_D8;
+      if(s<PRE_F.L) onPath(PRE_F,s,f.a,f.b,_q);
+      else if(s<PRE_F.L+f.br.L) onPath(f.br,s-PRE_F.L,0,0,_q);
+      else { const u=s-PRE_F.L-f.br.L; onPath(SUF_F,u,f.a,f.b,_q); ok=ok||(u>=tee&&u<=reach); }
+      if(!ok){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
+      arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
+    }
+    flowF.geometry.attributes.position.needsUpdate=true;
+  }
   let FRONT=null;
   function buildFront(){
     const G_ALL=PRE.L+G_TANK+SUF.L;
@@ -383,10 +420,18 @@
   // ---- D7 and D8 butterfly valves ------------------------------------------------------------------------------
   // In the CAD each valve is one fused mesh with its disc modelled open. The disc (and the stem inside the bore) is
   // split out by position (the thin disc lying in the plane of the pipe and the stem) so it can turn on the stem. Valve frame: x along the pipe, z up the stem. The body goes see-through while its disc turns.
-  const VALVES={
-    d7:{node:620, rad:77, slab:8, from:0, to:1, t0:3.1, t1:4.5, tint:0xd1202b, see:[619,621,584,583,582]},     // open -> closed
-    d8:{node:598, rad:51.8, slab:6.5, from:1, to:0, t0:6.5, t1:7.9, tint:0x1e9a4a, see:[597,591]}      // closed -> open
+  const VALVES={   // moves: [start, end, from, to] with 1 = disc across the bore
+    d7:{node:620, rad:77, slab:8, moves:[[3.1,4.5,0,1],[54.1,55.5,1,0]], tint:0xd1202b, see:[619,621,584,583,582]},   // closes for precoat, opens first after
+    d8:{node:598, rad:51.8, slab:6.5, moves:[[6.5,7.9,1,0],[57.6,59,0,1]], tint:0x1e9a4a, see:[597,591]}             // opens for precoat, closes second after
   };
+  function valveAt(v,t){   // {shut, moving, show}
+    let shut=v.moves[0][2], show=0, moving=null;
+    for(const [t0,t1,a,b] of v.moves){
+      if(t>=t0){ shut=a+(b-a)*ease((t-t0)/(t1-t0)); if(t<t1) moving=b>a?'closing':'opening'; }
+      show=Math.max(show, smooth((t-(t0-0.9))/0.6)*(1-smooth((t-(t1+0.6))/0.6)));
+    }
+    return {shut,moving,show};
+  }
   function splitDisc(v){
     const node=A.objs[v.node], src=node&&node.children.find(c=>c.isMesh); if(!src) return;
     const g=src.geometry, P=g.attributes.position.array, I=g.index.array;
@@ -414,9 +459,8 @@
     const key=Math.round(t*200); if(key===lastValve) return; lastValve=key;
     for(const v of Object.values(VALVES)){
       if(!v.pivot) continue;
-      const k=ease((t-v.t0)/(v.t1-v.t0)), shut=v.from+(v.to-v.from)*k;           // 1 = disc across the bore
+      const {shut,show}=valveAt(v,t);                                               // body see-through around each move
       v.pivot.rotation.z=shut*Math.PI/2;
-      const show=smooth((t-(v.t0-0.9))/0.6)*(1-smooth((t-(v.t1+0.6))/0.6));       // see-through body around the move
       for(const o of [v.body,...v.around]){ if(o.isLineSegments){ o.visible=show<0.5; continue; } const m=o.material; m.transparent=show>0.01; m.opacity=1-0.8*show; m.depthWrite=show<0.5; }
       v.disc.material.color.copy(v.base).lerp(v.tintC,show); v.disc.material.emissiveIntensity=0.35*show;
     }
@@ -424,11 +468,10 @@
   // readout during the switch-over
   function updateReadout(t){
     const set=(el,txt,cls)=>{ if(el.textContent!==txt) el.textContent=txt; el.className=cls; };
-    const d7=t>=VALVES.d7.t1?['Closed','stop']:t>=VALVES.d7.t0?['Closing','mid']:['Open','go'];
-    const d8=t>=VALVES.d8.t1?['Open','go']:t>=VALVES.d8.t0?['Opening','mid']:['Closed','stop'];
-    set(RD.d7,...d7); set(RD.d8,...d8);
+    const st=v=>{ const a=valveAt(v,t); return a.moving==='closing'?['Closing','mid']:a.moving==='opening'?['Opening','mid']:a.shut>0.5?['Closed','stop']:['Open','go']; };
+    set(RD.d7,...st(VALVES.d7)); set(RD.d8,...st(VALVES.d8));
     set(RD.pump,...(t>=10?['Running','go']:t>=9.3?['Starting','mid']:['Off','stop']));
-    set(RD.mode,...(t>=10?['Precoat','mid']:t>=2.6?['Switching','mid']:['Filter','go']));
+    set(RD.mode,...(t>=59?['Filter','go']:t>=53.2?['Switching','mid']:t>=10?['Precoat','mid']:t>=2.6?['Switching','mid']:['Filter','go']));
   }
   function applyAir(t){
     const k=airAt(t); if(Math.abs(k-lastAir)<0.004) return; lastAir=k;
@@ -496,6 +539,8 @@
   }
   const TAGS=[];
   function buildTags(drainPos){
+    TAGS.push({g:tag('TO POOL',WAVES,82), p:V(0,EFF_Y,-5120), dir:V(0,0,-1), on:t=>t>=T_D7+0.5});
+    TAGS.push({g:tag('FROM POOL',WAVES,96), p:V(0,-2760,INTAKE_Z), dir:V(0,-1,0), on:t=>t>=T_D8});
     if(drainPos) TAGS.push({g:tag('TO DRAIN','<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>',84), p:drainPos, dir:null});
   }
   const tagRects=[];
@@ -504,7 +549,7 @@
     for(const T_ of TAGS){
       _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
       if(T_.dir){ _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20; }
-      const off=x<-40||x>w+40||y<-20||y>h+20; T_.g.style.display=off?'none':''; if(off) continue;
+      const off=x<-40||x>w+40||y<-20||y>h+20||(T_.on&&!T_.on(T)); T_.g.style.display=off?'none':''; if(off) continue;
       const wd=+T_.g.firstChild.getAttribute('width');
       const gx=Math.round(clamp(x-wd/2,4,w-wd-4)), gy=Math.round(clamp(y-11+(T_.dir?0:23),4,h-26));
       T_.g.setAttribute('transform',`translate(${gx},${gy})`); tagRects.push([gx,gy,gx+wd,gy+22]);
@@ -528,7 +573,7 @@
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     const dressed=DefenderDress(A); A.root.updateMatrixWorld(true);
     Object.values(KEYS).forEach(fitKey);
-    buildFlow(); buildFront(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
+    buildFlow(); buildFlowF(); buildFront(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
     if(!reduced) startPlay();
@@ -559,7 +604,7 @@
     if(!ready) return;
     if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
     if(!reduced){ flowClock+=dt; needRender=true; }       // water keeps moving while paused
-    if(needRender){ needRender=false; updateCamera(); placeFlow(T); renderer.render(scene,camera); drawLabels(); }
+    if(needRender){ needRender=false; updateCamera(); placeFlow(T); placeFlowF(T); renderer.render(scene,camera); drawLabels(); }
   }
   requestAnimationFrame(frame);
   // scripting hook for checks
