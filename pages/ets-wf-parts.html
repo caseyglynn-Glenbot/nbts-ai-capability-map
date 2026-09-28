@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | ETS-UV Wafer WF-215-8: Parts &amp; Warranty</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff; --head:#9fd3ea;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --hi:#fdecec; --sel:#fbd9da;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --head:#1f4a5c; --leader:#ff5560; --track:#3a3e45; --hi:#3a2427; --sel:#4a2a2e; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --head:#1f4a5c; --leader:#ff5560; --track:#3a3e45; --hi:#3a2427; --sel:#4a2a2e; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  #work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(420px,44%);border-top:1px solid var(--rule)}
+  #view{position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1;width:100%;height:100%}
+  #overlay polyline{stroke:var(--leader);stroke-width:1.1;fill:none}
+  #overlay circle.dot{fill:var(--leader)}
+  #overlay circle.bal{fill:var(--panel);stroke:var(--ink);stroke-width:1.3}
+  #overlay text{font:500 11.5px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.05em;text-transform:uppercase}
+  #overlay text.bn{font-weight:600;font-size:10.5px;letter-spacing:0;text-anchor:middle;text-transform:none}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #overlay g.lbl{pointer-events:auto;cursor:pointer}
+  #overlay g.lbl.hov text.nm, #overlay g.lbl.sel text.nm{font-weight:700}
+  #overlay g.lbl.hov polyline, #overlay g.lbl.sel polyline{stroke-width:2.2}
+  #overlay g.lbl.hov circle.bal, #overlay g.lbl.sel circle.bal{fill:var(--leader);stroke:var(--leader)}
+  #overlay g.lbl.hov text.bn, #overlay g.lbl.sel text.bn{fill:#fff}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;z-index:1;left:14px;top:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);pointer-events:none}
+  #scale{position:absolute;right:14px;bottom:8px;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;pointer-events:none;display:flex;align-items:center;gap:6px}
+  #scale i{display:block;border-top:1.5px solid var(--ink-2);border-left:1.5px solid var(--ink-2);border-right:1.5px solid var(--ink-2);height:6px}
+
+  /* parts list, in the layout of the spares sheet */
+  #list{min-height:0;overflow-y:auto;background:var(--panel);border-left:1.5px solid var(--ink);padding:14px 16px 24px;box-sizing:border-box}
+  #list .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader)}
+  #list h2{margin:2px 0 2px;font:600 19px/1.15 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #list .src{font-size:11.5px;color:var(--ink-2);line-height:1.4}
+  #tabs{display:flex;flex-wrap:wrap;gap:5px;margin:12px 0 10px}
+  #tabs button{font:600 11.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:5px 9px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  #tabs button b{display:inline-grid;place-items:center;width:17px;height:17px;border:1.3px solid currentColor;border-radius:50%;font-size:10px}
+  #tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel)}
+  #tabs button:hover{background:var(--track)} #tabs button[aria-selected="true"]:hover{background:var(--ink)}
+  .sechead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:4px 0 8px}
+  .sechead h3{margin:0;font:600 14px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  .sechead button{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:0;color:var(--accent);cursor:pointer;padding:2px 0}
+  .drawing{margin:0 0 10px;border:1px solid var(--rule);background:#fff;padding:6px}
+  .drawing img{display:block;width:100%;height:auto}
+  table.sp{width:100%;border-collapse:collapse;font-size:12.5px;border:1.5px solid var(--ink)}
+  table.sp th{background:var(--head);font:600 10.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;text-align:left;padding:6px 6px;border:1px solid var(--ink);color:var(--ink)}
+  table.sp td{padding:6px;border:1px solid var(--rule);vertical-align:top}
+  table.sp td.it{width:26px;text-align:center}
+  table.sp td.it span{display:inline-grid;place-items:center;min-width:20px;height:20px;border:1.3px solid var(--ink);border-radius:50%;font:600 10.5px "Barlow Semi Condensed",system-ui,sans-serif;padding:0 2px;box-sizing:border-box}
+  table.sp td.pn{white-space:nowrap;font:600 12.5px "Barlow Semi Condensed",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+  table.sp td.q,table.sp td.m{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  table.sp td .qx{display:block;color:var(--ink-2);font-size:11px;margin-top:2px}
+  table.sp tr.row{cursor:default}
+  table.sp tr.row.hov td{background:var(--hi)}
+  table.sp tr.row.sel td{background:var(--sel)}
+  table.sp tr.row.flash td{animation:flash 1.2s ease}
+  @keyframes flash{0%,40%{background:var(--sel)}100%{background:transparent}}
+  .acts{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+  .acts button{font:500 10.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;border-radius:2px;padding:4px 8px;cursor:pointer}
+  .acts .order{background:var(--accent);border:1px solid var(--accent);color:#fff}
+  .acts .warr{background:transparent;border:1px solid var(--leader);color:var(--leader)}
+  .acts .tag{font:500 10.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);border:1px dashed var(--rule);padding:3px 7px}
+  .actnote{display:block;font-size:11px;color:var(--ink-2);margin-top:4px}
+  .actnote:empty{display:none}
+  .foot{font-size:11px;color:var(--ink-2);margin-top:6px}
+  .notes{margin-top:14px}
+  .notes h4{margin:0 0 4px;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule);padding-bottom:4px}
+  .notes details{border-bottom:1px solid var(--rule);padding:6px 0}
+  .notes summary{cursor:pointer;font-size:13px;font-weight:500;list-style:none;display:flex;gap:8px}
+  .notes summary::before{content:'+';color:var(--leader);font-weight:600;width:10px}
+  .notes details[open] summary::before{content:'\2013'}
+  .notes details p{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.45}
+  .notes .nsrc{font-size:11px;color:var(--ink-2);margin-top:6px}
+  .notes ul{margin:4px 0 0;padding-left:18px;font-size:12.5px;line-height:1.45}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:9px 16px calc(9px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:10px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:100px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  @media (max-width:980px){
+    body{overflow:auto;height:auto;min-height:100%}
+    #work{grid-template-columns:1fr;grid-template-rows:62vh auto}
+    #list{border-left:0;border-top:1.5px solid var(--ink)}
+    #bar{grid-template-columns:1fr;gap:8px;position:sticky;bottom:0}
+    .btns{justify-content:flex-start}
+    #pbar .crumbs{margin-left:0;width:100%}
+  }
+  @media (max-width:560px){ #overlay text.nm, #overlay .halo{display:none} table.sp td.m.d, table.sp th.d{display:none} }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/tools">Tools</a><span class="sep">&middot;</span><span>ETS-UV Wafer Parts &amp; Warranty</span></nav>
+</div>
+<div id="work">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
+    <div id="scale"><i style="width:60px"></i><span id="scaletxt">100 mm</span></div>
+    <div id="loading">Loading WF-215-8 geometry…</div>
+  </div>
+  <aside id="list" aria-label="Spare parts list">
+    <div class="kicker">ETS-UV Wafer · spare parts</div>
+    <h2 id="mtitle">WF-215-8</h2>
+    <div class="src" id="msrc"></div>
+    <div id="tabs" role="tablist"></div>
+    <div id="sec"></div>
+  </aside>
+</div>
+<div id="bar">
+  <h1>ETS-UV Wafer WF-215-8 · Parts &amp; Warranty<small>Item numbers match the spares sheet drawings. Hover a row to find the part.</small></h1>
+  <div class="ctrl">
+    <span class="tick">Collapsed</span>
+    <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Explode progress">
+    <span class="tick">Exploded</span>
+  </div>
+  <div class="btns">
+    <button id="play" aria-pressed="false">Play</button>
+    <button id="labels" aria-pressed="true">Labels</button>
+    <button id="resetview">Drawing view</button>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/ets-wf/wf-spares.js"></script>
+<script>
+(function(){
+  const MODEL='WF-215-8', MI=(window.WF_SPARES.models||[]).indexOf(MODEL);
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
+  const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  // ---- 3D parts: mesh groups in the model file, and the sheet part each one is --------------
+  const STEEL=0xa7afb8, PLATE=0x949ca6, GREY=0x8b9199, BLACK=0x1f2124, CABLE=0x2f3338, BOX=0xdfe3e7, MOTOR=0x6d7580, SENSOR=0x3a3f45;
+  // off: explode offset in mm (Y up, lamps along X, lamp connection end at +X). s/e: slice of the progress.
+  const MESH={
+    body:            {part:'body',          color:STEEL, off:[0,0,0],        s:0,   e:1},
+    feet:            {part:'feet',          color:PLATE, off:[0,-130,0],     s:0.05,e:0.45},
+    foot_hardware:   {part:'feet',          color:GREY,  off:[0,-220,0],     s:0.15,e:0.55},
+    end_plate_near:  {part:'end_plate_near',color:PLATE, off:[180,0,0],      s:0.1, e:0.55},
+    end_bolts_near:  {part:'end_bolts',     color:GREY,  off:[270,0,0],      s:0.2, e:0.65},
+    end_plate_far:   {part:'end_plate_far', color:PLATE, off:[-180,0,0],     s:0.1, e:0.55},
+    end_bolts_far:   {part:'end_bolts',     color:GREY,  off:[-270,0,0],     s:0.2, e:0.65},
+    lamp_caps_near:  {part:'lamp_caps_near',color:BLACK, off:[360,0,0],      s:0.3, e:0.75},
+    cap_screws_near: {part:'cap_screws',    color:GREY,  off:[430,0,0],      s:0.35,e:0.8},
+    lamp_cables:     {part:'lamp_cables',   color:CABLE, off:[520,0,0],      s:0.4, e:0.85},
+    lamp_caps_far:   {part:'lamp_caps_far', color:BLACK, off:[-360,0,0],     s:0.3, e:0.75},
+    cap_screws_far:  {part:'cap_screws',    color:GREY,  off:[-430,0,0],     s:0.35,e:0.8},
+    end_cover_far:   {part:'end_cover',     color:PLATE, off:[-360,0,0],     s:0.3, e:0.75},
+    plugs_far:       {part:'plugs',         color:GREY,  off:[-310,0,0],     s:0.25,e:0.7},
+    plug_near:       {part:'plugs',         color:GREY,  off:[310,0,0],      s:0.25,e:0.7},
+    plug_top:        {part:'plugs',         color:GREY,  off:[0,140,0],      s:0.25,e:0.7},
+    junction_box:    {part:'motor_box',     color:BOX,   off:[420,-60,-190], s:0.45,e:0.9},
+    box_glands:      {part:'box_glands',    color:BLACK, off:[420,-150,-190],s:0.5, e:0.95},
+    uv_sensor:       {part:'temp_probe',    color:SENSOR,off:[-50,190,0],    s:0.35,e:0.8},
+    sensor_cable:    {part:'temp_probe',    color:CABLE, off:[-50,280,0],    s:0.45,e:0.9},
+    wiper_motor:     {part:'uv_probe',      color:MOTOR, off:[50,190,0],     s:0.35,e:0.8},
+    motor_screws:    {part:'uv_probe',      color:GREY,  off:[50,240,0],     s:0.45,e:0.9},
+    dust_cover:      {part:'uv_probe',      color:BLACK, off:[50,300,0],     s:0.5, e:1}
+  };
+  // Callouts: balloon = item number on the spares sheet (letters are the sheet's sub-assembly groups).
+  // anchor: the mesh the leader points at. right: which label column.
+  const PARTS={
+    body:          {bal:'8',  name:'Chamber body',             anchor:'body',           right:true},
+    feet:          {bal:'6',  name:'Chamber legs',             anchor:'feet',           right:true},
+    end_plate_near:{bal:'7',  name:'Front flange',             anchor:'end_plate_near', right:false},
+    end_plate_far: {bal:'7',  name:'Rear flange',              anchor:'end_plate_far',  right:true},
+    end_bolts:     {bal:'3',  name:'Flange retaining bolts',   anchor:'end_bolts_near', right:false},
+    lamp_caps_near:{bal:'D6', name:'Clamp ring, screwed',      anchor:'lamp_caps_near', right:false},
+    cap_screws:    {bal:'D7', name:'Clamp ring screws',        anchor:'cap_screws_near',right:false},
+    lamp_cables:   {bal:'D9', name:'Twistlok lamp connector',  anchor:'lamp_cables',    right:false},
+    lamp_caps_far: {bal:'D11',name:'Clamp ring, rear',         anchor:'lamp_caps_far',  right:true},
+    end_cover:     {bal:'10', name:'Wiper blanking plate',     anchor:'end_cover_far',  right:true},
+    plugs:         {bal:'2',  name:'Plugs, vent and anode',    anchor:'plugs_far',      right:true},
+    temp_probe:    {bal:'1',  name:'Temperature probe',        anchor:'uv_sensor',      right:true},
+    uv_probe:      {bal:'C',  name:'UV probe assembly',        anchor:'wiper_motor',    right:false},
+    motor_box:     {bal:'B',  name:'Wiper motor housing',      anchor:'junction_box',   right:false},
+    box_glands:    {bal:'B13',name:'Cable glands',             anchor:'box_glands',     right:false}
+  };
+
+  // ---- scene ---------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-20000,20000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(0.6,1,-0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.25); fill.position.set(-1,0.3,0.6); scene.add(fill);
+
+  const meshes={};  // mesh name -> {obj, bb, cfg, k}
+  const _v=new THREE.Vector3(), _r=new THREE.Vector3(), _u=new THREE.Vector3(), target=new THREE.Vector3();
+  function contentExtent(right, up){
+    let a=1e9,b=-1e9,c=1e9,d=-1e9,any=false;
+    for(const m of Object.values(meshes)){
+      const bb=m.bb, o=m.cfg.off;
+      for(let k=0;k<8;k++){
+        _v.set(bb[k&1?3:0]+o[0], bb[k&2?4:1]+o[1], bb[k&4?5:2]+o[2]);
+        const x=_v.dot(right), y=_v.dot(up); a=Math.min(a,x); b=Math.max(b,x); c=Math.min(c,y); d=Math.max(d,y); any=true;
+      }
+    }
+    return any?{w:b-a,h:d-c,cr:(a+b)/2,cu:(c+d)/2}:null;
+  }
+  let labelsOn=true, colW=150;
+  const DRAW={theta:Math.atan2(-0.9,0.8), phi:Math.acos(0.415)};
+  let theta=DRAW.theta, phi=DRAW.phi, zoom=1, pan=new THREE.Vector3();
+  function updateCamera(){
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h;
+    const dir=new THREE.Vector3(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
+    _r.set(0,1,0).cross(dir).normalize(); _u.copy(dir).cross(_r).normalize();
+    const ext=contentExtent(_r,_u);
+    let halfW=600;
+    if(ext){
+      const col=labelsOn && w>560 ? colW+30 : 10, availW=Math.max(120, w-2*col), availH=Math.max(120, h-30);
+      halfW=Math.max(ext.w/2*(w/availW), ext.h/2*(h/availH)*asp)*1.0/zoom;
+      target.set(0,0,0).addScaledVector(_r, ext.cr).addScaledVector(_u, ext.cu);
+    }
+    const halfH=halfW/asp;
+    camera.left=-halfW; camera.right=halfW; camera.top=halfH; camera.bottom=-halfH;
+    const t=target.clone().add(pan);
+    camera.position.copy(t).add(dir.multiplyScalar(8000)); camera.up.set(0,1,0); camera.lookAt(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const px=(2*halfW)/w, mm=Math.max(10,Math.round(60*px/10)*10);
+    document.getElementById('scaletxt').textContent=mm+' mm'; document.querySelector('#scale i').style.width=(mm/px)+'px';
+  }
+  let needRender=true;
+  function resize(){ renderer.setSize(view.clientWidth, view.clientHeight,false); updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+
+  let drag=null, moved=0;
+  view.addEventListener('pointerdown', e=>{ moved=0; const g=e.target.closest&&e.target.closest('g.lbl'); drag={x:e.clientX,y:e.clientY,b:e.button,t:theta,p:phi,pan:pan.clone(),lbl:g?g.dataset.part:null}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{
+    if(!drag){ hoverFromView(e); return; }
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved=Math.max(moved,Math.abs(dx),Math.abs(dy));
+    if(drag.b===2||e.shiftKey){ const px=(camera.right-camera.left)/view.clientWidth; const R=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0), U=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1); pan.copy(drag.pan).addScaledVector(R,-dx*px).addScaledVector(U,dy*px); }
+    else { theta=drag.t+dx*0.008; phi=Math.min(Math.PI-0.05,Math.max(0.05,drag.p-dy*0.008)); }
+    updateCamera(); needRender=true;
+  });
+  view.addEventListener('pointerup', e=>{ const wasDrag=moved>4, lbl=drag&&drag.lbl; drag=null; if(wasDrag||e.button!==0) return; const p=lbl||pickPart(e); selectPart(p,true); });
+  view.addEventListener('pointercancel',()=>{drag=null});
+  view.addEventListener('pointerleave',()=>{ if(!drag) setHover(null,'view'); });
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoom=Math.min(12,Math.max(0.3,zoom*Math.exp(-e.deltaY*0.0012))); updateCamera(); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ theta=DRAW.theta; phi=DRAW.phi; zoom=1; pan.set(0,0,0); updateCamera(); needRender=true; });
+
+  // ---- load the model -------------------------------------------------------------------------
+  fetch('/assets/ets-wf/wf-215-8-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf), hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), base=4+hl;
+    for(const e of hdr){
+      const cfg=MESH[e.name]; if(!cfg) continue;
+      const g=new THREE.Group();
+      const q=new Int16Array(buf, base+e.V[0], e.nv*3), pos=new Float32Array(q.length); for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+      const idx=e.itype==='u16'? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+      const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setIndex(new THREE.BufferAttribute(idx.slice(),1)); geo.computeVertexNormals();
+      const mesh=new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:cfg.color,shininess:18,specular:0x222222,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}));
+      mesh.userData.mesh=e.name; g.add(mesh);
+      if(e.nl){
+        const ql=new Int16Array(buf, base+e.L[0], e.nl*3), lp=new Float32Array(ql.length); for(let i=0;i<ql.length;i++) lp[i]=ql[i]*0.1;
+        const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.BufferAttribute(lp,3));
+        const dark=(cfg.color===BLACK||cfg.color===CABLE||cfg.color===SENSOR);
+        g.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:dark?0x6a6f76:0x101214,transparent:true,opacity:dark?0.6:0.7})));
+      }
+      scene.add(g); meshes[e.name]={obj:g, bb:e.bbox, cfg, k:0};
+    }
+    document.getElementById('loading').remove();
+    buildLabels(); resize(); setProgress(0);
+    if(reduced) setProgress(1); else setTimeout(()=>{ if(!playing && P===0) startPlay(); },600);
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- highlight: a part (sheet sense) lights every mesh that belongs to it --------------------
+  let hovered=null, selected=null;
+  function tintPart(p,on){ for(const m of Object.values(meshes)) if(m.cfg.part===p) m.obj.children.forEach(c=>{ if(c.isMesh){ c.material.emissive.setHex(on?0xd1202b:0); c.material.emissiveIntensity=on?0.38:0; } }); }
+  function refreshTint(){ const on=new Set([...(hovered||[]),...(selected||[])]); for(const p of Object.keys(PARTS)) tintPart(p,on.has(p)); needRender=true; }
+  // hovering a row marks just that row; hovering the model marks every row for that part
+  let hoverRow=null;
+  function setHover(parts,from,row){ const next=parts&&parts.length?parts:null; const r=from==='list'?row:null; if(JSON.stringify(next)===JSON.stringify(hovered)&&r===hoverRow) return; hovered=next; hoverRow=r; refreshTint(); markRows(); }
+  const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+  function hitPart(e){
+    const r=view.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ndc,camera);
+    const list=[]; for(const m of Object.values(meshes)) m.obj.children.forEach(c=>{ if(c.isMesh) list.push(c); });
+    const h=ray.intersectObjects(list,false); return h.length? MESH[h[0].object.userData.mesh].part : null;
+  }
+  const pickPart=e=>hitPart(e);
+  function hoverFromView(e){ const g=e.target.closest&&e.target.closest('g.lbl'); const p=g?g.dataset.part:hitPart(e); setHover(p?[p]:null,'view'); }
+
+  // ---- explode ---------------------------------------------------------------------------------
+  const ease=t=>t<0?0:t>1?1:(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2);
+  let P=0;
+  function setProgress(v){ P=v; prog.value=Math.round(v*1000); for(const m of Object.values(meshes)){ const c=m.cfg, k=ease((P-c.s)/(c.e-c.s)); m.obj.position.set(c.off[0]*k,c.off[1]*k,c.off[2]*k); m.k=k; } needRender=true; }
+  prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
+
+  // ---- callouts: balloon with the sheet item number, then the name ----------------------------
+  const NS='http://www.w3.org/2000/svg', LBL={};
+  function buildLabels(){
+    for(const [p,d] of Object.entries(PARTS)){
+      if(!meshes[d.anchor]) continue;
+      const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl'); g.dataset.part=p;
+      const ln=document.createElementNS(NS,'polyline'), dot=document.createElementNS(NS,'circle'), bal=document.createElementNS(NS,'circle'), bn=document.createElementNS(NS,'text'), halo=document.createElementNS(NS,'text'), nm=document.createElementNS(NS,'text');
+      dot.setAttribute('class','dot'); dot.setAttribute('r','2.2'); bal.setAttribute('class','bal'); bal.setAttribute('r', d.bal.length>2?12:10.5);
+      bn.setAttribute('class','bn'); bn.textContent=d.bal; halo.setAttribute('class','halo'); nm.setAttribute('class','nm'); halo.textContent=nm.textContent=d.name;
+      g.append(ln,dot,halo,nm,bal,bn); overlay.appendChild(g); LBL[p]={g,ln,dot,bal,bn,halo,nm,d};
+    }
+    try{ colW=Math.max(...Object.values(LBL).map(l=>l.nm.getComputedTextLength()))+34; }catch(e){}
+  }
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const narrow=w<=560, items=[];
+    for(const [p,L] of Object.entries(LBL)){
+      const m=meshes[L.d.anchor], vis=(labelsOn||(hovered||[]).includes(p)) && m.k>0.92;
+      L.g.style.display=vis?'':'none';
+      L.g.classList.toggle('hov',!!hovered&&hovered.includes(p)); L.g.classList.toggle('sel',!!selected&&selected.includes(p));
+      if(!vis) continue;
+      const bb=m.bb, right=L.d.right; let best=null, cx=0, cy=0;
+      for(let k=0;k<8;k++){ _v.set(bb[k&1?3:0],bb[k&2?4:1],bb[k&4?5:2]).applyMatrix4(m.obj.matrixWorld).project(camera); const x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; cx+=x/8; cy+=y/8; if(!best||(right?x>best.x:x<best.x)) best={x,y}; }
+      items.push({L, x:best.x+(cx-best.x)*0.2, y:best.y+(cy-best.y)*0.2, right});
+    }
+    const lh=24, top=22, bottom=h-16;
+    for(const right of [false,true]){
+      const col=items.filter(i=>i.right===right).sort((a,b)=>a.y-b.y); if(!col.length) continue;
+      const ys=col.map(i=>i.y); ys[0]=Math.max(ys[0],top); for(let i=1;i<ys.length;i++) ys[i]=Math.max(ys[i],ys[i-1]+lh);
+      if(ys[ys.length-1]>bottom){ ys[ys.length-1]=bottom; for(let i=ys.length-2;i>=0;i--) ys[i]=Math.min(ys[i],ys[i+1]-lh); }
+      const bx= narrow ? (right? w-16 : 16) : (right? w-colW : colW);   // balloon centre
+      for(let i=0;i<col.length;i++){
+        const it=col[i], L=it.L, ly=Math.round(ys[i]), dir=right?-1:1, r=+L.bal.getAttribute('r');
+        L.bal.setAttribute('cx',bx); L.bal.setAttribute('cy',ly); L.bn.setAttribute('x',bx); L.bn.setAttribute('y',ly+3.6);
+        const sx=bx+dir*r;
+        L.ln.setAttribute('points',`${sx},${ly} ${sx+dir*14},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+        L.dot.setAttribute('cx',it.x); L.dot.setAttribute('cy',it.y);
+        for(const t of [L.halo,L.nm]){ t.setAttribute('x', bx - dir*(r+6)); t.setAttribute('y', ly+4); t.setAttribute('text-anchor', right?'start':'end'); }
+      }
+    }
+  }
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); updateCamera(); needRender=true; });
+
+  // ---- parts list, laid out like the spares sheet --------------------------------------------
+  const DATA=window.WF_SPARES, SECS=DATA.sections.map(s=>({...s, rows:s.rows.filter(r=>r.qty[MI]>0)})).filter(s=>s.rows.length);
+  document.getElementById('mtitle').textContent='ETS-UV Wafer '+MODEL;
+  document.getElementById('msrc').innerHTML=`Part numbers, prices and quantities from ${esc(DATA.source)}. Quantities are per ${esc(MODEL)} chamber.`;
+  const NOTES={
+    chamber:{src:'NBTS KB: WF model number decoding and configuration options (AS SOLD BOMs)', faq:[
+      ['What does WF-215-8 mean?','WF codes are [lamp count][kW x10]-[connection inches]: 2 lamps at 1.5 kW with an 8 inch connection. BOMs zero-pad it as WF-0215-08.'],
+      ['What is the chamber made of?','316 stainless steel with a sacrificial anode, clear fused quartz sleeves and a flanged ANSI 150 connection.']]},
+    lamp:{src:'WF RANGE (6+ LAMPS) O&M (SII-ELC-T) p119-121 and WAFER IOM (SIII-M-MPB3) Iss.5, via NBTS KB', faq:[
+      ['Lamp Power Low','Loose or damaged lamp output connections, or physical damage to the lamp. Check all connections from the ETA+ ballast to the lamp. Replace the lamp to confirm; on multi-lamp systems swap the suspect lamp with a known good one.'],
+      ['Lamp Voltage High','Incorrect lamp, wrong maximum power setting, or a faulty lamp. Fit the correct lamp, set the correct maximum power on the Spectra, or replace the lamp.'],
+      ['Lamp Approaching End Of Life','Change the lamp, then reset hours: Operator Menus, LAMP MENU, RESET ALL LAMPS or RESET INDIVIDUAL LAMP HOURS, and confirm.']]},
+    probe:{src:'WF RANGE (6+ LAMPS) O&M and WAFER IOM manuals, via NBTS KB', faq:[
+      ['Dose drops below the alarm or fault setpoint','Causes: a wiper sweep dip, air trapped between the sensor and lamps, or a faulty probe; also quartz deposits, fingerprints, water quality, lamp hours, flow changes or wrong setpoints.'],
+      ['What to check','Check LOW DOSE TIME and force a wiper sweep. Remove trapped air. Check the probe and cable for damage. Clean or replace the quartz with gloves, check water quality, replace the lamp if needed, check flow and alarm settings.']]},
+    motor:{src:'WF+ UV SYSTEM IOM (SIII-M-ELC) Iss.2 p48, via NBTS KB', faq:[
+      ['Wiper Motor Current Trip','The wiper is jammed or calibration was lost. Make sure nothing jams the wiper; the shaft should turn by hand. Re-calibrate the wiper.'],
+      ['Wiper No Motor Current','The ATUV-1040 sees no motor current. Check the motor connections and that the motor turns on 24 Vdc.'],
+      ['Wiper No Pulses / Loss Of Pulses','OPTO PULSE LED does not flash while the motor turns. Check the dust cover is in place (bright light can blind the opto sensor) and that the opto sensor sits over the cam.']]},
+    wiper2:{src:'WF+ UV SYSTEM IOM (SIII-M-ELC) Iss.2 p48, via NBTS KB', faq:[
+      ['Wiper Minimum Chamber Length','Make sure internal and external wiper parts are not jamming the wiper; the shaft should turn by hand.'],
+      ['Wiper Maximum Chamber Length or Run Time Exceeded','Check the threads on the wiper carriage lead screw nut have not worn and let the shaft spin freely.']]},
+    kits:{src:DATA.source, list:(DATA.kitNotes||[]).filter(Boolean)}
+  };
+  NOTES.wiper1=NOTES.wiper2; NOTES.probe_v=NOTES.probe;
+  const tabs=document.getElementById('tabs'), secEl=document.getElementById('sec');
+  tabs.innerHTML=SECS.map((s,i)=>`<button role="tab" data-i="${i}" aria-selected="${i===0}">${s.letter?`<b>${s.letter}</b>`:''}${esc(s.title)}</button>`).join('');
+  let cur=0, showDrawing=false;
+  const money=v=>v==null?'–':'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  function renderSection(i){
+    cur=i; [...tabs.children].forEach((b,j)=>b.setAttribute('aria-selected',String(j===i)));
+    const s=SECS[i], n=NOTES[s.id]||{};
+    secEl.innerHTML=`<div class="sechead"><h3>${s.letter?s.letter+' · ':''}${esc(s.title)}</h3>${s.drawing?`<button id="drawbtn">${showDrawing?'Hide drawing':'Show drawing'}</button>`:''}</div>
+      ${s.drawing&&showDrawing?`<figure class="drawing"><img src="/assets/ets-wf/drawings/${esc(s.drawing)}" alt="Spares sheet drawing, ${esc(s.title)}, with item balloons"></figure>`:''}
+      <table class="sp"><thead><tr><th>Item</th><th>Part no.</th><th>Description</th><th>Qty</th><th>MSRP ea.</th><th class="d">Dist. ea.</th></tr></thead><tbody>
+      ${s.rows.map((r,j)=>`<tr class="row" data-j="${j}" data-parts="${esc(r.groups.join(' '))}">
+        <td class="it">${r.item&&r.item!=='NA'?`<span>${esc(r.item)}</span>`:'–'}</td>
+        <td class="pn">${esc(r.pn)}</td>
+        <td>${esc(r.desc)}
+          <div class="acts">${r.fastenal?`<span class="tag">Fastenal part, not available from Neptune Benson</span>`:
+            `<button class="order" data-act="order" data-j="${j}">${r.contact?'Request from manufacturer':'Order part'}</button><button class="warr" data-act="warranty" data-j="${j}">Warranty replacement</button>`}</div>
+          <span class="actnote" data-note="${j}"></span></td>
+        <td class="q">${r.qty[MI]}</td><td class="m">${money(r.msrp)}</td><td class="m d">${money(r.dist)}</td></tr>`).join('')}
+      </tbody></table>
+      <div class="foot">Item numbers match the balloons on the sheet drawing. Hover a row to find the part on the model; parts inside the chamber light up the assembly they sit in.</div>
+      ${n.faq||n.list?`<div class="notes"><h4>${s.id==='kits'?'Kit contents':'Service notes'}</h4>${(n.faq||[]).map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}${n.list?`<ul>${n.list.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>`:''}<div class="nsrc">Source: ${esc(n.src)}</div></div>`:''}`;
+    markRows();
+  }
+  tabs.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ selected=null; refreshTint(); renderSection(+b.dataset.i); } });
+  secEl.addEventListener('click',e=>{
+    if(e.target.id==='drawbtn'){ showDrawing=!showDrawing; renderSection(cur); return; }
+    const a=e.target.closest('button[data-act]'); if(a){ partAction(a.dataset.act,+a.dataset.j); return; }
+    const tr=e.target.closest('tr.row'); if(tr){ const p=tr.dataset.parts.split(' ').filter(Boolean); selected=p.length?p:null; selRow=+tr.dataset.j; refreshTint(); markRows(); if(P<0.95&&!playing) startPlay(); }
+  });
+  let selRow=null;
+  secEl.addEventListener('pointerover',e=>{ const tr=e.target.closest('tr.row'); setHover(tr?tr.dataset.parts.split(' ').filter(Boolean):null,'list',tr?+tr.dataset.j:null); });
+  secEl.addEventListener('pointerleave',()=>setHover(null,'list'));
+  function markRows(){
+    const hs=new Set(hovered||[]);
+    secEl.querySelectorAll('tr.row').forEach(tr=>{ const ps=tr.dataset.parts.split(' '); tr.classList.toggle('hov', hoverRow!==null ? +tr.dataset.j===hoverRow : ps.some(p=>hs.has(p))); tr.classList.toggle('sel', selRow!==null && +tr.dataset.j===selRow); });
+    needRender=true;
+  }
+  // clicking the model (or a callout) opens the section that lists that part and flashes its rows
+  function selectPart(p){
+    if(!p){ selected=null; selRow=null; refreshTint(); markRows(); return; }
+    const order=['chamber','lamp','probe','probe_v','motor','wiper2','wiper1','kits'];
+    const pref={lamp_caps_near:'lamp',lamp_caps_far:'lamp',cap_screws:'lamp',lamp_cables:'lamp',uv_probe:'probe',motor_box:'motor',box_glands:'motor'};
+    let i=SECS.findIndex(s=>s.id===pref[p] && s.rows.some(r=>r.groups.includes(p)));
+    if(i<0) i=SECS.findIndex(s=>s.id==='chamber' && s.rows.some(r=>r.groups.includes(p)));
+    if(i<0) i=SECS.findIndex(s=>s.rows.some(r=>r.groups.includes(p)));
+    selected=[p]; selRow=null; refreshTint();
+    if(i>=0){ renderSection(i); const rows=[...secEl.querySelectorAll('tr.row')].filter(tr=>tr.dataset.parts.split(' ').includes(p) && !(p!=='body' && tr.dataset.parts.split(' ').length>1 && tr.dataset.parts.includes('body')));
+      rows.forEach(tr=>tr.classList.add('flash')); if(rows[0]) rows[0].scrollIntoView({block:'nearest',behavior:'smooth'}); }
+  }
+
+  // ---- order / warranty ---------------------------------------------------------------------
+  // Placeholder until the flows are defined. Each click builds the request below, fires a
+  // 'wf-part-action' event on window, and calls window.WF_ACTIONS.order / .warranty if set.
+  function partAction(act,j){
+    const s=SECS[cur], r=s.rows[j]; if(!r) return;
+    const req={action:act, model:'ETS-UV Wafer '+MODEL, section:s.title, item:r.item, partNumber:r.pn, description:r.desc, qtyPerChamber:r.qty[MI], msrp:r.msrp, distributorPrice:r.dist};
+    window.dispatchEvent(new CustomEvent('wf-part-action',{detail:req}));
+    const h=(window.WF_ACTIONS||{})[act], note=secEl.querySelector(`[data-note="${j}"]`);
+    if(typeof h==='function'){ h(req); if(note) note.textContent=''; }
+    else if(note) note.textContent=(act==='order'?'Ordering':'Warranty replacement')+' for '+r.pn+' is being set up. Nothing has been submitted.';
+  }
+  renderSection(0);
+
+  // ---- playback -----------------------------------------------------------------------------
+  let playing=false, last=0; const DUR=5000;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function startPlay(){ playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); if(P>=1) P=0; }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=>playing?stopPlay():startPlay());
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(playing){ const dt=now-last; last=now; let np=P+dt/DUR; if(np>=1){ np=1; stopPlay(); } setProgress(np); }
+    if(needRender){ needRender=false; renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  resize();
+})();
+</script>
+</body>
+</html>
