@@ -162,11 +162,65 @@
   fetch('/assets/defender-schematic/defender-sp41-schematic.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     box=new THREE.Box3().setFromObject(A.root);
-    // every mesh remembers its base material state for highlight and isolate
-    A.root.traverse(o=>{ if(o.isMesh){ o.userData.base={opacity:1}; } });
+    recolor(); addDrain();
+    // every mesh remembers its base opacity for highlight and isolate
+    A.root.traverse(o=>{ if(o.isMesh){ o.userData.baseOpacity=o.material.transparent?o.material.opacity:1; } });
     buildIndex(); buildLabels(); document.getElementById('loading').remove(); resize();
     window.DefenderModel=api();
   }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- colours: filter in the SP-55 animation palette, all piping as dark grey SCH 80 PVC --------------
+  const PAL={BLUE:0x2b6cc4, DARKBLUE:0x1d3f9a, GREY:0x8b9199, BLACK:0x1f2124, YELLOW:0xd9c92e, ACR:0xe6ecf2, PVC:0x4b5157};
+  const TANK=1, KEEP_CAD=new Set([550,551,552,553]);                 // RMF panel, gauge panel, vacuum unit, regulator keep CAD colours
+  const BODY=/^(1001-7313|1001-7314|1000-4331|1000-4332|1001-7319|70115|70118|1001-7257|1001-7196|1001-7252|1000-4634|1000-4483|1000-4545|1000-4630|1000-4339|1000-429[345]|1001-5724|1000-5925|1001-8480|1000-4480|1001-8538|1001-9346|1000-4549|1000-4535|1000-4623|1000-4208)/;
+  const PIPE=/pipe|elbow|(^|\W)tee(\W|$)|slip flange|spigot flange|reducing bushing|reducer|8x6x4|sch 80/i, NOT_PIPE=/pipe-\.375|hose|sight glass/i;
+  function under(i,a){ while(i>=0){ if(i===a) return true; i=A.nodes[i].parent; } return false; }
+  function partChain(i){ const out=[]; while(i>=0){ out.push(A.nodes[i].part||A.nodes[i].name); i=A.nodes[i].parent; } return out; }
+  function recolor(){
+    A.root.traverse(o=>{
+      if(!o.isMesh) return;
+      const i=o.userData.idx, n=A.nodes[i], nm=(n.name||'')+' '+(n.part||''), m=o.material;
+      if(PIPE.test(nm)&&!NOT_PIPE.test(nm)){ m.color.setHex(PAL.PVC); m.shininess=35; return; }
+      if(!under(i,TANK) || [...KEEP_CAD].some(k=>under(i,k))) return;
+      const chain=partChain(i), has=re=>chain.some(p=>re.test(p));
+      if(has(/^1001-9348/)){ m.color.setHex(PAL.ACR); m.transparent=true; m.opacity=0.45; m.depthWrite=false; return; }   // window acrylic
+      if(has(/^1000-4723/)||has(/^1000-1797/)||has(/^1000-4772/)){ m.color.setHex(PAL.BLACK); return; }                 // bump tire, gaskets
+      if(has(/^1000-4625/)){ m.color.setHex(PAL.DARKBLUE); return; }                                                      // lift shaft guide / bushing
+      if(has(/^1000-4475/)){ m.color.setHex(PAL.GREY); return; }                                                          // lift shaft nut
+      if(BODY.test(n.part||'')||BODY.test(chain[1]||'')&&/_Welds/.test(n.part||'')){ m.color.setHex(PAL.BLUE); return; }
+      if(has(/_Welds/)){ m.color.setHex(PAL.BLUE); return; }
+      const c=m.color, lum=0.3*c.r+0.59*c.g+0.11*c.b;
+      m.color.setHex(lum<0.12?PAL.BLACK:PAL.GREY);                                                                        // hardware
+    });
+  }
+
+  // ---- waste pit: shown as a floor drain with a "to drain" tag instead of the grey cylinder ----------------
+  const PIT=672; let drainPos=null;
+  function addDrain(){
+    const pit=A.objs[PIT]; if(!pit) return;
+    const b=new THREE.Box3().setFromObject(pit);
+    const c=b.getCenter(new THREE.Vector3()); drainPos=new THREE.Vector3(c.x,b.max.y,c.z);
+    const cv=document.createElement('canvas'); cv.width=cv.height=128; const g=cv.getContext('2d');
+    g.fillStyle='#3a3f45'; g.beginPath(); g.arc(64,64,62,0,7); g.fill();
+    g.strokeStyle='#8b9199'; g.lineWidth=6; g.beginPath(); g.arc(64,64,58,0,7); g.stroke();
+    g.fillStyle='#15181b'; for(let k=-3;k<=3;k++){ const w=Math.sqrt(Math.max(0,44*44-(k*14)**2))*2; g.fillRect(64-w/2,64+k*14-3,w,6); }
+    const tex=new THREE.CanvasTexture(cv);
+    const disc=new THREE.Mesh(new THREE.CircleGeometry(150,40), new THREE.MeshPhongMaterial({map:tex,transparent:true,side:THREE.DoubleSide,shininess:0}));
+    disc.userData.idx=PIT;
+    // hide the pit geometry but keep the drain on the pit node, so the group and click-to-identify still work
+    pit.children.forEach(ch=>{ ch.visible=false; ch.userData.hidden=true; });
+    pit.updateMatrixWorld(true);
+    const world=new THREE.Matrix4().compose(drainPos.clone().add(new THREE.Vector3(0,2,0)), new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0)), new THREE.Vector3(1,1,1));
+    disc.matrixAutoUpdate=false; disc.matrix.copy(new THREE.Matrix4().copy(pit.matrixWorld).invert().multiply(world)); pit.add(disc);
+    const tag=document.createElementNS('http://www.w3.org/2000/svg','g'); tag.setAttribute('class','drain');
+    tag.innerHTML='<rect rx="3" ry="3" width="84" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/><path d="M11 6v9M7 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/><text x="22" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">TO DRAIN</text>';
+    overlay.appendChild(tag); window._drainTag=tag;
+  }
+  function drawDrainTag(){
+    const t=window._drainTag; if(!t||!drainPos) return;
+    const q=drainPos.clone().project(camera), w=view.clientWidth, h=view.clientHeight;
+    t.setAttribute('transform',`translate(${Math.round((q.x+1)/2*w-42)},${Math.round((1-q.y)/2*h+12)})`);
+  }
 
   // node index -> mark / group that owns it (walks up the tree)
   let owner={};
@@ -189,8 +243,8 @@
     const keep=isolate&&selected? new Set(meshesOf(nodesOf(selected))) : null;
     A.root.traverse(o=>{
       if(o.isMesh){ const m=o.material, on=hi.has(o); m.emissive.setHex(on?0xd1202b:0); m.emissiveIntensity=on?0.45:0;
-        const faded=keep&&!keep.has(o); m.transparent=faded; m.opacity=faded?0.08:1; m.depthWrite=!faded; }
-      else if(o.isLineSegments){ const p=o.parent; let faded=false; if(keep){ faded=true; p.traverse(c=>{ if(c.isMesh&&keep.has(c)) faded=false; }); } o.visible=!faded; }
+        const faded=keep&&!keep.has(o), base=o.userData.baseOpacity; m.transparent=faded||base<1; m.opacity=faded?0.08:base; m.depthWrite=!faded&&base>=1; }
+      else if(o.isLineSegments){ const p=o.parent; let faded=false; if(keep){ faded=true; p.traverse(c=>{ if(c.isMesh&&keep.has(c)) faded=false; }); } o.visible=!faded&&!o.userData.hidden; }
     });
     markRows(); needRender=true;
   }
@@ -308,7 +362,7 @@
     select:(id)=>select(id?{kind:/^[DF]\d+$/.test(id)?'mark':'group',id}:null), render:()=>{ needRender=true; }
   }; }
 
-  function frame(){ requestAnimationFrame(frame); if(needRender&&A){ needRender=false; renderer.render(scene,camera); drawLabels(); } }
+  function frame(){ requestAnimationFrame(frame); if(needRender&&A){ needRender=false; renderer.render(scene,camera); drawLabels(); drawDrainTag(); } }
   requestAnimationFrame(frame);
   resize();
 })();

@@ -56,6 +56,6 @@ window.DEF_SCHEMATIC = {
     {id:'uvlever', ref:'Lever valve in UV loop (not marked on the schematic)', nodes:[644,696]},
     {id:'vent', ref:'3/4" vent line', nodes:[660,661,662,663,664,709,710,711,712,713,714,715]},
     {id:'air', ref:'Compressed air line', nodes:[665,666,669,718]},
-    {id:'pit', ref:'Waste pit (min. 300 gpm capacity)', nodes:[672]}
+    {id:'pit', ref:'To drain (waste pit, min. 300 gpm capacity)', nodes:[672]}
   ]
 };
