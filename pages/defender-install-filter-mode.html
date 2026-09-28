@@ -346,9 +346,9 @@
     tubeMesh.visible=k>0.01; tubeMesh.material.opacity=0.55*k;
   }
 
-  // ---- compressed air set (D20 compressor, F36 valve, D21 separator and the air pipe between them) -----------
+  // ---- compressed air set (D20 compressor, F36 valve, D21 separator, and the air line from D20 through D21 to D13) --
   // shown in the opening overview, then faded out for the rest of the animation (this page only)
-  const AIR_SET=[653,682,668,669];
+  const AIR_SET=[653,682,668,669,666,718,665];   // D20, F36, D21, air pipe D20 to D21, then pipe, 45° elbow and pipe D21 to D13
   let airMeshes=[], airLines=[], lastAir=-1;
   function buildAirFade(){
     AIR_SET.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{
