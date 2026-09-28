@@ -346,6 +346,23 @@
     tubeMesh.visible=k>0.01; tubeMesh.material.opacity=0.55*k;
   }
 
+  // ---- compressed air set (D20 compressor, F36 valve, D21 separator and the air pipe between them) -----------
+  // shown in the opening overview, then faded out for the rest of the animation (this page only)
+  const AIR_SET=[653,682,668,669];
+  let airMeshes=[], airLines=[], lastAir=-1;
+  function buildAirFade(){
+    AIR_SET.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{
+      if(o.isMesh&&o.visible){ o.userData.base=o.material.transparent?o.material.opacity:1; airMeshes.push(o); }
+      else if(o.isLineSegments&&o.visible) airLines.push(o);
+    }));
+  }
+  const airAt=t=>1-smooth((t-2)/1.5);
+  function applyAir(t){
+    const k=airAt(t); if(Math.abs(k-lastAir)<0.004) return; lastAir=k;
+    for(const o of airMeshes){ const m=o.material, op=o.userData.base*k; o.visible=k>0.01; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const l of airLines) l.visible=k>0.5;
+  }
+
   // ---- callouts: schematic mark tags for the current step, plus a few named points ------------------------
   const NS='http://www.w3.org/2000/svg', LBL=[]; let labelsOn=true;
   const NAMED=[
@@ -438,7 +455,7 @@
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     const dressed=DefenderDress(A); A.root.updateMatrixWorld(true);
     Object.values(KEYS).forEach(fitKey);
-    buildFlow(); buildFront(); buildGhost(); buildLabels(); buildTags(dressed.drainPos);
+    buildFlow(); buildFront(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
     if(!reduced) startPlay();
@@ -450,7 +467,7 @@
   function setTime(t){
     T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
     updateSteps(T);
-    if(ready) applyGhost(T);
+    if(ready){ applyGhost(T); applyAir(T); }
     needRender=true;
   }
   prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
