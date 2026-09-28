@@ -314,7 +314,7 @@
   // perlite still in suspension (load) and the share that slips through the young cake (pass), both falling as
   // the cake builds; the sight glass sees load x pass
   const loadAt=t=>0.85-0.8*smooth((t-16)/32), passAt=t=>0.8*(1-smooth((t-20)/26));
-  const BLUE=new THREE.Color(0x1597c9), TAN=new THREE.Color(0xc8a25e);
+  const BLUE=new THREE.Color(0x1597c9), TAN=new THREE.Color(0xffffff);   // perlite particles shown white on this page
   function placeFlow(t){
     const arr=flow.geometry.attributes.position.array, col=flow.geometry.attributes.color.array, front=frontAt(t), load=loadAt(t), pass=passAt(t);
     let lead=null, leadG=-1;
