@@ -26,7 +26,7 @@ window.DEF_SCHEMATIC = {
     {mark:'D17', ref:'Vacuum transfer valve', notes:'True union ball valve 1.5", normally closed.', nodes:[680], confirm:true},
     {mark:'D18', ref:'Vacuum vent valve', notes:'True union ball valve 1.5", normally closed. Vacuum drain line must be plumbed independently to waste.', nodes:[670], confirm:true},
     {mark:'D19', ref:'Vacuum hose valve with hose', notes:'True union ball valve 1.5", normally closed.', nodes:[684,690], confirm:true},
-    {mark:'D20', ref:'Air compressor', notes:'Optional.', nodes:[653]},
+    {mark:'D20', ref:'Air compressor', notes:'Optional. Shown as a 5 HP, 60 gal vertical tank unit (modelled on the Ingersoll Rand SS5L5), tan, at the schematic footprint diameter and twice the schematic height.', nodes:[653]},
     {mark:'D21', ref:'Water separator', notes:'', nodes:[668]},
     {mark:'F22', ref:'greenDrive VFD', notes:'Available in NEMA4X or with bypass.', nodes:[]},
     {mark:'F23', ref:'Wafer UV generator', notes:'Package includes control cabinet and treatment chamber.', nodes:[]},

@@ -162,7 +162,7 @@
   fetch('/assets/defender-schematic/defender-sp41-schematic.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     box=new THREE.Box3().setFromObject(A.root);
-    recolor(); addDrain();
+    recolor(); addDrain(); addCompressor();
     // every mesh remembers its base opacity for highlight and isolate
     A.root.traverse(o=>{ if(o.isMesh){ o.userData.baseOpacity=o.material.transparent?o.material.opacity:1; } });
     buildIndex(); buildLabels(); document.getElementById('loading').remove(); resize();
@@ -220,6 +220,64 @@
     const t=window._drainTag; if(!t||!drainPos) return;
     const q=drainPos.clone().project(camera), w=view.clientWidth, h=view.clientHeight;
     t.setAttribute('transform',`translate(${Math.round((q.x+1)/2*w-42)},${Math.round((1-q.y)/2*h+12)})`);
+  }
+
+  // ---- D20: the plain compressor cylinder replaced by a vertical tank compressor ----------------------------
+  // Modelled on the Ingersoll Rand SS5L5 (5 HP, 60 gal vertical: red tank, cast iron twin-cylinder pump and motor
+  // on a saddle, belt guard over the flywheel and motor sheave, pressure switch, gauge, manual drain), scaled to the
+  // height and diameter of the original placeholder.
+  const COMP=653;
+  function addCompressor(){
+    const node=A.objs[COMP]; if(!node) return;
+    const bb=new THREE.Box3().setFromObject(node), size=bb.getSize(new THREE.Vector3()), ctr=bb.getCenter(new THREE.Vector3());
+    node.children.forEach(ch=>{ ch.visible=false; ch.userData.hidden=true; });
+    const D=Math.min(size.x,size.z), H=size.y*2, y0=bb.min.y, R=D*0.46;
+    const TAN=0xc9b48a, IRON=0x3b3f43, MOTOR=0x2b2f33, STEEL=0x9aa0a6, WHITE=0xf2f2ee;
+    const grp=new THREE.Group(), edgeMat=new THREE.LineBasicMaterial({color:0x14171a,transparent:true,opacity:0.55});
+    const mat=c=>new THREE.MeshPhongMaterial({color:c,shininess:30,specular:0x333333,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1});
+    function add(geo,c,x,y,z,rx,ry,rz){ const m=new THREE.Mesh(geo,mat(c)); m.position.set(x,y,z); m.rotation.set(rx||0,ry||0,rz||0); m.userData.idx=COMP; grp.add(m);
+      const e=new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),edgeMat); e.position.copy(m.position); e.rotation.copy(m.rotation); grp.add(e); return m; }
+    // feet
+    const legH=34+R*0.42*0.32;   // pad plus the rise of the lower dome at the leg radius
+    for(let k=0;k<4;k++){ const a=Math.PI/4+k*Math.PI/2, x=Math.cos(a)*R*0.72, z=Math.sin(a)*R*0.72;
+      add(new THREE.BoxGeometry(70,12,70),IRON,x,y0+6,z); add(new THREE.BoxGeometry(28,legH,28),IRON,x,y0+legH/2,z); }
+    // tank with domed ends
+    const Ht=H*0.62, dome=R*0.42, prof=[];
+    for(let i=0;i<=10;i++){ const t=i/10*Math.PI/2; prof.push(new THREE.Vector2(Math.sin(t)*R, dome*(1-Math.cos(t)))); }
+    for(let i=10;i>=0;i--){ const t=i/10*Math.PI/2; prof.push(new THREE.Vector2(Math.sin(t)*R, Ht-dome*(1-Math.cos(t)))); }
+    const tb=y0+34; add(new THREE.LatheGeometry(prof,40),TAN,0,tb,0);
+    add(new THREE.TorusGeometry(R+2,4,6,48),IRON,0,tb+dome,0,Math.PI/2); add(new THREE.TorusGeometry(R+2,4,6,48),IRON,0,tb+Ht-dome,0,Math.PI/2);
+    // saddle plate and supports
+    const py=tb+Ht-dome*0.25; add(new THREE.BoxGeometry(R*1.9,14,R*1.35),IRON,0,py,0);
+    for(const sx of [-1,1]) for(const sz of [-1,1]) add(new THREE.BoxGeometry(18,dome*0.55,18),IRON,sx*R*0.6,py-dome*0.3,sz*R*0.45);
+    // pump: crankcase, twin finned cylinders, heads, flywheel
+    const px=-R*0.42, cy=py+7;
+    add(new THREE.BoxGeometry(170,120,150),IRON,px,cy+60,-10);
+    for(const dz of [-40,30]){
+      add(new THREE.CylinderGeometry(42,42,120,20),IRON,px,cy+180,dz);
+      for(let f=0;f<6;f++) add(new THREE.CylinderGeometry(56,56,5,20),IRON,px,cy+132+f*19,dz);
+      add(new THREE.BoxGeometry(110,34,90),IRON,px,cy+257,dz);
+    }
+    add(new THREE.CylinderGeometry(105,105,22,32),IRON,px,cy+95,R*0.5,Math.PI/2);        // flywheel
+    // motor on the other side, with sheave and conduit box
+    const mx=R*0.4; add(new THREE.CylinderGeometry(78,78,230,28),MOTOR,mx,cy+85,-15,Math.PI/2);
+    add(new THREE.CylinderGeometry(84,84,20,28),MOTOR,mx,cy+85,-138,Math.PI/2); add(new THREE.CylinderGeometry(84,84,20,28),MOTOR,mx,cy+85,108,Math.PI/2);
+    add(new THREE.BoxGeometry(70,60,70),MOTOR,mx,cy+175,-20); add(new THREE.BoxGeometry(160,16,120),IRON,mx,cy+8,-15);
+    add(new THREE.CylinderGeometry(40,40,26,24),STEEL,mx,cy+85,R*0.5,Math.PI/2);          // sheave
+    // belt guard over flywheel and sheave, facing the room
+    const shape=new THREE.Shape(); const r1=128, r2=58, x1=px, x2=mx, yc=cy+95;
+    shape.absarc(x1,yc,r1,Math.PI/2,Math.PI*1.5,false); shape.lineTo(x2,yc-r2); shape.absarc(x2,yc,r2,-Math.PI/2,Math.PI/2,false); shape.lineTo(x1,yc+r1);
+    const guard=new THREE.ExtrudeGeometry(shape,{depth:46,bevelEnabled:true,bevelSize:6,bevelThickness:6,bevelSegments:2,curveSegments:24});
+    add(guard,TAN,0,0,R*0.5-10);
+    // pressure switch, gauge, outlet, drain
+    add(new THREE.BoxGeometry(70,90,55),STEEL,R*0.1,tb+Ht+10,-R*0.55);
+    add(new THREE.CylinderGeometry(34,34,12,24),WHITE,-R*0.05,tb+Ht+30,-R*0.62,Math.PI/2,0,0.5);
+    add(new THREE.CylinderGeometry(12,12,120,12),STEEL,R*0.15,tb+Ht-40,-R*0.7);
+    add(new THREE.CylinderGeometry(9,9,60,10),STEEL,R*0.55,tb+22,R*0.55,0,0,Math.PI/2);  // manual drain
+    // place the group at the placeholder's footprint, then attach it under the D20 node
+    grp.position.set(ctr.x,0,ctr.z); grp.updateMatrixWorld(true); node.updateMatrixWorld(true);
+    const inv=new THREE.Matrix4().copy(node.matrixWorld).invert();
+    grp.matrixAutoUpdate=false; grp.matrix.copy(inv.multiply(grp.matrixWorld)); node.add(grp);
   }
 
   // node index -> mark / group that owns it (walks up the tree)
