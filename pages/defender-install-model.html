@@ -171,7 +171,7 @@
 
   // ---- colours: filter in the SP-55 animation palette, all piping as dark grey SCH 80 PVC --------------
   const PAL={BLUE:0x2b6cc4, DARKBLUE:0x1d3f9a, GREY:0x8b9199, BLACK:0x1f2124, YELLOW:0xd9c92e, ACR:0xe6ecf2, PVC:0x4b5157};
-  const TANK=1, KEEP_CAD=new Set([550,551,552,553]);                 // RMF panel, gauge panel, vacuum unit, regulator keep CAD colours
+  const TANK=1, PUMP=667, KEEP_CAD=new Set([550,551,552,553]);                 // RMF panel, gauge panel, vacuum unit, regulator keep CAD colours
   const BODY=/^(1001-7313|1001-7314|1000-4331|1000-4332|1001-7319|70115|70118|1001-7257|1001-7196|1001-7252|1000-4634|1000-4483|1000-4545|1000-4630|1000-4339|1000-429[345]|1001-5724|1000-5925|1001-8480|1000-4480|1001-8538|1001-9346|1000-4549|1000-4535|1000-4623|1000-4208)/;
   const PIPE=/pipe|elbow|(^|\W)tee(\W|$)|slip flange|spigot flange|reducing bushing|reducer|8x6x4|sch 80/i, NOT_PIPE=/pipe-\.375|hose|sight glass/i;
   function under(i,a){ while(i>=0){ if(i===a) return true; i=A.nodes[i].parent; } return false; }
@@ -181,6 +181,9 @@
       if(!o.isMesh) return;
       const i=o.userData.idx, n=A.nodes[i], nm=(n.name||'')+' '+(n.part||''), m=o.material;
       if(PIPE.test(nm)&&!NOT_PIPE.test(nm)){ m.color.setHex(PAL.PVC); m.shininess=35; return; }
+      if(under(i,PUMP)){ const c=m.color, lum=0.3*c.r+0.59*c.g+0.11*c.b;                                               // F33 pump in the filter palette
+        const chain=partChain(i).join(' ');
+        m.color.setHex(lum<0.12?PAL.BLACK:/shaft|screw|bolt|nut|washer|key|plug|pin/i.test(chain)?PAL.GREY:PAL.BLUE); return; }
       if(!under(i,TANK) || [...KEEP_CAD].some(k=>under(i,k))) return;
       const chain=partChain(i), has=re=>chain.some(p=>re.test(p));
       if(has(/^1001-9348/)){ m.color.setHex(PAL.ACR); m.transparent=true; m.opacity=0.45; m.depthWrite=false; return; }   // window acrylic
