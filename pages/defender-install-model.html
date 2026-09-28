@@ -162,7 +162,7 @@
   fetch('/assets/defender-schematic/defender-sp41-schematic.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     box=new THREE.Box3().setFromObject(A.root);
-    recolor(); addDrain(); addCompressor();
+    recolor(); styleStrainer(); addDrain(); addCompressor();
     // every mesh remembers its base opacity for highlight and isolate
     A.root.traverse(o=>{ if(o.isMesh){ o.userData.baseOpacity=o.material.transparent?o.material.opacity:1; } });
     buildIndex(); buildLabels(); document.getElementById('loading').remove(); resize();
@@ -194,6 +194,47 @@
       if(has(/_Welds/)){ m.color.setHex(PAL.BLUE); return; }
       const c=m.color, lum=0.3*c.r+0.59*c.g+0.11*c.b;
       m.color.setHex(lum<0.12?PAL.BLACK:PAL.GREY);                                                                        // hardware
+    });
+  }
+
+  // ---- F29 Guardian strainer: blue body, clear lid, black knobs, steel bolts and basket, yellow label -----
+  // The STEP part is a single mesh, so it is split into its solids (welded connected components) and each
+  // solid is sorted by its bounding box in the part's own frame (y up, flanges on z).
+  const STRAINER=610;
+  function styleStrainer(){
+    const node=A.objs[STRAINER]; if(!node) return;
+    const src=node.children.find(c=>c.isMesh); if(!src) return;
+    const g=src.geometry, P=g.attributes.position.array, I=g.index.array, nv=P.length/3, nt=I.length/3;
+    const weld=new Int32Array(nv), map=new Map();
+    for(let v=0;v<nv;v++){ const k=Math.round(P[v*3]*10)+','+Math.round(P[v*3+1]*10)+','+Math.round(P[v*3+2]*10); let w=map.get(k); if(w===undefined){ w=map.size; map.set(k,w); } weld[v]=w; }
+    const par=new Int32Array(map.size).map((_,i)=>i), f=x=>{ while(par[x]!==x){ par[x]=par[par[x]]; x=par[x]; } return x; };
+    for(let t=0;t<nt;t++){ const a=f(weld[I[t*3]]), b=f(weld[I[t*3+1]]), c=f(weld[I[t*3+2]]); par[b]=a; par[f(c)]=a; }
+    const comp=new Map();                                          // root -> {tris, box}
+    for(let t=0;t<nt;t++){ const r=f(weld[I[t*3]]); let c=comp.get(r); if(!c){ c={tris:[],lo:[1e9,1e9,1e9],hi:[-1e9,-1e9,-1e9]}; comp.set(r,c); }
+      c.tris.push(t); for(let k=0;k<3;k++){ const v=I[t*3+k]; for(let d=0;d<3;d++){ const x=P[v*3+d]; if(x<c.lo[d]) c.lo[d]=x; if(x>c.hi[d]) c.hi[d]=x; } } }
+    const comps=[...comp.values()].sort((a,b)=>b.tris.length-a.tris.length);
+    const cls=c=>{ const w=Math.max(c.hi[0]-c.lo[0],c.hi[2]-c.lo[2]);
+      if(c===comps[0]) return 'body';
+      if(c.lo[1]>=575&&c.hi[1]<=592&&w>250) return 'black';        // cover gasket
+      if(c.lo[1]>=575&&c.hi[1]<=615&&w>300) return 'lid';          // acrylic cover
+      if(c.lo[1]>=608) return 'black';                              // hand knobs and their washers
+      return 'steel'; };                                            // cover bolts, nuts, basket
+    const MATS={ body:[PAL.BLUE], lid:[PAL.ACR,0.35], black:[PAL.BLACK], steel:[0xb9bec4] };
+    const buckets={}; comps.forEach(c=>(buckets[cls(c)]=buckets[cls(c)]||[]).push(...c.tris));
+    Object.entries(buckets).forEach(([k,tris])=>{
+      const idx=new Uint32Array(tris.length*3); tris.forEach((t,j)=>{ idx[j*3]=I[t*3]; idx[j*3+1]=I[t*3+1]; idx[j*3+2]=I[t*3+2]; });
+      const ng=new THREE.BufferGeometry(); ng.setAttribute('position',g.attributes.position); ng.setAttribute('normal',g.attributes.normal); ng.setIndex(new THREE.BufferAttribute(idx,1)); ng.computeBoundingBox(); ng.computeBoundingSphere();
+      const m=src.material.clone(); m.color.setHex(MATS[k][0]);
+      if(MATS[k][1]!==undefined){ m.transparent=true; m.opacity=MATS[k][1]; m.depthWrite=false; }
+      if(k==='steel'){ m.shininess=60; m.specular.setHex(0x555555); }
+      const mesh=new THREE.Mesh(ng,m); mesh.userData.idx=STRAINER; if(k==='lid') mesh.renderOrder=2; node.add(mesh);
+    });
+    node.remove(src);
+    // yellow nameplate on both sides of the barrel, between the flanges
+    const lm=new THREE.MeshPhongMaterial({color:0xe8c21c,shininess:30,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    [0,Math.PI].forEach(rot=>{
+      const plate=new THREE.Mesh(new THREE.CylinderGeometry(134.5,134.5,110,16,1,true,Math.PI/2-0.42+rot,0.84),lm);
+      plate.position.y=330; plate.userData.idx=STRAINER; node.add(plate);
     });
   }
 
