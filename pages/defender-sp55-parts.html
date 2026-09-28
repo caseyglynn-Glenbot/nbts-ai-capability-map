@@ -47,6 +47,9 @@
   #overlay .lbl text{pointer-events:auto;cursor:pointer}
   #overlay .lbl.sel text.tx{font-weight:600}
   #overlay .lbl.sel line{stroke-width:2}
+  #overlay .lbl.hov text.tx{font-weight:600}
+  #overlay .lbl.hov polyline{stroke-width:2.2}
+  #overlay .lbl.hov circle{r:4}
   #panel{position:absolute;z-index:2;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--panel);border-left:1.5px solid var(--ink);box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:16px 18px 24px;box-sizing:border-box;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;gap:14px}
   #panel.open{transform:none}
   #panel .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
@@ -231,9 +234,11 @@
     const ext=contentExtent(_r,_u);
     let halfW;
     if(ext){
-      const col=columnPx(w), availW=Math.max(140, w-1.7*col), availH=Math.max(140, h-26);
+      // with the parts panel open on a wide screen, frame the model in the space left of it
+      const pw=(panel.classList.contains('open') && w>640) ? panel.offsetWidth : 0;
+      const col=columnPx(w), availW=Math.max(140, w-pw-1.7*col), availH=Math.max(140, h-26);
       halfW=Math.max(ext.w/2*(w/availW), ext.h/2*(h/availH)*asp)*1.05/zoom;
-      target.set(0,0,0).addScaledVector(_r, ext.cr).addScaledVector(_u, ext.cu);
+      target.set(0,0,0).addScaledVector(_r, ext.cr + pw/2*(2*halfW/w)).addScaledVector(_u, ext.cu);
     } else {
       halfW=Math.max(FIT_W/2, FIT_H/2*asp)/zoom;
     }
@@ -321,6 +326,7 @@
     select(n);
   }
   function select(n){
+    hovered=null;
     if(selected && parts[selected]) setTint(selected,false);
     selected=n;
     if(n && parts[n]){ setTint(n,true); showPart(n); if(P<0.95 && n!=='body'){ stopPlay(); dirn=1; startPlay(); } }
@@ -333,8 +339,8 @@
   }
   const panel=document.getElementById('panel'), partsBtn=document.getElementById('partsbtn');
   const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  function openPanel(){ panel.classList.add('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
-  function closePanel(){ panel.classList.remove('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; needRender=true; } }
+  function openPanel(){ panel.classList.add('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
+  function closePanel(){ if(hovered){ const h=hovered; hovered=null; if(h!==selected) setTint(h,false); } panel.classList.remove('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; needRender=true; } }
   function showIndex(){
     const info=window.SP55_PARTS||{};
     const order=Object.keys(GROUPS).filter(k=>info[k]);
@@ -375,6 +381,20 @@
     if(typeof handler==='function'){ handler(req); if(note) note.textContent=''; }
     else if(note){ note.textContent=(act==='order'?'Ordering':'Warranty replacement')+' for '+r[0]+' is being set up. Nothing has been submitted.'; }
   }
+  // ---- hovering an entry in the parts index calls that part out in the view -------------
+  let hovered=null;
+  function hover(n){
+    if(n && !parts[n]) n=null;
+    if(hovered===n) return;
+    if(hovered && hovered!==selected) setTint(hovered,false);
+    hovered=n;
+    if(n && n!==selected) setTint(n,true);
+    needRender=true;
+  }
+  panel.addEventListener('pointerover',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
+  panel.addEventListener('pointerleave',()=>hover(null));
+  panel.addEventListener('focusin',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
+  panel.addEventListener('focusout',()=>hover(null));
   partsBtn.addEventListener('click',()=> panel.classList.contains('open') ? closePanel() : showIndex());
   addEventListener('keydown',e=>{ if(e.key==='Escape') closePanel(); });
 
@@ -422,9 +442,10 @@
     const items=[];
     for(const [n,el] of Object.entries(labelEls)){
       const p=parts[n], c=p.cfg, bb=p.bb;
-      const vis=labelsOn && p.k>0.92;
+      const vis=(labelsOn || hovered===n) && p.k>0.92;
       el.grp.style.opacity=vis? Math.min(1,(p.k-0.92)/0.08) : 0;
       el.grp.classList.toggle('sel', selected===n);
+      el.grp.classList.toggle('hov', hovered===n);
       if(!vis) continue;
       const right=RIGHT_COL.has(n);
       // anchor on the face of the part that looks at its own column, so the
