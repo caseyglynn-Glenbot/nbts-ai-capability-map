@@ -165,7 +165,7 @@
   const VALVES={   // [t0,t1,from,to]  1 = open
     V1:{name:'Influent', pos:V(-230,330,1190), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
     V2:{name:'Effluent', pos:V(230,-330,1190), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
-    V3:{name:'Backwash waste', flip:true, pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
+    V3:{name:'Backwash waste', pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
     V4:{name:'Backwash supply', pos:V(-230,-330,1190), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
   };
   const valveAt=(v,t)=>{ let s=v.moves[0][2], mv=null; for(const [a,b,f,to] of v.moves){ if(t>=a){ s=f+(to-f)*ease((t-a)/(b-a)); if(t<b) mv=to>f?'Opening':'Closing'; } } return {s,mv}; };
