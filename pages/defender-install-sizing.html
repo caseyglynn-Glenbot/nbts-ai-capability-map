@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Defender Pipe and Valve Sizing</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00; --dmark:#1f6fd6; --fmark:#1b8f45; --water:#1597c9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{fill:none;stroke-width:1.1}
+  #overlay text{font:600 11.5px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;letter-spacing:.03em}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.9}
+  #overlay g.d polyline{stroke:var(--dmark)} #overlay g.d text.t{fill:var(--dmark)}
+  #overlay g.f polyline{stroke:var(--fmark)} #overlay g.f text.t{fill:var(--fmark)}
+  #overlay g.n polyline{stroke:var(--leader)} #overlay g.n text.t{fill:var(--ink)}
+  #overlay g.lbl text .nm{fill:var(--ink);font-weight:500}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #sizing{position:absolute;right:16px;top:14px;width:318px;max-height:calc(100% - 28px);overflow:auto;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 10px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #sizing .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #sizing label{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+  #sizing label.flow{display:flex;justify-content:space-between;align-items:center;color:var(--ink);font-size:12px}
+  #sizing input[type=number]{font:600 13px "Barlow Semi Condensed",system-ui,sans-serif;width:64px;padding:3px 5px;border:1px solid var(--rule);border-radius:2px;background:var(--panel);color:var(--ink);text-align:right}
+  #sizing .lims input{width:44px;font-size:12px}
+  #sizing input[type=range]{width:100%;accent-color:var(--accent);margin:6px 0 4px}
+  #sizing .lims{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+  #szt{width:100%;border-collapse:collapse;font-size:12px}
+  #szt td{padding:5px 3px;border-top:1px solid var(--rule);vertical-align:top}
+  #szt td small{display:block;color:var(--ink-2);font-size:10.5px}
+  #szt td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:0}
+  #szt tr.e i{background:#2a63b8} #szt tr.i i,#szt tr.s i{background:#2f8f5b} #szt tr.p i{background:#c2701d}
+  #szt td.sz{font:700 14px "Barlow Semi Condensed",system-ui,sans-serif;white-space:nowrap;text-align:right}
+  #szt td.v{font:500 11.5px "Barlow Semi Condensed",system-ui,sans-serif;color:var(--ink-2);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+  #szt tr.on td{background:var(--track)}
+  #szt .warn{margin-left:4px;font:600 9.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--warn);border:1px solid var(--warn);padding:0 3px}
+  #check{margin-top:8px;min-height:20px}
+  #check .ckmsg{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.04em;margin-bottom:2px}
+  #check text.ck{font:500 10.5px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--ink-2)} #check text.ck.on{fill:var(--ink);font-weight:700}
+  #check text.ck.ok{fill:var(--ok);font-weight:600} #check text.ck.no{fill:var(--leader);font-weight:600}
+  #sizing .note{font-size:10.5px;color:var(--ink-2);margin-top:4px;line-height:1.35}
+  #overlay g.sztag rect{fill:var(--panel);stroke:var(--ink);stroke-width:1} #overlay g.sztag text{font:700 11.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;fill:var(--ink)}
+  #overlay g.sztag polyline{stroke:var(--ink);stroke-width:1} #overlay g.sztag.e rect,#overlay g.sztag.eff rect{stroke:#2a63b8;stroke-width:1.6} #overlay g.sztag.inf rect,#overlay g.sztag.suc rect{stroke:#2f8f5b;stroke-width:1.6} #overlay g.sztag.pre rect{stroke:#c2701d;stroke-width:1.6}
+  #readout{position:absolute;right:16px;top:14px;width:214px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.mid{color:var(--warn)} #readout dd.stop{color:var(--leader)} #readout dd.wet{color:var(--water)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:176px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #sizing{right:8px;top:8px;width:236px;padding:6px 8px} #sizing .lims,#sizing .note,#check,#szt td small{display:none} #sizing input[type=range]{display:none}
+    #readout{width:150px}
+    #overlay g.lbl .nm{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Defender Pipe and Valve Sizing</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading installation model (10 MB)…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Sizing · pipes and valves</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="sizing">
+      <div class="kicker">Sizing</div>
+      <label class="flow">System flow <span><input id="flow" type="number" min="20" max="4000" step="10" value="600" inputmode="numeric"> gpm</span></label>
+      <input id="flowr" type="range" min="50" max="3000" step="10" value="600" aria-label="System flow, gpm">
+      <div class="lims"><label>Return limit <input id="limret" type="number" min="2" max="15" step="0.5" value="8"> ft/s</label><label>Suction limit <input id="limsuc" type="number" min="2" max="15" step="0.5" value="6"> ft/s</label></div>
+      <table id="szt"><tbody id="sztab"></tbody></table>
+      <div id="check" aria-live="polite"></div>
+      <div class="note">SCH 80 PVC inside diameters. Velocity = 0.4085 × gpm ÷ ID².</div>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>Defender · Pipe and Valve Sizing<small>Effluent, influent, suction and precoat lines from the system flow. Built from Schematic.stp.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
+      <span class="tick" id="tend">0:44</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/defender-schematic/assembly-loader.js"></script>
+<script src="/assets/defender-schematic/schematic-marks.js"></script>
+<script src="/assets/defender-schematic/install-dress.js"></script>
+<script>
+(function(){
+  const S=window.DEF_SCHEMATIC, view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const tnow=document.getElementById('tnow');
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // ---- timeline (seconds) --------------------------------------------------------------------------------
+  const T_END=44;
+  const STEPS=[
+    {t:0,  key:'flow', h:'Start from the system flow', marks:[], d:'Every line is sized from the design flow for the pool. Enter it in the sizing panel; the sizes below follow it.'},
+    {t:5,  key:'eff',  h:'Effluent (return) line', marks:['D7','F26','F27'], d:'Pick the smallest pipe that keeps the return velocity at or below the return limit. The D7 effluent valve and the UV loop valves are the same size as this line.'},
+    {t:14, key:'inf',  h:'Influent line', marks:['F32'], d:'Pump discharge to the filter carries the same flow under pressure, so it is the same size as the effluent line. The F32 throttling valve matches it.'},
+    {t:19, key:'suc',  h:'Suction line', marks:['F28','F30','D6'], d:'Pool to pump is held to the lower suction limit, so it comes out the same size as the effluent or one size up. The check valve, strainer isolation valve and influent check valve match it.'},
+    {t:28, key:'pre',  h:'Precoat line', marks:['D8','D9','D11'], d:'Two pipe sizes smaller than the effluent, and never less than 2 in (RMF O&M, mark D8). The precoat valve, fill valve and sight glass match it.'},
+    {t:35, key:'valves', h:'Valve sizes', marks:['D7','F26','F27','F32','F28','F30','D6','D8','D9','D10','F31'], d:'Each valve takes the size of the line it sits in. Fixed items: D10 drain valve 4 in, vacuum transfer valves 1 1/2 in, precoat vent 3/4 in.'}
+  ];
+
+  // ---- renderer and camera --------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-50000,50000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(-0.6,1,0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.3,-0.6); scene.add(fill);
+
+  let A=null, ready=false;
+  const deg=Math.PI/180;
+  // camera keys: an orbit direction and the parts to frame (fitted once the model has loaded)
+  const KEYS={
+    all: {th:135, ph:63, nodes:null},
+    eff: {th:140, ph:60, pad:1.08, nodes:[554,582,583,620,622,626,627,637,707,623]},
+    inf: {th:150, ph:62, pad:1.25, nodes:[596,590,589,588,587,586,561,608]},
+    suc: {th:150, ph:68, pad:1.08, nodes:[706,703,702,618,615,617,610,609,607,606,605]},
+    pre: {th:140, ph:66, pad:1.15, nodes:[585,595,597,599,600,602,603,604,591,598,601]}
+  };
+  const PATH=[[0,'all'],[4.4,'all'],[6,'eff'],[13.2,'eff'],[14.6,'inf'],[18.4,'inf'],[19.8,'suc'],[27.2,'suc'],[28.6,'pre'],[34.2,'pre'],[35.8,'all'],[44,'all']];
+  const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
+  function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
+  function fitKey(k){
+    // project each part's own box, which fits much tighter than one box round everything
+    const objs=k.nodes? k.nodes.map(i=>A.objs[i]).filter(Boolean) : A.objs.filter((o,i)=>A.nodes[i].parent===0||A.nodes[i].parent===1);
+    const {r,u,dir}=basis(k.th*deg,k.ph*deg); let a=1e9,bb=-1e9,c=1e9,d=-1e9,e=1e9,f=-1e9; const b=new THREE.Box3();
+    for(const o of objs){ b.setFromObject(o); if(b.isEmpty()||!o.visible) continue;
+      for(let n=0;n<8;n++){ _v.set(n&1?b.max.x:b.min.x,n&2?b.max.y:b.min.y,n&4?b.max.z:b.min.z); const x=_v.dot(r), y=_v.dot(u), z=_v.dot(dir); a=Math.min(a,x); bb=Math.max(bb,x); c=Math.min(c,y); d=Math.max(d,y); e=Math.min(e,z); f=Math.max(f,z); } }
+    k.c=V(0,0,0).addScaledVector(r,(a+bb)/2).addScaledVector(u,(c+d)/2).addScaledVector(dir,(e+f)/2); const pad=k.pad||1.08; k.hx=(bb-a)/2*pad; k.hy=(d-c)/2*pad;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={th:0,ph:0,c:V(0,0,0),hx:1,hy:1};
+  function camAt(t){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,ka]=PATH[i], [tb,kb]=PATH[i+1], a=KEYS[ka], b=KEYS[kb], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    cam.th=(a.th+(b.th-a.th)*k)*deg; cam.ph=(a.ph+(b.ph-a.ph)*k)*deg; cam.c.lerpVectors(a.c,b.c,k);
+    cam.hx=Math.exp(Math.log(a.hx)+(Math.log(b.hx)-Math.log(a.hx))*k); cam.hy=Math.exp(Math.log(a.hy)+(Math.log(b.hy)-Math.log(a.hy))*k);
+  }
+  function updateCamera(){
+    if(!ready) return;
+    camAt(T);
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h, wide=w>760;
+    const th=cam.th+yawOff, ph=clamp(cam.ph+pitchOff,0.08,Math.PI-0.08);
+    const {dir,r,u}=basis(th,ph);
+    // keep the framed parts clear of the steps panel (left) and the status panel (right)
+    const useW=wide? Math.max(200,w-700) : w, useH=wide? h-40 : h*0.72;
+    let halfW=Math.max(cam.hx*w/useW, cam.hy*(h/useH)*asp)/zoomOff;
+    const px=2*halfW/w, shiftX=wide? (340-340)/2 : 0, shiftY=wide? 0 : h*0.12;
+    const t=cam.c.clone().addScaledVector(r,-shiftX*px).addScaledVector(u,-shiftY*px);
+    camera.left=-halfW; camera.right=halfW; camera.top=halfW/asp; camera.bottom=-halfW/asp;
+    camera.position.copy(t).addScaledVector(dir,20000); camera.up.set(0,1,0); camera.lookAt(t);
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+
+  }
+  function resize(){ renderer.setSize(view.clientWidth,view.clientHeight,false); updateCamera(); needRender=true; }
+  addEventListener('resize',resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown',e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove',e=>{ if(!drag) return; yawOff=drag.yo+(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(-e.deltaY*0.0012),0.5,6); needRender=true; },{passive:false});
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+
+  // ---- sizing ------------------------------------------------------------------------------------------------------------
+  // SCH 80 PVC inside diameters (in). Velocity (ft/s) = 0.4085 x gpm / ID^2.
+  const PIPE=[[1.5,1.500],[2,1.939],[2.5,2.323],[3,2.900],[4,3.826],[5,4.813],[6,5.761],[8,7.625],[10,9.564],[12,11.376],[14,12.500]];
+  const vel=(gpm,i)=>0.4085*gpm/(PIPE[i][1]*PIPE[i][1]);
+  const nm=i=>{ const s=PIPE[i][0]; return (s===1.5?'1 1/2':s===2.5?'2 1/2':String(s))+' in'; };
+  const firstOk=(gpm,lim)=>{ for(let i=0;i<PIPE.length;i++) if(vel(gpm,i)<=lim) return i; return PIPE.length-1; };
+  let FLOW=600, LIM_RET=8, LIM_SUC=6, SZ=null;
+  function computeSizes(){
+    const eff=firstOk(FLOW,LIM_RET), sucRaw=firstOk(FLOW,LIM_SUC);
+    const suc=Math.min(Math.max(sucRaw,eff),Math.min(eff+1,PIPE.length-1)), sucOver=sucRaw>eff+1;
+    const pre=Math.max(1,eff-2);                     // two sizes smaller, never under 2 in (index 1)
+    SZ={eff,inf:eff,suc,pre,sucOver,sucRaw,
+        v:{eff:vel(FLOW,eff),inf:vel(FLOW,eff),suc:vel(FLOW,suc),pre:null}};
+    renderTable(); needRender=true;
+  }
+  // ---- sizing panel --------------------------------------------------------------------------------------------------------
+  const flowIn=document.getElementById('flow'), flowRange=document.getElementById('flowr'), limRet=document.getElementById('limret'), limSuc=document.getElementById('limsuc'), tbl=document.getElementById('sztab');
+  function syncFlow(v,src){ FLOW=clamp(Math.round(+v||0),20,4000); if(src!=='n') flowIn.value=FLOW; if(src!=='r') flowRange.value=FLOW; computeSizes(); }
+  flowIn.addEventListener('input',()=>syncFlow(flowIn.value,'n')); flowIn.addEventListener('change',()=>syncFlow(flowIn.value));
+  flowRange.addEventListener('input',()=>syncFlow(flowRange.value,'r'));
+  limRet.addEventListener('input',()=>{ LIM_RET=clamp(+limRet.value||8,2,15); computeSizes(); });
+  limSuc.addEventListener('input',()=>{ LIM_SUC=clamp(+limSuc.value||6,2,15); computeSizes(); });
+  const LINES=[
+    {k:'eff', name:'Effluent (return)', rule:()=>'≤ '+LIM_RET+' ft/s', cls:'e'},
+    {k:'inf', name:'Influent (pump to filter)', rule:()=>'same as effluent', cls:'i'},
+    {k:'suc', name:'Suction (pool to pump)', rule:()=>'≤ '+LIM_SUC+' ft/s, same or +1', cls:'s'},
+    {k:'pre', name:'Precoat', rule:()=>'2 sizes smaller, min 2 in', cls:'p'}
+  ];
+  function renderTable(){
+    tbl.innerHTML=LINES.map(L=>{ const i=SZ[L.k], v=SZ.v[L.k];
+      const warn=L.k==='suc'&&SZ.sucOver? '<span class="warn" title="Suction needs more than one size up at this flow">check</span>':'';
+      return `<tr class="${L.cls}${cur&&cur===L.k?' on':''}"><td><i></i>${L.name}<small>${L.rule()}</small></td><td class="sz">${nm(i)}${warn}</td><td class="v">${v==null?'—':v.toFixed(1)+' ft/s'}</td></tr>`; }).join('');
+  }
+  let cur=null;
+
+  // ---- size check animation: candidate pipe sections stepping up (or down) to the answer ---------------------------------------
+  const chk=document.getElementById('check'), NS2='http://www.w3.org/2000/svg';
+  function drawCheck(t){
+    const s=STEPS[curStep]; if(!s||!SZ){ chk.innerHTML=''; return; }
+    const k=s.key; if(!['eff','suc','pre'].includes(k)){ chk.innerHTML=k==='inf'?checkNote('Influent = effluent size',SZ.inf,'#2f8f5b'):''; return; }
+    const lim=k==='suc'?LIM_SUC:LIM_RET, target=SZ[k], col=k==='eff'?'#2a63b8':k==='suc'?'#2f8f5b':'#c2701d';
+    let seq;
+    if(k==='pre') seq=[SZ.eff, Math.max(0,SZ.eff-1), target];
+    else { const start=Math.max(0,target-3); seq=[]; for(let i=start;i<=target;i++) seq.push(i); }
+    const el=t-s.t-0.6, per=k==='pre'?1.1:0.8, n=Math.min(seq.length-1, Math.max(0,Math.floor(el/per))), shown=el<0?-1:n;
+    const W=300, H=128, maxD=PIPE[seq.reduce((a,b)=>Math.max(a,b))][1], sc=64/maxD;
+    let x=16, out=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Size check">`;
+    seq.forEach((i,j)=>{
+      const r=PIPE[i][1]*sc/2, on=j===shown, done=j<shown, cx=x+r, v=vel(FLOW,i);
+      const pass=k==='pre'? j===seq.length-1 : v<=lim;
+      const stroke=on? (pass?col:'#d1202b') : done? '#b9bec5' : '#dfe2e6';
+      out+=`<circle cx="${cx}" cy="48" r="${Math.max(3,r)}" fill="${on?stroke:'none'}" fill-opacity="${on?0.18:0}" stroke="${stroke}" stroke-width="${on?2.4:1.4}"/>`;
+      out+=`<text x="${cx}" y="100" text-anchor="middle" class="ck ${on?'on':''}">${nm(i)}</text>`;
+      if(k!=='pre') out+=`<text x="${cx}" y="116" text-anchor="middle" class="ck v ${on?(pass?'ok':'no'):''}">${v.toFixed(1)} ft/s</text>`;
+      else if(j===0) out+=`<text x="${cx}" y="116" text-anchor="middle" class="ck v">effluent</text>`;
+      else out+=`<text x="${cx}" y="116" text-anchor="middle" class="ck v">−${j} size</text>`;
+      x+=Math.max(6,r)*2+18;
+    });
+    out+='</svg>';
+    const i=seq[Math.max(0,shown)], v=vel(FLOW,i), pass=k==='pre'?shown===seq.length-1:v<=lim;
+    const msg=shown<0?'Checking sizes…': k==='pre'? (shown===seq.length-1? `Precoat line: ${nm(target)}${SZ.eff-2<1?' (2 in minimum)':''}` : 'Stepping down from the effluent size')
+      : pass? `${nm(i)} passes: ${v.toFixed(1)} ≤ ${lim} ft/s` : `${nm(i)} too small: ${v.toFixed(1)} > ${lim} ft/s`;
+    chk.innerHTML=`<div class="ckmsg" style="color:${shown>=0&&!pass&&k!=='pre'?'var(--leader)':'var(--ink)'}">${msg}</div>`+out;
+  }
+  function checkNote(txt,i,col){ return `<div class="ckmsg">${txt}: <b style="color:${col}">${nm(i)}</b> at ${vel(FLOW,i).toFixed(1)} ft/s</div>`; }
+
+  // ---- line highlight in the model ---------------------------------------------------------------------------------------------
+  const GROUPS={
+    eff:{col:0x2a63b8, nodes:[554,581,582,583,584,619,621,622,707,620,626,627,628,629,637,623,631,639,644]},
+    inf:{col:0x2f8f5b, nodes:[596,590,589,588,587,586,561,608]},
+    suc:{col:0x2f8f5b, nodes:[706,705,704,703,702,618,615,616,617,614,613,612,611,607,606,605,609]},
+    pre:{col:0xc2701d, nodes:[585,595,597,599,600,602,603,604,591,598,601]}
+  };
+  function buildGroups(){
+    for(const g of Object.values(GROUPS)){ g.mats=[]; g.nodes.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); g.mats.push(o.material); } })); }
+  }
+  let lastHi='';
+  function applyHighlight(t){
+    const s=STEPS[curStep]||{}, all=s.key==='valves'||s.key==='flow'&&t>2.5;
+    const on=k=>all||s.key===k, key=Object.keys(GROUPS).map(k=>on(k)?1:0).join('')+(all?'a':'')+Math.round(pulse(t)*10);
+    if(key===lastHi) return; lastHi=key;
+    for(const [k,g] of Object.entries(GROUPS)){ const a=on(k)? (all?0.35:0.28+0.22*pulse(t)) : 0; for(const m of g.mats){ m.emissive.setHex(g.col); m.emissiveIntensity=a; } }
+  }
+  const pulse=t=>0.5+0.5*Math.sin(t*3.2);
+
+  // ---- size tags on the lines ------------------------------------------------------------------------------------------------------
+  const TAGPTS={eff:V(0,1480,-2950), inf:V(0,-760,-1802), suc:V(0,-1706,-3780), pre:V(0,-560,-2082)};
+  const SZTAGS={};
+  function buildSizeTags(){
+    for(const [k,p] of Object.entries(TAGPTS)){
+      const g=document.createElementNS(NS,'g'); g.setAttribute('class','sztag '+k);
+      g.innerHTML='<polyline/><rect rx="3" ry="3" height="24"/><text x="8" y="16"></text>';
+      overlay.appendChild(g); SZTAGS[k]={g,p};
+    }
+  }
+  const LBLNAME={eff:'EFFLUENT',inf:'INFLUENT',suc:'SUCTION',pre:'PRECOAT'};
+  function drawSizeTags(w,h){
+    const s=STEPS[curStep]||{}, all=s.key==='valves'||s.key==='flow'&&T>2.5;
+    const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
+    for(const [k,o] of Object.entries(SZTAGS)){
+      const on=labelsOn&&SZ&&!moving&&(all||s.key===k); o.g.style.display=on?'':'none'; if(!on) continue;
+      _v.copy(o.p).project(camera); const x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
+      if(x<0||x>w||y<0||y>h){ o.g.style.display='none'; continue; }
+      const v=SZ.v[k], txt=`${LBLNAME[k]}  ${nm(SZ[k])}${v==null?'':'  ·  '+v.toFixed(1)+' ft/s'}`;
+      const t=o.g.querySelector('text'); if(t.textContent!==txt) t.textContent=txt;
+      const wd=txt.length*6.6+16, tx=clamp(x+30,6,w-wd-6), ty=clamp(y-46,6,h-30);
+      o.g.querySelector('rect').setAttribute('width',wd); o.g.setAttribute('transform',`translate(${tx},${ty})`);
+      o.g.querySelector('polyline').setAttribute('points',`0,12 ${x-tx},${y-ty}`);
+    }
+  }
+
+  // ---- valve size callouts ----------------------------------------------------------------------------------------------------------
+  const VALVE_LINE={D7:'eff',F26:'eff',F27:'eff',F32:'inf',F28:'suc',F30:'suc',D6:'suc',D8:'pre',D9:'pre',D11:'pre'};
+  const VALVE_FIXED={D10:'4 in'};
+  function valveSize(mark){
+    if(VALVE_FIXED[mark]) return VALVE_FIXED[mark];
+    if(mark==='F31') return `${nm(SZ.suc).replace(' in','')} × ${nm(SZ.pre)}`;
+    const k=VALVE_LINE[mark]; return k&&SZ? nm(SZ[k]) : '';
+  }
+
+  // ---- compressed air set hidden after the opening overview (as on the other animations) ----------------------------------------------
+  const AIR_SET=[653,682,668,669,666,718,665];
+  let airMeshes=[], airLines=[], lastAir=-1;
+  function buildAirFade(){
+    AIR_SET.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{
+      if(o.isMesh&&o.visible){ o.userData.base=o.material.transparent?o.material.opacity:1; airMeshes.push(o); }
+      else if(o.isLineSegments&&o.visible) airLines.push(o);
+    }));
+  }
+  const airAt=t=>1-smooth((t-1.5)/1.5);
+  function applyAir(t){
+    const k=airAt(t); if(Math.abs(k-lastAir)<0.004) return; lastAir=k;
+    for(const o of airMeshes){ const m=o.material, op=o.userData.base*k; o.visible=k>0.01; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const l of airLines) l.visible=k>0.5;
+  }
+
+  // ---- callouts: schematic mark tags for the current step, plus a few named points ------------------------
+  const NS='http://www.w3.org/2000/svg', LBL=[]; let labelsOn=true;
+  const NAMED=[];
+  function mkLabel(kind,code,name){
+    const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl '+kind);
+    const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text');
+    h.setAttribute('class','halo'); t.setAttribute('class','t');
+    const fillT=el=>{ if(code){ el.append(code+' '); const s=document.createElementNS(NS,'tspan'); s.setAttribute('class','nm'); s.textContent=name; el.append(s); } else el.textContent=name; };
+    fillT(h); fillT(t); g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t};
+  }
+  function buildLabels(){
+    const used=new Set(STEPS.flatMap(s=>s.marks));
+    for(const m of S.marks){
+      if(!used.has(m.mark)||!m.nodes.length) continue;
+      const b=new THREE.Box3(); m.nodes.forEach(i=>b.expandByObject(A.objs[i]));
+      LBL.push({id:m.mark, ref:m.ref, c:b.getCenter(V(0,0,0)), steps:STEPS.map((s,i)=>s.marks.includes(m.mark)?i:-1).filter(i=>i>=0), ...mkLabel(m.mark[0].toLowerCase(),m.mark,m.ref)});
+    }
+    for(const n of NAMED) LBL.push({id:n.id, c:n.p, steps:n.steps||[n.step], ...mkLabel('n',null,n.txt)});
+  }
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
+    const cx=w/2, cy=h/2, items=[];
+    for(const L of LBL){
+      const on=labelsOn && !moving && L.steps.includes(curStep);
+      L.g.style.opacity=on?1:0; if(!on) continue;
+      if(L.ref&&SZ){ const sz=valveSize(L.id), want=STEPS[curStep].key==='valves'? (sz||L.ref) : L.ref+(sz?' · '+sz:''); for(const el of [L.h,L.t]){ const sp=el.querySelector('tspan'); if(sp&&sp.textContent!==want) sp.textContent=want; } }
+      _v.copy(L.c).project(camera); const x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
+      if(x<0||x>w||y<0||y>h){ L.g.style.opacity=0; continue; }
+      const dx=x-cx||1, dy=y-cy, len=Math.hypot(dx,dy)||1;
+      items.push({L,x,y,tx:x+dx/len*70,ty:y+dy/len*50});
+    }
+    for(let it=0;it<40;it++) for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
+      const a=items[i], b=items[j], ddx=b.tx-a.tx, ddy=b.ty-a.ty, d=Math.hypot(ddx,ddy);
+      if(d<30){ const push=(30-d)/2, ux=(ddx||0.1)/(d||1), uy=(ddy||1)/(d||1); a.tx-=ux*push; a.ty-=uy*push; b.tx+=ux*push; b.ty+=uy*push; }
+    }
+    drawTags(w,h); drawSizeTags(w,h);
+    for(const it of items){
+      let tx=clamp(it.tx,16,w-16), ty=clamp(it.ty,14,h-10); const left=tx<it.x, tw=(it.L.t.textContent.length)*6.2;
+      for(const r of tagRects){ const x0=left?tx-tw:tx, x1=left?tx:tx+tw; if(x1>r[0]&&x0<r[2]&&ty>r[1]-4&&ty-12<r[3]) ty=r[3]+16; }
+      it.L.ln.setAttribute('points',`${tx+(left?6:-6)},${ty-4} ${it.x},${it.y}`);
+      for(const t of [it.L.h,it.L.t]){ t.setAttribute('x',tx); t.setAttribute('y',ty); t.setAttribute('text-anchor',left?'end':'start'); }
+    }
+  }
+  document.getElementById('labels').addEventListener('click',e=>{ labelsOn=!labelsOn; e.target.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+
+  // ---- "from pool" / "to pool" / "to drain" tags ---------------------------------------------------------------
+  const WAVES='<path d="M6 9c2-2 4-2 6 0s4 2 6 0M6 14c2-2 4-2 6 0s4 2 6 0" stroke="var(--water)" stroke-width="1.7" fill="none" stroke-linecap="round"/>';
+  function tag(txt,icon,wd){
+    const g=document.createElementNS(NS,'g');
+    g.innerHTML=`<rect rx="3" ry="3" width="${wd}" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>${icon}<text x="24" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">${txt}</text>`;
+    overlay.appendChild(g); return g;
+  }
+  const TAGS=[];
+  function buildTags(drainPos){
+    if(drainPos) TAGS.push({g:tag('TO DRAIN','<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>',84), p:drainPos, dir:null});
+  }
+  const tagRects=[];
+  function drawTags(w,h){
+    tagRects.length=0;
+    for(const T_ of TAGS){
+      _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
+      if(T_.dir){ _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20; }
+      const off=x<-40||x>w+40||y<-20||y>h+20||(T_.on&&!T_.on(T)); T_.g.style.display=off?'none':''; if(off) continue;
+      const wd=+T_.g.firstChild.getAttribute('width');
+      const gx=Math.round(clamp(x-wd/2,4,w-wd-4)), gy=Math.round(clamp(y-11+(T_.dir?0:23),4,h-26));
+      T_.g.setAttribute('transform',`translate(${gx},${gy})`); tagRects.push([gx,gy,gx+wd,gy+22]);
+    }
+  }
+
+  // ---- steps ---------------------------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); });
+  }
+
+  // ---- load -------------------------------------------------------------------------------------------------------
+  fetch('/assets/defender-schematic/defender-sp41-schematic.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
+    const dressed=DefenderDress(A); A.root.updateMatrixWorld(true);
+    Object.values(KEYS).forEach(fitKey);
+    buildAirFade(); buildGroups(); buildSizeTags(); computeSizes(); buildLabels(); buildTags(dressed.drainPos);
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- time and playback ------------------------------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(ready){ applyAir(T); applyHighlight(T); }
+    needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+  let playing=false, loop=false, last=performance.now();
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=STEPS[STEPS.length-1].t+1;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
+
+  let tblStep=-2;
+  function frame(now){
+    requestAnimationFrame(frame);
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(!ready) return;
+    if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
+    needRender=true;
+    if(needRender){ needRender=false; updateCamera(); applyHighlight(T); drawCheck(T); if(tblStep!==curStep){ tblStep=curStep; cur=STEPS[curStep]&&STEPS[curStep].key; renderTable(); } renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  // scripting hook for checks
+  window.DefenderSizing={ setTime:t=>{ stopPlay(); setTime(t); }, get T(){ return T; }, camera, scene };
+})();
+</script>
+
+</body>
+</html>
