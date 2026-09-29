@@ -187,10 +187,10 @@
   const deg=Math.PI/180;
   const BOX=(a,b)=>new THREE.Box3(a,b);
   const KEYS={
-    all:   {th:38, ph:64, box:BOX(V(-700,-700,-830),V(700,780,1520))},
-    face:  {th:62, ph:66, pad:1.15, box:BOX(V(-560,-420,940),V(560,800,1520))},
+    all:   {th:38, ph:64, box:BOX(V(-700,-700,-830),V(800,780,1520))},
+    face:  {th:62, ph:66, pad:1.15, box:BOX(V(-560,-420,940),V(790,800,1520))},
     inside:{th:14, ph:74, pad:1.02, box:BOX(V(-560,-700,-830),V(560,560,1250))},
-    waste: {th:50, ph:64, pad:1.3, box:BOX(V(-100,-420,940),V(560,800,1300))}
+    waste: {th:50, ph:64, pad:1.3, box:BOX(V(-100,-420,940),V(790,800,1300))}
   };
   const PATH=[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43,'face'],[44.4,'all'],[54,'all']];
   const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
@@ -232,7 +232,7 @@
   document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
 
   // ---- geometry (mm, y up, tank axis along z) ------------------------------------------------------------------
-  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1190, HDR_X=470;
+  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1190, HDR_X=470, WASTE_X=700;   // waste riser set out past the backwash waste valve handle
   const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x222222,side:THREE.DoubleSide},o||{}));
   const PVC=0x4b5157, WHITE_PVC=0xe9e9e4;
   const EXTRA=new THREE.Group(); scene.add(EXTRA);
@@ -274,16 +274,16 @@
     for(const [v,sd,y] of VV){ const xc=sd*230; valve(v,X);
       // flanges bolt straight onto the wafer body faces (2 in face to face, as D9 in the Defender model)
       flange(P_(xc-sd*26,y,FZ),V(sd,0,0)); flange(P_(xc+sd*26,y,FZ),V(-sd,0,0));
-      pipe(P_(sd*T,y,FZ),P_(xc-sd*80,y,FZ),57,mPVC); pipe(P_(xc+sd*80,y,FZ),P_(sd*(HX-118),y,FZ),57,mPVC); }
+      pipe(P_(sd*T,y,FZ),P_(xc-sd*80,y,FZ),57,mPVC); pipe(P_(xc+sd*80,y,FZ),P_(sd*((sd>0&&y===U?WASTE_X:HX)-118),y,FZ),57,mPVC); }
     // pump header with the inlet tee, elbows at each end
     elbow(P_(-HX,U,FZ),X,neg(Y)); elbow(P_(-HX,L,FZ),X,Y);
     pipe(P_(-HX,U-118,FZ),P_(-HX,T,FZ),57,mPVC); pipe(P_(-HX,-T,FZ),P_(-HX,L+118,FZ),57,mPVC); tee(P_(-HX,0,FZ),Y,Z);
     pipe(P_(-HX,0,FZ+T),P_(-HX,0,1500),57,mPVC); flange(P_(-HX,0,1500),Z);
     // backwash to waste, up through the sight glass
-    elbow(P_(HX,U,FZ),neg(X),Y); pipe(P_(HX,U+118,FZ),P_(HX,510,FZ),57,mPVC); pipe(P_(HX,650,FZ),P_(HX,780,FZ),57,mPVC); flange(P_(HX,780,FZ),Y);
-    const sg=new THREE.Mesh(new THREE.CylinderGeometry(62,62,140,24,1,true),mGlass); sg.position.set(HX,580,FZ); EXTRA.add(sg); GLASS.mesh=sg;
+    const WX=WASTE_X; elbow(P_(WX,U,FZ),neg(X),Y); pipe(P_(WX,U+118,FZ),P_(WX,510,FZ),57,mPVC); pipe(P_(WX,650,FZ),P_(WX,780,FZ),57,mPVC); flange(P_(WX,780,FZ),Y);
+    const sg=new THREE.Mesh(new THREE.CylinderGeometry(62,62,140,24,1,true),mGlass); sg.position.set(WX,580,FZ); EXTRA.add(sg); GLASS.mesh=sg;
     const sgw=new THREE.Mesh(new THREE.CylinderGeometry(50,50,136,20),mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false})); sgw.position.copy(sg.position); EXTRA.add(sgw); GLASS.water=sgw;
-    [510,650].forEach(y=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(72,72,14,24),mPVC); r.position.set(HX,y,FZ); EXTRA.add(r); });
+    [510,650].forEach(y=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(72,72,14,24),mPVC); r.position.set(WX,y,FZ); EXTRA.add(r); });
     // to pool
     elbow(P_(HX,L,FZ),neg(X),Z); pipe(P_(HX,L,FZ+118),P_(HX,L,1500),57,mPVC); flange(P_(HX,L,1500),Z);
   }
@@ -370,7 +370,7 @@
     const bw=i=>{ const o=lat(i,11), u=lat(i,13), x1=(h1(i*5.3)*2-1)*(chord(BED_TOP)-80), z1=(h1(i*6.9)*2-1)*(SHELL_Z-80);
       return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,-330,FACE_Z,45),Q(0,-330,FACE_Z,45),Q(0,UNDER_Y+110,968,45),Q(0,UNDER_Y+110,556,22),Q(0,UNDER_Y,470,22),Q(0,UNDER_Y,u.z,18),
         Q(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),Q(x1*0.7,-250,(u.z+z1)/2,10),Q(x1,120,z1,12),Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(0,OVER_Y,o.z,18),Q(0,OVER_Y,556,22),
-        Q(0,OVER_Y,968,45),Q(0,OVER_Y,FACE_Z,45),Q(HDR_X,OVER_Y,FACE_Z,45),Q(HDR_X,780,FACE_Z,45),Q(HDR_X,900,FACE_Z,50)]; };
+        Q(0,OVER_Y,968,45),Q(0,OVER_Y,FACE_Z,45),Q(WASTE_X,OVER_Y,FACE_Z,45),Q(WASTE_X,780,FACE_Z,45),Q(WASTE_X,900,FACE_Z,50)]; };
     stream(1500,[[EV.bw[0],EV.bw[1],1]],bw,{dirty:bwDirty,seed:7,speed:1000});
   }
   // sand grains tumbling in the expanded bed during backwash
@@ -424,7 +424,7 @@
     {txt:'Backwash waste valve', p:VALVES.V3.pos, steps:[3,5]},
     {txt:'Backwash supply valve', p:VALVES.V4.pos, steps:[3,5]},
     {txt:'Expanded bed', p:V(-250,120,200), steps:[4]},
-    {txt:'Sight glass', p:V(HDR_X,580,FACE_Z), steps:[4]}
+    {txt:'Sight glass', p:V(WASTE_X,580,FACE_Z), steps:[4]}
   ];
   function mkLabel(txt){ const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl n'); const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text'); h.setAttribute('class','halo'); t.setAttribute('class','t'); h.textContent=t.textContent=txt; g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t}; }
   function buildLabels(){ for(const n of NAMED) LBL.push({c:n.p,steps:n.steps,...mkLabel(n.txt)}); }
@@ -450,7 +450,7 @@
   const TAGS=[
     {g:null, txt:'FROM PUMP', icon:RIGHT, wd:96, p:V(-HDR_X,0,1560), dir:V(0,0,1)},
     {g:null, txt:'TO POOL', icon:WAVES, wd:82, p:V(HDR_X,-330,1560), dir:V(0,0,1)},
-    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(HDR_X,830,FACE_Z), dir:V(0,1,0)}
+    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(WASTE_X,830,FACE_Z), dir:V(0,1,0)}
   ];
   function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
     _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20;
