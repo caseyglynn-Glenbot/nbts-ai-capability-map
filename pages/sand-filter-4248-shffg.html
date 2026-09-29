@@ -163,10 +163,10 @@
   ];
   const EV={filter:[[5,24.6],[42.4,1e9]], dirt:[8,23.5], bw:[28.2,40], dpRise:[8,23], bedUp:[28.6,30.6], bedDown:[39.6,41.6], clean:[30,38]};
   const VALVES={   // [t0,t1,from,to]  1 = open
-    V1:{name:'Influent', pos:V(-230,330,1150), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
-    V2:{name:'Effluent', pos:V(230,-330,1150), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
-    V3:{name:'Backwash waste', pos:V(230,330,1150), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
-    V4:{name:'Backwash supply', pos:V(-230,-330,1150), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
+    V1:{name:'Influent', pos:V(-230,330,1190), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
+    V2:{name:'Effluent', pos:V(230,-330,1190), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
+    V3:{name:'Backwash waste', pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
+    V4:{name:'Backwash supply', pos:V(-230,-330,1190), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
   };
   const valveAt=(v,t)=>{ let s=v.moves[0][2], mv=null; for(const [a,b,f,to] of v.moves){ if(t>=a){ s=f+(to-f)*ease((t-a)/(b-a)); if(t<b) mv=to>f?'Opening':'Closing'; } } return {s,mv}; };
   const dirtAt=t=>smooth((t-EV.dirt[0])/(EV.dirt[1]-EV.dirt[0]))*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])));
@@ -232,7 +232,7 @@
   document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
 
   // ---- geometry (mm, y up, tank axis along z) ------------------------------------------------------------------
-  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1150, HDR_X=470;
+  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1190, HDR_X=470;
   const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x222222,side:THREE.DoubleSide},o||{}));
   const PVC=0x4b5157, WHITE_PVC=0xe9e9e4;
   const EXTRA=new THREE.Group(); scene.add(EXTRA);
@@ -240,27 +240,50 @@
   function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); (parent||EXTRA).add(s); return s; }
   function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) pipe(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) joint(pts[i],r,m,parent); }
   function flange(p,axis,m){ const f=new THREE.Mesh(new THREE.CylinderGeometry(114,114,26,28),m); f.position.copy(p); f.quaternion.setFromUnitVectors(V(0,1,0),axis); EXTRA.add(f); }
-  // face piping (schematic 4-valve single-tank arrangement; the CAD model carries the tank and nozzles only)
-  const mPVC=mat(PVC), mValve=mat(0x2b6cc4), mHandle=mat(0xc8202f), mGlass=mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false});
+  // face piping: a 4-valve nest built from the 4 in parts in the Defender installation model (slip flanges, elbows,
+  // DN100 wafer-lug butterfly valves with lever operators; the 6 in tee scaled to 4 in), SCH 80 PVC in dark grey.
+  const mPVC=mat(PVC), mGlass=mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false});
   const P_=(x,y,z)=>V(x,y,z);
+  let PARTS=null; const PIDX={elbow4:1,flange4:2,valve4:3,lever4:4,tee6:5};
+  function partObj(name,recolor){ const src=PARTS.objs[PIDX[name]], g=new THREE.Group();
+    src.children.forEach(c=>{ const k=c.clone(); if(k.isMesh){ k.material=k.material.clone(); if(recolor) k.material.color.setHex(recolor); } g.add(k); }); return g; }
+  function placeM(obj,ex,ey,ez,C,K,sc){ sc=sc||1; const m=new THREE.Matrix4().makeBasis(ex,ey,ez); m.scale(V(sc,sc,sc)); const off=K? K.clone().multiplyScalar(sc).applyMatrix4(new THREE.Matrix4().makeBasis(ex,ey,ez)) : V(0,0,0);
+    m.setPosition(C.clone().sub(off)); obj.matrixAutoUpdate=false; obj.matrix.copy(m); EXTRA.add(obj); return obj; }
+  const X=V(1,0,0), Y=V(0,1,0), Z=V(0,0,1), neg=v=>v.clone().negate(), cross=(a,b)=>V(0,0,0).crossVectors(a,b);
+  function elbow(C,dA,dB){ return placeM(partObj('elbow4',PVC),dB,neg(dA),cross(dB,neg(dA)),C,V(0,118,0)); }          // corner at C, ports toward dA and dB
+  function tee(C,dRun,dBr){ return placeM(partObj('tee6',PVC),dRun,dBr,cross(dRun,dBr),C,V(168.5,0,0),2/3); }       // 6 in tee scaled to 4 in
+  function flange(F,n){ const x=Math.abs(n.y)<0.9?cross(Y,n).normalize():X.clone(); return placeM(partObj('flange4',PVC),x,cross(n,x),n,F); }
+  function valve(v,d){ const g=new THREE.Group(), body=partObj('valve4');
+    // split the disc out of the fused valve mesh (thin disc in the plane of the pipe and stem) so it can turn on the stem
+    const mesh=body.children.find(c=>c.isMesh), geo=mesh.geometry, Pp=geo.attributes.position.array, I=geo.index.array, di=[], bi=[];
+    const inD=k=>Math.abs(Pp[3*k+1])<6.5&&Math.hypot(Pp[3*k],Pp[3*k+2])<51.8;
+    for(let t=0;t<I.length;t+=3) (inD(I[t])&&inD(I[t+1])&&inD(I[t+2])?di:bi).push(I[t],I[t+1],I[t+2]);
+    const mk=idx=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',geo.attributes.position); q.setAttribute('normal',geo.attributes.normal); q.setIndex(idx); q.computeBoundingSphere(); return q; };
+    mesh.geometry=mk(bi); g.add(body);
+    const pivot=new THREE.Group(); g.add(pivot); pivot.add(new THREE.Mesh(mk(di),mat(0x9aa0a6)));
+    const lever=partObj('lever4'); lever.matrixAutoUpdate=false; lever.matrix.set(0,0,-1,0, -1,0,0,0, 0,1,0,176.253, 0,0,0,1); pivot.add(lever);
+    lever.children.forEach(c=>{ if(c.isMesh) c.material.color.setHex(0xc8202f); });                                  // red latch-lock handle
+    placeM(g,d,cross(Y,d),Y,v.pos); v.pivot=pivot; v.bodyMat=mesh.material; }
   function buildFace(){
-    run([P_(0,OVER_Y,968),P_(0,OVER_Y,FACE_Z)],57,mPVC); run([P_(0,UNDER_Y+110,968),P_(0,UNDER_Y+110,FACE_Z)],57,mPVC);
-    run([P_(-HDR_X,OVER_Y,FACE_Z),P_(HDR_X,OVER_Y,FACE_Z)],57,mPVC); run([P_(-HDR_X,-330,FACE_Z),P_(HDR_X,-330,FACE_Z)],57,mPVC);
-    run([P_(-HDR_X,-330,FACE_Z),P_(-HDR_X,OVER_Y,FACE_Z)],57,mPVC);                        // pump header
-    run([P_(-HDR_X,0,FACE_Z),P_(-HDR_X,0,1500)],57,mPVC);                                  // from pump
-    run([P_(HDR_X,OVER_Y,FACE_Z),P_(HDR_X,780,FACE_Z)],57,mPVC);                           // backwash to waste
-    run([P_(HDR_X,-330,FACE_Z),P_(HDR_X,-330,1500)],57,mPVC);                              // to pool
-    [[-HDR_X,0,1500],[HDR_X,-330,1500],[HDR_X,780,FACE_Z]].forEach(([x,y,z],i)=>flange(P_(x,y,z),i<2?V(0,0,1):V(0,1,0),mPVC));
-    const sg=new THREE.Mesh(new THREE.CylinderGeometry(66,66,150,24,1,true),mGlass); sg.position.set(HDR_X,580,FACE_Z); EXTRA.add(sg); GLASS.mesh=sg;
-    const sgw=new THREE.Mesh(new THREE.CylinderGeometry(52,52,146,20),mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false})); sgw.position.copy(sg.position); EXTRA.add(sgw); GLASS.water=sgw;
-    for(const [k,v] of Object.entries(VALVES)){
-      const g=new THREE.Group(); g.position.copy(v.pos); EXTRA.add(g);
-      const body=new THREE.Mesh(new THREE.CylinderGeometry(82,82,54,28,1,true),mValve.clone()); body.rotation.z=Math.PI/2; g.add(body);
-      const neck=new THREE.Mesh(new THREE.CylinderGeometry(16,16,70,12),mValve); neck.position.y=110; g.add(neck);
-      const disc=new THREE.Mesh(new THREE.CylinderGeometry(55,55,8,24),mat(0x9aa0a6)); g.add(disc);
-      const handle=new THREE.Mesh(new THREE.BoxGeometry(200,14,26),mHandle.clone()); handle.position.set(0,150,0); const hp=new THREE.Group(); hp.add(handle); hp.position.y=0; g.add(hp);
-      v.g=g; v.disc=disc; v.hp=hp; v.body=body;
-    }
+    const U=OVER_Y, L=-330, FZ=FACE_Z, HX=HDR_X, T=112;
+    // nozzle spools
+    for(const y of [U,L]){ flange(P_(0,y,968),neg(Z)); pipe(P_(0,y,1000),P_(0,y,FZ-T),57,mPVC); tee(P_(0,y,FZ),X,neg(Z)); }
+    // valves with a flange either side
+    const VV=[[VALVES.V1,-1,U],[VALVES.V4,-1,L],[VALVES.V3,1,U],[VALVES.V2,1,L]];
+    for(const [v,sd,y] of VV){ const xc=sd*230; valve(v,X);
+      flange(P_(xc-sd*51,y,FZ),V(sd,0,0)); flange(P_(xc+sd*51,y,FZ),V(-sd,0,0));
+      pipe(P_(sd*T,y,FZ),P_(xc-sd*115,y,FZ),57,mPVC); pipe(P_(xc+sd*115,y,FZ),P_(sd*(HX-118),y,FZ),57,mPVC); }
+    // pump header with the inlet tee, elbows at each end
+    elbow(P_(-HX,U,FZ),X,neg(Y)); elbow(P_(-HX,L,FZ),X,Y);
+    pipe(P_(-HX,U-118,FZ),P_(-HX,T,FZ),57,mPVC); pipe(P_(-HX,-T,FZ),P_(-HX,L+118,FZ),57,mPVC); tee(P_(-HX,0,FZ),Y,Z);
+    pipe(P_(-HX,0,FZ+T),P_(-HX,0,1500),57,mPVC); flange(P_(-HX,0,1500),Z);
+    // backwash to waste, up through the sight glass
+    elbow(P_(HX,U,FZ),neg(X),Y); pipe(P_(HX,U+118,FZ),P_(HX,510,FZ),57,mPVC); pipe(P_(HX,650,FZ),P_(HX,780,FZ),57,mPVC); flange(P_(HX,780,FZ),Y);
+    const sg=new THREE.Mesh(new THREE.CylinderGeometry(62,62,140,24,1,true),mGlass); sg.position.set(HX,580,FZ); EXTRA.add(sg); GLASS.mesh=sg;
+    const sgw=new THREE.Mesh(new THREE.CylinderGeometry(50,50,136,20),mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false})); sgw.position.copy(sg.position); EXTRA.add(sgw); GLASS.water=sgw;
+    [510,650].forEach(y=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(72,72,14,24),mPVC); r.position.set(HX,y,FZ); EXTRA.add(r); });
+    // to pool
+    elbow(P_(HX,L,FZ),neg(X),Z); pipe(P_(HX,L,FZ+118),P_(HX,L,1500),57,mPVC); flange(P_(HX,L,1500),Z);
   }
   const GLASS={};
   // internals: overdrain and underdrain headers with slotted laterals (schematic), sand bed and dirt layer
@@ -365,10 +388,9 @@
   const GREEN=0x1e9a4a, RED=0xd1202b, AMBER=0xd08a12, CLEAR=new THREE.Color(0x9fd3ec), MUD=new THREE.Color(0x7a5a2c);
   function applyState(t){
     applyGhost(t);
-    for(const v of Object.values(VALVES)){ const {s,mv}=valveAt(v,t); v.disc.rotation.z=0; v.disc.rotation.x=0;
-      v.disc.quaternion.setFromAxisAngle(V(0,1,0),0); v.disc.rotation.set(Math.PI/2,0,(1-s)*Math.PI/2);   // open: disc edge-on to the flow
-      v.hp.rotation.y=(1-s)*Math.PI/2;
-      v.body.material.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); v.body.material.emissiveIntensity=mv?0.5:s>0.5?0.25:0; }
+    for(const v of Object.values(VALVES)){ const {s,mv}=valveAt(v,t);
+      if(v.pivot) v.pivot.rotation.z=(1-s)*Math.PI/2;                                                    // open: disc edge-on to the flow
+      if(v.bodyMat){ v.bodyMat.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); v.bodyMat.emissiveIntensity=mv?0.5:s>0.5?0.22:0; } }
     const sc=bedAt(t); bedMesh.scale.y=sc; bedMesh.material.opacity=(0.5-0.18*(sc-1)/0.28)*ghostAt(t)+0.02; bedMesh.visible=ghostAt(t)>0.01;
     const d=dirtAt(t); dirtMesh.scale.y=sc; dirtMesh.material.opacity=0.75*d*ghostAt(t); dirtMesh.visible=d>0.01&&ghostAt(t)>0.01;
     const bwOn=t>=EV.bw[0]&&t<EV.bw[1]+1;
@@ -426,7 +448,7 @@
   const TAGS=[
     {g:null, txt:'FROM PUMP', icon:RIGHT, wd:96, p:V(-HDR_X,0,1560), dir:V(0,0,1)},
     {g:null, txt:'TO POOL', icon:WAVES, wd:82, p:V(HDR_X,-330,1560), dir:V(0,0,1)},
-    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(HDR_X,850,FACE_Z), dir:V(0,1,0)}
+    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(HDR_X,830,FACE_Z), dir:V(0,1,0)}
   ];
   function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
     _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20;
@@ -442,7 +464,9 @@
   function updateSteps(t){ let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
 
   // ---- load -----------------------------------------------------------------------------------------------------------------
-  fetch('/assets/shffg/shffg4248.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+  const getBin=u=>fetch(u,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); });
+  Promise.all([getBin('/assets/shffg/shffg4248.bin'),getBin('/assets/shffg/pipe-parts-4in.bin')]).then(([buf,pbuf])=>{
+    PARTS=loadAssembly(pbuf);
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     A.root.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); } });
     const shell=A.objs[2]; if(shell) shell.traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x5a6b7a); });   // fibreglass shell in a neutral grey-blue
