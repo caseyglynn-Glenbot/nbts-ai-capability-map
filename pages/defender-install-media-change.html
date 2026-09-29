@@ -281,7 +281,8 @@
     P(0,INF_Y-80,PUMP_Z,52),P(0,INF_Y,PUMP_Z+90,52),P(0,INF_Y,-560,52)];                                                    // pool to the influent nozzle
   const R_OVER=[P(-268,960,214,16),P(-268,1379,214,16),P(-725,1379,710,16),P(-734,1300,720,16),P(-734,-1011,720,16),P(-734,-1180,720,22)];   // head vent to the vacuum drain valve, to waste
   const R_VENT=[P(0,960,RISER_Z,40),P(0,EFF_Y-80,RISER_Z,50),P(0,EFF_Y,RISER_Z-90,50),P(0,EFF_Y,PRE_Z,40),P(0,1602,PRE_Z,10),P(-319,1602,1307,10),P(-320,1500,1316,10),P(-320,-1759,1316,10),P(-320,-1820,1316,14)];  // header, precoat vent line, F34, to waste
-  const R_MEDIA=[P(-372,-830,644,14),P(-440,-700,570,14),P(-560,-500,400,14),P(-660,-330,260,14),P(-700,-285,200,14),P(-617,-291,162,14),P(-531,-305,142,14),P(-460,-305,125,10)];  // bag, hose, D19, into the tank
+  const R_MEDIA=[P(-381,-830,655,14),P(-389,-777,641,14),P(-415,-756,613,14),P(-426,-702,555,14),P(-498,-656,478,14),P(-599,-647,382,14),P(-733,-639,298,14),
+    P(-805,-609,285,14),P(-843,-536,273,14),P(-867,-431,269,14),P(-829,-306,239,14),P(-748,-291,205,14),P(-683,-298,193,12),P(-617,-291,162,12),P(-531,-305,142,12),P(-460,-305,125,10)];  // bag, along the D19 hose (centreline from the hose geometry), D19, into the tank
   const R_AIR=[P(-268,960,214,12),P(-268,1379,214,12),P(-725,1379,710,12),P(-734,1300,720,12),P(-734,538,720,12),P(-593,538,647,12),P(-475,542,616,12),P(-420,470,590,12),P(-370,230,600,12),P(-250,260,700,12),P(-110,430,770,12)];  // tank to the vacuum unit
   const R_PRE_OUT=[P(0,SUCT_Y,PUMP_Z,40),P(0,-1326,PUMP_Z,50),P(0,INF_Y-80,PUMP_Z,52),P(0,INF_Y,PUMP_Z+90,52),P(0,INF_Y,-560,52)];               // precoat: pump to filter
   const R_PRE_BACK=[P(0,960,RISER_Z,40),P(0,EFF_Y-80,RISER_Z,50),P(0,EFF_Y,RISER_Z-90,50),P(0,EFF_Y,PRE_Z+70,50),P(0,EFF_Y-80,PRE_Z,38),P(0,SUCT_Y+60,PRE_Z,38),P(0,SUCT_Y,PRE_Z+70,40),P(0,SUCT_Y,PUMP_Z,40)];  // precoat line back to the pump
@@ -360,8 +361,8 @@
     waterMesh.position.y=TANK_BOT; waterMesh.renderOrder=3; scene.add(waterMesh);
     // bag of perlite
     const cv=document.createElement('canvas'); cv.width=256; cv.height=160; const x=cv.getContext('2d');
-    x.fillStyle='#f3f1ea'; x.fillRect(0,0,256,160); x.fillStyle='#1E4B8C'; x.font='bold 34px Barlow Semi Condensed, Arial'; x.textAlign='center'; x.fillText('PERLITE',128,78); x.font='20px Arial'; x.fillText('filter media',128,108);
-    const tex=new THREE.CanvasTexture(cv), side=new THREE.MeshPhongMaterial({color:0xefece2,transparent:true,shininess:5}), face=new THREE.MeshPhongMaterial({map:tex,transparent:true,shininess:5});
+    x.fillStyle='#cdb48a'; x.fillRect(0,0,256,160); x.fillStyle='#3a2f1f'; x.font='bold 34px Barlow Semi Condensed, Arial'; x.textAlign='center'; x.fillText('PERLITE',128,78); x.font='20px Arial'; x.fillText('filter media',128,108);
+    const tex=new THREE.CanvasTexture(cv), side=new THREE.MeshPhongMaterial({color:0xcdb48a,transparent:true,shininess:5}), face=new THREE.MeshPhongMaterial({map:tex,transparent:true,shininess:5});
     const bg=new THREE.BoxGeometry(380,1,300); bg.translate(0,0.5,0);
     bagMesh=new THREE.Mesh(bg,[side,side,side,side,face,side]); bagMesh.position.copy(BAG).setY(-1461); bagMesh.visible=false; scene.add(bagMesh);
   }
