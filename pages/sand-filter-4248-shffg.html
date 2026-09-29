@@ -90,13 +90,14 @@
     #overlay g.lbl .nm{display:none}
     #hint{display:none}
   }
-  #cfg{display:flex;align-items:center;gap:6px;margin:0 0 8px;flex-wrap:wrap}
-  #cfg .lab{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin-right:2px}
+  #cfg{margin:0 0 8px}
+  #cfg .row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+  #cfg .lab{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);width:52px}
   #cfg button{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:3px 8px;cursor:pointer}
   #cfg button:hover{background:var(--track)}
   #cfg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
-  #cfgnote{font:400 11.5px/1.35 "Barlow",system-ui,sans-serif;color:var(--ink-2);margin:-2px 0 8px}
-  @media (max-width:760px){ #cfgnote{display:none} #cfg{margin-bottom:4px} }
+  #cfgnote{font:400 11.5px/1.35 "Barlow",system-ui,sans-serif;color:var(--ink-2);margin:0 0 8px}
+  @media (max-width:760px){ #cfgnote{display:none} #cfg{margin-bottom:2px} #cfg .row{margin-bottom:2px} }
 </style>
 </head>
 <body>
@@ -111,27 +112,18 @@
     <div id="loading">Loading sand filter model…</div>
     <div id="steps" aria-live="polite">
       <div class="kicker">Sand filter · filter and backwash</div>
-      <div id="cfg" role="group" aria-label="Face piping configuration"><span class="lab">Face piping</span></div>
+      <div id="cfg" role="group" aria-label="Face piping configuration"></div>
       <div id="cfgnote"></div>
       <ol id="steplist"></ol>
     </div>
     <div id="readout" aria-hidden="true">
       <div class="kicker">Filter status</div>
-      <dl>
-        <dt>Mode</dt><dd id="r-mode" class="go">Filter</dd>
-        <dt>Differential</dt><dd id="r-dp" class="go">4.0 psi</dd>
-        <dt>Sand bed</dt><dd id="r-bed" class="go">Settled</dd>
-        <dt>Influent valve</dt><dd id="r-V1" class="go">Open</dd>
-        <dt>Effluent valve</dt><dd id="r-V2" class="go">Open</dd>
-        <dt>Backwash supply</dt><dd id="r-V4" class="stop">Closed</dd>
-        <dt>Backwash waste</dt><dd id="r-V3" class="stop">Closed</dd>
-        <dt>Sight glass</dt><dd id="r-glass">—</dd>
-      </dl>
+      <dl id="rdl"></dl>
     </div>
     <div id="hint">Drag to look around · scroll to zoom</div>
   </div>
   <div id="bar">
-    <h1>48048SHFFGS · Sand Filter<small id="sub">Stacked pair of 48 in tanks, filter mode and backwash.</small></h1>
+    <h1>48048SHFFGS · Sand Filter<small id="sub">48 in horizontal sand filter, filter mode and backwash.</small></h1>
     <div class="ctrl">
       <span class="tick" id="tnow">0:00</span>
       <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
@@ -151,52 +143,95 @@
 <script>
 (function(){
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
-  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), tnow=document.getElementById('tnow');
-  const RD={}; ['mode','dp','V1','V2','V3','V4','glass','bed'].forEach(k=>RD[k]=document.getElementById('r-'+k));
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), tnow=document.getElementById('tnow'), tend=document.getElementById('tend');
   const V=(x,y,z)=>new THREE.Vector3(x,y,z);
   const clamp=(v,a,b)=>v<a?a:v>b?b:v;
   const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
   const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const win=(t,a,b)=>smooth((t-a[0])/(a[1]-a[0]))*(1-smooth((t-b[0])/(b[1]-b[0])));
   const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
   const deg=Math.PI/180;
 
-  // ---- face piping configurations (the C1 to C4 single-tank face piping STEP models) ----------------------------------------
-  // Native frame of each model: origin on the face of the upper tank connection, x along the valve runs, lower connection
-  // at y -813. zc: pipe centreline off the tank face; vx: valve centres; px: pump riser; outX: end of the waste and pool runs.
+  // ---- face piping configurations -----------------------------------------------------------------------------------------
+  // Single (C1 to C4): one tank's face piping, native origin on the upper tank connection, lower connection at y -813.
+  //   zc: pipe centreline off the tank face; vx: valve centres; px: pump riser; outX: end of the waste and pool runs.
+  // Stacked: one valve nest for both tanks, native origin on the lower tank's lower connection. The CAD upper connections
+  //   sit higher than the 48 in tank's (BU/TU); every run above the effluent header is moved down by dY to meet them.
   const CFGS={
-    C1:{file:'face-c1.bin', tank:'4L', size:3, rot:false, zc:132,  vx:155, px:-355, inlet:{side:-487}, outX:232, pr:44,
+    C1:{file:'face-c1.bin', tank:'4L', rot:false, zc:132,  vx:155, px:-355, inlet:{side:-487}, outX:232, pr:44,
         note:'3 in face piping, pump connection from the side. Shown on the 4 in tank connections.'},
-    C2:{file:'face-c2.bin', tank:'6L', size:6, rot:true,  zc:-214, vx:242, px:-600, inlet:{side:-813}, outX:355, pr:84,
+    C2:{file:'face-c2.bin', tank:'6L', rot:true,  zc:-214, vx:242, px:-600, inlet:{side:-813}, outX:355, pr:84,
         note:'6 in face piping, pump connection from the side, on the 6 in tank connections.'},
-    C3:{file:'face-c3.bin', tank:'4L', size:3, rot:false, zc:132,  vx:155, px:-355, inlet:{top:132},   outX:232, pr:44,
+    C3:{file:'face-c3.bin', tank:'4L', rot:false, zc:132,  vx:155, px:-355, inlet:{top:132},   outX:232, pr:44,
         note:'3 in face piping, pump connection from above. Shown on the 4 in tank connections.'},
-    C4:{file:'face-c4.bin', tank:'4L', size:4, rot:true,  zc:-159, vx:185, px:-414, inlet:{top:159},   outX:274, pr:57,
-        note:'4 in face piping, pump connection from above, on the 4 in tank connections.'}
+    C4:{file:'face-c4.bin', tank:'4L', rot:true,  zc:-159, vx:185, px:-414, inlet:{top:159},   outX:274, pr:57,
+        note:'4 in face piping, pump connection from above, on the 4 in tank connections.'},
+    'S-C1':{stack:true, file:'face-s-c1.bin', tank:'4L', dY:-203, tlShift:-127, xB:381, xPool:-254, zv:477, zh:203, zr:165, yT:1557, inTop:1771, bwY:606, wOut:540, wDir:1, BU:1016, TU:2413, poolTop:1752, rIn:84, rW:57, rP:84, R:48,
+        note:'4 in connections with 6 in headers. Pump header on the right, effluent valve on the left, waste to the right. Upper runs moved down 203 mm to meet the 48 in tank connections.'},
+    'S-C2':{stack:true, file:'face-s-c2.bin', tank:'6L', dY:-489, tlShift:0, xB:737, xPool:-737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:-270, wDir:-1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90,
+        note:'8 in connections with 12 in headers and a gear-operated effluent valve. Pump header on the right, effluent valve and waste on the left. Shown on the 6 in tank connections; upper runs moved down 489 mm to fit.'},
+    'S-C31':{stack:true, file:'face-s-c31.bin', tank:'6L', dY:-489, tlShift:0, xB:-737, xPool:737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:270, wDir:1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90,
+        note:'8 in connections with 12 in headers and a gear-operated effluent valve. Pump header on the left, effluent valve and waste on the right. Shown on the 6 in tank connections; upper runs moved down 489 mm to fit.'},
+    'S-C32':{stack:true, file:'face-s-c32.bin', tank:'6L', dY:-489, tlShift:0, xB:-737, xPool:737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:-1007, wDir:-1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90,
+        note:'8 in connections with 12 in headers and a gear-operated effluent valve. Pump header on the left, effluent valve on the right, waste to the left. Shown on the 6 in tank connections; upper runs moved down 489 mm to fit.'}
   };
   const TANKS={'4L':'shffgs48048-4L.bin','6L':'shffgs48048-6L.bin'};
   const NOZ_U=407, NOZ_L=-406, TANK_DY=1397, FACE_Z=975, LOW=-813;
 
-  // ---- timeline (seconds) ----------------------------------------------------------------------------------
+  // ---- timelines ----------------------------------------------------------------------------------------------------------
   // Operation per the Neptune Benson horizontal sand filter O&M (SHF O&M 4/7/16) and SHFFG tech data sheet (R 2/9/18).
-  const T_END=54;
-  const STEPS=[
-    {t:0,  h:'Stacked horizontal sand filters', d:'48048SHFFGS: two 48 in fibreglass tanks, one stacked on the other, each with its own face piping. Each tank has 19.7 sq ft of filter area. The upper connection feeds the overdrain laterals and the lower connection collects from the underdrain laterals.'},
-    {t:5,  h:'Filter mode', d:'The influent and effluent valves are open. Water from the pump enters the upper connection, spreads out of the overdrain laterals above the bed, passes down through the sand, and is collected by the underdrain laterals and returned to the pool.'},
-    {t:15, h:'Dirt builds in the bed', d:'Dirt is trapped in the top of the sand bed. The influent gauge rises and the differential between the influent and effluent gauges climbs. Clean, it reads about 3 to 5 psi; backwash when it has risen 10 psi above that.'},
-    {t:24, h:'Switch to backwash', d:'Each valve pair is linked to one lever. The upper lever closes the influent valve and opens the backwash waste valve in one move; the lower lever closes the effluent valve and opens the backwash supply valve.'},
-    {t:29, h:'Backwash', d:'Water now enters the underdrain laterals and flows up through the bed. The sand lifts and expands, releasing the trapped dirt, which leaves through the overdrain laterals and the backwash line to waste. Watch the sight glass until the water runs clear.'},
-    {t:40, h:'Back to filter mode', d:'Both levers return to their filter positions, the sand settles back into a level bed and the differential drops back to its clean reading.'}
-  ];
-  const EV={filter:[[5,24.6],[43,1e9]], dirt:[8,23.5], bw:[28.2,40], dpRise:[8,23], bedUp:[28.6,30.6], bedDown:[39.6,41.6], clean:[30,38]};
-  // lever moves [t0,t1,from,to]; 0 = filter position, 1 = backwash position
-  const LEVERS={up:[[24.4,25.6,0,1],[40.2,41.4,1,0]], low:[[25.8,27.0,0,1],[41.6,42.8,1,0]]};
+  // The stacked nest has no backwash supply valve: one tank is backwashed with water filtered by the other.
+  const MODES={
+    single:{
+      T_END:54,
+      STEPS:[
+        {t:0,  h:'Horizontal sand filter', d:'One 48 in fibreglass tank with 19.7 sq ft of filter area. The upper connection feeds the overdrain laterals and the lower connection collects from the underdrain laterals.'},
+        {t:5,  h:'Filter mode', d:'The influent and effluent valves are open. Water from the pump enters the upper connection, spreads out of the overdrain laterals above the bed, passes down through the sand, and is collected by the underdrain laterals and returned to the pool.'},
+        {t:15, h:'Dirt builds in the bed', d:'Dirt is trapped in the top of the sand bed. The influent gauge rises and the differential between the influent and effluent gauges climbs. Clean, it reads about 3 to 5 psi; backwash when it has risen 10 psi above that.'},
+        {t:24, h:'Switch to backwash', d:'Each valve pair is linked to one lever. The upper lever closes the influent valve and opens the backwash waste valve in one move; the lower lever closes the effluent valve and opens the backwash supply valve.'},
+        {t:29, h:'Backwash', d:'Water now enters the underdrain laterals and flows up through the bed. The sand lifts and expands, releasing the trapped dirt, which leaves through the overdrain laterals and the backwash line to waste. Watch the sight glass until the water runs clear.'},
+        {t:40, h:'Back to filter mode', d:'Both levers return to their filter positions, the sand settles back into a level bed and the differential drops back to its clean reading.'}
+      ],
+      LEVERS:{up:[[24.4,25.6,0,1],[40.2,41.4,1,0]], low:[[25.8,27.0,0,1],[41.6,42.8,1,0]]},
+      VSTATE:{V1:['up',1], V3:['up',0], V2:['low',1], V4:['low',0]},
+      ROWS:[['mode','Mode'],['dp','Differential'],['bed0','Sand bed'],['V1','Influent valve'],['V2','Effluent valve'],['V4','Backwash supply'],['V3','Backwash waste'],['glass','Sight glass']],
+      VLBL:{V1:'Influent valve', V3:'Backwash waste valve', V4:'Backwash supply valve', V2:'Effluent valve'},
+      EV:{filter:[[5,24.6],[43,1e9]], dirt:[8,23.5], dpRise:[8,23]},
+      BW:[{t:[28.2,40], ti:0, up:[28.6,30.6], down:[39.6,41.6], clean:[30,38]}],
+      ghost:[4,44.4], valveSteps:[3,5], bwSteps:[4],
+      PATH:[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43.8,'face'],[45,'all'],[54,'all']]
+    },
+    stack:{
+      T_END:66,
+      STEPS:[
+        {t:0,  h:'Stacked filters, one valve nest', d:'Two 48 in tanks, one on the other, each with 19.7 sq ft of filter area. Each tank has an influent and backwash waste valve pair on one lever; one effluent valve serves the header joining both lower connections.'},
+        {t:5,  h:'Filter mode', d:'Both influent valves and the effluent valve are open. Water from the pump splits between the tanks, filters down through each sand bed and leaves both lower connections through the common header to the pool.'},
+        {t:15, h:'Dirt builds in the beds', d:'Dirt is trapped in the top of both sand beds and the differential climbs. Clean, it reads about 3 to 5 psi; backwash when it has risen 10 psi above that.'},
+        {t:24, h:'Backwash the lower tank', d:'The effluent valve closes. The lower tank’s lever closes its influent valve and opens its backwash waste valve.'},
+        {t:28.2, h:'Lower tank backwash', d:'Water filters down through the upper tank, crosses the header into the lower tank’s underdrain and rises through its bed, lifting the sand and carrying the dirt out to waste. Watch the sight glass until it runs clear.'},
+        {t:38.4, h:'Backwash the upper tank', d:'The lower tank’s lever returns to filter, then the upper tank’s lever closes its influent valve and opens its waste valve. Now the lower tank filters the water that backwashes the upper tank.'},
+        {t:52.4, h:'Back to filter mode', d:'The upper lever returns and the effluent valve opens. Both beds settle and both tanks filter to the pool again.'}
+      ],
+      LEVERS:{E:[[24.4,25.4,0,1],[54.2,55.2,1,0]], A:[[25.8,27.0,0,1],[38.6,39.8,1,0]], B:[[40.2,41.4,0,1],[52.6,53.8,1,0]]},
+      VSTATE:{Veff:['E',1], Vin0:['A',1], Vw0:['A',0], Vin1:['B',1], Vw1:['B',0]},
+      ROWS:[['mode','Mode'],['dp','Differential'],['bed0','Lower bed'],['bed1','Upper bed'],['Veff','Effluent valve'],['Vin0','Lower influent'],['Vw0','Lower waste'],['Vin1','Upper influent'],['Vw1','Upper waste'],['glass','Sight glass']],
+      VLBL:{Veff:'Effluent valve', Vin0:'Lower tank influent', Vw0:'Lower tank waste', Vin1:'Upper tank influent', Vw1:'Upper tank waste'},
+      EV:{filter:[[5,24.6],[55.6,1e9]], dirt:[8,23.5], dpRise:[8,23]},
+      BW:[{t:[28.2,38.4], ti:0, up:[28.6,30.6], down:[38,40], clean:[30,37]}, {t:[42,52.4], ti:1, up:[42.4,44.4], down:[52,54], clean:[44,51]}],
+      ghost:[4,56.8], valveSteps:[3,5,6], bwSteps:[4],
+      PATH:[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[27.8,'face'],[29,'inside'],[32.6,'inside'],[33.6,'waste'],[37.4,'waste'],[38.4,'face'],[41.6,'face'],[42.8,'inside'],[51.6,'inside'],[52.6,'face'],[55.6,'face'],[56.8,'all'],[66,'all']]
+    }
+  };
+  let M=MODES.single;
   const leverAt=(mv,t)=>{ let k=mv[0][2], m=null; for(const [a,b,f,to] of mv){ if(t>=a){ k=f+(to-f)*ease((t-a)/(b-a)); if(t<b) m=to>f?1:-1; } } return {k,m}; };
-  const VSTATE={ V1:['up',1], V3:['up',0], V2:['low',1], V4:['low',0] };        // [lever, open in filter mode]
-  const valveAt=(key,t)=>{ const [lv,f]=VSTATE[key], {k,m}=leverAt(LEVERS[lv],t), s=f?1-k:k; return {s, mv: m? ((f?m>0:m<0)?'Closing':'Opening') : null}; };
-  const dirtAt=t=>smooth((t-EV.dirt[0])/(EV.dirt[1]-EV.dirt[0]))*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])));
-  const bedAt=t=>1+0.26*smooth((t-EV.bedUp[0])/(EV.bedUp[1]-EV.bedUp[0]))*(1-smooth((t-EV.bedDown[0])/(EV.bedDown[1]-EV.bedDown[0])));
-  const dpAt=t=>4+10*smooth((t-EV.dpRise[0])/(EV.dpRise[1]-EV.dpRise[0]))*(1-smooth((t-EV.bw[0])/2));
-  const bwDirty=t=>0.85*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])))+0.03;
+  const valveAt=(key,t)=>{ const [lv,f]=M.VSTATE[key], {k,m}=leverAt(M.LEVERS[lv],t), s=f?1-k:k; return {s, mv: m? ((f?m>0:m<0)?'Closing':'Opening') : null}; };
+  const bwOf=ti=>M.BW.find(b=>b.ti===ti);
+  const dirtAt=(t,ti)=>{ const b=bwOf(ti); return smooth((t-M.EV.dirt[0])/(M.EV.dirt[1]-M.EV.dirt[0]))*(1-smooth((t-b.clean[0])/(b.clean[1]-b.clean[0]))); };
+  const bedAt=(t,ti)=>{ const b=bwOf(ti); return 1+0.26*win(t,b.up,b.down); };
+  const bwNow=t=>M.BW.find(b=>t>=b.t[0]&&t<b.t[1]+1);
+  const bwDirty=t=>{ const b=bwNow(t)||M.BW[0]; return 0.85*(1-smooth((t-b.clean[0])/(b.clean[1]-b.clean[0])))+0.03; };
+  const dpAt=t=>4+10*smooth((t-M.EV.dpRise[0])/(M.EV.dpRise[1]-M.EV.dpRise[0]))*(1-smooth((t-M.BW[0].t[0])/2));
+  const ghostAt=t=>smooth((t-M.ghost[0])/1.6)*(1-smooth((t-M.ghost[1])/1.6));
 
   // ---- renderer and camera ------------------------------------------------------------------------------------
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -209,13 +244,7 @@
   const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(-1,0.3,-0.6); scene.add(fill);
   let ready=false, CFG=null, CUR=null;
   const BOX=(a,b)=>new THREE.Box3(a,b);
-  const KEYS={
-    all:   {th:38, ph:66, box:BOX(V(-720,-760,-830),V(720,2040,1450))},
-    face:  {th:58, ph:72, pad:1.08, box:BOX(V(-620,-560,900),V(620,1960,1450))},
-    inside:{th:16, ph:76, pad:1.02, box:BOX(V(-620,-760,-830),V(620,2040,1000))},
-    waste: {th:50, ph:68, pad:1.08, box:BOX(V(-100,-420,940),V(790,800,1300))}
-  };
-  const PATH=[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43.8,'face'],[45,'all'],[54,'all']];
+  const KEYS={ all:{th:38, ph:66}, face:{th:58, ph:72, pad:1.08}, inside:{th:16, ph:76, pad:1.02}, waste:{th:50, ph:68, pad:1.08} };
   const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
   function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
   function fitKey(k){
@@ -226,8 +255,8 @@
   let yawOff=0, pitchOff=0, zoomOff=1;
   const cam={th:0,ph:0,c:V(0,0,0),hx:1,hy:1};
   function camAt(t){
-    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
-    const [ta,ka]=PATH[i], [tb,kb]=PATH[i+1], a=KEYS[ka], b=KEYS[kb], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    const P=M.PATH; let i=0; while(i<P.length-2 && t>P[i+1][0]) i++;
+    const [ta,ka]=P[i], [tb,kb]=P[i+1], a=KEYS[ka], b=KEYS[kb], k=ease((t-ta)/Math.max(1e-6,tb-ta));
     cam.th=(a.th+(b.th-a.th)*k)*deg; cam.ph=(a.ph+(b.ph-a.ph)*k)*deg; cam.c.lerpVectors(a.c,b.c,k);
     cam.hx=Math.exp(Math.log(a.hx)+(Math.log(b.hx)-Math.log(a.hx))*k); cam.hy=Math.exp(Math.log(a.hy)+(Math.log(b.hy)-Math.log(a.hy))*k);
   }
@@ -262,14 +291,15 @@
   function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); parent.add(s); return s; }
   function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) pipe(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) joint(pts[i],r,m,parent); }
   const P_=(x,y,z)=>V(x,y,z);
-  // native face-piping frame -> world, for tank ti (0 bottom, 1 top)
-  function faceMatrix(ti){ const m=new THREE.Matrix4(), y=NOZ_U+ti*TANK_DY;
+  // native face-piping frame -> world, for tank ti (single) or the whole stack
+  function faceMatrix(ti){ const m=new THREE.Matrix4();
+    if(CFG.stack){ m.makeTranslation(0,NOZ_L,FACE_Z); return m; }
+    const y=NOZ_U+ti*TANK_DY;
     if(CFG.rot) m.set(-1,0,0,0, 0,1,0,y, 0,0,-1,FACE_Z, 0,0,0,1); else m.set(1,0,0,0, 0,1,0,y, 0,0,1,FACE_Z, 0,0,0,1); return m; }
   const NAT=[]; const W_=(ti,x,y,z)=>V(x,y,z).applyMatrix4(NAT[ti]);
 
-  // ---- linked valve pairs: disc, lever, cranks and connecting link from the STEP model, driven as a four-bar linkage ----
-  const ASM=[];      // {lever:'up'|'low', ti, valves:{D,F}, parts...}
-  const VBODY={V1:[],V2:[],V3:[],V4:[]};
+  // ---- valves: linked pairs (disc, lever, cranks and connecting link, driven as a four-bar linkage) and single valves ----
+  const ASM=[], VBODY={}, VOBJ={};
   const splitCache=new Map();
   function splitValve(geo,other){
     // the Open and Close valve models differ only in the disc (and stem flats): triangles whose corners are not in the other
@@ -281,24 +311,33 @@
     let Rd=0; for(let t=0;t<I.length;t+=3) if(diff[I[t]]&&diff[I[t+1]]&&diff[I[t+2]]) for(let j=0;j<3;j++){ const k=I[t+j]; Rd=Math.max(Rd,Math.hypot(P[3*k],P[3*k+1])); }
     const di=[], bi=[], inR=k=>Math.hypot(P[3*k],P[3*k+1])<=Rd+1;
     for(let t=0;t<I.length;t+=3){ const c=diff[I[t]]+diff[I[t+1]]+diff[I[t+2]]; ((c>=2&&inR(I[t])&&inR(I[t+1])&&inR(I[t+2]))?di:bi).push(I[t],I[t+1],I[t+2]); }
-    const mk=idx=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',geo.attributes.position); q.setAttribute('normal',geo.attributes.normal); q.setIndex(idx); q.computeBoundingSphere(); return q; };
-    const r={body:mk(bi),disc:mk(di)}; splitCache.set(geo.uuid,r); return r;
+    const r=mkSplit(geo,di,bi); splitCache.set(geo.uuid,r); return r;
   }
+  function splitSingle(geo){
+    // one valve model only (open): the disc lies in the plane of the stem and the flow, thin across it
+    if(splitCache.has(geo.uuid)) return splitCache.get(geo.uuid);
+    const P=geo.attributes.position.array, I=geo.index.array; geo.computeBoundingBox(); const bb=geo.boundingBox, Rb=Math.min(-bb.min.y,bb.max.y);
+    const Rd=Rb*0.8, Tk=Rd*0.16, inD=k=>Math.abs(P[3*k+1])<=Tk&&Math.hypot(P[3*k],P[3*k+2])<=Rd, di=[], bi=[];
+    for(let t=0;t<I.length;t+=3) ((inD(I[t])&&inD(I[t+1])&&inD(I[t+2]))?di:bi).push(I[t],I[t+1],I[t+2]);
+    const r=mkSplit(geo,di,bi); splitCache.set(geo.uuid,r); return r;
+  }
+  function mkSplit(geo,di,bi){ const mk=idx=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',geo.attributes.position); q.setAttribute('normal',geo.attributes.normal); q.setIndex(idx); q.computeBoundingSphere(); return q; }; return {body:mk(bi),disc:mk(di)}; }
   const meshOf=o=>o.children.find(c=>c.isMesh);
   const natM=o=>o.matrixWorld.clone();
   const centre=o=>new THREE.Box3().setFromObject(o).getCenter(V(0,0,0));
   function rotAbout(p,axis,th){ return new THREE.Matrix4().makeTranslation(p.x,p.y,p.z).multiply(new THREE.Matrix4().makeRotationAxis(axis,th)).multiply(new THREE.Matrix4().makeTranslation(-p.x,-p.y,-p.z)); }
-  function setNat(o,M){ o.matrixAutoUpdate=false; o.matrix.copy(o.userData.Pinv).multiply(M); o.matrixWorldNeedsUpdate=true; }
+  function setNat(o,M_){ o.matrixAutoUpdate=false; o.matrix.copy(o.userData.Pinv).multiply(M_); o.matrixWorldNeedsUpdate=true; }
   function prepNat(o){ o.userData.M0=natM(o); o.userData.Pinv=o.parent.matrixWorld.clone().invert(); }
-  function buildAssembly(face,node,lv,ti){
+  function addBody(key,s){ (VBODY[key]=VBODY[key]||[]).push(meshOf(s.obj).material); (VOBJ[key]=VOBJ[key]||[]).push(s.obj); }
+  function valveStem(v){ const M_=natM(v); return {obj:v, p:V(0,0,0).setFromMatrixPosition(M_), axis:V(0,0,0).setFromMatrixColumn(M_,2).normalize()}; }
+  function buildPair(node,lv,roleOf){
     const kids=[]; node.traverse(o=>{ if(o!==node) kids.push(o); });
     const direct=node.children.filter(o=>o.userData.idx!==undefined);
     const valves=kids.filter(o=>/BF Valve/.test(o.name)&&!/Assembly/.test(o.name)&&meshOf(o));
     const lever=direct.find(o=>/Lever/.test(o.name)), cranks=direct.filter(o=>/^Link1/.test(o.name)), rod=direct.find(o=>/^Link6/.test(o.name));
     const pinParts=direct.filter(o=>/^(Bolt|Nut|Washer)/.test(o.name));
     [lever,rod,...cranks,...pinParts].forEach(prepNat);
-    const st=valves.map(v=>{ const M=natM(v); return {obj:v, p:V(0,0,0).setFromMatrixPosition(M), axis:V(0,0,0).setFromMatrixColumn(M,2).normalize()}; });
-    const axis=st[0].axis;
+    const st=valves.map(valveStem), axis=st[0].axis;
     const lp=V(0,0,0).setFromMatrixPosition(lever.userData.M0);
     const plane=(a,b)=>{ const d=V(0,0,0).subVectors(a,b); return d.sub(axis.clone().multiplyScalar(d.dot(axis))).length(); };
     const D=st.reduce((a,b)=>plane(lp,a.p)<plane(lp,b.p)?a:b), F=st.find(s=>s!==D);
@@ -312,19 +351,16 @@
         for(let it=0;it<30;it++){ const f=pinAt(F,pinF,th).distanceTo(pd)-L0, f2=pinAt(F,pinF,th+1e-4).distanceTo(pd)-L0, dd=(f2-f)/1e-4; if(Math.abs(dd)<1e-9) break; const st_=clamp(-f/dd,-0.2,0.2); th+=st_; if(Math.abs(st_)<1e-7) break; }
         tab.push(th); } return tab; }
     const A1=solve(1), A2=solve(-1), sgn=Math.abs(Math.abs(A1[60])-Math.PI/2)<=Math.abs(Math.abs(A2[60])-Math.PI/2)?1:-1, tab=sgn>0?A1:A2;
-    // discs: split each valve model and put the disc on the stem
     const protos=valves.map(v=>meshOf(v).geometry);
-    for(const s of st){ const m=meshOf(s.obj), other=protos.find(g=>g!==m.geometry)||m.geometry, sp=splitValve(m.geometry,other);
+    for(const s of st){ const m=meshOf(s.obj), other=protos.find(g=>g!==m.geometry), sp=other?splitValve(m.geometry,other):splitSingle(m.geometry);
       m.geometry=sp.body; m.material.color.setHex(VALVE);
       const disc=new THREE.Mesh(sp.disc,mat(0x9aa0a6)); s.obj.add(disc); s.disc=disc;
       s.obj.children.filter(c=>c.isLineSegments).forEach(c=>s.obj.remove(c)); }
     lever.traverse(o=>{ if(o.isMesh) o.material.color.setHex(HANDLE); });
     [rod,...cranks,...pinParts].forEach(o=>o.traverse(c=>{ if(c.isMesh) c.material.color.setHex(STEEL); }));
-    // which valve is which: the pump is on native -x
-    const up=lv==='up', pumpSide=s=>s.p.x<0;
-    for(const s of st){ s.key= up? (pumpSide(s)?'V1':'V3') : (pumpSide(s)?'V4':'V2'); VBODY[s.key].push(meshOf(s.obj).material); }
+    for(const s of st){ s.key=roleOf(s); addBody(s.key,s); }
     const cr=cranks.map(c=>{ const p=V(0,0,0).setFromMatrixPosition(c.userData.M0); return {o:c, s: plane(p,D.p)<plane(p,F.p)?D:F}; });
-    ASM.push({lv,ti,D,F,axis,sgn,tab,lever,rod,cr,pinParts,pinD,pinF,
+    ASM.push({lv,
       set(k){ const x=k*60, i=Math.min(59,Math.floor(x)), f=x-i, thD=sgn*k*Math.PI/2, thF=tab[i]+(tab[i+1]-tab[i])*f;
         D.disc.rotation.z=thD; F.disc.rotation.z=thF;
         const RD_=rotAbout(D.p,axis,thD), RF=rotAbout(F.p,axis,thF);
@@ -336,24 +372,50 @@
         const MR=new THREE.Matrix4().makeTranslation(pd.x,pd.y,pd.z).multiply(new THREE.Matrix4().makeRotationAxis(axis,phi)).multiply(new THREE.Matrix4().makeTranslation(-pinD.x,-pinD.y,-pinD.z));
         setNat(rod,MR.clone().multiply(rod.userData.M0)); for(const o of pinParts) setNat(o,MR.clone().multiply(o.userData.M0)); }});
   }
+  function buildSingleValve(node,lv,key){
+    const kids=[]; node.traverse(o=>{ if(o!==node) kids.push(o); });
+    const v=kids.find(o=>/BF Valve/.test(o.name)&&!/Assembly/.test(o.name)&&meshOf(o)); if(!v) return;
+    const op=node.children.find(o=>/Lever Operator/.test(o.name)), gear=node.children.find(o=>/Gear Operator/.test(o.name));
+    const s=valveStem(v), m=meshOf(v), sp=splitSingle(m.geometry);
+    m.geometry=sp.body; m.material.color.setHex(VALVE); v.children.filter(c=>c.isLineSegments).forEach(c=>v.remove(c));
+    const disc=new THREE.Mesh(sp.disc,mat(0x9aa0a6)); v.add(disc);
+    if(op){ prepNat(op); op.traverse(o=>{ if(o.isMesh) o.material.color.setHex(HANDLE); }); }
+    if(gear) gear.traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x3d4247); });
+    s.key=key; addBody(key,s);
+    ASM.push({lv, set(k){ const th=k*Math.PI/2; disc.rotation.z=th; if(op) setNat(op,rotAbout(s.p,s.axis,th).multiply(op.userData.M0)); }});
+  }
   const GLASS=[];
+  function sightRun(FG,a,dir,r,len){ const mP=mat(PVC), mR=mat(0x3d4247), at=d=>a.clone().addScaledVector(dir,d);
+    pipe(a,at(60),r,mP,FG); pipe(at(230),at(len),r,mP,FG); for(const d of [60,230]) pipe(at(d-8),at(d+8),r*1.3,mR,FG);
+    const sg=pipe(at(68),at(222),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
+    const sw=pipe(at(70),at(220),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
+    GLASS.push({glass:sg,water:sw,p:at(145)}); }
   function buildFace(buf,ti){
-    const F=loadAssembly(buf), FG=new THREE.Group();
+    const F=loadAssembly(buf), FG=new THREE.Group(), C=CFG;
+    const top=F.objs.filter((o,i)=>F.nodes[i].parent===0);
+    if(C.stack){ for(const a of top){ const fixed=/To Pool|^SA3|^SA4/.test(a.name); if(!fixed) a.position.y+=C.dY; if(/^SA4/.test(a.name)) a.position.x+=C.tlShift; } }
     F.root.updateMatrixWorld(true);
     F.root.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.setHex(PVC); } });
-    const top=F.objs.filter((o,i)=>F.nodes[i].parent===0);
-    for(const a of top){ if(/Backwash/.test(a.name)) buildAssembly(F,a,'up',ti); else if(/To Pool/.test(a.name)) buildAssembly(F,a,'low',ti); }
+    if(C.stack){
+      for(const a of top){
+        if(/^SA1/.test(a.name)){ const tank=Math.abs(centre(a).x)<150?0:1, teeN=a.children.find(o=>/Tee/.test(o.name)), tee=teeN?centre(teeN).y:centre(a).y; buildPair(a,tank?'B':'A',s=>(s.p.y>tee?'Vin':'Vw')+tank); }
+        else if(/To Pool/.test(a.name)) buildSingleValve(a,'E','Veff'); }
+    } else {
+      for(const a of top){ if(/Backwash/.test(a.name)) buildPair(a,'up',s=>s.p.x<0?'V1':'V3'); else if(/To Pool/.test(a.name)) buildPair(a,'low',s=>s.p.x<0?'V4':'V2'); }
+    }
     FG.add(F.root);
     // short runs off the ends of the nest: pump, pool and waste (with the sight glass), schematic
-    const C=CFG, z=C.zc, r=C.pr, mP=mat(PVC), mR=mat(0x3d4247);
-    if(C.inlet.side!=null) pipe(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else pipe(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
-    pipe(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
-    const g0=C.outX+60, g1=C.outX+230;
-    pipe(P_(C.outX,0,z),P_(g0,0,z),r,mP,FG); pipe(P_(g1,0,z),P_(C.outX+320,0,z),r,mP,FG);
-    for(const x of [g0,g1]) pipe(P_(x-8,0,z),P_(x+8,0,z),r*1.3,mR,FG);
-    const sg=pipe(P_(g0+8,0,z),P_(g1-8,0,z),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
-    const sw=pipe(P_(g0+10,0,z),P_(g1-10,0,z),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
-    GLASS.push({glass:sg,water:sw});
+    const mP=mat(PVC);
+    if(C.stack){
+      pipe(P_(C.xB,C.inTop+C.dY,C.zv),P_(C.xB,C.inTop+C.dY+160,C.zv),C.rIn,mP,FG);
+      pipe(P_(C.xPool,C.poolTop,C.zh),P_(C.xPool,C.poolTop+260,C.zh),C.rP,mP,FG);
+      sightRun(FG,P_(C.wOut,C.bwY+C.dY,C.zv),V(C.wDir,0,0),C.rW,320);
+    } else {
+      const z=C.zc, r=C.pr;
+      if(C.inlet.side!=null) pipe(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else pipe(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
+      pipe(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
+      sightRun(FG,P_(C.outX,0,z),V(1,0,0),r,320);
+    }
     FG.matrixAutoUpdate=false; FG.matrix.copy(NAT[ti]); CUR.add(FG);
   }
 
@@ -375,14 +437,13 @@
     const bed=new THREE.Mesh(seg(BED_TOP,BOT+2),mat(0xd8c08a,{transparent:true,opacity:0.5,depthWrite:false,shininess:5})); bed.position.y=BOT+dy; bed.renderOrder=2; CUR.add(bed);
     const dirt=new THREE.Mesh(seg(BED_TOP,BED_TOP-90),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false,shininess:5})); dirt.position.y=BOT+dy; dirt.renderOrder=3; CUR.add(dirt);
     const grains=mkPoints(900,0.6); const c=grains.geometry.attributes.color.array; for(let i=0;i<900;i++){ const k=0.8+0.2*h1(i); c[3*i]=0.85*k; c[3*i+1]=0.75*k; c[3*i+2]=0.53*k; }
-    BEDS.push({bed,dirt,grains,dy});
+    BEDS.push({bed,dirt,grains,dy,ti});
   }
 
   // ---- ghost the tank shells, manways and saddles so the inside can be seen ---------------------------------------------------
   let ghostMeshes=[], ghostLines=[], lastGhost=-1;
-  const GHOST=[3,4,5,17,18,19,20], SADDLE=[11,12,17,18];
-  function buildGhost(A){ for(const off of [0,31]) GHOST.forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) ghostMeshes.push(o); else if(o.isLineSegments) ghostLines.push(o); })); }
-  const ghostAt=t=>smooth((t-4)/1.6)*(1-smooth((t-44.4)/1.6));
+  const GHOST=[3,4,5,17,18,19,20], SADDLE=[11,12,17,18], TOP_TANK=32;
+  function buildGhost(A,offs){ for(const off of offs) GHOST.forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) ghostMeshes.push(o); else if(o.isLineSegments) ghostLines.push(o); })); }
   function applyGhost(t){
     const g=ghostAt(t); if(Math.abs(g-lastGhost)<0.004) return; lastGhost=g;
     for(const o of ghostMeshes){ const m=o.material, op=1-0.84*g; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
@@ -397,7 +458,8 @@
     const p=new THREE.Points(g,new THREE.PointsMaterial({size:6,vertexColors:true,map:dotTex,transparent:true,opacity:0.92,depthWrite:false,depthTest:false,sizeAttenuation:false}));
     p.frustumCulled=false; p.renderOrder=10; p.userData.scale=scale||1; CUR.add(p); POINTS.push(p); return p;
   }
-  function prep(pts){ let L=0; pts.forEach((q,i)=>{ if(i) L+=q.p.distanceTo(pts[i-1].p); q.s=L; }); pts.L=L; return pts; }
+  // a path is a list of {p,r}; a {dirt:true} marker sets where backwash water starts to carry dirt
+  function prep(raw){ const pts=[]; let L=0, dS=0; for(const q of raw){ if(q.dirt){ dS=L; continue; } if(pts.length) L+=q.p.distanceTo(pts[pts.length-1].p); pts.push({p:q.p,r:q.r,s:L}); } pts.L=L; pts.dS=dS; return pts; }
   function across(d,a,b,r,out){ _r.copy(Math.abs(d.y)<0.9?V(0,1,0):V(1,0,0)).cross(d).normalize(); _u.copy(d).cross(_r); return out.addScaledVector(_r,a*r).addScaledVector(_u,b*r); }
   const _d=V(0,0,0), _q=V(0,0,0);
   function onPath(pts,s,a,b,out){ let i=1; while(i<pts.length-1 && s>pts[i].s) i++; const p0=pts[i-1], p1=pts[i], k=clamp((s-p0.s)/Math.max(1e-6,p1.s-p0.s),0,1); out.lerpVectors(p0.p,p1.p,k); _d.subVectors(p1.p,p0.p).normalize(); return across(_d,a,b,p0.r+(p1.r-p0.r)*k,out); }
@@ -412,47 +474,64 @@
       const arr=S_.pts.geometry.attributes.position.array, col=S_.pts.geometry.attributes.color.array;
       let w=null; for(const x of S_.wins){ if(t>=x[0]&&t<=x[1]+S_.parts[0].path.L/S_.speed+1) w=x; }
       S_.pts.visible=!!w; if(!w) continue;
-      const front=(t-w[0])*S_.speed, tail=t>w[1]?(t-w[1])*S_.speed:-1, dirty=S_.dirty?S_.dirty(t):0, dens=w[2]==null?1:w[2];
+      const front=(t-w[0])*S_.speed, tail=t>w[1]?(t-w[1])*S_.speed:-1, dirty=S_.dirty?S_.dirty(t):0;
       for(let i=0;i<S_.parts.length;i++){
         const f=S_.parts[i], L=f.path.L, s=(f.ph*L+flowClock*S_.speed)%L;
-        if(f.k>dens||s>front||s<tail){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
+        if(s>front||s<tail){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
         onPath(f.path,s,f.a,f.b,_q);
         arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
-        const c=f.k<dirty*dens?DIRT:S_.color; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
+        const c=(f.k<dirty&&s>=f.path.dS)?DIRT:S_.color; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
       }
       S_.pts.geometry.attributes.position.needsUpdate=true; S_.pts.geometry.attributes.color.needsUpdate=true;
     }
   }
-  const Qv=(p,r)=>({p,r:r==null?40:r});
+  const Qv=(p,r)=>({p,r:r==null?40:r}), DIRTMARK={dirt:true};
   function lat(i,seed){ const z=LAT_Z[(h1(i*3.1+seed)*LAT_Z.length)|0], x=(h1(i*4.7+seed)*2-1); return {z,x}; }
-  function buildStreams(ti){
-    const C=CFG, dy=ti*TANK_DY, z=C.zc, R=C.pr*0.8, N=(x,y,zz,r)=>Qv(W_(ti,x,y,zz),r==null?R:r), T_=(x,y,zz,r)=>Qv(V(x,y+dy,zz),r);
+  // inside a tank: down through the bed (filter) and up through the expanded bed (backwash)
+  function tIn(ti){ const dy=ti*TANK_DY; return (x,y,z,r)=>Qv(V(x,y+dy,z),r); }
+  function downPts(ti,i,seed){ const T_=tIn(ti), o=lat(i,seed), u=lat(i,seed+5), zs=o.z+(h1(i*8.1+seed)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
+    return [T_(0,NOZ_U,556,22),T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP+10,zs,6),
+      T_(u.x*(chord(UNDER_Y)-50)*0.9,UNDER_Y+60,u.z,6),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),T_(0,UNDER_Y,u.z,18),T_(0,UNDER_Y,470,22),T_(0,NOZ_L,556,22)]; }
+  function dirtPts(ti,i,seed){ const T_=tIn(ti), o=lat(i,seed), zs=o.z+(h1(i*8.7+seed)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
+    return [T_(0,NOZ_U,556,22),T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP-20-h1(i*6.2)*60,zs,4)]; }
+  function upPts(ti,i,seed){ const T_=tIn(ti), o=lat(i,seed), u=lat(i,seed+2), x1=(h1(i*5.3+seed)*2-1)*(chord(BED_TOP)-80), z1=(h1(i*6.9+seed)*2-1)*(SHELL_Z-80);
+    return [T_(0,NOZ_L,556,22),T_(0,UNDER_Y,470,22),T_(0,UNDER_Y,u.z,18),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),DIRTMARK,T_(x1*0.7,-280,(u.z+z1)/2,10),T_(x1,140,z1,12),
+      T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(0,OVER_Y,o.z,18),T_(0,NOZ_U,556,22)]; }
+  const dirtyAt=t=>bwDirty(t);
+  function buildStreamsSingle(){
+    const C=CFG, z=C.zc, R=C.pr*0.8, N=(x,y,zz,r)=>Qv(W_(0,x,y,zz),r==null?R:r);
     const pump=C.inlet.side!=null? [N(C.inlet.side-260,0,z),N(C.px,0,z)] : [N(C.px,C.inlet.top+150,z),N(C.px,0,z)];
-    const inTop=[...pump,N(-C.vx,0,z),N(0,0,z),N(0,0,0),T_(0,NOZ_U,556,22)];
-    const inBot=[...pump,N(C.px,LOW,z),N(-C.vx,LOW,z),N(0,LOW,z),N(0,LOW,0),T_(0,NOZ_L,556,22),T_(0,UNDER_Y,470,22)];
-    const toPool=[T_(0,UNDER_Y,470,22),T_(0,NOZ_L,556,22),N(0,LOW,0),N(0,LOW,z),N(C.vx,LOW,z),N(C.outX+300,LOW,z)];
-    const toWaste=[T_(0,NOZ_U,556,22),N(0,0,0),N(0,0,z),N(C.vx,0,z),N(C.outX+320,0,z),N(C.outX+520,0,z,R*1.1)];
-    const n=ti?0.7:1;
-    // filter mode: pump -> influent valve -> upper connection -> overdrain -> down through the sand -> underdrain -> lower connection -> effluent valve -> pool
-    const filt=i=>{ const o=lat(i,0), u=lat(i,5), zs=o.z+(h1(i*8.1)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
-      return [...inTop,T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP+10,zs,6),
-        T_(u.x*(chord(UNDER_Y)-50)*0.9,UNDER_Y+60,u.z,6),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),T_(0,UNDER_Y,u.z,18),...toPool]; };
-    stream(Math.round(1300*n),EV.filter.map(([a,b])=>[a,b,1]),filt,{seed:1+ti*17});
-    // dirt carried in and trapped in the top of the bed
-    const dirt=i=>{ const o=lat(i,9), zs=o.z+(h1(i*8.7)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
-      return [...inTop,T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP-20-h1(i*6.2)*60,zs,4)]; };
-    stream(Math.round(240*n),[[EV.dirt[0],EV.dirt[1],1]],dirt,{color:DIRT,scale:0.75,seed:3+ti*17});
-    // backwash: pump -> backwash supply valve -> lower connection -> underdrain -> up through the expanded bed -> overdrain -> upper connection -> backwash waste valve -> sight glass -> waste
-    const bw=i=>{ const o=lat(i,11), u=lat(i,13), x1=(h1(i*5.3)*2-1)*(chord(BED_TOP)-80), z1=(h1(i*6.9)*2-1)*(SHELL_Z-80);
-      return [...inBot,T_(0,UNDER_Y,u.z,18),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),T_(x1*0.7,-280,(u.z+z1)/2,10),T_(x1,140,z1,12),
-        T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(0,OVER_Y,o.z,18),...toWaste]; };
-    stream(Math.round(1400*n),[[EV.bw[0],EV.bw[1],1]],bw,{dirty:bwDirty,seed:7+ti*17,speed:1000});
+    const inTop=[...pump,N(-C.vx,0,z),N(0,0,z),N(0,0,0)];
+    const inBot=[...pump,N(C.px,LOW,z),N(-C.vx,LOW,z),N(0,LOW,z),N(0,LOW,0)];
+    const toPool=[N(0,LOW,0),N(0,LOW,z),N(C.vx,LOW,z),N(C.outX+300,LOW,z)];
+    const toWaste=[N(0,0,0),N(0,0,z),N(C.vx,0,z),N(C.outX+320,0,z),N(C.outX+520,0,z,R*1.1)];
+    stream(1300,M.EV.filter.map(([a,b])=>[a,b]),i=>[...inTop,...downPts(0,i,0),...toPool],{seed:1});
+    stream(240,[M.EV.dirt],i=>[...inTop,...dirtPts(0,i,9)],{color:DIRT,scale:0.75,seed:3});
+    stream(1400,[M.BW[0].t],i=>[...inBot,...upPts(0,i,11),...toWaste],{dirty:dirtyAt,seed:7,speed:1000});
+  }
+  function buildStreamsStack(){
+    const C=CFG, R=C.R, Pm=(x,y,z,r)=>Qv(W_(0,x,y+C.dY,z),r==null?R:r), Pf=(x,y,z,r)=>Qv(W_(0,x,y,z),r==null?R:r);
+    const pump=[Pm(C.xB,C.inTop+160,C.zv,C.R*1.4),Pm(C.xB,C.yT,C.zv,C.R*1.4)];
+    const infA=[Pm(0,C.yT,C.zv),Pm(0,C.BU,C.zv),Pm(0,C.BU,0)];
+    const infB=[Pm(C.xB,C.BU,C.zv),Pm(C.xB,C.BU,C.zr),Pm(C.xB,C.TU,C.zr),Pm(0,C.TU,C.zr),Pm(0,C.TU,0)];
+    const out=(x)=>[Pm(x,C.BU,C.zv),Pm(x,C.bwY,C.zv),Pm(C.wOut,C.bwY,C.zv),Pm(C.wOut+C.wDir*540,C.bwY,C.zv,R*1.1)];
+    const lowA=[Pf(0,0,0),Pf(0,0,C.zh),Pf(C.xPool,0,C.zh),Pf(C.xPool,TANK_DY,C.zh)], lowB=[Pf(0,TANK_DY,0),Pf(0,TANK_DY,C.zh),Pf(C.xPool,TANK_DY,C.zh)];
+    const pool=[Pf(C.xPool,C.poolTop+260,C.zh,C.R*1.4)];
+    const fw=M.EV.filter.map(([a,b])=>[a,b]);
+    stream(1300,fw,i=>[...pump,...infA,...downPts(0,i,0),...lowA,...pool],{seed:1,speed:1500});
+    stream(1300,fw,i=>[...pump,...infB,...downPts(1,i,20),...lowB,...pool],{seed:21,speed:1500});
+    stream(200,[M.EV.dirt],i=>[...pump,...infA,...dirtPts(0,i,9)],{color:DIRT,scale:0.75,seed:3,speed:1500});
+    stream(200,[M.EV.dirt],i=>[...pump,...infB,...dirtPts(1,i,29)],{color:DIRT,scale:0.75,seed:23,speed:1500});
+    // backwash the lower tank: filtered by the upper tank, across the header, up through the lower bed, out to waste
+    stream(2200,[M.BW[0].t],i=>[...pump,...infB,...downPts(1,i,40),...lowB.slice(0,2),Pf(C.xPool,TANK_DY,C.zh),Pf(C.xPool,0,C.zh),Pf(0,0,C.zh),Pf(0,0,0),...upPts(0,i,11),Pm(0,C.BU,0),...out(0)],{dirty:dirtyAt,seed:7,speed:2200});
+    // backwash the upper tank: filtered by the lower tank, across the header, up through the upper bed, out to waste
+    stream(2200,[M.BW[1].t],i=>[...pump,...infA,...downPts(0,i,50),Pf(0,0,0),Pf(0,0,C.zh),Pf(C.xPool,0,C.zh),Pf(C.xPool,TANK_DY,C.zh),Pf(0,TANK_DY,C.zh),Pf(0,TANK_DY,0),...upPts(1,i,31),
+      Pm(0,C.TU,0),Pm(0,C.TU,C.zr),Pm(C.xB,C.TU,C.zr),Pm(C.xB,C.BU,C.zr),...out(C.xB)],{dirty:dirtyAt,seed:17,speed:2200});
   }
   // sand grains tumbling in the expanded bed during backwash
   function placeGrains(t){
-    const k=(bedAt(t)-1)/0.26;
-    for(const B of BEDS){ const g=B.grains, a=g.geometry.attributes.position.array; g.visible=k>0.02&&ghostAt(t)>0.1; if(!g.visible) continue;
-      const top=BOT+(BED_TOP-BOT)*bedAt(t);
+    for(const B of BEDS){ const k=(bedAt(t,B.ti)-1)/0.26, g=B.grains, a=g.geometry.attributes.position.array; g.visible=k>0.02&&ghostAt(t)>0.1; if(!g.visible) continue;
+      const top=BOT+(BED_TOP-BOT)*bedAt(t,B.ti);
       for(let i=0;i<900;i++){
         if(h1(i*2.9)>k){ a[3*i]=a[3*i+1]=a[3*i+2]=1e6; continue; }
         const y=top-40-h1(i*3.7)*280+Math.sin(flowClock*2.2+i)*35, w=chord(y)-40;
@@ -463,53 +542,53 @@
 
   // ---- apply state ------------------------------------------------------------------------------------------------------------
   const GREEN=0x1e9a4a, AMBER=0xd08a12, CLEAR=new THREE.Color(0x9fd3ec), MUD=new THREE.Color(0x7a5a2c);
+  let RD={};
+  function buildReadout(){ const dl=document.getElementById('rdl'); dl.innerHTML=M.ROWS.map(([k,l])=>`<dt>${l}</dt><dd id="r-${k}">—</dd>`).join(''); RD={}; M.ROWS.forEach(([k])=>RD[k]=document.getElementById('r-'+k)); }
   function applyState(t){
     applyGhost(t);
-    for(const a of ASM) a.set(leverAt(LEVERS[a.lv],t).k);
-    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(k,t); for(const m of VBODY[k]){ m.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); m.emissiveIntensity=mv?0.5:s>0.5?0.25:0; } }
-    const sc=bedAt(t), d=dirtAt(t), ga=ghostAt(t);
-    for(const B of BEDS){ B.bed.scale.y=sc; B.bed.material.opacity=(0.5-0.18*(sc-1)/0.26)*ga+0.02; B.bed.visible=ga>0.01;
+    for(const a of ASM) a.set(leverAt(M.LEVERS[a.lv],t).k);
+    for(const k in M.VSTATE){ const {s,mv}=valveAt(k,t); for(const m of (VBODY[k]||[])){ m.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); m.emissiveIntensity=mv?0.5:s>0.5?0.25:0; } }
+    const ga=ghostAt(t);
+    for(const B of BEDS){ const sc=bedAt(t,B.ti), d=dirtAt(t,B.ti); B.bed.scale.y=sc; B.bed.material.opacity=(0.5-0.18*(sc-1)/0.26)*ga+0.02; B.bed.visible=ga>0.01;
       B.dirt.scale.y=sc; B.dirt.material.opacity=0.75*d*ga; B.dirt.visible=d>0.01&&ga>0.01; }
-    const bwOn=t>=EV.bw[0]&&t<EV.bw[1]+1;
+    const bw=bwNow(t), bwOn=!!bw;
     for(const G of GLASS){ G.water.visible=bwOn; G.water.material.color.copy(CLEAR).lerp(MUD,bwDirty(t)/0.88); }
     // status
     const set=(el,txt,cls)=>{ if(!el) return; if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; };
-    const inBW=t>=EV.bw[0]-3.8&&t<EV.bw[1]+2.8;
-    set(RD.mode,...(t>=EV.bw[0]&&t<EV.bw[1]?['Backwash','mid']:inBW?['Switching','mid']:['Filter','go']));
+    const first=M.BW[0].t[0], last=M.BW[M.BW.length-1].t[1], inBW=t>=first-3.8&&t<last+2.8+(M===MODES.stack?1.2:0);
+    const active=M.BW.find(b=>t>=b.t[0]&&t<b.t[1]);
+    set(RD.mode,...(active?['Backwash','mid']:inBW?['Switching','mid']:['Filter','go']));
     set(RD.dp, inBW? '—' : dpAt(t).toFixed(1)+' psi', dpAt(t)>=12&&!inBW?'stop':dpAt(t)>=8&&!inBW?'mid':'go');
-    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(k,t); set(RD[k],...(mv?[mv,'mid']:s>0.5?['Open','go']:['Closed','stop'])); }
+    for(const k in M.VSTATE){ const {s,mv}=valveAt(k,t); set(RD[k],...(mv?[mv,'mid']:s>0.5?['Open','go']:['Closed','stop'])); }
     set(RD.glass, bwOn? (bwDirty(t)>0.4?'Dirty':bwDirty(t)>0.1?'Clearing':'Clear') : '—', bwOn?(bwDirty(t)>0.4?'stop':bwDirty(t)>0.1?'mid':'go'):'');
-    set(RD.bed, sc>1.03?'Expanded':d>0.3?'Loaded':'Settled', sc>1.03?'mid':d>0.6?'stop':'go');
+    for(const B of BEDS){ const sc=bedAt(t,B.ti), d=dirtAt(t,B.ti); set(RD['bed'+B.ti], sc>1.03?'Expanded':d>0.3?'Loaded':'Settled', sc>1.03?'mid':d>0.6?'stop':'go'); }
   }
 
   // ---- callouts ---------------------------------------------------------------------------------------------------------------
   const NS='http://www.w3.org/2000/svg'; let LBL=[], labelsOn=true;
   function mkLabel(txt){ const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl n'); const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text'); h.setAttribute('class','halo'); t.setAttribute('class','t'); h.textContent=t.textContent=txt; g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t}; }
   function buildLabels(){
-    const C=CFG, z=C.zc;
+    const st=CFG.stack, vs=M.valveSteps, bs=M.bwSteps;
     const NAMED=[
       {txt:'Upper connection', p:V(0,NOZ_U,900), steps:[0]},
       {txt:'Lower connection', p:V(0,NOZ_L,900), steps:[0]},
-      {txt:'Upper tank', p:V(-560,NOZ_U+TANK_DY-80,-300), steps:[0]},
-      {txt:'Lower tank', p:V(-560,NOZ_L+90,-300), steps:[0]},
       {txt:'Manway', p:V(-600,290,0), steps:[0]},
       {txt:'Air relief', p:V(0,640,0), steps:[0]},
       {txt:'Overdrain laterals', p:V(320,OVER_Y,-260), steps:[1,4]},
       {txt:'Sand bed, 24 in', p:V(-300,-250,-100), steps:[1]},
       {txt:'Underdrain laterals', p:V(260,UNDER_Y,-420), steps:[1,4]},
       {txt:'Dirt held in the top of the bed', p:V(200,BED_TOP-40,150), steps:[2]},
-      {txt:'Influent valve', p:W_(0,-C.vx,0,z), steps:[3,5]},
-      {txt:'Backwash waste valve', p:W_(0,C.vx,0,z), steps:[3,5]},
-      {txt:'Backwash supply valve', p:W_(0,-C.vx,LOW,z), steps:[3,5]},
-      {txt:'Effluent valve', p:W_(0,C.vx,LOW,z), steps:[3,5]},
-      {txt:'Expanded bed', p:V(-250,140,200), steps:[4]},
-      {txt:'Sight glass', p:W_(0,C.outX+145,0,z), steps:[4]}
+      {txt:'Expanded bed', p:V(-250,140,200), steps:bs},
+      {txt:'Sight glass', p:GLASS[0].glass.getWorldPosition(V(0,0,0)), steps:bs}
     ];
+    if(st) NAMED.push({txt:'Upper tank', p:V(-560,NOZ_U+TANK_DY-80,-300), steps:[0]},{txt:'Lower tank', p:V(-560,NOZ_L+90,-300), steps:[0]},{txt:'Common effluent header', p:W_(0,CFG.xPool,TANK_DY*0.5,CFG.zh), steps:[0,1]});
+    CUR.updateMatrixWorld(true);
+    for(const k in M.VLBL) if(VOBJ[k]) NAMED.push({txt:M.VLBL[k], p:VOBJ[k][0].getWorldPosition(V(0,0,0)), steps:vs});
     for(const n of NAMED) LBL.push({c:n.p,steps:n.steps,...mkLabel(n.txt)});
   }
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
-    const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
+    const P=M.PATH, moving=P.some(([ta],i)=>i&&P[i-1][1]!==P[i][1]&&T>P[i-1][0]&&T<ta);
     const cx=w/2, cy=h/2, items=[];
     for(const L of LBL){
       const on=labelsOn && !moving && L.steps.includes(curStep); L.g.style.opacity=on?1:0; if(!on) continue;
@@ -527,11 +606,15 @@
   const WAVES='<path d="M6 9c2-2 4-2 6 0s4 2 6 0M6 14c2-2 4-2 6 0s4 2 6 0" stroke="var(--water)" stroke-width="1.7" fill="none" stroke-linecap="round"/>', DOWN='<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>', RIGHT='<path d="M6 11h11M13 7l4 4-4 4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>';
   function tag(txt,icon,wd){ const g=document.createElementNS(NS,'g'); g.innerHTML=`<rect rx="3" ry="3" width="${wd}" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>${icon}<text x="24" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">${txt}</text>`; overlay.appendChild(g); return g; }
   let TAGS=[];
-  function buildTags(){ const C=CFG, z=C.zc;
-    const inP=C.inlet.side!=null? W_(0,C.inlet.side-260,0,z) : W_(0,C.px,C.inlet.top+150,z), inD=C.inlet.side!=null? W_(0,C.inlet.side-360,0,z).sub(inP) : V(0,1,0);
+  function buildTags(){ const C=CFG, up=V(0,1,0);
+    if(C.stack){
+      TAGS=[{txt:'FROM PUMP', icon:RIGHT, wd:96, p:W_(0,C.xB,C.inTop+C.dY+160,C.zv), dir:up},
+        {txt:'TO POOL', icon:WAVES, wd:82, p:W_(0,C.xPool,C.poolTop+260,C.zh), dir:up},
+        {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.wOut+C.wDir*320,C.bwY+C.dY,C.zv), dir:V(0,-1,0)}]; return; }
+    const z=C.zc, inP=C.inlet.side!=null? W_(0,C.inlet.side-260,0,z) : W_(0,C.px,C.inlet.top+150,z), inD=C.inlet.side!=null? W_(0,C.inlet.side-360,0,z).sub(inP) : up.clone();
     TAGS=[{txt:'FROM PUMP', icon:RIGHT, wd:96, p:inP, dir:inD.normalize()},
       {txt:'TO POOL', icon:WAVES, wd:82, p:W_(0,C.outX+300,LOW,z), dir:W_(0,C.outX+400,LOW,z).sub(W_(0,C.outX+300,LOW,z)).normalize()},
-      {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.outX+320,0,z), dir:V(0,1,0)}]; }
+      {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.outX+320,0,z), dir:up}]; }
   function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
     _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*50; y+=dy/l*20;
     const off=x<-40||x>w+40||y<-20||y>h+20; T_.g.style.display=off?'none':''; if(off) continue;
@@ -539,15 +622,15 @@
 
   // ---- steps -----------------------------------------------------------------------------------------------------------------
   const stepList=document.getElementById('steplist');
-  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
-  const stepLis=[...stepList.children];
-  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
-  let curStep=-1;
-  function updateSteps(t){ let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
+  let stepLis=[], curStep=-1;
+  function buildSteps(){ stepList.innerHTML=M.STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join(''); stepLis=[...stepList.children]; curStep=-1; tend.textContent=fmt(M.T_END); }
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(M.STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  function updateSteps(t){ let s=0; for(let i=0;i<M.STEPS.length;i++) if(t>=M.STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
 
   // ---- configuration switch and load -------------------------------------------------------------------------------------------
   const cfgBox=document.getElementById('cfg'), cfgNote=document.getElementById('cfgnote'), sub=document.getElementById('sub');
-  Object.keys(CFGS).forEach(k=>{ const b=document.createElement('button'); b.textContent=k; b.dataset.k=k; b.setAttribute('aria-pressed','false'); b.title=CFGS[k].note; cfgBox.appendChild(b); });
+  cfgBox.innerHTML=`<div class="row"><span class="lab">Single</span>${['C1','C2','C3','C4'].map(k=>`<button data-k="${k}" aria-pressed="false" title="${CFGS[k].note}">${k}</button>`).join('')}</div>`+
+    `<div class="row"><span class="lab">Stacked</span>${['S-C1','S-C2','S-C31','S-C32'].map(k=>`<button data-k="${k}" aria-pressed="false" title="${CFGS[k].note}">${k.slice(2)}</button>`).join('')}</div>`;
   cfgBox.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&!loading) choose(b.dataset.k); });
   const bins={};
   const getBin=u=>bins[u]||(bins[u]=fetch(u,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }));
@@ -555,53 +638,63 @@
   function clearScene(){
     if(CUR){ scene.remove(CUR); CUR.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose()); }); }
     POINTS=[]; STREAMS=[]; ASM.length=0; BEDS.length=0; GLASS.length=0; ghostMeshes=[]; ghostLines=[]; lastGhost=-1; splitCache.clear();
-    for(const k in VBODY) VBODY[k]=[];
+    for(const k in VBODY) delete VBODY[k]; for(const k in VOBJ) delete VOBJ[k];
     LBL.forEach(L=>L.g.remove()); LBL=[]; TAGS.forEach(T_=>T_.g&&T_.g.remove()); TAGS=[];
   }
   function choose(k){
     if(!CFGS[k]) k='C4';
-    loading=true; const ld=document.getElementById('loading'); if(ld){ ld.style.display=''; }
+    loading=true; const ld=document.getElementById('loading'); if(ld){ ld.style.display=''; ld.textContent='Loading sand filter model…'; }
     [...cfgBox.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));
     const C=CFGS[k];
     return Promise.all([getBin('/assets/shffg/'+TANKS[C.tank]),getBin('/assets/shffg/'+C.file)]).then(([tb,fb])=>{
       clearScene(); CFG=C; CUR=new THREE.Group(); scene.add(CUR);
+      const newMode=C.stack?MODES.stack:MODES.single, modeChanged=newMode!==M; M=newMode;
+      if(modeChanged||!stepLis.length){ buildSteps(); if(T>M.T_END) T=0; }
+      buildReadout();
       NAT[0]=faceMatrix(0); NAT[1]=faceMatrix(1);
       const A=loadAssembly(tb); CUR.add(A.root);
       A.root.traverse(o=>{ if(o.isMesh) o.material=o.material.clone(); });
-      for(const off of [0,31]){
+      const tanks=C.stack?[0,1]:[0], offs=tanks.map(ti=>ti*31);
+      if(!C.stack&&A.objs[TOP_TANK]) A.objs[TOP_TANK].visible=false;             // single configs: bottom tank only
+      for(const off of offs){
         A.objs[3+off]&&A.objs[3+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x5a6b7a); });
         SADDLE.forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x2b4f86); }));
         [21,25].forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(PVC); }));
       }
-      buildGhost(A);
-      for(const ti of [0,1]){ buildFace(fb,ti); buildInternals(ti); buildStreams(ti); }
+      buildGhost(A,offs);
+      if(C.stack){ buildFace(fb,0); for(const ti of tanks) buildInternals(ti); buildStreamsStack(); }
+      else { buildFace(fb,0); buildInternals(0); buildStreamsSingle(); }
+      CUR.updateMatrixWorld(true);
       // camera boxes for this piping
-      const z=C.zc, far=FACE_Z+Math.abs(z)*2.2+120;
-      KEYS.all.box=BOX(V(-760,-760,-830),V(760,2040,far));
-      KEYS.face.box=BOX(V(-640,-620,900),V(640,2040,far));
-      const wb=new THREE.Box3(); for(const x of [-C.vx-250,C.outX+480]) for(const y of [-560,420]) for(const zz of [0,z*2.4]) wb.expandByPoint(W_(0,x,y,zz)); KEYS.waste.box=wb;
-      KEYS.waste.th=(C.rot?130:50);
+      const nest=new THREE.Box3(); CUR.children.filter(o=>o.isGroup&&o.matrixAutoUpdate===false).forEach(g=>nest.expandByObject(g));
+      const top=C.stack?2040:660, far=Math.max(nest.max.z+60,1100);
+      KEYS.all.box=BOX(V(Math.min(-760,nest.min.x),-760,-830),V(Math.max(760,nest.max.x),Math.max(top,nest.max.y),far));
+      KEYS.face.box=nest.clone().expandByPoint(V(0,NOZ_L-120,900));
+      KEYS.inside.box=BOX(V(-620,-760,-830),V(620,top,1000));
+      const g0=GLASS[0].glass.getWorldPosition(V(0,0,0)), wb=new THREE.Box3().setFromCenterAndSize(g0,V(1,1,1));
+      if(C.stack) wb.expandByPoint(VOBJ.Vw0[0].getWorldPosition(V(0,0,0))).expandByPoint(VOBJ.Vw1[0].getWorldPosition(V(0,0,0)));
+      else { wb.expandByPoint(VOBJ.V3[0].getWorldPosition(V(0,0,0))); wb.expandByPoint(V(0,NOZ_U,900)); }
+      wb.expandByScalar(C.stack?520:600); KEYS.waste.box=wb; KEYS.waste.th=g0.x<-100?130:50;
       Object.values(KEYS).forEach(fitKey);
       buildLabels(); buildTags();
-      cfgNote.textContent=k+': '+C.note;
-      sub.textContent=(C.tank==='6L'?'48048SHFFGS-6L':'48048SHFFGS-4L')+' with '+k+' face piping on each tank. Laterals and sand shown schematically.';
+      const nm=C.stack?'Stacked '+k.slice(2):k;
+      cfgNote.textContent=nm+': '+C.note;
+      sub.textContent=(C.stack?(C.tank==='6L'?'48048SHFFGS-6L':'48048SHFFGS-4L')+' stacked pair':'48 in single tank')+' with '+nm+' face piping. Laterals and sand shown schematically.';
       try{ const u=new URL(location.href); u.searchParams.set('c',k); history.replaceState(null,'',u); }catch(e){}
       if(ld) ld.style.display='none';
       loading=false; ready=true; resize(); setTime(T);
-    }).catch(err=>{ loading=false; if(ld){ ld.style.display=''; ld.textContent='Could not load the model: '+err.message; } });
+    }).catch(err=>{ loading=false; console.error(err); if(ld){ ld.style.display=''; ld.textContent='Could not load the model: '+err.message; } });
   }
-  const startCfg=(new URLSearchParams(location.search).get('c')||'C4').toUpperCase();
-  choose(startCfg).then(()=>{ if(!reduced&&ready) startPlay(); });
 
   // ---- time and playback ----------------------------------------------------------------------------------------------------
   let T=0, needRender=true;
   function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
-  function setTime(t){ T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T); updateSteps(T); if(ready) applyState(T); needRender=true; }
-  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+  function setTime(t){ T=clamp(t,0,M.T_END); prog.value=Math.round(T/M.T_END*1000); tnow.textContent=fmt(T); updateSteps(T); if(ready) applyState(T); needRender=true; }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*M.T_END); });
   let playing=false, loop=false, last=performance.now();
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduced) T=STEPS[1].t+2;
-  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); }
+  if(reduced) T=7;
+  function startPlay(){ if(T>=M.T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); }
   function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
   playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
   loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
@@ -609,12 +702,14 @@
   function frame(now){
     requestAnimationFrame(frame);
     const dt=Math.min(0.05,(now-last)/1000); last=now; if(!ready||loading) return;
-    if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
+    if(playing){ let t=T+dt; if(t>=M.T_END){ if(loop) t=0; else { t=M.T_END; stopPlay(); } } setTime(t); }
     if(!reduced){ flowClock+=dt; needRender=true; }
     if(needRender){ needRender=false; updateCamera(); placeStreams(T); placeGrains(T); renderer.render(scene,camera); drawLabels(); }
   }
   requestAnimationFrame(frame);
-  window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, choose, get T(){ return T; }, get ASM(){ return ASM; }, camera, scene };
+  const startCfg=new URLSearchParams(location.search).get('c')||'C4';
+  choose(CFGS[startCfg]?startCfg:startCfg.toUpperCase()).then(()=>{ if(!reduced&&ready) startPlay(); });
+  window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, choose, get T(){ return T; }, get ASM(){ return ASM; }, get VOBJ(){ return VOBJ; }, camera, scene };
 })();
 </script>
 
