@@ -38,9 +38,9 @@
   #steps ol{list-style:none;margin:0;padding:0}
   #steps li{border-top:1px solid var(--rule)}
   #steps li:first-child{border-top:0}
-  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
-  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps li button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps li button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
   #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
   #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
   #steps li.on button{color:var(--ink)}
@@ -90,6 +90,13 @@
     #overlay g.lbl .nm{display:none}
     #hint{display:none}
   }
+  #cfg{display:flex;align-items:center;gap:6px;margin:0 0 8px;flex-wrap:wrap}
+  #cfg .lab{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin-right:2px}
+  #cfg button{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:3px 8px;cursor:pointer}
+  #cfg button:hover{background:var(--track)}
+  #cfg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  #cfgnote{font:400 11.5px/1.35 "Barlow",system-ui,sans-serif;color:var(--ink-2);margin:-2px 0 8px}
+  @media (max-width:760px){ #cfgnote{display:none} #cfg{margin-bottom:4px} }
 </style>
 </head>
 <body>
@@ -104,6 +111,8 @@
     <div id="loading">Loading sand filter model…</div>
     <div id="steps" aria-live="polite">
       <div class="kicker">Sand filter · filter and backwash</div>
+      <div id="cfg" role="group" aria-label="Face piping configuration"><span class="lab">Face piping</span></div>
+      <div id="cfgnote"></div>
       <ol id="steplist"></ol>
     </div>
     <div id="readout" aria-hidden="true">
@@ -122,7 +131,7 @@
     <div id="hint">Drag to look around · scroll to zoom</div>
   </div>
   <div id="bar">
-    <h1>4248SHFFG-4L · Sand Filter<small>Filter mode and backwash. Tank from the 4248SHFFG-4L STEP; laterals, sand and face piping shown schematically.</small></h1>
+    <h1>48048SHFFGS · Sand Filter<small id="sub">Stacked pair of 48 in tanks, filter mode and backwash.</small></h1>
     <div class="ctrl">
       <span class="tick" id="tnow">0:00</span>
       <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
@@ -149,28 +158,43 @@
   const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
   const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
   const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+  const deg=Math.PI/180;
+
+  // ---- face piping configurations (the C1 to C4 single-tank face piping STEP models) ----------------------------------------
+  // Native frame of each model: origin on the face of the upper tank connection, x along the valve runs, lower connection
+  // at y -813. zc: pipe centreline off the tank face; vx: valve centres; px: pump riser; outX: end of the waste and pool runs.
+  const CFGS={
+    C1:{file:'face-c1.bin', tank:'4L', size:3, rot:false, zc:132,  vx:155, px:-355, inlet:{side:-487}, outX:232, pr:44,
+        note:'3 in face piping, pump connection from the side. Shown on the 4 in tank connections.'},
+    C2:{file:'face-c2.bin', tank:'6L', size:6, rot:true,  zc:-214, vx:242, px:-600, inlet:{side:-813}, outX:355, pr:84,
+        note:'6 in face piping, pump connection from the side, on the 6 in tank connections.'},
+    C3:{file:'face-c3.bin', tank:'4L', size:3, rot:false, zc:132,  vx:155, px:-355, inlet:{top:132},   outX:232, pr:44,
+        note:'3 in face piping, pump connection from above. Shown on the 4 in tank connections.'},
+    C4:{file:'face-c4.bin', tank:'4L', size:4, rot:true,  zc:-159, vx:185, px:-414, inlet:{top:159},   outX:274, pr:57,
+        note:'4 in face piping, pump connection from above, on the 4 in tank connections.'}
+  };
+  const TANKS={'4L':'shffgs48048-4L.bin','6L':'shffgs48048-6L.bin'};
+  const NOZ_U=407, NOZ_L=-406, TANK_DY=1397, FACE_Z=975, LOW=-813;
 
   // ---- timeline (seconds) ----------------------------------------------------------------------------------
   // Operation per the Neptune Benson horizontal sand filter O&M (SHF O&M 4/7/16) and SHFFG tech data sheet (R 2/9/18).
   const T_END=54;
   const STEPS=[
-    {t:0,  h:'Horizontal sand filter', d:'4248SHFFG-4L: 42 in fibreglass tank, 4 in connections, 17.1 sq ft of filter area, 86 to 342 gpm. The upper nozzle feeds the overdrain laterals and the lower nozzle collects from the underdrain laterals.'},
-    {t:5,  h:'Filter mode', d:'The influent and effluent valves are open. Water from the pump enters the upper nozzle, spreads out of the overdrain laterals above the bed, passes down through 21 in of 0.45 to 0.55 mm sand, and is collected by the underdrain laterals and returned to the pool.'},
+    {t:0,  h:'Stacked horizontal sand filters', d:'48048SHFFGS: two 48 in fibreglass tanks, one stacked on the other, each with its own face piping. Each tank has 19.7 sq ft of filter area. The upper connection feeds the overdrain laterals and the lower connection collects from the underdrain laterals.'},
+    {t:5,  h:'Filter mode', d:'The influent and effluent valves are open. Water from the pump enters the upper connection, spreads out of the overdrain laterals above the bed, passes down through the sand, and is collected by the underdrain laterals and returned to the pool.'},
     {t:15, h:'Dirt builds in the bed', d:'Dirt is trapped in the top of the sand bed. The influent gauge rises and the differential between the influent and effluent gauges climbs. Clean, it reads about 3 to 5 psi; backwash when it has risen 10 psi above that.'},
-    {t:24, h:'Switch to backwash', d:'The influent and effluent valves close and the backwash supply and backwash waste valves open, reversing the flow through the tank.'},
+    {t:24, h:'Switch to backwash', d:'Each valve pair is linked to one lever. The upper lever closes the influent valve and opens the backwash waste valve in one move; the lower lever closes the effluent valve and opens the backwash supply valve.'},
     {t:29, h:'Backwash', d:'Water now enters the underdrain laterals and flows up through the bed. The sand lifts and expands, releasing the trapped dirt, which leaves through the overdrain laterals and the backwash line to waste. Watch the sight glass until the water runs clear.'},
-    {t:40, h:'Back to filter mode', d:'The valves return to their filter positions, the sand settles back into a level bed and the differential drops back to its clean reading.'}
+    {t:40, h:'Back to filter mode', d:'Both levers return to their filter positions, the sand settles back into a level bed and the differential drops back to its clean reading.'}
   ];
-  const EV={filter:[[5,24.6],[42.4,1e9]], dirt:[8,23.5], bw:[28.2,40], dpRise:[8,23], bedUp:[28.6,30.6], bedDown:[39.6,41.6], clean:[30,38]};
-  const VALVES={   // [t0,t1,from,to]  1 = open
-    V1:{name:'Influent', pos:V(-230,330,1190), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
-    V2:{name:'Effluent', pos:V(230,-330,1190), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
-    V3:{name:'Backwash waste', pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
-    V4:{name:'Backwash supply', pos:V(-230,-330,1190), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
-  };
-  const valveAt=(v,t)=>{ let s=v.moves[0][2], mv=null; for(const [a,b,f,to] of v.moves){ if(t>=a){ s=f+(to-f)*ease((t-a)/(b-a)); if(t<b) mv=to>f?'Opening':'Closing'; } } return {s,mv}; };
+  const EV={filter:[[5,24.6],[43,1e9]], dirt:[8,23.5], bw:[28.2,40], dpRise:[8,23], bedUp:[28.6,30.6], bedDown:[39.6,41.6], clean:[30,38]};
+  // lever moves [t0,t1,from,to]; 0 = filter position, 1 = backwash position
+  const LEVERS={up:[[24.4,25.6,0,1],[40.2,41.4,1,0]], low:[[25.8,27.0,0,1],[41.6,42.8,1,0]]};
+  const leverAt=(mv,t)=>{ let k=mv[0][2], m=null; for(const [a,b,f,to] of mv){ if(t>=a){ k=f+(to-f)*ease((t-a)/(b-a)); if(t<b) m=to>f?1:-1; } } return {k,m}; };
+  const VSTATE={ V1:['up',1], V3:['up',0], V2:['low',1], V4:['low',0] };        // [lever, open in filter mode]
+  const valveAt=(key,t)=>{ const [lv,f]=VSTATE[key], {k,m}=leverAt(LEVERS[lv],t), s=f?1-k:k; return {s, mv: m? ((f?m>0:m<0)?'Closing':'Opening') : null}; };
   const dirtAt=t=>smooth((t-EV.dirt[0])/(EV.dirt[1]-EV.dirt[0]))*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])));
-  const bedAt=t=>1+0.28*smooth((t-EV.bedUp[0])/(EV.bedUp[1]-EV.bedUp[0]))*(1-smooth((t-EV.bedDown[0])/(EV.bedDown[1]-EV.bedDown[0])));
+  const bedAt=t=>1+0.26*smooth((t-EV.bedUp[0])/(EV.bedUp[1]-EV.bedUp[0]))*(1-smooth((t-EV.bedDown[0])/(EV.bedDown[1]-EV.bedDown[0])));
   const dpAt=t=>4+10*smooth((t-EV.dpRise[0])/(EV.dpRise[1]-EV.dpRise[0]))*(1-smooth((t-EV.bw[0])/2));
   const bwDirty=t=>0.85*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])))+0.03;
 
@@ -183,16 +207,15 @@
   scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
   const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(0.6,1,0.9); scene.add(sun);
   const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(-1,0.3,-0.6); scene.add(fill);
-  let A=null, ready=false;
-  const deg=Math.PI/180;
+  let ready=false, CFG=null, CUR=null;
   const BOX=(a,b)=>new THREE.Box3(a,b);
   const KEYS={
-    all:   {th:38, ph:64, box:BOX(V(-700,-700,-830),V(800,780,1520))},
-    face:  {th:62, ph:66, pad:1.15, box:BOX(V(-560,-420,940),V(790,800,1520))},
-    inside:{th:14, ph:74, pad:1.02, box:BOX(V(-560,-700,-830),V(560,560,1250))},
-    waste: {th:50, ph:64, pad:1.3, box:BOX(V(-100,-420,940),V(790,800,1300))}
+    all:   {th:38, ph:66, box:BOX(V(-720,-760,-830),V(720,2040,1450))},
+    face:  {th:58, ph:72, pad:1.08, box:BOX(V(-620,-560,900),V(620,1960,1450))},
+    inside:{th:16, ph:76, pad:1.02, box:BOX(V(-620,-760,-830),V(620,2040,1000))},
+    waste: {th:50, ph:68, pad:1.08, box:BOX(V(-100,-420,940),V(790,800,1300))}
   };
-  const PATH=[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43,'face'],[44.4,'all'],[54,'all']];
+  const PATH=[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43.8,'face'],[45,'all'],[54,'all']];
   const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
   function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
   function fitKey(k){
@@ -231,110 +254,158 @@
   view.addEventListener('contextmenu',e=>e.preventDefault());
   document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
 
-  // ---- geometry (mm, y up, tank axis along z) ------------------------------------------------------------------
-  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1190, HDR_X=470, WASTE_X=700;   // waste riser set out past the backwash waste valve handle
+  // ---- geometry helpers (mm, y up, tank axis along z) ------------------------------------------------------------------
+  const R_IN=600, BOT=-600, BED_TOP=10, SHELL_Z=610, OVER_Y=NOZ_U, UNDER_Y=-520;       // 24 in of sand over the underdrain
   const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x222222,side:THREE.DoubleSide},o||{}));
-  const PVC=0x4b5157, WHITE_PVC=0xe9e9e4;
-  const EXTRA=new THREE.Group(); scene.add(EXTRA);
-  function pipe(a,b,r,m,parent){ const d=V(0,0,0).subVectors(b,a), L=d.length(); const g=new THREE.CylinderGeometry(r,r,L,20,1,false); const me=new THREE.Mesh(g,m); me.position.copy(a).addScaledVector(d,0.5); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); (parent||EXTRA).add(me); return me; }
-  function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); (parent||EXTRA).add(s); return s; }
+  const PVC=0x4b5157, WHITE_PVC=0xe9e9e4, STEEL=0xaeb3b9, VALVE=0x3a4048, HANDLE=0xc8202f;
+  function pipe(a,b,r,m,parent){ const d=V(0,0,0).subVectors(b,a), L=d.length(); const g=new THREE.CylinderGeometry(r,r,L,20,1,false); const me=new THREE.Mesh(g,m); me.position.copy(a).addScaledVector(d,0.5); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); parent.add(me); return me; }
+  function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); parent.add(s); return s; }
   function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) pipe(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) joint(pts[i],r,m,parent); }
-  function flange(p,axis,m){ const f=new THREE.Mesh(new THREE.CylinderGeometry(114,114,26,28),m); f.position.copy(p); f.quaternion.setFromUnitVectors(V(0,1,0),axis); EXTRA.add(f); }
-  // face piping: a 4-valve nest built from the 4 in parts in the Defender installation model (slip flanges, elbows,
-  // DN100 wafer-lug butterfly valves with lever operators; the 6 in tee scaled to 4 in), SCH 80 PVC in dark grey.
-  const mPVC=mat(PVC), mGlass=mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false});
   const P_=(x,y,z)=>V(x,y,z);
-  let PARTS=null; const PIDX={elbow4:1,flange4:2,valve4:3,lever4:4,tee6:5};
-  function partObj(name,recolor){ const src=PARTS.objs[PIDX[name]], g=new THREE.Group();
-    src.children.forEach(c=>{ const k=c.clone(); if(k.isMesh){ k.material=k.material.clone(); if(recolor) k.material.color.setHex(recolor); } g.add(k); }); return g; }
-  function placeM(obj,ex,ey,ez,C,K,sc){ sc=sc||1; const m=new THREE.Matrix4().makeBasis(ex,ey,ez); m.scale(V(sc,sc,sc)); const off=K? K.clone().multiplyScalar(sc).applyMatrix4(new THREE.Matrix4().makeBasis(ex,ey,ez)) : V(0,0,0);
-    m.setPosition(C.clone().sub(off)); obj.matrixAutoUpdate=false; obj.matrix.copy(m); EXTRA.add(obj); return obj; }
-  const X=V(1,0,0), Y=V(0,1,0), Z=V(0,0,1), neg=v=>v.clone().negate(), cross=(a,b)=>V(0,0,0).crossVectors(a,b);
-  function elbow(C,dA,dB){ return placeM(partObj('elbow4',PVC),dB,neg(dA),cross(dB,neg(dA)),C,V(0,118,0)); }          // corner at C, ports toward dA and dB
-  function tee(C,dRun,dBr){ return placeM(partObj('tee6',PVC),dRun,dBr,cross(dRun,dBr),C,V(168.5,0,0),2/3); }       // 6 in tee scaled to 4 in
-  function flange(F,n){ const x=Math.abs(n.y)<0.9?cross(Y,n).normalize():X.clone(); return placeM(partObj('flange4',PVC),x,cross(n,x),n,F); }
-  function valve(v,d){ const g=new THREE.Group(), body=partObj('valve4');
-    // split the disc out of the fused valve mesh (thin disc in the plane of the pipe and stem) so it can turn on the stem
-    const mesh=body.children.find(c=>c.isMesh), geo=mesh.geometry, Pp=geo.attributes.position.array, I=geo.index.array, di=[], bi=[];
-    const inD=k=>Math.abs(Pp[3*k+1])<6.5&&Math.hypot(Pp[3*k],Pp[3*k+2])<51.8;
-    for(let t=0;t<I.length;t+=3) (inD(I[t])&&inD(I[t+1])&&inD(I[t+2])?di:bi).push(I[t],I[t+1],I[t+2]);
+  // native face-piping frame -> world, for tank ti (0 bottom, 1 top)
+  function faceMatrix(ti){ const m=new THREE.Matrix4(), y=NOZ_U+ti*TANK_DY;
+    if(CFG.rot) m.set(-1,0,0,0, 0,1,0,y, 0,0,-1,FACE_Z, 0,0,0,1); else m.set(1,0,0,0, 0,1,0,y, 0,0,1,FACE_Z, 0,0,0,1); return m; }
+  const NAT=[]; const W_=(ti,x,y,z)=>V(x,y,z).applyMatrix4(NAT[ti]);
+
+  // ---- linked valve pairs: disc, lever, cranks and connecting link from the STEP model, driven as a four-bar linkage ----
+  const ASM=[];      // {lever:'up'|'low', ti, valves:{D,F}, parts...}
+  const VBODY={V1:[],V2:[],V3:[],V4:[]};
+  const splitCache=new Map();
+  function splitValve(geo,other){
+    // the Open and Close valve models differ only in the disc (and stem flats): triangles whose corners are not in the other
+    // model, inside the disc radius, are the disc
+    if(splitCache.has(geo.uuid)) return splitCache.get(geo.uuid);
+    const P=geo.attributes.position.array, O=other.attributes.position.array, I=geo.index.array, key=(a,i)=>Math.round(a[i]*2)+','+Math.round(a[i+1]*2)+','+Math.round(a[i+2]*2);
+    const S=new Set(); for(let i=0;i<O.length;i+=3) S.add(key(O,i));
+    const diff=new Uint8Array(P.length/3); for(let i=0;i<diff.length;i++) diff[i]=S.has(key(P,3*i))?0:1;
+    let Rd=0; for(let t=0;t<I.length;t+=3) if(diff[I[t]]&&diff[I[t+1]]&&diff[I[t+2]]) for(let j=0;j<3;j++){ const k=I[t+j]; Rd=Math.max(Rd,Math.hypot(P[3*k],P[3*k+1])); }
+    const di=[], bi=[], inR=k=>Math.hypot(P[3*k],P[3*k+1])<=Rd+1;
+    for(let t=0;t<I.length;t+=3){ const c=diff[I[t]]+diff[I[t+1]]+diff[I[t+2]]; ((c>=2&&inR(I[t])&&inR(I[t+1])&&inR(I[t+2]))?di:bi).push(I[t],I[t+1],I[t+2]); }
     const mk=idx=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',geo.attributes.position); q.setAttribute('normal',geo.attributes.normal); q.setIndex(idx); q.computeBoundingSphere(); return q; };
-    mesh.geometry=mk(bi); g.add(body);
-    const pivot=new THREE.Group(); g.add(pivot); pivot.add(new THREE.Mesh(mk(di),mat(0x9aa0a6)));
-    const lever=partObj('lever4'); lever.matrixAutoUpdate=false; lever.matrix.set(0,0,-1,0, -1,0,0,0, 0,1,0,176.253, 0,0,0,1); if(v.flip) lever.matrix.premultiply(new THREE.Matrix4().makeRotationZ(Math.PI));   // flip: handle turned 180° on the stem
-    pivot.add(lever);
-    lever.children.forEach(c=>{ if(c.isMesh) c.material.color.setHex(0xc8202f); });                                  // red latch-lock handle
-    placeM(g,d,cross(Y,d),Y,v.pos); v.pivot=pivot; v.bodyMat=mesh.material; }
-  function buildFace(){
-    const U=OVER_Y, L=-330, FZ=FACE_Z, HX=HDR_X, T=112;
-    // nozzle spools
-    for(const y of [U,L]){ flange(P_(0,y,968),neg(Z)); pipe(P_(0,y,1000),P_(0,y,FZ-T),57,mPVC); tee(P_(0,y,FZ),X,neg(Z)); }
-    // valves with a flange either side
-    const VV=[[VALVES.V1,-1,U],[VALVES.V4,-1,L],[VALVES.V3,1,U],[VALVES.V2,1,L]];
-    for(const [v,sd,y] of VV){ const xc=sd*230; valve(v,X);
-      // flanges bolt straight onto the wafer body faces (2 in face to face, as D9 in the Defender model)
-      flange(P_(xc-sd*26,y,FZ),V(sd,0,0)); flange(P_(xc+sd*26,y,FZ),V(-sd,0,0));
-      pipe(P_(sd*T,y,FZ),P_(xc-sd*80,y,FZ),57,mPVC); pipe(P_(xc+sd*80,y,FZ),P_(sd*((sd>0&&y===U?WASTE_X:HX)-118),y,FZ),57,mPVC); }
-    // pump header with the inlet tee, elbows at each end
-    elbow(P_(-HX,U,FZ),X,neg(Y)); elbow(P_(-HX,L,FZ),X,Y);
-    pipe(P_(-HX,U-118,FZ),P_(-HX,T,FZ),57,mPVC); pipe(P_(-HX,-T,FZ),P_(-HX,L+118,FZ),57,mPVC); tee(P_(-HX,0,FZ),Y,Z);
-    pipe(P_(-HX,0,FZ+T),P_(-HX,0,1500),57,mPVC); flange(P_(-HX,0,1500),Z);
-    // backwash to waste, up through the sight glass
-    const WX=WASTE_X; elbow(P_(WX,U,FZ),neg(X),Y); pipe(P_(WX,U+118,FZ),P_(WX,510,FZ),57,mPVC); pipe(P_(WX,650,FZ),P_(WX,780,FZ),57,mPVC); flange(P_(WX,780,FZ),Y);
-    const sg=new THREE.Mesh(new THREE.CylinderGeometry(62,62,140,24,1,true),mGlass); sg.position.set(WX,580,FZ); EXTRA.add(sg); GLASS.mesh=sg;
-    const sgw=new THREE.Mesh(new THREE.CylinderGeometry(50,50,136,20),mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false})); sgw.position.copy(sg.position); EXTRA.add(sgw); GLASS.water=sgw;
-    [510,650].forEach(y=>{ const r=new THREE.Mesh(new THREE.CylinderGeometry(72,72,14,24),mPVC); r.position.set(WX,y,FZ); EXTRA.add(r); });
-    // to pool
-    elbow(P_(HX,L,FZ),neg(X),Z); pipe(P_(HX,L,FZ+118),P_(HX,L,1500),57,mPVC); flange(P_(HX,L,1500),Z);
+    const r={body:mk(bi),disc:mk(di)}; splitCache.set(geo.uuid,r); return r;
   }
-  const GLASS={};
-  // internals: overdrain and underdrain headers with slotted laterals (schematic), sand bed and dirt layer
-  let bedMesh, dirtMesh, grainCloud;
-  const LAT_Z=[]; for(let z=-520;z<=520;z+=130) LAT_Z.push(z);
+  const meshOf=o=>o.children.find(c=>c.isMesh);
+  const natM=o=>o.matrixWorld.clone();
+  const centre=o=>new THREE.Box3().setFromObject(o).getCenter(V(0,0,0));
+  function rotAbout(p,axis,th){ return new THREE.Matrix4().makeTranslation(p.x,p.y,p.z).multiply(new THREE.Matrix4().makeRotationAxis(axis,th)).multiply(new THREE.Matrix4().makeTranslation(-p.x,-p.y,-p.z)); }
+  function setNat(o,M){ o.matrixAutoUpdate=false; o.matrix.copy(o.userData.Pinv).multiply(M); o.matrixWorldNeedsUpdate=true; }
+  function prepNat(o){ o.userData.M0=natM(o); o.userData.Pinv=o.parent.matrixWorld.clone().invert(); }
+  function buildAssembly(face,node,lv,ti){
+    const kids=[]; node.traverse(o=>{ if(o!==node) kids.push(o); });
+    const direct=node.children.filter(o=>o.userData.idx!==undefined);
+    const valves=kids.filter(o=>/BF Valve/.test(o.name)&&!/Assembly/.test(o.name)&&meshOf(o));
+    const lever=direct.find(o=>/Lever/.test(o.name)), cranks=direct.filter(o=>/^Link1/.test(o.name)), rod=direct.find(o=>/^Link6/.test(o.name));
+    const pinParts=direct.filter(o=>/^(Bolt|Nut|Washer)/.test(o.name));
+    [lever,rod,...cranks,...pinParts].forEach(prepNat);
+    const st=valves.map(v=>{ const M=natM(v); return {obj:v, p:V(0,0,0).setFromMatrixPosition(M), axis:V(0,0,0).setFromMatrixColumn(M,2).normalize()}; });
+    const axis=st[0].axis;
+    const lp=V(0,0,0).setFromMatrixPosition(lever.userData.M0);
+    const plane=(a,b)=>{ const d=V(0,0,0).subVectors(a,b); return d.sub(axis.clone().multiplyScalar(d.dot(axis))).length(); };
+    const D=st.reduce((a,b)=>plane(lp,a.p)<plane(lp,b.p)?a:b), F=st.find(s=>s!==D);
+    const bolts=direct.filter(o=>/^Bolt/.test(o.name)).map(centre);
+    const pinD=bolts.reduce((a,b)=>plane(a,D.p)<plane(b,D.p)?a:b), pinF=bolts.find(b=>b!==pinD)||bolts[0];
+    const L0=pinD.distanceTo(pinF);
+    // four-bar table: follower angle for each driver angle, choosing the turn direction that brings both valves round 90 degrees
+    const pinAt=(s,p0,th)=>p0.clone().applyMatrix4(rotAbout(s.p,axis,th));
+    function solve(sg){ const tab=[0]; let th=0;
+      for(let i=1;i<=60;i++){ const pd=pinAt(D,pinD,sg*i/60*Math.PI/2);
+        for(let it=0;it<30;it++){ const f=pinAt(F,pinF,th).distanceTo(pd)-L0, f2=pinAt(F,pinF,th+1e-4).distanceTo(pd)-L0, dd=(f2-f)/1e-4; if(Math.abs(dd)<1e-9) break; const st_=clamp(-f/dd,-0.2,0.2); th+=st_; if(Math.abs(st_)<1e-7) break; }
+        tab.push(th); } return tab; }
+    const A1=solve(1), A2=solve(-1), sgn=Math.abs(Math.abs(A1[60])-Math.PI/2)<=Math.abs(Math.abs(A2[60])-Math.PI/2)?1:-1, tab=sgn>0?A1:A2;
+    // discs: split each valve model and put the disc on the stem
+    const protos=valves.map(v=>meshOf(v).geometry);
+    for(const s of st){ const m=meshOf(s.obj), other=protos.find(g=>g!==m.geometry)||m.geometry, sp=splitValve(m.geometry,other);
+      m.geometry=sp.body; m.material.color.setHex(VALVE);
+      const disc=new THREE.Mesh(sp.disc,mat(0x9aa0a6)); s.obj.add(disc); s.disc=disc;
+      s.obj.children.filter(c=>c.isLineSegments).forEach(c=>s.obj.remove(c)); }
+    lever.traverse(o=>{ if(o.isMesh) o.material.color.setHex(HANDLE); });
+    [rod,...cranks,...pinParts].forEach(o=>o.traverse(c=>{ if(c.isMesh) c.material.color.setHex(STEEL); }));
+    // which valve is which: the pump is on native -x
+    const up=lv==='up', pumpSide=s=>s.p.x<0;
+    for(const s of st){ s.key= up? (pumpSide(s)?'V1':'V3') : (pumpSide(s)?'V4':'V2'); VBODY[s.key].push(meshOf(s.obj).material); }
+    const cr=cranks.map(c=>{ const p=V(0,0,0).setFromMatrixPosition(c.userData.M0); return {o:c, s: plane(p,D.p)<plane(p,F.p)?D:F}; });
+    ASM.push({lv,ti,D,F,axis,sgn,tab,lever,rod,cr,pinParts,pinD,pinF,
+      set(k){ const x=k*60, i=Math.min(59,Math.floor(x)), f=x-i, thD=sgn*k*Math.PI/2, thF=tab[i]+(tab[i+1]-tab[i])*f;
+        D.disc.rotation.z=thD; F.disc.rotation.z=thF;
+        const RD_=rotAbout(D.p,axis,thD), RF=rotAbout(F.p,axis,thF);
+        setNat(lever,RD_.clone().multiply(lever.userData.M0));
+        for(const c of cr) setNat(c.o,(c.s===D?RD_:RF).clone().multiply(c.o.userData.M0));
+        const pd=pinD.clone().applyMatrix4(RD_), pf=pinF.clone().applyMatrix4(RF);
+        const a0=V(0,0,0).subVectors(pinF,pinD), a1=V(0,0,0).subVectors(pf,pd); [a0,a1].forEach(a=>a.sub(axis.clone().multiplyScalar(a.dot(axis))).normalize());
+        const phi=Math.atan2(V(0,0,0).crossVectors(a0,a1).dot(axis),a0.dot(a1));
+        const MR=new THREE.Matrix4().makeTranslation(pd.x,pd.y,pd.z).multiply(new THREE.Matrix4().makeRotationAxis(axis,phi)).multiply(new THREE.Matrix4().makeTranslation(-pinD.x,-pinD.y,-pinD.z));
+        setNat(rod,MR.clone().multiply(rod.userData.M0)); for(const o of pinParts) setNat(o,MR.clone().multiply(o.userData.M0)); }});
+  }
+  const GLASS=[];
+  function buildFace(buf,ti){
+    const F=loadAssembly(buf), FG=new THREE.Group();
+    F.root.updateMatrixWorld(true);
+    F.root.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.setHex(PVC); } });
+    const top=F.objs.filter((o,i)=>F.nodes[i].parent===0);
+    for(const a of top){ if(/Backwash/.test(a.name)) buildAssembly(F,a,'up',ti); else if(/To Pool/.test(a.name)) buildAssembly(F,a,'low',ti); }
+    FG.add(F.root);
+    // short runs off the ends of the nest: pump, pool and waste (with the sight glass), schematic
+    const C=CFG, z=C.zc, r=C.pr, mP=mat(PVC), mR=mat(0x3d4247);
+    if(C.inlet.side!=null) pipe(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else pipe(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
+    pipe(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
+    const g0=C.outX+60, g1=C.outX+230;
+    pipe(P_(C.outX,0,z),P_(g0,0,z),r,mP,FG); pipe(P_(g1,0,z),P_(C.outX+320,0,z),r,mP,FG);
+    for(const x of [g0,g1]) pipe(P_(x-8,0,z),P_(x+8,0,z),r*1.3,mR,FG);
+    const sg=pipe(P_(g0+8,0,z),P_(g1-8,0,z),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
+    const sw=pipe(P_(g0+10,0,z),P_(g1-10,0,z),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
+    GLASS.push({glass:sg,water:sw});
+    FG.matrixAutoUpdate=false; FG.matrix.copy(NAT[ti]); CUR.add(FG);
+  }
+
+  // internals: overdrain and underdrain headers with slotted laterals (schematic), sand bed and dirt layer, per tank
+  const BEDS=[];
+  const LAT_Z=[]; for(let z=-560;z<=560;z+=140) LAT_Z.push(z);
   const chord=y=>Math.sqrt(Math.max(0,R_IN*R_IN-y*y));
-  function buildInternals(){
-    const m=mat(WHITE_PVC), IN=new THREE.Group(); EXTRA.add(IN);
-    run([P_(0,OVER_Y,556),P_(0,OVER_Y,-560)],30,m,IN);
-    run([P_(0,UNDER_Y+110,556),P_(0,UNDER_Y,470),P_(0,UNDER_Y,-560)],30,m,IN);
+  function buildInternals(ti){
+    const dy=ti*TANK_DY, m=mat(WHITE_PVC), IN=new THREE.Group(); IN.position.y=dy; CUR.add(IN);
+    run([P_(0,OVER_Y,556),P_(0,OVER_Y,-570)],32,m,IN);
+    run([P_(0,NOZ_L,556),P_(0,UNDER_Y,470),P_(0,UNDER_Y,-570)],32,m,IN);
     const wo=chord(OVER_Y)-40, wu=chord(UNDER_Y)-30;
-    for(const z of LAT_Z){ run([P_(-wo,OVER_Y,z),P_(wo,OVER_Y,z)],15,m,IN); run([P_(-wu,UNDER_Y,z),P_(wu,UNDER_Y,z)],15,m,IN); }
+    for(const z of LAT_Z){ run([P_(-wo,OVER_Y,z),P_(wo,OVER_Y,z)],16,m,IN); run([P_(-wu,UNDER_Y,z),P_(wu,UNDER_Y,z)],16,m,IN); }
     const seg=(top,bot)=>{ const s=new THREE.Shape(), a0=Math.asin(clamp(bot/R_IN,-1,1)), a1=Math.asin(clamp(top/R_IN,-1,1));
       s.moveTo(-Math.cos(a1)*R_IN, top); s.lineTo(Math.cos(a1)*R_IN, top);
       for(let i=0;i<=24;i++){ const a=a1+(a0-a1)*i/24; s.lineTo(Math.cos(a)*R_IN, Math.sin(a)*R_IN); }
       for(let i=0;i<=24;i++){ const a=a0+(a1-a0)*i/24; s.lineTo(-Math.cos(a)*R_IN, Math.sin(a)*R_IN); }
       const g=new THREE.ExtrudeGeometry(s,{depth:2*SHELL_Z,bevelEnabled:false,curveSegments:24}); g.translate(0,-BOT,-SHELL_Z); return g; };
-    bedMesh=new THREE.Mesh(seg(BED_TOP,BOT),mat(0xd8c08a,{transparent:true,opacity:0.5,depthWrite:false,shininess:5})); bedMesh.position.y=BOT; bedMesh.renderOrder=2; EXTRA.add(bedMesh);
-    dirtMesh=new THREE.Mesh(seg(BED_TOP,BED_TOP-90),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false,shininess:5})); dirtMesh.position.y=BOT; dirtMesh.renderOrder=3; EXTRA.add(dirtMesh);
-    grainCloud=mkPoints(900,0.6); const c=grainCloud.geometry.attributes.color.array; for(let i=0;i<900;i++){ const k=0.8+0.2*h1(i); c[3*i]=0.85*k; c[3*i+1]=0.75*k; c[3*i+2]=0.53*k; }
+    const bed=new THREE.Mesh(seg(BED_TOP,BOT+2),mat(0xd8c08a,{transparent:true,opacity:0.5,depthWrite:false,shininess:5})); bed.position.y=BOT+dy; bed.renderOrder=2; CUR.add(bed);
+    const dirt=new THREE.Mesh(seg(BED_TOP,BED_TOP-90),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false,shininess:5})); dirt.position.y=BOT+dy; dirt.renderOrder=3; CUR.add(dirt);
+    const grains=mkPoints(900,0.6); const c=grains.geometry.attributes.color.array; for(let i=0;i<900;i++){ const k=0.8+0.2*h1(i); c[3*i]=0.85*k; c[3*i+1]=0.75*k; c[3*i+2]=0.53*k; }
+    BEDS.push({bed,dirt,grains,dy});
   }
 
-  // ---- ghost the tank shell and manway so the inside can be seen ----------------------------------------------------------
+  // ---- ghost the tank shells, manways and saddles so the inside can be seen ---------------------------------------------------
   let ghostMeshes=[], ghostLines=[], lastGhost=-1;
-  function buildGhost(){ [2,3,6,9,17,18].forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh){ o.userData.base=1; ghostMeshes.push(o); } else if(o.isLineSegments) ghostLines.push(o); })); }
-  const ghostAt=t=>smooth((t-4)/1.6)*(1-smooth((t-44)/1.6));
+  const GHOST=[3,4,5,17,18,19,20], SADDLE=[11,12,17,18];
+  function buildGhost(A){ for(const off of [0,31]) GHOST.forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) ghostMeshes.push(o); else if(o.isLineSegments) ghostLines.push(o); })); }
+  const ghostAt=t=>smooth((t-4)/1.6)*(1-smooth((t-44.4)/1.6));
   function applyGhost(t){
     const g=ghostAt(t); if(Math.abs(g-lastGhost)<0.004) return; lastGhost=g;
-    for(const o of ghostMeshes){ const m=o.material, op=1-0.82*g; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const o of ghostMeshes){ const m=o.material, op=1-0.84*g; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
     for(const l of ghostLines) l.visible=g<0.4;
   }
 
   // ---- particle streams ---------------------------------------------------------------------------------------------------------
   const dotTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d'); const gr=g.createRadialGradient(16,16,0,16,16,16); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,32,32); return new THREE.CanvasTexture(c); })();
-  const POINTS=[];
+  let POINTS=[];
   function mkPoints(n,scale){
     const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e6),3)); g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3).fill(1),3));
     const p=new THREE.Points(g,new THREE.PointsMaterial({size:6,vertexColors:true,map:dotTex,transparent:true,opacity:0.92,depthWrite:false,depthTest:false,sizeAttenuation:false}));
-    p.frustumCulled=false; p.renderOrder=10; p.userData.scale=scale||1; scene.add(p); POINTS.push(p); return p;
+    p.frustumCulled=false; p.renderOrder=10; p.userData.scale=scale||1; CUR.add(p); POINTS.push(p); return p;
   }
   function prep(pts){ let L=0; pts.forEach((q,i)=>{ if(i) L+=q.p.distanceTo(pts[i-1].p); q.s=L; }); pts.L=L; return pts; }
   function across(d,a,b,r,out){ _r.copy(Math.abs(d.y)<0.9?V(0,1,0):V(1,0,0)).cross(d).normalize(); _u.copy(d).cross(_r); return out.addScaledVector(_r,a*r).addScaledVector(_u,b*r); }
   const _d=V(0,0,0), _q=V(0,0,0);
   function onPath(pts,s,a,b,out){ let i=1; while(i<pts.length-1 && s>pts[i].s) i++; const p0=pts[i-1], p1=pts[i], k=clamp((s-p0.s)/Math.max(1e-6,p1.s-p0.s),0,1); out.lerpVectors(p0.p,p1.p,k); _d.subVectors(p1.p,p0.p).normalize(); return across(_d,a,b,p0.r+(p1.r-p0.r)*k,out); }
   const BLUE=new THREE.Color(0x1597c9), DIRT=new THREE.Color(0x7a5a2c);
-  const STREAMS=[];
+  let STREAMS=[];
   function stream(n,wins,build,opt){ opt=opt||{}; const pts=mkPoints(n,opt.scale), parts=[];
     for(let i=0;i<n;i++){ const ang=h1(i*1.7+(opt.seed||0))*6.283, rad=Math.sqrt(h1(i*2.3+(opt.seed||0))); const path=prep(build(i)); parts.push({path,a:Math.cos(ang)*rad,b:Math.sin(ang)*rad,ph:h1(i*13.7+(opt.seed||0)),k:h1(i*7.3+(opt.seed||0))}); }
-    STREAMS.push({pts,parts,wins,color:opt.color||BLUE,dirty:opt.dirty||null,speed:opt.speed||900,dyn:opt.dyn||null}); }
+    STREAMS.push({pts,parts,wins,color:opt.color||BLUE,dirty:opt.dirty||null,speed:opt.speed||900}); }
   let flowClock=0;
   function placeStreams(t){
     for(const S_ of STREAMS){
@@ -345,89 +416,97 @@
       for(let i=0;i<S_.parts.length;i++){
         const f=S_.parts[i], L=f.path.L, s=(f.ph*L+flowClock*S_.speed)%L;
         if(f.k>dens||s>front||s<tail){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
-        onPath(f.path,s,f.a,f.b,_q); if(S_.dyn) S_.dyn(_q,t);
+        onPath(f.path,s,f.a,f.b,_q);
         arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
         const c=f.k<dirty*dens?DIRT:S_.color; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
       }
       S_.pts.geometry.attributes.position.needsUpdate=true; S_.pts.geometry.attributes.color.needsUpdate=true;
     }
   }
-  const Q=(x,y,z,r)=>({p:V(x,y,z),r:r==null?40:r});
+  const Qv=(p,r)=>({p,r:r==null?40:r});
   function lat(i,seed){ const z=LAT_Z[(h1(i*3.1+seed)*LAT_Z.length)|0], x=(h1(i*4.7+seed)*2-1); return {z,x}; }
-  function buildStreams(){
-    // filter mode: pump -> influent valve -> upper nozzle -> overdrain -> down through the sand -> underdrain -> lower nozzle -> effluent valve -> pool
+  function buildStreams(ti){
+    const C=CFG, dy=ti*TANK_DY, z=C.zc, R=C.pr*0.8, N=(x,y,zz,r)=>Qv(W_(ti,x,y,zz),r==null?R:r), T_=(x,y,zz,r)=>Qv(V(x,y+dy,zz),r);
+    const pump=C.inlet.side!=null? [N(C.inlet.side-260,0,z),N(C.px,0,z)] : [N(C.px,C.inlet.top+150,z),N(C.px,0,z)];
+    const inTop=[...pump,N(-C.vx,0,z),N(0,0,z),N(0,0,0),T_(0,NOZ_U,556,22)];
+    const inBot=[...pump,N(C.px,LOW,z),N(-C.vx,LOW,z),N(0,LOW,z),N(0,LOW,0),T_(0,NOZ_L,556,22),T_(0,UNDER_Y,470,22)];
+    const toPool=[T_(0,UNDER_Y,470,22),T_(0,NOZ_L,556,22),N(0,LOW,0),N(0,LOW,z),N(C.vx,LOW,z),N(C.outX+300,LOW,z)];
+    const toWaste=[T_(0,NOZ_U,556,22),N(0,0,0),N(0,0,z),N(C.vx,0,z),N(C.outX+320,0,z),N(C.outX+520,0,z,R*1.1)];
+    const n=ti?0.7:1;
+    // filter mode: pump -> influent valve -> upper connection -> overdrain -> down through the sand -> underdrain -> lower connection -> effluent valve -> pool
     const filt=i=>{ const o=lat(i,0), u=lat(i,5), zs=o.z+(h1(i*8.1)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
-      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,OVER_Y,FACE_Z,45),Q(0,OVER_Y,FACE_Z,45),Q(0,OVER_Y,968,45),Q(0,OVER_Y,556,22),Q(0,OVER_Y,o.z,18),
-        Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(xs*0.9,OVER_Y-120,zs,6),Q(xs,BED_TOP+10,zs,6),Q(u.x*(chord(UNDER_Y)-50)*0.9,UNDER_Y+60,u.z,6),Q(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),
-        Q(0,UNDER_Y,u.z,18),Q(0,UNDER_Y,470,22),Q(0,UNDER_Y+110,556,22),Q(0,UNDER_Y+110,968,45),Q(0,-330,FACE_Z,45),Q(HDR_X,-330,FACE_Z,45),Q(HDR_X,-330,1500,45)]; };
-    stream(1400,EV.filter.map(([a,b])=>[a,b,1]),filt,{seed:1});
+      return [...inTop,T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP+10,zs,6),
+        T_(u.x*(chord(UNDER_Y)-50)*0.9,UNDER_Y+60,u.z,6),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),T_(0,UNDER_Y,u.z,18),...toPool]; };
+    stream(Math.round(1300*n),EV.filter.map(([a,b])=>[a,b,1]),filt,{seed:1+ti*17});
     // dirt carried in and trapped in the top of the bed
     const dirt=i=>{ const o=lat(i,9), zs=o.z+(h1(i*8.7)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
-      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,OVER_Y,FACE_Z,45),Q(0,OVER_Y,FACE_Z,45),Q(0,OVER_Y,968,45),Q(0,OVER_Y,556,22),Q(0,OVER_Y,o.z,18),
-        Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(xs*0.9,OVER_Y-120,zs,6),Q(xs,BED_TOP-20-h1(i*6.2)*60,zs,4)]; };
-    stream(260,[[EV.dirt[0],EV.dirt[1],1]],dirt,{color:DIRT,scale:0.75,seed:3});
-    // backwash: pump -> backwash supply valve -> lower nozzle -> underdrain -> up through the expanded bed -> overdrain -> upper nozzle -> backwash waste valve -> sight glass -> waste
+      return [...inTop,T_(0,OVER_Y,o.z,18),T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(xs*0.9,OVER_Y-140,zs,6),T_(xs,BED_TOP-20-h1(i*6.2)*60,zs,4)]; };
+    stream(Math.round(240*n),[[EV.dirt[0],EV.dirt[1],1]],dirt,{color:DIRT,scale:0.75,seed:3+ti*17});
+    // backwash: pump -> backwash supply valve -> lower connection -> underdrain -> up through the expanded bed -> overdrain -> upper connection -> backwash waste valve -> sight glass -> waste
     const bw=i=>{ const o=lat(i,11), u=lat(i,13), x1=(h1(i*5.3)*2-1)*(chord(BED_TOP)-80), z1=(h1(i*6.9)*2-1)*(SHELL_Z-80);
-      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,-330,FACE_Z,45),Q(0,-330,FACE_Z,45),Q(0,UNDER_Y+110,968,45),Q(0,UNDER_Y+110,556,22),Q(0,UNDER_Y,470,22),Q(0,UNDER_Y,u.z,18),
-        Q(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),Q(x1*0.7,-250,(u.z+z1)/2,10),Q(x1,120,z1,12),Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(0,OVER_Y,o.z,18),Q(0,OVER_Y,556,22),
-        Q(0,OVER_Y,968,45),Q(0,OVER_Y,FACE_Z,45),Q(WASTE_X,OVER_Y,FACE_Z,45),Q(WASTE_X,780,FACE_Z,45),Q(WASTE_X,900,FACE_Z,50)]; };
-    stream(1500,[[EV.bw[0],EV.bw[1],1]],bw,{dirty:bwDirty,seed:7,speed:1000});
+      return [...inBot,T_(0,UNDER_Y,u.z,18),T_(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),T_(x1*0.7,-280,(u.z+z1)/2,10),T_(x1,140,z1,12),
+        T_(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),T_(0,OVER_Y,o.z,18),...toWaste]; };
+    stream(Math.round(1400*n),[[EV.bw[0],EV.bw[1],1]],bw,{dirty:bwDirty,seed:7+ti*17,speed:1000});
   }
   // sand grains tumbling in the expanded bed during backwash
   function placeGrains(t){
-    const k=(bedAt(t)-1)/0.28, a=grainCloud.geometry.attributes.position.array; grainCloud.visible=k>0.02&&ghostAt(t)>0.1;
-    if(!grainCloud.visible) return;
-    const top=BOT+(BED_TOP-BOT)*bedAt(t);
-    for(let i=0;i<900;i++){
-      if(h1(i*2.9)>k){ a[3*i]=a[3*i+1]=a[3*i+2]=1e6; continue; }
-      const y=top-40-h1(i*3.7)*260+Math.sin(flowClock*2.2+i)*35, w=chord(y)-40;
-      a[3*i]=(h1(i*4.4)*2-1)*w+Math.sin(flowClock*1.3+i*0.7)*20; a[3*i+1]=y; a[3*i+2]=(h1(i*5.9)*2-1)*(SHELL_Z-40);
-    }
-    grainCloud.geometry.attributes.position.needsUpdate=true;
+    const k=(bedAt(t)-1)/0.26;
+    for(const B of BEDS){ const g=B.grains, a=g.geometry.attributes.position.array; g.visible=k>0.02&&ghostAt(t)>0.1; if(!g.visible) continue;
+      const top=BOT+(BED_TOP-BOT)*bedAt(t);
+      for(let i=0;i<900;i++){
+        if(h1(i*2.9)>k){ a[3*i]=a[3*i+1]=a[3*i+2]=1e6; continue; }
+        const y=top-40-h1(i*3.7)*280+Math.sin(flowClock*2.2+i)*35, w=chord(y)-40;
+        a[3*i]=(h1(i*4.4)*2-1)*w+Math.sin(flowClock*1.3+i*0.7)*20; a[3*i+1]=y+B.dy; a[3*i+2]=(h1(i*5.9)*2-1)*(SHELL_Z-40);
+      }
+      g.geometry.attributes.position.needsUpdate=true; }
   }
 
   // ---- apply state ------------------------------------------------------------------------------------------------------------
-  const GREEN=0x1e9a4a, RED=0xd1202b, AMBER=0xd08a12, CLEAR=new THREE.Color(0x9fd3ec), MUD=new THREE.Color(0x7a5a2c);
+  const GREEN=0x1e9a4a, AMBER=0xd08a12, CLEAR=new THREE.Color(0x9fd3ec), MUD=new THREE.Color(0x7a5a2c);
   function applyState(t){
     applyGhost(t);
-    for(const v of Object.values(VALVES)){ const {s,mv}=valveAt(v,t);
-      if(v.pivot) v.pivot.rotation.z=(1-s)*Math.PI/2;                                                    // open: disc edge-on to the flow
-      if(v.bodyMat){ v.bodyMat.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); v.bodyMat.emissiveIntensity=mv?0.5:s>0.5?0.22:0; } }
-    const sc=bedAt(t); bedMesh.scale.y=sc; bedMesh.material.opacity=(0.5-0.18*(sc-1)/0.28)*ghostAt(t)+0.02; bedMesh.visible=ghostAt(t)>0.01;
-    const d=dirtAt(t); dirtMesh.scale.y=sc; dirtMesh.material.opacity=0.75*d*ghostAt(t); dirtMesh.visible=d>0.01&&ghostAt(t)>0.01;
+    for(const a of ASM) a.set(leverAt(LEVERS[a.lv],t).k);
+    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(k,t); for(const m of VBODY[k]){ m.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); m.emissiveIntensity=mv?0.5:s>0.5?0.25:0; } }
+    const sc=bedAt(t), d=dirtAt(t), ga=ghostAt(t);
+    for(const B of BEDS){ B.bed.scale.y=sc; B.bed.material.opacity=(0.5-0.18*(sc-1)/0.26)*ga+0.02; B.bed.visible=ga>0.01;
+      B.dirt.scale.y=sc; B.dirt.material.opacity=0.75*d*ga; B.dirt.visible=d>0.01&&ga>0.01; }
     const bwOn=t>=EV.bw[0]&&t<EV.bw[1]+1;
-    GLASS.water.visible=bwOn; GLASS.water.material.color.copy(CLEAR).lerp(MUD,bwDirty(t)/0.88);
+    for(const G of GLASS){ G.water.visible=bwOn; G.water.material.color.copy(CLEAR).lerp(MUD,bwDirty(t)/0.88); }
     // status
     const set=(el,txt,cls)=>{ if(!el) return; if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; };
-    const inBW=t>=EV.bw[0]-3.6&&t<EV.bw[1]+2.6, filtering=!inBW;
+    const inBW=t>=EV.bw[0]-3.8&&t<EV.bw[1]+2.8;
     set(RD.mode,...(t>=EV.bw[0]&&t<EV.bw[1]?['Backwash','mid']:inBW?['Switching','mid']:['Filter','go']));
     set(RD.dp, inBW? '—' : dpAt(t).toFixed(1)+' psi', dpAt(t)>=12&&!inBW?'stop':dpAt(t)>=8&&!inBW?'mid':'go');
-    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(VALVES[k],t); set(RD[k],...(mv?[mv,'mid']:s>0.5?['Open','go']:['Closed','stop'])); }
+    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(k,t); set(RD[k],...(mv?[mv,'mid']:s>0.5?['Open','go']:['Closed','stop'])); }
     set(RD.glass, bwOn? (bwDirty(t)>0.4?'Dirty':bwDirty(t)>0.1?'Clearing':'Clear') : '—', bwOn?(bwDirty(t)>0.4?'stop':bwDirty(t)>0.1?'mid':'go'):'');
     set(RD.bed, sc>1.03?'Expanded':d>0.3?'Loaded':'Settled', sc>1.03?'mid':d>0.6?'stop':'go');
   }
 
   // ---- callouts ---------------------------------------------------------------------------------------------------------------
-  const NS='http://www.w3.org/2000/svg', LBL=[]; let labelsOn=true;
-  const NAMED=[
-    {txt:'Influent (upper) nozzle', p:V(0,OVER_Y,900), steps:[0]},
-    {txt:'Effluent (lower) nozzle', p:V(0,-330,900), steps:[0]},
-    {txt:'Manway', p:V(-560,250,0), steps:[0]},
-    {txt:'Air relief', p:V(0,540,0), steps:[0]},
-    {txt:'Drain', p:V(-78,-545,0), steps:[0]},
-    {txt:'Overdrain laterals', p:V(300,OVER_Y,-260), steps:[1,4]},
-    {txt:'Sand bed, 21 in', p:V(-300,-250,-100), steps:[1]},
-    {txt:'Underdrain laterals', p:V(260,UNDER_Y,-390), steps:[1,4]},
-    {txt:'Dirt held in the top of the bed', p:V(200,BED_TOP-40,150), steps:[2]},
-    {txt:'Influent valve', p:VALVES.V1.pos, steps:[3,5]},
-    {txt:'Effluent valve', p:VALVES.V2.pos, steps:[3,5]},
-    {txt:'Backwash waste valve', p:VALVES.V3.pos, steps:[3,5]},
-    {txt:'Backwash supply valve', p:VALVES.V4.pos, steps:[3,5]},
-    {txt:'Expanded bed', p:V(-250,120,200), steps:[4]},
-    {txt:'Sight glass', p:V(WASTE_X,580,FACE_Z), steps:[4]}
-  ];
+  const NS='http://www.w3.org/2000/svg'; let LBL=[], labelsOn=true;
   function mkLabel(txt){ const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl n'); const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text'); h.setAttribute('class','halo'); t.setAttribute('class','t'); h.textContent=t.textContent=txt; g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t}; }
-  function buildLabels(){ for(const n of NAMED) LBL.push({c:n.p,steps:n.steps,...mkLabel(n.txt)}); }
+  function buildLabels(){
+    const C=CFG, z=C.zc;
+    const NAMED=[
+      {txt:'Upper connection', p:V(0,NOZ_U,900), steps:[0]},
+      {txt:'Lower connection', p:V(0,NOZ_L,900), steps:[0]},
+      {txt:'Upper tank', p:V(-560,NOZ_U+TANK_DY-80,-300), steps:[0]},
+      {txt:'Lower tank', p:V(-560,NOZ_L+90,-300), steps:[0]},
+      {txt:'Manway', p:V(-600,290,0), steps:[0]},
+      {txt:'Air relief', p:V(0,640,0), steps:[0]},
+      {txt:'Overdrain laterals', p:V(320,OVER_Y,-260), steps:[1,4]},
+      {txt:'Sand bed, 24 in', p:V(-300,-250,-100), steps:[1]},
+      {txt:'Underdrain laterals', p:V(260,UNDER_Y,-420), steps:[1,4]},
+      {txt:'Dirt held in the top of the bed', p:V(200,BED_TOP-40,150), steps:[2]},
+      {txt:'Influent valve', p:W_(0,-C.vx,0,z), steps:[3,5]},
+      {txt:'Backwash waste valve', p:W_(0,C.vx,0,z), steps:[3,5]},
+      {txt:'Backwash supply valve', p:W_(0,-C.vx,LOW,z), steps:[3,5]},
+      {txt:'Effluent valve', p:W_(0,C.vx,LOW,z), steps:[3,5]},
+      {txt:'Expanded bed', p:V(-250,140,200), steps:[4]},
+      {txt:'Sight glass', p:W_(0,C.outX+145,0,z), steps:[4]}
+    ];
+    for(const n of NAMED) LBL.push({c:n.p,steps:n.steps,...mkLabel(n.txt)});
+  }
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
     const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
@@ -447,13 +526,14 @@
   // tags
   const WAVES='<path d="M6 9c2-2 4-2 6 0s4 2 6 0M6 14c2-2 4-2 6 0s4 2 6 0" stroke="var(--water)" stroke-width="1.7" fill="none" stroke-linecap="round"/>', DOWN='<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>', RIGHT='<path d="M6 11h11M13 7l4 4-4 4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>';
   function tag(txt,icon,wd){ const g=document.createElementNS(NS,'g'); g.innerHTML=`<rect rx="3" ry="3" width="${wd}" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>${icon}<text x="24" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">${txt}</text>`; overlay.appendChild(g); return g; }
-  const TAGS=[
-    {g:null, txt:'FROM PUMP', icon:RIGHT, wd:96, p:V(-HDR_X,0,1560), dir:V(0,0,1)},
-    {g:null, txt:'TO POOL', icon:WAVES, wd:82, p:V(HDR_X,-330,1560), dir:V(0,0,1)},
-    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(WASTE_X,830,FACE_Z), dir:V(0,1,0)}
-  ];
+  let TAGS=[];
+  function buildTags(){ const C=CFG, z=C.zc;
+    const inP=C.inlet.side!=null? W_(0,C.inlet.side-260,0,z) : W_(0,C.px,C.inlet.top+150,z), inD=C.inlet.side!=null? W_(0,C.inlet.side-360,0,z).sub(inP) : V(0,1,0);
+    TAGS=[{txt:'FROM PUMP', icon:RIGHT, wd:96, p:inP, dir:inD.normalize()},
+      {txt:'TO POOL', icon:WAVES, wd:82, p:W_(0,C.outX+300,LOW,z), dir:W_(0,C.outX+400,LOW,z).sub(W_(0,C.outX+300,LOW,z)).normalize()},
+      {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.outX+320,0,z), dir:V(0,1,0)}]; }
   function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
-    _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20;
+    _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*50; y+=dy/l*20;
     const off=x<-40||x>w+40||y<-20||y>h+20; T_.g.style.display=off?'none':''; if(off) continue;
     T_.g.setAttribute('transform',`translate(${Math.round(clamp(x-T_.wd/2,4,w-T_.wd-4))},${Math.round(clamp(y-11,4,h-26))})`); } }
 
@@ -465,19 +545,53 @@
   let curStep=-1;
   function updateSteps(t){ let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
 
-  // ---- load -----------------------------------------------------------------------------------------------------------------
-  const getBin=u=>fetch(u,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); });
-  Promise.all([getBin('/assets/shffg/shffg4248.bin'),getBin('/assets/shffg/pipe-parts-4in.bin')]).then(([buf,pbuf])=>{
-    PARTS=loadAssembly(pbuf);
-    A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
-    A.root.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); } });
-    const shell=A.objs[2]; if(shell) shell.traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x5a6b7a); });   // fibreglass shell in a neutral grey-blue
-    [10,11].forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x2b4f86); }));   // saddles
-    Object.values(KEYS).forEach(fitKey);
-    buildFace(); buildInternals(); buildGhost(); buildStreams(); buildLabels();
-    document.getElementById('loading').remove();
-    ready=true; resize(); setTime(T); if(!reduced) startPlay();
-  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+  // ---- configuration switch and load -------------------------------------------------------------------------------------------
+  const cfgBox=document.getElementById('cfg'), cfgNote=document.getElementById('cfgnote'), sub=document.getElementById('sub');
+  Object.keys(CFGS).forEach(k=>{ const b=document.createElement('button'); b.textContent=k; b.dataset.k=k; b.setAttribute('aria-pressed','false'); b.title=CFGS[k].note; cfgBox.appendChild(b); });
+  cfgBox.addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&!loading) choose(b.dataset.k); });
+  const bins={};
+  const getBin=u=>bins[u]||(bins[u]=fetch(u,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }));
+  let loading=false;
+  function clearScene(){
+    if(CUR){ scene.remove(CUR); CUR.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose()); }); }
+    POINTS=[]; STREAMS=[]; ASM.length=0; BEDS.length=0; GLASS.length=0; ghostMeshes=[]; ghostLines=[]; lastGhost=-1; splitCache.clear();
+    for(const k in VBODY) VBODY[k]=[];
+    LBL.forEach(L=>L.g.remove()); LBL=[]; TAGS.forEach(T_=>T_.g&&T_.g.remove()); TAGS=[];
+  }
+  function choose(k){
+    if(!CFGS[k]) k='C4';
+    loading=true; const ld=document.getElementById('loading'); if(ld){ ld.style.display=''; }
+    [...cfgBox.querySelectorAll('button')].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));
+    const C=CFGS[k];
+    return Promise.all([getBin('/assets/shffg/'+TANKS[C.tank]),getBin('/assets/shffg/'+C.file)]).then(([tb,fb])=>{
+      clearScene(); CFG=C; CUR=new THREE.Group(); scene.add(CUR);
+      NAT[0]=faceMatrix(0); NAT[1]=faceMatrix(1);
+      const A=loadAssembly(tb); CUR.add(A.root);
+      A.root.traverse(o=>{ if(o.isMesh) o.material=o.material.clone(); });
+      for(const off of [0,31]){
+        A.objs[3+off]&&A.objs[3+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x5a6b7a); });
+        SADDLE.forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x2b4f86); }));
+        [21,25].forEach(i=>A.objs[i+off]&&A.objs[i+off].traverse(o=>{ if(o.isMesh) o.material.color.setHex(PVC); }));
+      }
+      buildGhost(A);
+      for(const ti of [0,1]){ buildFace(fb,ti); buildInternals(ti); buildStreams(ti); }
+      // camera boxes for this piping
+      const z=C.zc, far=FACE_Z+Math.abs(z)*2.2+120;
+      KEYS.all.box=BOX(V(-760,-760,-830),V(760,2040,far));
+      KEYS.face.box=BOX(V(-640,-620,900),V(640,2040,far));
+      const wb=new THREE.Box3(); for(const x of [-C.vx-250,C.outX+480]) for(const y of [-560,420]) for(const zz of [0,z*2.4]) wb.expandByPoint(W_(0,x,y,zz)); KEYS.waste.box=wb;
+      KEYS.waste.th=(C.rot?130:50);
+      Object.values(KEYS).forEach(fitKey);
+      buildLabels(); buildTags();
+      cfgNote.textContent=k+': '+C.note;
+      sub.textContent=(C.tank==='6L'?'48048SHFFGS-6L':'48048SHFFGS-4L')+' with '+k+' face piping on each tank. Laterals and sand shown schematically.';
+      try{ const u=new URL(location.href); u.searchParams.set('c',k); history.replaceState(null,'',u); }catch(e){}
+      if(ld) ld.style.display='none';
+      loading=false; ready=true; resize(); setTime(T);
+    }).catch(err=>{ loading=false; if(ld){ ld.style.display=''; ld.textContent='Could not load the model: '+err.message; } });
+  }
+  const startCfg=(new URLSearchParams(location.search).get('c')||'C4').toUpperCase();
+  choose(startCfg).then(()=>{ if(!reduced&&ready) startPlay(); });
 
   // ---- time and playback ----------------------------------------------------------------------------------------------------
   let T=0, needRender=true;
@@ -494,13 +608,13 @@
   document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
   function frame(now){
     requestAnimationFrame(frame);
-    const dt=Math.min(0.05,(now-last)/1000); last=now; if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now; if(!ready||loading) return;
     if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
     if(!reduced){ flowClock+=dt; needRender=true; }
     if(needRender){ needRender=false; updateCamera(); placeStreams(T); placeGrains(T); renderer.render(scene,camera); drawLabels(); }
   }
   requestAnimationFrame(frame);
-  window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, get T(){ return T; }, camera, scene };
+  window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, choose, get T(){ return T; }, get ASM(){ return ASM; }, camera, scene };
 })();
 </script>
 
