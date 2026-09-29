@@ -165,7 +165,7 @@
   const VALVES={   // [t0,t1,from,to]  1 = open
     V1:{name:'Influent', pos:V(-230,330,1190), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
     V2:{name:'Effluent', pos:V(230,-330,1190), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
-    V3:{name:'Backwash waste', pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
+    V3:{name:'Backwash waste', flip:true, pos:V(230,330,1190), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
     V4:{name:'Backwash supply', pos:V(-230,-330,1190), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
   };
   const valveAt=(v,t)=>{ let s=v.moves[0][2], mv=null; for(const [a,b,f,to] of v.moves){ if(t>=a){ s=f+(to-f)*ease((t-a)/(b-a)); if(t<b) mv=to>f?'Opening':'Closing'; } } return {s,mv}; };
@@ -261,7 +261,8 @@
     const mk=idx=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',geo.attributes.position); q.setAttribute('normal',geo.attributes.normal); q.setIndex(idx); q.computeBoundingSphere(); return q; };
     mesh.geometry=mk(bi); g.add(body);
     const pivot=new THREE.Group(); g.add(pivot); pivot.add(new THREE.Mesh(mk(di),mat(0x9aa0a6)));
-    const lever=partObj('lever4'); lever.matrixAutoUpdate=false; lever.matrix.set(0,0,-1,0, -1,0,0,0, 0,1,0,176.253, 0,0,0,1); pivot.add(lever);
+    const lever=partObj('lever4'); lever.matrixAutoUpdate=false; lever.matrix.set(0,0,-1,0, -1,0,0,0, 0,1,0,176.253, 0,0,0,1); if(v.flip) lever.matrix.premultiply(new THREE.Matrix4().makeRotationZ(Math.PI));   // flip: handle turned 180° on the stem
+    pivot.add(lever);
     lever.children.forEach(c=>{ if(c.isMesh) c.material.color.setHex(0xc8202f); });                                  // red latch-lock handle
     placeM(g,d,cross(Y,d),Y,v.pos); v.pivot=pivot; v.bodyMat=mesh.material; }
   function buildFace(){
@@ -271,8 +272,9 @@
     // valves with a flange either side
     const VV=[[VALVES.V1,-1,U],[VALVES.V4,-1,L],[VALVES.V3,1,U],[VALVES.V2,1,L]];
     for(const [v,sd,y] of VV){ const xc=sd*230; valve(v,X);
-      flange(P_(xc-sd*51,y,FZ),V(sd,0,0)); flange(P_(xc+sd*51,y,FZ),V(-sd,0,0));
-      pipe(P_(sd*T,y,FZ),P_(xc-sd*115,y,FZ),57,mPVC); pipe(P_(xc+sd*115,y,FZ),P_(sd*(HX-118),y,FZ),57,mPVC); }
+      // flanges bolt straight onto the wafer body faces (2 in face to face, as D9 in the Defender model)
+      flange(P_(xc-sd*26,y,FZ),V(sd,0,0)); flange(P_(xc+sd*26,y,FZ),V(-sd,0,0));
+      pipe(P_(sd*T,y,FZ),P_(xc-sd*80,y,FZ),57,mPVC); pipe(P_(xc+sd*80,y,FZ),P_(sd*(HX-118),y,FZ),57,mPVC); }
     // pump header with the inlet tee, elbows at each end
     elbow(P_(-HX,U,FZ),X,neg(Y)); elbow(P_(-HX,L,FZ),X,Y);
     pipe(P_(-HX,U-118,FZ),P_(-HX,T,FZ),57,mPVC); pipe(P_(-HX,-T,FZ),P_(-HX,L+118,FZ),57,mPVC); tee(P_(-HX,0,FZ),Y,Z);
