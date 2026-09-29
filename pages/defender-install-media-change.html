@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Defender Media Change</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00; --dmark:#1f6fd6; --fmark:#1b8f45; --water:#1597c9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{fill:none;stroke-width:1.1}
+  #overlay text{font:600 11.5px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;letter-spacing:.03em}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.9}
+  #overlay g.d polyline{stroke:var(--dmark)} #overlay g.d text.t{fill:var(--dmark)}
+  #overlay g.f polyline{stroke:var(--fmark)} #overlay g.f text.t{fill:var(--fmark)}
+  #overlay g.n polyline{stroke:var(--leader)} #overlay g.n text.t{fill:var(--ink)}
+  #overlay g.lbl text .nm{fill:var(--ink);font-weight:500}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:214px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.mid{color:var(--warn)} #readout dd.stop{color:var(--leader)} #readout dd.wet{color:var(--water)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:176px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #readout dl > :nth-child(n+5){display:none}
+    #readout{width:150px}
+    #overlay g.lbl .nm{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Defender Media Change</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading installation model (10 MB)…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Media change · drain, rinse, recharge</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">Filter and valves</div>
+      <dl>
+        <dt>Tank level</dt><dd id="r-level" class="wet">100%</dd>
+        <dt>F33 Pump</dt><dd id="r-pump" class="go">Running</dd>
+        <dt>Bumps</dt><dd id="r-bump">—</dd>
+        <dt>D14 Vacuum</dt><dd id="r-vac">Off</dd>
+        <dt>D7 Effluent</dt><dd id="r-D7" class="go">Open</dd>
+        <dt>F32 Discharge</dt><dd id="r-F32" class="go">Open</dd>
+        <dt>D10 Drain</dt><dd id="r-D10" class="stop">Closed</dd>
+        <dt>D18 Vac. drain</dt><dd id="r-D18" class="stop">Closed</dd>
+        <dt>D17 Vac. transfer</dt><dd id="r-D17" class="stop">Closed</dd>
+        <dt>D19 Vac. hose</dt><dd id="r-D19" class="stop">Closed</dd>
+        <dt>F34 Precoat vent</dt><dd id="r-F34" class="stop">Closed</dd>
+        <dt>D8 Precoat</dt><dd id="r-D8" class="stop">Closed</dd>
+      </dl>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>Defender SP-41 · Media Change<small>Recharging perlite (drain/rinse), RMF 12 O&amp;M steps 1 to 30. Built from Schematic.stp.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
+      <span class="tick" id="tend">1:54</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/defender-schematic/assembly-loader.js"></script>
+<script src="/assets/defender-schematic/schematic-marks.js"></script>
+<script src="/assets/defender-schematic/install-dress.js"></script>
+<script>
+(function(){
+  const S=window.DEF_SCHEMATIC, view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const tnow=document.getElementById('tnow'), RD={}; ['level','pump','bump','vac','D7','F32','D10','D18','D17','D19','F34','D8'].forEach(k=>RD[k]=document.getElementById('r-'+k));
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // ---- timeline (seconds) --------------------------------------------------------------------------------
+  // Follows "Recharging Perlite (Drain/Rinse)", Defender RMF O&M 04/2025 pp. 54-55 (RMF 12 controller), steps 1-30.
+  const T_END=114;
+  const STEPS=[
+    {t:0,     h:'Stop the filter', marks:['D10','D7'], d:'Before pressing STOP, partially open the D10 drain valve to clear debris from the piping. Press STOP: the pump stops and the D7 effluent valve closes. Press MENU, then DRAIN RINSE.'},
+    {t:9,     h:'Close discharge, bump', marks:['F32','D1'], d:'Steps 3 and 4. Close the pump discharge valve, then press BUMP CYCLE. The filter bumps 10 times and the spent perlite and dirt drop off the tubes into the water.'},
+    {t:22.4,  h:'Drain the tank', marks:['D10','D18'], d:'Steps 5 to 7. Open the drain valve, then the vacuum drain valve so air can get in as the tank empties. The spent media goes to waste with the water. When the tank is empty, close the drain valve.'},
+    {t:34,    h:'Rinse fill', marks:['F32','F33','D18'], d:'Steps 8 to 10. Open the pump discharge valve and press PUMP ON. The tank refills from the pool and is full when water runs out of the vacuum drain valve. Press PUMP OFF.'},
+    {t:48,    h:'Rinse a second time', marks:['D10','F32'], d:'Step 11. Press REPEAT and follow the controller to drain and refill the tank again, removing as much of the remaining media and debris as possible.'},
+    {t:63,    h:'Final drain', marks:['F32','D10','D18'], d:'Steps 12 to 15. Close the pump discharge valve and open the drain valve. Once the tank is empty, close the drain valve and the vacuum drain valve.'},
+    {t:71.6,  h:'Set up the vacuum transfer', marks:['D17','D19','D14'], d:'Steps 16 to 18. Open the vacuum transfer valve and the vacuum hose valve, and put the vacuum hose into the bag of perlite.'},
+    {t:75,    h:'Vacuum in the new media', marks:['D14','D15','D19'], d:'Steps 19 to 22. Press VACUUM ON. The vacuum transfer unit pulls air out of the tank and the fresh perlite is drawn up the hose into the tank. When the required amount is in, press VACUUM OFF and close the vacuum hose and vacuum transfer valves.'},
+    {t:85.2,  h:'Fill and vent', marks:['F34','F32','D18'], d:'Steps 23 to 27. Open the precoat vent line valve, the pump discharge valve and the vacuum drain valve, then press PUMP ON. The tank is full when water runs from the vacuum drain valve, and the system is full when water runs from the precoat vent line. Press PUMP OFF.'},
+    {t:99.4,  h:'Close the vents', marks:['D18','F34'], d:'Steps 28 and 29. Close the vacuum drain valve and the precoat vent line valve.'},
+    {t:101.2, h:'Precoat, then filter mode', marks:['D8','D11'], d:'Step 30. The system starts a 10 minute precoat cycle on its own: the fresh perlite coats the tubes, then the filter returns to filter mode. The Precoat Cycle animation shows this in detail.'}
+  ];
+  // event times
+  const EV={
+    crack:[2.4,22.8], stop:5.2,
+    bump:[13.5,20.5],
+    drain:[[24.2,32.2,0.75],[50.4,55,0.35],[65.2,70,0.12]],      // [start, end, share of dirty water]
+    fill:[[37.8,45.4],[57.2,61.8],[89,96.2]],                    // tank filling from empty
+    pump:[[0,5.2],[37.2,46.6],[57,62.2],[88.6,98.6],[103,1e9]],
+    over:[[44.8,46.6],[61.2,62.2],[95.6,98.6]],                  // water out of the vacuum drain valve
+    vent:[96.4,98.6], vac:[75.6,83.6], bag:[73.6,86.5], precoat:[103.4,1e9]
+  };
+
+  // ---- renderer and camera --------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-50000,50000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(-0.6,1,0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.3,-0.6); scene.add(fill);
+
+  let A=null, ready=false;
+  const deg=Math.PI/180;
+  // camera keys: an orbit direction and the parts to frame (fitted once the model has loaded)
+  const KEYS={
+    all:      {th:135, ph:63, nodes:null},
+    tankdrain:{th:150, ph:66, pad:1.2, nodes:[3,48,580,673,674,675,676,677,672]},
+    tank:     {th:128, ph:66, pad:1.1, nodes:[3,48,52,561,554]},
+    d7:       {th:80,  ph:74, pad:1.6, nodes:[620,619,621]},
+    f32:      {th:150, ph:30, pad:1.7, nodes:[608,590]},
+    vac:      {th:155, ph:72, pad:1.12, nodes:[552,687,680,681,670,684,690,659,678,657,655,654,298]},
+    vent:     {th:150, ph:60, pad:1.08, nodes:[662,663,664,716,717,715,660,554,48]}
+  };
+  const PATH=[[0,'all'],[1.2,'all'],[2.4,'tankdrain'],[4.6,'tankdrain'],[5.8,'d7'],[8.2,'d7'],[9.4,'f32'],[12,'f32'],[13.2,'tank'],[21.6,'tank'],[22.6,'tankdrain'],[33.6,'tankdrain'],[34.4,'f32'],[36.4,'f32'],[37.6,'tank'],[43.6,'tank'],[44.6,'vac'],[47.4,'vac'],[48.4,'tankdrain'],[71.2,'tankdrain'],[72,'vac'],[84.8,'vac'],[85.6,'f32'],[87.8,'f32'],[88.6,'tank'],[95,'tank'],[96,'vent'],[100.8,'vent'],[101.8,'tank'],[110,'tank'],[112,'all'],[114,'all']];
+  const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
+  function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
+  function fitKey(k){
+    // project each part's own box, which fits much tighter than one box round everything
+    const objs=k.nodes? k.nodes.map(i=>A.objs[i]).filter(Boolean) : A.objs.filter((o,i)=>A.nodes[i].parent===0||A.nodes[i].parent===1);
+    const {r,u,dir}=basis(k.th*deg,k.ph*deg); let a=1e9,bb=-1e9,c=1e9,d=-1e9,e=1e9,f=-1e9; const b=new THREE.Box3();
+    for(const o of objs){ b.setFromObject(o); if(b.isEmpty()||!o.visible) continue;
+      for(let n=0;n<8;n++){ _v.set(n&1?b.max.x:b.min.x,n&2?b.max.y:b.min.y,n&4?b.max.z:b.min.z); const x=_v.dot(r), y=_v.dot(u), z=_v.dot(dir); a=Math.min(a,x); bb=Math.max(bb,x); c=Math.min(c,y); d=Math.max(d,y); e=Math.min(e,z); f=Math.max(f,z); } }
+    k.c=V(0,0,0).addScaledVector(r,(a+bb)/2).addScaledVector(u,(c+d)/2).addScaledVector(dir,(e+f)/2); const pad=k.pad||1.08; k.hx=(bb-a)/2*pad; k.hy=(d-c)/2*pad;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={th:0,ph:0,c:V(0,0,0),hx:1,hy:1};
+  function camAt(t){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,ka]=PATH[i], [tb,kb]=PATH[i+1], a=KEYS[ka], b=KEYS[kb], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    cam.th=(a.th+(b.th-a.th)*k)*deg; cam.ph=(a.ph+(b.ph-a.ph)*k)*deg; cam.c.lerpVectors(a.c,b.c,k);
+    cam.hx=Math.exp(Math.log(a.hx)+(Math.log(b.hx)-Math.log(a.hx))*k); cam.hy=Math.exp(Math.log(a.hy)+(Math.log(b.hy)-Math.log(a.hy))*k);
+  }
+  function updateCamera(){
+    if(!ready) return;
+    camAt(T);
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h, wide=w>760;
+    const th=cam.th+yawOff, ph=clamp(cam.ph+pitchOff,0.08,Math.PI-0.08);
+    const {dir,r,u}=basis(th,ph);
+    // keep the framed parts clear of the steps panel (left) and the status panel (right)
+    const useW=wide? Math.max(200,w-580) : w, useH=wide? h-40 : h*0.72;
+    let halfW=Math.max(cam.hx*w/useW, cam.hy*(h/useH)*asp)/zoomOff;
+    const px=2*halfW/w, shiftX=wide? (340-220)/2 : 0, shiftY=wide? 0 : h*0.12;
+    const t=cam.c.clone().addScaledVector(r,-shiftX*px).addScaledVector(u,-shiftY*px);
+    camera.left=-halfW; camera.right=halfW; camera.top=halfW/asp; camera.bottom=-halfW/asp;
+    camera.position.copy(t).addScaledVector(dir,20000); camera.up.set(0,1,0); camera.lookAt(t);
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const ps=clamp(WATER_D*h/(camera.top-camera.bottom),2.5,13); for(const p of POINTS) p.material.size=ps*p.userData.scale;
+  }
+  function resize(){ renderer.setSize(view.clientWidth,view.clientHeight,false); updateCamera(); needRender=true; }
+  addEventListener('resize',resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown',e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove',e=>{ if(!drag) return; yawOff=drag.yo+(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(-e.deltaY*0.0012),0.5,6); needRender=true; },{passive:false});
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+
+  // ---- geometry (world mm, y up), from the pipe and tank geometry in Schematic.stp ------------------------------
+  const SUCT_Y=-1706, INF_Y=-635, EFF_Y=1329, RISER_Z=-342, PUMP_Z=-1802, PRE_Z=-2082, INTAKE_Z=-4726;
+  const SHEET_Y=928, TUBE_BOT=-455, TUBE_R=24, CAKE_R=36, TUBE_FIELD=470, TUBE_PITCH=108;
+  const TANK_R=540, TANK_BOT=-1000, TANK_TOP=925;       // water inside the shell, up to the tube sheet
+  const BAG=V(-400,-1150,760);                            // bag of perlite on the floor at the end of the vacuum hose
+  const TUBES=[]; // schematic tube field under the tube sheet (the STEP file carries the filter externals only)
+  for(let row=-8;row<=8;row++) for(let col=-8;col<=8;col++){ const x=(col+(row&1)*0.5)*TUBE_PITCH, z=row*TUBE_PITCH*0.866; if(Math.hypot(x,z)<=TUBE_FIELD) TUBES.push([x,z]); }
+
+  function prepPath(pts){ let L=0; pts.forEach((q,i)=>{ if(i){ L+=q.p.distanceTo(pts[i-1].p); } q.s=L; }); pts.L=L; return pts; }
+  function across(d,a,b,r,out){
+    _r.copy(Math.abs(d.y)<0.9?V(0,1,0):V(1,0,0)).cross(d).normalize(); _u.copy(d).cross(_r);
+    return out.addScaledVector(_r,a*r).addScaledVector(_u,b*r);
+  }
+  const _d=V(0,0,0);
+  function onPath(pts,s,a,b,out){
+    let i=1; while(i<pts.length-1 && s>pts[i].s) i++;
+    const p0=pts[i-1], p1=pts[i], k=clamp((s-p0.s)/Math.max(1e-6,p1.s-p0.s),0,1);
+    out.lerpVectors(p0.p,p1.p,k); _d.subVectors(p1.p,p0.p).normalize();
+    return across(_d,a,b,p0.r+(p1.r-p0.r)*k,out);
+  }
+  const P=(x,y,z,r)=>({p:V(x,y,z),r:r==null?40:r});
+  const inTank=(i,ylo,yhi)=>{ const a=h1(i*3.3)*6.283, r=Math.sqrt(h1(i*4.1))*(TANK_R-80); return V(Math.cos(a)*r, ylo+h1(i*5.7)*(yhi-ylo), Math.sin(a)*r); };
+
+  // routes
+  const R_DRAIN=[P(0,-1080,0,45),P(0,-1396,0,45),P(0,-1396,1136,45),P(0,-1430,1162,45),P(0,-1660,1162,55)];                 // D10 to the floor drain
+  const R_FILL=[P(0,-2700,INTAKE_Z,62),P(0,-2231,INTAKE_Z,62),P(0,SUCT_Y-80,INTAKE_Z,62),P(0,SUCT_Y,INTAKE_Z+90,62),P(0,SUCT_Y,-3330,62),
+    P(0,SUCT_Y-150,-3190,95),P(0,SUCT_Y-150,-3100,95),P(0,SUCT_Y,-2960,62),P(0,SUCT_Y,-1974,62),P(0,SUCT_Y,PUMP_Z,40),P(0,-1326,PUMP_Z,50),
+    P(0,INF_Y-80,PUMP_Z,52),P(0,INF_Y,PUMP_Z+90,52),P(0,INF_Y,-560,52)];                                                    // pool to the influent nozzle
+  const R_OVER=[P(-268,960,214,16),P(-268,1379,214,16),P(-725,1379,710,16),P(-734,1300,720,16),P(-734,-1011,720,16),P(-734,-1180,720,22)];   // head vent to the vacuum drain valve, to waste
+  const R_VENT=[P(0,960,RISER_Z,40),P(0,EFF_Y-80,RISER_Z,50),P(0,EFF_Y,RISER_Z-90,50),P(0,EFF_Y,PRE_Z,40),P(0,1602,PRE_Z,10),P(-319,1602,1307,10),P(-320,1500,1316,10),P(-320,-1759,1316,10),P(-320,-1820,1316,14)];  // header, precoat vent line, F34, to waste
+  const R_MEDIA=[P(-372,-830,644,14),P(-440,-700,570,14),P(-560,-500,400,14),P(-660,-330,260,14),P(-700,-285,200,14),P(-617,-291,162,14),P(-531,-305,142,14),P(-460,-305,125,10)];  // bag, hose, D19, into the tank
+  const R_AIR=[P(-268,960,214,12),P(-268,1379,214,12),P(-725,1379,710,12),P(-734,1300,720,12),P(-734,538,720,12),P(-593,538,647,12),P(-475,542,616,12),P(-420,470,590,12),P(-370,230,600,12),P(-250,260,700,12),P(-110,430,770,12)];  // tank to the vacuum unit
+  const R_PRE_OUT=[P(0,SUCT_Y,PUMP_Z,40),P(0,-1326,PUMP_Z,50),P(0,INF_Y-80,PUMP_Z,52),P(0,INF_Y,PUMP_Z+90,52),P(0,INF_Y,-560,52)];               // precoat: pump to filter
+  const R_PRE_BACK=[P(0,960,RISER_Z,40),P(0,EFF_Y-80,RISER_Z,50),P(0,EFF_Y,RISER_Z-90,50),P(0,EFF_Y,PRE_Z+70,50),P(0,EFF_Y-80,PRE_Z,38),P(0,SUCT_Y+60,PRE_Z,38),P(0,SUCT_Y,PRE_Z+70,40),P(0,SUCT_Y,PUMP_Z,40)];  // precoat line back to the pump
+
+  // ---- particle streams: each particle follows its own copy of a route (so it can start or end at a spread point) --
+  const WATER_D=34, SPEED=1150, BLUE=new THREE.Color(0x1597c9), DIRTY=new THREE.Color(0xa88b57), WHITE=new THREE.Color(0xffffff), AIRC=new THREE.Color(0xaab8c4);
+  const dotTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d'); const gr=g.createRadialGradient(16,16,0,16,16,16); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,32,32); return new THREE.CanvasTexture(c); })();
+  const POINTS=[];
+  function mkPoints(n,scale){
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e6),3)); g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3).fill(1),3));
+    const p=new THREE.Points(g,new THREE.PointsMaterial({size:6,vertexColors:true,map:dotTex,transparent:true,opacity:0.92,depthWrite:false,depthTest:false,sizeAttenuation:false}));
+    p.frustumCulled=false; p.renderOrder=10; p.userData.scale=scale||1; scene.add(p); POINTS.push(p); return p;
+  }
+  const STREAMS=[];
+  // wins: [[t0,t1,density,dirty]]; head/tail: optional per-particle start/end points added to the route
+  function stream(route,n,wins,opt){
+    opt=opt||{}; const pts=mkPoints(n,opt.scale), parts=[], sd=opt.seed||0;
+    for(let i=0;i<n;i++){
+      const ang=h1(i*1.7+sd)*6.283, rad=Math.sqrt(h1(i*2.3+sd)), a=Math.cos(ang)*rad, b=Math.sin(ang)*rad;
+      const path=route.map(q=>({p:q.p.clone(),r:q.r}));
+      if(opt.head) path.unshift({p:opt.head(i),r:0});
+      if(opt.tail) path.push({p:opt.tail(i),r:0});
+      prepPath(path); parts.push({path,a,b,ph:h1(i*13.7+sd),k:h1(i*7.3+sd)});
+    }
+    const S_={pts,parts,wins,color:opt.color||BLUE,dirtyColor:opt.dirtyColor||DIRTY,speed:opt.speed||SPEED};
+    STREAMS.push(S_); return S_;
+  }
+  let flowClock=0;
+  const _q=V(0,0,0);
+  function placeStreams(t){
+    for(const S_ of STREAMS){
+      const arr=S_.pts.geometry.attributes.position.array, col=S_.pts.geometry.attributes.color.array;
+      let w=null; for(const x of S_.wins){ const Lmax=S_.parts[0].path.L; if(t>=x[0]&&t<=x[1]+Lmax/S_.speed+1) w=x; }
+      S_.pts.visible=!!w; if(!w) continue;
+      const front=(t-w[0])*S_.speed, tail=t>w[1]?(t-w[1])*S_.speed:-1, dens=w[2]==null?1:w[2], dirty=w[3]||0;
+      for(let i=0;i<S_.parts.length;i++){
+        const f=S_.parts[i], L=f.path.L, s=(f.ph*L+flowClock*S_.speed)%L;
+        if(f.k>dens||s>front||s<tail){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
+        onPath(f.path,s,f.a,f.b,_q); arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
+        const c=(typeof dirty==='function'? f.k<dirty(t) : f.k<dirty*dens)? S_.dirtyColor : S_.color; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
+      }
+      S_.pts.geometry.attributes.position.needsUpdate=true; S_.pts.geometry.attributes.color.needsUpdate=true;
+    }
+  }
+
+  // ---- tank state: water level, spent media, fresh media, cake on the tubes ------------------------------------------
+  function levelAt(t){
+    let L=1;
+    const d=EV.drain, f=EV.fill;
+    const seq=[[d[0],-1],[f[0],1],[d[1],-1],[f[1],1],[d[2],-1],[f[2],1]];
+    for(const [[t0,t1],dir] of seq){ if(t<t0) break; const k=smooth((t-t0)/(t1-t0)); L=dir<0?1-k:k; }
+    return L;
+  }
+  const oldCakeAt=t=>1-smooth((t-EV.bump[0])/(EV.bump[1]-EV.bump[0]));
+  function oldMediaAt(t){          // share of the spent media still in the tank
+    if(t<EV.bump[0]) return 0;
+    let m=smooth((t-EV.bump[0])/(EV.bump[1]-EV.bump[0]));
+    const left=[0.25,0.06,0];
+    EV.drain.forEach(([t0,t1],i)=>{ if(t>=t0){ const k=smooth((t-t0)/(t1-t0)); const from=i?left[i-1]:1; m=from+(left[i]-from)*k; } });
+    return m;
+  }
+  const newMediaAt=t=>smooth((t-EV.vac[0]-1.5)/(EV.vac[1]-EV.vac[0]));
+  const newCakeAt=t=>smooth((t-EV.precoat[0]-0.4)/6.5);
+  const pumpOn=t=>EV.pump.some(([a,b])=>t>=a&&t<b);
+  function bumpsAt(t){ return t<EV.bump[0]?0: Math.min(10, Math.floor((t-EV.bump[0])/((EV.bump[1]-EV.bump[0])/10))+1); }
+
+  let oldCloud, newCloud, waterMesh, bagMesh;
+  const CLOUD_N=700;
+  function buildTankState(){
+    oldCloud=mkPoints(CLOUD_N,0.8); newCloud=mkPoints(CLOUD_N,0.8);
+    const cA=oldCloud.geometry.attributes.color.array, cB=newCloud.geometry.attributes.color.array;
+    for(let i=0;i<CLOUD_N;i++){ cA[3*i]=DIRTY.r; cA[3*i+1]=DIRTY.g; cA[3*i+2]=DIRTY.b; }
+    oldCloud.geometry.attributes.color.needsUpdate=true;
+    const g=new THREE.CylinderGeometry(TANK_R+30,TANK_R+30,1,40,1,false); g.translate(0,0.5,0);
+    waterMesh=new THREE.Mesh(g,new THREE.MeshPhongMaterial({color:0x3d9ad6,transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide,shininess:60}));
+    waterMesh.position.y=TANK_BOT; waterMesh.renderOrder=3; scene.add(waterMesh);
+    // bag of perlite
+    const cv=document.createElement('canvas'); cv.width=256; cv.height=160; const x=cv.getContext('2d');
+    x.fillStyle='#f3f1ea'; x.fillRect(0,0,256,160); x.fillStyle='#1E4B8C'; x.font='bold 34px Barlow Semi Condensed, Arial'; x.textAlign='center'; x.fillText('PERLITE',128,78); x.font='20px Arial'; x.fillText('filter media',128,108);
+    const tex=new THREE.CanvasTexture(cv), side=new THREE.MeshPhongMaterial({color:0xefece2,transparent:true,shininess:5}), face=new THREE.MeshPhongMaterial({map:tex,transparent:true,shininess:5});
+    const bg=new THREE.BoxGeometry(380,1,300); bg.translate(0,0.5,0);
+    bagMesh=new THREE.Mesh(bg,[side,side,side,side,face,side]); bagMesh.position.copy(BAG).setY(-1461); bagMesh.visible=false; scene.add(bagMesh);
+  }
+  function applyTankState(t){
+    const lv=levelAt(t), topY=TANK_BOT+lv*(TANK_TOP-TANK_BOT), g=ghostAt(t);
+    waterMesh.scale.y=Math.max(1,topY-TANK_BOT); waterMesh.material.opacity=0.2*g*Math.min(1,lv*20); waterMesh.visible=g>0.01&&lv>0.002;
+    const place=(cloud,amt,settle,seed)=>{
+      const a=cloud.geometry.attributes.position.array; cloud.visible=g>0.01&&amt>0.001;
+      for(let i=0;i<CLOUD_N;i++){
+        if(h1(i*9.1+seed)>amt){ a[3*i]=a[3*i+1]=a[3*i+2]=1e6; continue; }
+        const r=Math.sqrt(h1(i*4.1+seed))*(TANK_R-40), ang=h1(i*3.3+seed)*6.283+flowClock*0.12*(0.3+lv), u=h1(i*5.7+seed);
+        let y=TANK_BOT+u*(topY-TANK_BOT)*(1-settle)+ (1-lv)*h1(i*6.1+seed)*60;
+        a[3*i]=Math.cos(ang)*r; a[3*i+1]=y+Math.sin(flowClock*0.8+i)*12*lv; a[3*i+2]=Math.sin(ang)*r;
+      }
+      cloud.geometry.attributes.position.needsUpdate=true;
+    };
+    place(oldCloud, oldMediaAt(t), 0, 0);
+    place(newCloud, newMediaAt(t)*(1-newCakeAt(t)), 0, 17);
+    // bag: appears for the vacuum transfer, empties as the media goes in
+    const bagOn=t>=EV.bag[0]&&t<=EV.bag[1]; bagMesh.visible=bagOn;
+    if(bagOn){ const k=smooth((t-EV.vac[0])/(EV.vac[1]-EV.vac[0])), fade=smooth((t-EV.bag[0])/0.8)*(1-smooth((t-EV.bag[1]+0.8)/0.8)); bagMesh.scale.y=620*(1-0.7*k); bagMesh.material.forEach(m=>m.opacity=fade); }
+  }
+
+  // ---- ghosted filter body, with a schematic tube field -------------------------------------------------------------
+  let ghostMeshes=[], ghostLines=[], tubeMesh=null;
+  function buildGhost(){
+    const ext=A.objs[2];
+    ext.traverse(o=>{ if(o.isMesh){ o.userData.base=o.material.transparent?o.material.opacity:1; ghostMeshes.push(o); } else if(o.isLineSegments) ghostLines.push(o); });
+    const geo=new THREE.CylinderGeometry(CAKE_R,CAKE_R,SHEET_Y-TUBE_BOT,14,1,false);
+    tubeMesh=new THREE.InstancedMesh(geo,new THREE.MeshPhongMaterial({color:0xd9c89c,transparent:true,opacity:0,depthWrite:false,shininess:5}),TUBES.length);
+    tubeMesh.visible=false; scene.add(tubeMesh);
+  }
+  const ghostAt=t=>smooth((t-1.4)/1.2)*(1-smooth((t-110)/1.6));
+  const BARE=new THREE.Color(0xb8bec5), OLDC=new THREE.Color(0xb59a66), NEWC=new THREE.Color(0xf1f0ea), _m4=new THREE.Matrix4(), _sc=V(1,1,1), _pos=V(0,0,0), _qt=new THREE.Quaternion();
+  let lastGhost=-1, lastCake=-1;
+  function applyGhost(t){
+    const fresh=t>=EV.vac[0], k=fresh? newCakeAt(t) : oldCakeAt(t), key=(fresh?1000:0)+Math.round(k*300);
+    if(key!==lastCake){ lastCake=key;
+      const r=(TUBE_R+(CAKE_R-TUBE_R)*k)/CAKE_R; _sc.set(r,1,r);
+      TUBES.forEach((tb,i)=>{ _pos.set(tb[0],(SHEET_Y+TUBE_BOT)/2,tb[1]); _m4.compose(_pos,_qt,_sc); tubeMesh.setMatrixAt(i,_m4); });
+      tubeMesh.instanceMatrix.needsUpdate=true; tubeMesh.material.color.copy(BARE).lerp(fresh?NEWC:OLDC,k);
+    }
+    const g=ghostAt(t); if(Math.abs(g-lastGhost)<0.004) return; lastGhost=g;
+    for(const o of ghostMeshes){ const m=o.material, op=o.userData.base*(1-0.84*g); m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const l of ghostLines) l.visible=g<0.35;
+    tubeMesh.visible=g>0.01; tubeMesh.material.opacity=0.7*g;
+  }
+
+  // ---- compressed air set hidden after the opening overview (as on the other animations) ------------------------------
+  const AIR_SET=[653,682,668,669,666,718,665];
+  let airMeshes=[], airLines=[], lastAir=-1;
+  function buildAirFade(){
+    AIR_SET.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{
+      if(o.isMesh&&o.visible){ o.userData.base=o.material.transparent?o.material.opacity:1; airMeshes.push(o); }
+      else if(o.isLineSegments&&o.visible) airLines.push(o);
+    }));
+  }
+  const airAt=t=>1-smooth((t-1.5)/1.5);
+  function applyAir(t){
+    const k=airAt(t); if(Math.abs(k-lastAir)<0.004) return; lastAir=k;
+    for(const o of airMeshes){ const m=o.material, op=o.userData.base*k; o.visible=k>0.01; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const l of airLines) l.visible=k>0.5;
+  }
+
+  // ---- valves ---------------------------------------------------------------------------------------------------------
+  // Butterfly valves (D7, F32, D8): the disc is split out of the fused CAD mesh and turned on its stem, with the body and
+  // the flanges either side see-through while it moves. Other valves (ball valves and the drain valve) show their state
+  // by colour: green open, amber partly open, a short red flash when they close.
+  const DISCS={   // moves: [start, end, from, to] with 1 = disc across the bore
+    D7: {node:620, rad:77, slab:8, moves:[[6,7.4,0,1]], tint:0xd1202b, see:[619,621,584,583,582]},
+    F32:{node:608, rad:77, slab:8, moves:[[10.2,11.6,0,1],[34.8,36,1,0],[48.6,49.6,0,1],[55.9,56.8,1,0],[63.4,64.4,0,1],[86.2,87.6,1,0]], tint:0x1e9a4a, see:[590,596,589]},
+    D8: {node:598, rad:51.8, slab:6.5, moves:[[101.6,102.8,1,0]], tint:0x1e9a4a, see:[597,591]}
+  };
+  const SIMPLE={  // [time, state] with state 0 closed, 0.5 partly open, 1 open
+    D10:{nodes:[566], seq:[[0,0],[EV.crack[0],0.5],[22.8,1],[33,0],[50,1],[55.4,0],[64.8,1],[70.4,0]]},
+    D18:{nodes:[670], seq:[[0,0],[23.8,1],[71,0],[88,1],[99.8,0]]},
+    D17:{nodes:[680], seq:[[0,0],[72.4,1],[84.6,0]]},
+    D19:{nodes:[684], seq:[[0,0],[73.2,1],[84,0]]},
+    F34:{nodes:[716], seq:[[0,0],[85.6,1],[100.4,0]]}
+  };
+  function discAt(v,t){
+    let shut=v.moves[0][2], show=0, moving=null, closing=false;
+    for(const [t0,t1,a,b] of v.moves){
+      if(t>=t0){ shut=a+(b-a)*ease((t-t0)/(t1-t0)); if(t<t1) moving=b>a?'closing':'opening'; }
+      const sh=smooth((t-(t0-0.9))/0.6)*(1-smooth((t-(t1+0.6))/0.6)); if(sh>show){ show=sh; closing=b>a; }
+    }
+    return {shut,moving,show,closing};
+  }
+  function simpleAt(v,t){ let s=0, since=0, prev=0; for(const [t0,st] of v.seq){ if(t>=t0){ prev=s; s=st; since=t-t0; } } return {s,since,prev}; }
+  function splitDisc(v){
+    const node=A.objs[v.node], src=node&&node.children.find(c=>c.isMesh); if(!src) return;
+    const g=src.geometry, Pp=g.attributes.position.array, I=g.index.array;
+    const inDisc=k=>Math.abs(Pp[3*k+1])<v.slab && Math.hypot(Pp[3*k],Pp[3*k+2])<v.rad;
+    const di=[], bi=[];
+    for(let t=0;t<I.length;t+=3){ (inDisc(I[t])&&inDisc(I[t+1])&&inDisc(I[t+2])?di:bi).push(I[t],I[t+1],I[t+2]); }
+    const mk=idx=>{ const ng=new THREE.BufferGeometry(); ng.setAttribute('position',g.attributes.position); ng.setAttribute('normal',g.attributes.normal); ng.setIndex(idx); ng.computeBoundingSphere(); return ng; };
+    src.geometry=mk(bi);
+    v.pivot=new THREE.Group(); node.add(v.pivot);
+    const dm=src.material.clone(); dm.emissive.setHex(v.tint); dm.emissiveIntensity=0; v.base=dm.color.clone(); v.tintC=new THREE.Color(v.tint);
+    v.disc=new THREE.Mesh(mk(di),dm); v.disc.userData.idx=v.node; v.pivot.add(v.disc);
+    const ln=node.children.find(c=>c.isLineSegments);
+    if(ln){ const Lp=ln.geometry.attributes.position.array, keep=[], move=[];
+      const inP=o=>Math.abs(Lp[o+1])<v.slab && Math.hypot(Lp[o],Lp[o+2])<v.rad;
+      for(let o=0;o<Lp.length;o+=6) (inP(o)&&inP(o+3)?move:keep).push(...Lp.slice(o,o+6));
+      const lg=a=>{ const q=new THREE.BufferGeometry(); q.setAttribute('position',new THREE.Float32BufferAttribute(a,3)); return q; };
+      ln.geometry=lg(keep); v.pivot.add(new THREE.LineSegments(lg(move),ln.material)); }
+    v.body=src; v.around=[];
+    v.see.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh||o.isLineSegments) v.around.push(o); }));
+  }
+  function buildValves(){
+    Object.values(DISCS).forEach(splitDisc);
+    Object.values(SIMPLE).forEach(v=>{ v.mats=[]; v.nodes.forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); v.mats.push(o.material); } })); });
+  }
+  const GREEN=0x1e9a4a, AMBER=0xd08a12, RED=0xd1202b;
+  let lastValve=-1;
+  function applyValves(t){
+    const key=Math.round(t*100); if(key===lastValve) return; lastValve=key;
+    for(const v of Object.values(DISCS)){
+      if(!v.pivot) continue;
+      const {shut,show,closing}=discAt(v,t);
+      v.pivot.rotation.z=shut*Math.PI/2; v.tintC.setHex(closing?RED:GREEN);             // red while closing, green while opening
+      for(const o of [v.body,...v.around]){ if(o.isLineSegments){ o.visible=show<0.5; continue; } const m=o.material; m.transparent=show>0.01; m.opacity=1-0.8*show; m.depthWrite=show<0.5; }
+      v.disc.material.color.copy(v.base).lerp(v.tintC,show); v.disc.material.emissiveIntensity=0.35*show;
+    }
+    for(const v of Object.values(SIMPLE)){
+      const {s,since,prev}=simpleAt(v,t), flash=s===0&&prev>0? 1-smooth(since/1.6) : 0;
+      const c=s>=1?GREEN:s>0?AMBER:RED, k=s>0? 0.55 : 0.6*flash;
+      for(const m of v.mats){ m.emissive.setHex(c); m.emissiveIntensity=k; }
+    }
+    // vacuum transfer unit glows while it runs
+    const vOn=t>=EV.vac[0]&&t<EV.vac[1];
+    if(vacMats) for(const m of vacMats){ m.emissive.setHex(0x2a63b8); m.emissiveIntensity=vOn?0.25+0.15*Math.sin(t*6):0; }
+  }
+  let vacMats=null;
+  function buildVac(){ vacMats=[]; A.objs[552]&&A.objs[552].traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); vacMats.push(o.material); } }); }
+
+  // ---- status panel ----------------------------------------------------------------------------------------------------
+  function updateReadout(t){
+    const set=(el,txt,cls)=>{ if(!el) return; if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; };
+    const disc=n=>{ const a=discAt(DISCS[n],t); return a.moving==='closing'?['Closing','mid']:a.moving==='opening'?['Opening','mid']:a.shut>0.5?['Closed','stop']:['Open','go']; };
+    const simp=n=>{ const s=simpleAt(SIMPLE[n],t).s; return s>=1?['Open','go']:s>0?['Partly open','mid']:['Closed','stop']; };
+    set(RD.pump,...(pumpOn(t)?['Running','go']:['Off','stop']));
+    set(RD.vac,...(t>=EV.vac[0]&&t<EV.vac[1]?['On','go']:['Off','']));
+    set(RD.level, Math.round(levelAt(t)*100)+'%', 'wet');
+    set(RD.bump, t<EV.bump[0]?'—':bumpsAt(t)+' of 10', t>=EV.bump[0]&&t<EV.bump[1]?'mid':'');
+    set(RD.D7,...disc('D7')); set(RD.F32,...disc('F32')); set(RD.D8,...disc('D8'));
+    for(const n of ['D10','D18','D17','D19','F34']) set(RD[n],...simp(n));
+  }
+
+  // ---- streams ------------------------------------------------------------------------------------------------------------
+  function buildStreams(){
+    const drainWins=[[EV.crack[0],EV.crack[1],0.22,0.9], ...EV.drain.map(([a,b,d])=>[a,b,1,d])];
+    stream(R_DRAIN,520,drainWins,{head:i=>inTank(i,TANK_BOT,TANK_BOT+200).setY(-990)});
+    stream(R_FILL,900,EV.fill.map(([a,b])=>[a-0.6,b+0.4,1,0]),{tail:i=>inTank(i,TANK_BOT+60,TANK_BOT+700),seed:3});
+    stream(R_OVER,300,EV.over.map(([a,b])=>[a,b,1,0]),{scale:0.85,seed:5});
+    stream(R_VENT,520,[[EV.vent[0],EV.vent[1],1,0]],{scale:0.85,seed:7});
+    stream(R_MEDIA,420,[[EV.vac[0],EV.vac[1],1,0]],{head:i=>V(BAG.x+(h1(i*2.2)-0.5)*260,-1150+h1(i*3.1)*240,BAG.z+(h1(i*4.4)-0.5)*200),tail:i=>inTank(i,TANK_BOT,TANK_BOT+80),color:WHITE,scale:0.75,speed:900,seed:9});
+    stream(R_AIR,260,[[EV.vac[0],EV.vac[1],1,0]],{color:AIRC,scale:0.7,speed:1500,seed:11});
+    const media=t=>0.9*newMediaAt(t)*(1-newCakeAt(t));
+    stream(R_PRE_OUT,420,[[EV.precoat[0],1e9,1,media]],{tail:i=>inTank(i,TANK_BOT+200,SHEET_Y-100),dirtyColor:WHITE,seed:13});
+    stream(R_PRE_BACK,520,[[EV.precoat[0]+2.6,1e9,1,0]],{seed:15});
+  }
+
+  // ---- callouts: schematic mark tags for the current step, plus a few named points ------------------------
+  const NS='http://www.w3.org/2000/svg', LBL=[]; let labelsOn=true;
+  const NAMED=[
+    {id:'bag', txt:'Bag of perlite', p:V(BAG.x,-1000,BAG.z), steps:[6,7]},
+    {id:'tubes', txt:'Tube elements', p:V(0,300,-300), steps:[1,10]},
+    {id:'waste', txt:'Vacuum drain line to waste', p:V(-734,-700,720), steps:[3]},
+    {id:'vent', txt:'Precoat vent line', p:V(-320,800,1316), steps:[8]}
+  ];
+  function mkLabel(kind,code,name){
+    const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl '+kind);
+    const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text');
+    h.setAttribute('class','halo'); t.setAttribute('class','t');
+    const fillT=el=>{ if(code){ el.append(code+' '); const s=document.createElementNS(NS,'tspan'); s.setAttribute('class','nm'); s.textContent=name; el.append(s); } else el.textContent=name; };
+    fillT(h); fillT(t); g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t};
+  }
+  function buildLabels(){
+    const used=new Set(STEPS.flatMap(s=>s.marks));
+    for(const m of S.marks){
+      if(!used.has(m.mark)||!m.nodes.length) continue;
+      const b=new THREE.Box3(); m.nodes.forEach(i=>b.expandByObject(A.objs[i]));
+      LBL.push({id:m.mark, c:b.getCenter(V(0,0,0)), steps:STEPS.map((s,i)=>s.marks.includes(m.mark)?i:-1).filter(i=>i>=0), ...mkLabel(m.mark[0].toLowerCase(),m.mark,m.ref)});
+    }
+    for(const n of NAMED) LBL.push({id:n.id, c:n.p, steps:n.steps||[n.step], ...mkLabel('n',null,n.txt)});
+  }
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
+    const cx=w/2, cy=h/2, items=[];
+    for(const L of LBL){
+      const on=labelsOn && !moving && L.steps.includes(curStep);
+      L.g.style.opacity=on?1:0; if(!on) continue;
+      _v.copy(L.c).project(camera); const x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
+      if(x<0||x>w||y<0||y>h){ L.g.style.opacity=0; continue; }
+      const dx=x-cx||1, dy=y-cy, len=Math.hypot(dx,dy)||1;
+      items.push({L,x,y,tx:x+dx/len*70,ty:y+dy/len*50});
+    }
+    for(let it=0;it<40;it++) for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){
+      const a=items[i], b=items[j], ddx=b.tx-a.tx, ddy=b.ty-a.ty, d=Math.hypot(ddx,ddy);
+      if(d<30){ const push=(30-d)/2, ux=(ddx||0.1)/(d||1), uy=(ddy||1)/(d||1); a.tx-=ux*push; a.ty-=uy*push; b.tx+=ux*push; b.ty+=uy*push; }
+    }
+    drawTags(w,h);
+    for(const it of items){
+      let tx=clamp(it.tx,16,w-16), ty=clamp(it.ty,14,h-10); const left=tx<it.x, tw=(it.L.t.textContent.length)*6.2;
+      for(const r of tagRects){ const x0=left?tx-tw:tx, x1=left?tx:tx+tw; if(x1>r[0]&&x0<r[2]&&ty>r[1]-4&&ty-12<r[3]) ty=r[3]+16; }
+      it.L.ln.setAttribute('points',`${tx+(left?6:-6)},${ty-4} ${it.x},${it.y}`);
+      for(const t of [it.L.h,it.L.t]){ t.setAttribute('x',tx); t.setAttribute('y',ty); t.setAttribute('text-anchor',left?'end':'start'); }
+    }
+  }
+  document.getElementById('labels').addEventListener('click',e=>{ labelsOn=!labelsOn; e.target.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+
+  // ---- "from pool" / "to pool" / "to drain" tags ---------------------------------------------------------------
+  const WAVES='<path d="M6 9c2-2 4-2 6 0s4 2 6 0M6 14c2-2 4-2 6 0s4 2 6 0" stroke="var(--water)" stroke-width="1.7" fill="none" stroke-linecap="round"/>';
+  function tag(txt,icon,wd){
+    const g=document.createElementNS(NS,'g');
+    g.innerHTML=`<rect rx="3" ry="3" width="${wd}" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>${icon}<text x="24" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">${txt}</text>`;
+    overlay.appendChild(g); return g;
+  }
+  const TAGS=[];
+  function buildTags(drainPos){
+    TAGS.push({g:tag('FROM POOL',WAVES,96), p:V(0,-2760,INTAKE_Z), dir:V(0,-1,0), on:t=>EV.fill.some(([a,b])=>t>=a-0.6&&t<=b+0.8)});
+    TAGS.push({g:tag('TO WASTE','<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>',86), p:V(-734,-1180,720), dir:V(0,-1,0), on:t=>t>=EV.drain[0][0]});
+    if(drainPos) TAGS.push({g:tag('TO DRAIN','<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>',84), p:drainPos, dir:null});
+  }
+  const tagRects=[];
+  function drawTags(w,h){
+    tagRects.length=0;
+    for(const T_ of TAGS){
+      _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h;
+      if(T_.dir){ _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20; }
+      const off=x<-40||x>w+40||y<-20||y>h+20||(T_.on&&!T_.on(T)); T_.g.style.display=off?'none':''; if(off) continue;
+      const wd=+T_.g.firstChild.getAttribute('width');
+      const gx=Math.round(clamp(x-wd/2,4,w-wd-4)), gy=Math.round(clamp(y-11+(T_.dir?0:23),4,h-26));
+      T_.g.setAttribute('transform',`translate(${gx},${gy})`); tagRects.push([gx,gy,gx+wd,gy+22]);
+    }
+  }
+
+  // ---- steps ---------------------------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); });
+  }
+
+  // ---- load -------------------------------------------------------------------------------------------------------
+  fetch('/assets/defender-schematic/defender-sp41-schematic.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
+    const dressed=DefenderDress(A); A.root.updateMatrixWorld(true);
+    Object.values(KEYS).forEach(fitKey);
+    buildGhost(); buildAirFade(); buildValves(); buildVac(); buildTankState(); buildStreams(); buildLabels(); buildTags(dressed.drainPos);
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- time and playback ------------------------------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(ready){ applyGhost(T); applyAir(T); applyValves(T); updateReadout(T); }
+    needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+  let playing=false, loop=false, last=performance.now();
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=STEPS[STEPS.length-1].t+1;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(!ready) return;
+    if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
+    if(!reduced){ flowClock+=dt; needRender=true; }       // water keeps moving while paused
+    if(needRender){ needRender=false; updateCamera(); placeStreams(T); applyTankState(T); renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  // scripting hook for checks
+  window.DefenderMediaChange={ setTime:t=>{ stopPlay(); setTime(t); }, get T(){ return T; }, camera, scene };
+})();
+</script>
+
+</body>
+</html>
