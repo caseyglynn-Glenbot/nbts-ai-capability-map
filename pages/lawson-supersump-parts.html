@@ -149,9 +149,9 @@
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
   const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
   const DATA=window.LAWSON_SUPERSUMP;
-  const ORDER=['grate','sump','plate','hardware'];
-  const LABEL={grate:'Grate', sump:'Sump', plate:'Test plate'};
-  const COLOR={grate:0xf2f2ee, sump:0xd5d9de, plate:0x8b9199};
+  const ORDER=['grate','screws','inserts','sump','plate'];
+  const LABEL={grate:'Grate', sump:'Sump', plate:'Test plate', screws:'Grate screws', inserts:'Brass inserts'};
+  const COLOR={grate:0xf2f2ee, sump:0xd5d9de, plate:0x8b9199, screws:0x9aa3ad, inserts:0xc9a24a};
 
   // ---- scene ----------------------------------------------------------------------------------
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -199,9 +199,38 @@
           off.set(0,0,0); off[ax]=sg*(halfW*1.25); s=0.35; e=1; }
         parts[k]={obj, bb, off, s, e, k:0, base:obj.position.clone()};
       });
+      addHardware(d,H);
       ld.remove(); buildLabels(); resize(); setProgress(0);
       if(reduced) setProgress(1); else setTimeout(()=>{ if(cur===m && !playing && P===0){ dirn=1; startPlay(); } },600);
     }).catch(err=>{ ld.textContent='Could not load the model: '+err.message; });
+  }
+  // ---- grate screws and brass inserts, built at the bolt holes found in the sump ---------------------------------
+  // 1/4-20 socket head cap screw: head 9.5 mm dia x 6.35 mm, 3/16 in hex socket; brass rivet-nut insert: 7.8 mm body,
+  // 10.5 mm flange, 1/4-20 bore. Screws sit recessed in the grate with the tip about 10 mm into the insert.
+  function addHardware(d,H){
+    const grp={screws:new THREE.Group(), inserts:new THREE.Group()};
+    const mS=new THREE.MeshPhongMaterial({color:COLOR.screws,shininess:80,specular:0x777777}), mI=new THREE.MeshPhongMaterial({color:COLOR.inserts,shininess:70,specular:0x886622});
+    const hex=new THREE.CylinderGeometry(2.75,2.75,4.2,6), dark=new THREE.MeshPhongMaterial({color:0x2a2d31});
+    const Lb=d.boltLen, top=d.sumpTop;
+    for(const [x,z] of d.holes){
+      // insert: flange at the sump face, body down into the bore
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(3.9,3.9,13,20,1,true),mI); body.position.set(x,top-6.5,z);
+      const fl=new THREE.Mesh(new THREE.RingGeometry(3.2,5.25,24),mI); fl.rotation.x=-Math.PI/2; fl.position.set(x,top+0.05,z);
+      const flr=new THREE.Mesh(new THREE.CylinderGeometry(5.25,5.25,1,24,1,true),mI); flr.position.set(x,top-0.45,z);
+      const bore=new THREE.Mesh(new THREE.CylinderGeometry(3.2,3.2,13,16,1,true),mI); bore.position.set(x,top-6.5,z);
+      grp.inserts.add(body,fl,flr,bore);
+      // screw: shank from the head down, tip ~10 mm into the insert
+      const hb=top+Lb-10;
+      const shank=new THREE.Mesh(new THREE.CylinderGeometry(3.175,3.175,Lb,16),mS); shank.position.set(x,hb-Lb/2,z);
+      const head=new THREE.Mesh(new THREE.CylinderGeometry(4.75,4.75,6.35,24),mS); head.position.set(x,hb+3.175,z);
+      const sock=new THREE.Mesh(hex,dark); sock.position.set(x,hb+6.35-2.05,z);
+      grp.screws.add(shank,head,sock);
+    }
+    for(const [k,g] of Object.entries(grp)){
+      g.traverse(o=>{ if(o.isMesh){ o.userData.part=k; o.material=o.material.clone(); } }); root.add(g); g.updateMatrixWorld(true);
+      const b=new THREE.Box3().setFromObject(g), off=new THREE.Vector3(0, k==='screws'? H*1.35 : H*0.28, 0);
+      parts[k]={obj:g, bb:[b.min.x,b.min.y,b.min.z,b.max.x,b.max.y,b.max.z], off, s:k==='screws'?0:0.25, e:k==='screws'?0.55:0.8, k:0, base:g.position.clone()};
+    }
   }
   document.getElementById('models').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&b.dataset.m!==cur) loadModel(b.dataset.m); });
 
@@ -300,7 +329,7 @@
 
   // ---- explode and callouts ------------------------------------------------------------------------------
   let P=0, labelsOn=true, measuredAt=0; const labelEls={};
-  function buildLabels(){ const ns='http://www.w3.org/2000/svg';
+  function buildLabels(){ const ns='http://www.w3.org/2000/svg'; measuredAt=0;
     for(const k of Object.keys(parts)){ const grp=document.createElementNS(ns,'g'); grp.setAttribute('class','lbl'); grp.style.opacity=0; grp.dataset.part=k;
       const ln=document.createElementNS(ns,'polyline'), dot=document.createElementNS(ns,'circle'); dot.setAttribute('r','2.2');
       const halo=document.createElementNS(ns,'text'); halo.setAttribute('class','halo'); const tx=document.createElementNS(ns,'text'); tx.setAttribute('class','tx');
@@ -309,7 +338,7 @@
     for(const p of Object.values(parts)){ const k=ease((P-p.s)/(p.e-p.s)); p.k=k; p.obj.position.copy(p.base).addScaledVector(p.off,k); }
     needRender=true; }
   prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
-  const RIGHT_COL=new Set(['plate']), v3=new THREE.Vector3();
+  const RIGHT_COL=new Set(['plate','screws']), v3=new THREE.Vector3();
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ measuredAt=0; needRender=true; });
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
@@ -321,7 +350,8 @@
       for(let n=0;n<8;n++){ v3.set(bb[n&1?3:0],bb[n&2?4:1],bb[n&4?5:2]).addScaledVector(p.off,p.k).project(camera); const px=(v3.x+1)/2*w, py=(1-v3.y)/2*h; cx+=px/8; cy+=py/8; if(!best||(right?px>best.x:px<best.x)) best={x:px,y:py}; }
       items.push({el,x:best.x+(cx-best.x)*0.25,y:best.y+(cy-best.y)*0.25,right}); }
     if(!items.length) return;
-    if(measuredAt!==w){ measuredAt=w; for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){ it.el.tw=70; } } updateCamera(); }
+    if(measuredAt!==w){ measuredAt=w; for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength()||0; }catch(e){ it.el.tw=0; } } updateCamera(); }
+    for(const it of items) if(!it.el.tw){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){} if(!it.el.tw) it.el.tw=110; }
     const fs=parseFloat(getComputedStyle(overlay).fontSize)||13, lh=Math.max(15,fs+5), pad=12, top=lh*0.7, bottom=h-lh*0.4, panelW=(panel.classList.contains('open')&&w>640)?panel.offsetWidth:0;
     for(const right of [false,true]){ const col=items.filter(i=>i.right===right).sort((a,b)=>a.y-b.y); if(!col.length) continue;
       const maxW=Math.min(Math.max(...col.map(i=>i.el.tw||70)),Math.max(70,w*0.28)), ys=col.map(i=>i.y);

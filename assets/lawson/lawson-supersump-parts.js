@@ -1,7 +1,8 @@
 // Lawson Aquatics SuperSump (MLD-SG) parts data for the 9x9, 12x12 and 18x18 main drains.
 // Sources: Lawson Aquatic Grate O&M (parts list, installation and maintenance instructions), the
 // MLD-SG-0909 / 1212 / 1818 General Certificates of Conformity, and the SuperSump technical data sheet (R 4/5/13).
-// Part rows are [part number, description, note].
+// Part rows are [part number, description, note]. holes: bolt-hole centres (x,z) in the STEP frame, found from the
+// 7.8 mm insert bores in the sump; sumpTop: the sump face the grate sits on; boltLen in mm (5/8 in or 15/16 in).
 (function(){
   const SRC='Lawson Aquatic Grate O&M (parts list, installation and maintenance); MLD-SG General Certificate of Conformity; SuperSump technical data sheet R 4/5/13.';
   const FAQ_GRATE=[
@@ -26,7 +27,7 @@
   ];
   function model(o){
     return {
-      model:o.model, size:o.size, assembly:o.assembly, port:o.port, floor:o.floor, wall:o.wall, area:o.area, blockable:o.blockable,
+      model:o.model, size:o.size, holes:o.holes, sumpTop:o.sumpTop, boltLen:o.boltLen, assembly:o.assembly, port:o.port, floor:o.floor, wall:o.wall, area:o.area, blockable:o.blockable,
       parts:{
         grate:{title:o.size+' grate (cover)', desc:'Injection-moulded white grate with the Lawson low-profile top, 54% open area. Screws down onto the sump with four stainless screws into moulded brass inserts.',
           parts:[[o.grate,o.size+' SuperSump grate','Grate part number from the parts list and certificate'],[o.assembly,'Complete '+o.model+' assembly (sump and grate)',o.assemblyNote||'']], faq:FAQ_GRATE, src:SRC},
@@ -34,15 +35,17 @@
           parts:[[o.sump,o.size+' SuperSump sump body','Sump part number from the parts list and certificate'],[o.assembly,'Complete '+o.model+' assembly (sump and grate)',o.assemblyNote||'']], faq:FAQ_SUMP, src:SRC},
         plate:{title:'Test plate', desc:'Moulded plate across the side port with a 1/2 in NPT tap, used to pressure test the suction piping. It is cut out after testing.',
           parts:[[o.sump,'Moulded into the sump body','No separate part number; supplied as part of the sump']], faq:FAQ_PLATE, src:SRC},
-        hardware:{title:'Screws and inserts', desc:'Stainless steel grate screws and brass inserts. Not shown in the 3D model.', nomodel:true,
-          parts:[['1000-8309','Fastener and insert kit','Parts list: fastener and inserts part number'],[o.bolt,o.boltDesc,'Model number from the installation instructions'],['BRASS-TI','Brass insert','Model number from the SuperSump data sheet']], faq:FAQ_HW, src:SRC}
+        screws:{title:'Grate screws', desc:'Four 1/4-20 stainless steel hex socket screws hold the grate down, one at each bolt hole, threading into the brass inserts in the sump. Tighten with a hex key to 10 in-lb.',
+          parts:[[o.bolt,o.boltDesc,'Model number from the installation instructions'],['1000-8309','Fastener and insert kit','Parts list: fastener and inserts part number']], faq:FAQ_HW, src:SRC},
+        inserts:{title:'Brass inserts', desc:'Four brass rivet-nut inserts, 1/4-20 thread, set into the bolt holes around the top of the sump for the grate screws.',
+          parts:[['BRASS-TI','Brass rivet-nut insert, 1/4-20','Model number from the SuperSump data sheet'],['1000-8309','Fastener and insert kit','Parts list: fastener and inserts part number']], faq:FAQ_HW, src:SRC}
       }
     };
   }
   window.LAWSON_SUPERSUMP={
-    '0909':model({model:'MLD-SG-0909', size:'9 x 9', assembly:'1001-9895', grate:'1000-8344', sump:'1002-1110', port:'4 in', floor:237, wall:199, area:42.12, blockable:true, bolt:'BOLT-01-SS', boltDesc:'1/4-20 stainless screw, (4) per grate'}),
-    '1212':model({model:'MLD-SG-1212', size:'12 x 12', assembly:'1001-9893', grate:'1000-8345', sump:'1000-8357', port:'6 in', floor:365, wall:340, area:81.3, blockable:true, bolt:'BOLT-01-SS', boltDesc:'1/4-20 stainless screw, (4) per grate',
+    '0909':model({model:'MLD-SG-0909', size:'9 x 9', assembly:'1001-9895', grate:'1000-8344', sump:'1002-1110', port:'4 in', holes:[[0,105.1],[-105.1,0],[0,-105.1],[105.1,0]], sumpTop:252.4, boltLen:15.9, floor:237, wall:199, area:42.12, blockable:true, bolt:'BOLT-01-SS', boltDesc:'1/4-20 x 5/8 stainless hex socket screw, (4) per grate'}),
+    '1212':model({model:'MLD-SG-1212', size:'12 x 12', assembly:'1001-9893', grate:'1000-8345', sump:'1000-8357', port:'6 in', holes:[[70.1,103.6],[70.1,-175.8],[-69.6,-36.1],[209.8,-36.1]], sumpTop:172.9, boltLen:15.9, floor:365, wall:340, area:81.3, blockable:true, bolt:'BOLT-01-SS', boltDesc:'1/4-20 x 5/8 stainless hex socket screw, (4) per grate',
       assemblyNote:'O&M parts list gives 1001-9893; the MLD-SG-1212 certificate shows 1001-9896 (the MLD-FG-1212 frame and grate number). Confirm before ordering.'}),
-    '1818':model({model:'MLD-SG-1818', size:'18 x 18', assembly:'1001-9894', grate:'1000-8346', sump:'1000-8358', port:'8 in', floor:816, wall:696, area:183.06, blockable:false, bolt:'BOLT-02-SS', boltDesc:'1/4-20 x 15/16 stainless screw, (4) per grate'})
+    '1818':model({model:'MLD-SG-1818', size:'18 x 18', assembly:'1001-9894', grate:'1000-8346', sump:'1000-8358', port:'8 in', holes:[[72.9,149.1],[-372.9,-295.3],[-372.9,149.1],[72.9,-295.3]], sumpTop:-167.4, boltLen:23.8, floor:816, wall:696, area:183.06, blockable:false, bolt:'BOLT-02-SS', boltDesc:'1/4-20 x 15/16 stainless hex socket screw, (4) per grate'})
   };
 })();
