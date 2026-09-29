@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Sand Filter: How It Works</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00; --dmark:#1f6fd6; --fmark:#1b8f45; --water:#1597c9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --dmark:#6aa8ff; --fmark:#5cc28a; --water:#4cc0ec; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{fill:none;stroke-width:1.1}
+  #overlay text{font:600 11.5px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;letter-spacing:.03em}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.9}
+  #overlay g.d polyline{stroke:var(--dmark)} #overlay g.d text.t{fill:var(--dmark)}
+  #overlay g.f polyline{stroke:var(--fmark)} #overlay g.f text.t{fill:var(--fmark)}
+  #overlay g.n polyline{stroke:var(--leader)} #overlay g.n text.t{fill:var(--ink)}
+  #overlay g.lbl text .nm{fill:var(--ink);font-weight:500}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:214px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.mid{color:var(--warn)} #readout dd.stop{color:var(--leader)} #readout dd.wet{color:var(--water)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:176px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #readout dl > :nth-child(n+5){display:none}
+    #readout{width:150px}
+    #overlay g.lbl .nm{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Horizontal Sand Filter</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading sand filter model…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Sand filter · filter and backwash</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">Filter status</div>
+      <dl>
+        <dt>Mode</dt><dd id="r-mode" class="go">Filter</dd>
+        <dt>Differential</dt><dd id="r-dp" class="go">4.0 psi</dd>
+        <dt>Sand bed</dt><dd id="r-bed" class="go">Settled</dd>
+        <dt>Influent valve</dt><dd id="r-V1" class="go">Open</dd>
+        <dt>Effluent valve</dt><dd id="r-V2" class="go">Open</dd>
+        <dt>Backwash supply</dt><dd id="r-V4" class="stop">Closed</dd>
+        <dt>Backwash waste</dt><dd id="r-V3" class="stop">Closed</dd>
+        <dt>Sight glass</dt><dd id="r-glass">—</dd>
+      </dl>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>4248SHFFG-4L · Sand Filter<small>Filter mode and backwash. Tank from the 4248SHFFG-4L STEP; laterals, sand and face piping shown schematically.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
+      <span class="tick" id="tend">0:54</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/defender-schematic/assembly-loader.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), tnow=document.getElementById('tnow');
+  const RD={}; ['mode','dp','V1','V2','V3','V4','glass','bed'].forEach(k=>RD[k]=document.getElementById('r-'+k));
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // ---- timeline (seconds) ----------------------------------------------------------------------------------
+  // Operation per the Neptune Benson horizontal sand filter O&M (SHF O&M 4/7/16) and SHFFG tech data sheet (R 2/9/18).
+  const T_END=54;
+  const STEPS=[
+    {t:0,  h:'Horizontal sand filter', d:'4248SHFFG-4L: 42 in fibreglass tank, 4 in connections, 17.1 sq ft of filter area, 86 to 342 gpm. The upper nozzle feeds the overdrain laterals and the lower nozzle collects from the underdrain laterals.'},
+    {t:5,  h:'Filter mode', d:'The influent and effluent valves are open. Water from the pump enters the upper nozzle, spreads out of the overdrain laterals above the bed, passes down through 21 in of 0.45 to 0.55 mm sand, and is collected by the underdrain laterals and returned to the pool.'},
+    {t:15, h:'Dirt builds in the bed', d:'Dirt is trapped in the top of the sand bed. The influent gauge rises and the differential between the influent and effluent gauges climbs. Clean, it reads about 3 to 5 psi; backwash when it has risen 10 psi above that.'},
+    {t:24, h:'Switch to backwash', d:'The influent and effluent valves close and the backwash supply and backwash waste valves open, reversing the flow through the tank.'},
+    {t:29, h:'Backwash', d:'Water now enters the underdrain laterals and flows up through the bed. The sand lifts and expands, releasing the trapped dirt, which leaves through the overdrain laterals and the backwash line to waste. Watch the sight glass until the water runs clear.'},
+    {t:40, h:'Back to filter mode', d:'The valves return to their filter positions, the sand settles back into a level bed and the differential drops back to its clean reading.'}
+  ];
+  const EV={filter:[[5,24.6],[42.4,1e9]], dirt:[8,23.5], bw:[28.2,40], dpRise:[8,23], bedUp:[28.6,30.6], bedDown:[39.6,41.6], clean:[30,38]};
+  const VALVES={   // [t0,t1,from,to]  1 = open
+    V1:{name:'Influent', pos:V(-230,330,1150), moves:[[24.4,25.4,1,0],[41.2,42.2,0,1]]},
+    V2:{name:'Effluent', pos:V(230,-330,1150), moves:[[24.8,25.8,1,0],[41.6,42.6,0,1]]},
+    V3:{name:'Backwash waste', pos:V(230,330,1150), moves:[[26.4,27.4,0,1],[40.2,41.2,1,0]]},
+    V4:{name:'Backwash supply', pos:V(-230,-330,1150), moves:[[26.8,27.8,0,1],[40.6,41.6,1,0]]}
+  };
+  const valveAt=(v,t)=>{ let s=v.moves[0][2], mv=null; for(const [a,b,f,to] of v.moves){ if(t>=a){ s=f+(to-f)*ease((t-a)/(b-a)); if(t<b) mv=to>f?'Opening':'Closing'; } } return {s,mv}; };
+  const dirtAt=t=>smooth((t-EV.dirt[0])/(EV.dirt[1]-EV.dirt[0]))*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])));
+  const bedAt=t=>1+0.28*smooth((t-EV.bedUp[0])/(EV.bedUp[1]-EV.bedUp[0]))*(1-smooth((t-EV.bedDown[0])/(EV.bedDown[1]-EV.bedDown[0])));
+  const dpAt=t=>4+10*smooth((t-EV.dpRise[0])/(EV.dpRise[1]-EV.dpRise[0]))*(1-smooth((t-EV.bw[0])/2));
+  const bwDirty=t=>0.85*(1-smooth((t-EV.clean[0])/(EV.clean[1]-EV.clean[0])))+0.03;
+
+  // ---- renderer and camera ------------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-50000,50000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(0.6,1,0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(-1,0.3,-0.6); scene.add(fill);
+  let A=null, ready=false;
+  const deg=Math.PI/180;
+  const BOX=(a,b)=>new THREE.Box3(a,b);
+  const KEYS={
+    all:   {th:38, ph:64, box:BOX(V(-700,-700,-830),V(700,780,1520))},
+    face:  {th:62, ph:66, pad:1.15, box:BOX(V(-560,-420,940),V(560,800,1520))},
+    inside:{th:14, ph:74, pad:1.02, box:BOX(V(-560,-700,-830),V(560,560,1250))},
+    waste: {th:50, ph:64, pad:1.3, box:BOX(V(-100,-420,940),V(560,800,1300))}
+  };
+  const PATH=[[0,'all'],[4,'all'],[6,'inside'],[23.4,'inside'],[24.4,'face'],[28.2,'face'],[29.4,'inside'],[34,'inside'],[35,'waste'],[39,'waste'],[40.2,'face'],[43,'face'],[44.4,'all'],[54,'all']];
+  const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
+  function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
+  function fitKey(k){
+    const {r,u,dir}=basis(k.th*deg,k.ph*deg), b=k.box; let a=1e9,bb=-1e9,c=1e9,d=-1e9,e=1e9,f=-1e9;
+    for(let n=0;n<8;n++){ _v.set(n&1?b.max.x:b.min.x,n&2?b.max.y:b.min.y,n&4?b.max.z:b.min.z); const x=_v.dot(r), y=_v.dot(u), z=_v.dot(dir); a=Math.min(a,x); bb=Math.max(bb,x); c=Math.min(c,y); d=Math.max(d,y); e=Math.min(e,z); f=Math.max(f,z); }
+    k.c=V(0,0,0).addScaledVector(r,(a+bb)/2).addScaledVector(u,(c+d)/2).addScaledVector(dir,(e+f)/2); const pad=k.pad||1.05; k.hx=(bb-a)/2*pad; k.hy=(d-c)/2*pad;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={th:0,ph:0,c:V(0,0,0),hx:1,hy:1};
+  function camAt(t){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,ka]=PATH[i], [tb,kb]=PATH[i+1], a=KEYS[ka], b=KEYS[kb], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    cam.th=(a.th+(b.th-a.th)*k)*deg; cam.ph=(a.ph+(b.ph-a.ph)*k)*deg; cam.c.lerpVectors(a.c,b.c,k);
+    cam.hx=Math.exp(Math.log(a.hx)+(Math.log(b.hx)-Math.log(a.hx))*k); cam.hy=Math.exp(Math.log(a.hy)+(Math.log(b.hy)-Math.log(a.hy))*k);
+  }
+  function updateCamera(){
+    if(!ready) return;
+    camAt(T);
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h, wide=w>760;
+    const th=cam.th+yawOff, ph=clamp(cam.ph+pitchOff,0.08,Math.PI-0.08), {dir,r,u}=basis(th,ph);
+    const useW=wide? Math.max(200,w-580) : w, useH=wide? h-40 : h*0.72;
+    const halfW=Math.max(cam.hx*w/useW, cam.hy*(h/useH)*asp)/zoomOff;
+    const px=2*halfW/w, shiftX=wide? (340-220)/2 : 0, shiftY=wide? 0 : h*0.12;
+    const t=cam.c.clone().addScaledVector(r,-shiftX*px).addScaledVector(u,-shiftY*px);
+    camera.left=-halfW; camera.right=halfW; camera.top=halfW/asp; camera.bottom=-halfW/asp;
+    camera.position.copy(t).addScaledVector(dir,20000); camera.up.set(0,1,0); camera.lookAt(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const ps=clamp(30*h/(camera.top-camera.bottom),2.5,12); for(const p of POINTS) p.material.size=ps*p.userData.scale;
+  }
+  function resize(){ renderer.setSize(view.clientWidth,view.clientHeight,false); updateCamera(); needRender=true; }
+  addEventListener('resize',resize);
+  let drag=null;
+  view.addEventListener('pointerdown',e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove',e=>{ if(!drag) return; yawOff=drag.yo+(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(-e.deltaY*0.0012),0.5,6); needRender=true; },{passive:false});
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+
+  // ---- geometry (mm, y up, tank axis along z) ------------------------------------------------------------------
+  const R_IN=528, BED_TOP=-10, BOT=-535, SHELL_Z=600, OVER_Y=330, UNDER_Y=-440, FACE_Z=1150, HDR_X=470;
+  const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x222222,side:THREE.DoubleSide},o||{}));
+  const PVC=0x4b5157, WHITE_PVC=0xe9e9e4;
+  const EXTRA=new THREE.Group(); scene.add(EXTRA);
+  function pipe(a,b,r,m,parent){ const d=V(0,0,0).subVectors(b,a), L=d.length(); const g=new THREE.CylinderGeometry(r,r,L,20,1,false); const me=new THREE.Mesh(g,m); me.position.copy(a).addScaledVector(d,0.5); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); (parent||EXTRA).add(me); return me; }
+  function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); (parent||EXTRA).add(s); return s; }
+  function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) pipe(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) joint(pts[i],r,m,parent); }
+  function flange(p,axis,m){ const f=new THREE.Mesh(new THREE.CylinderGeometry(114,114,26,28),m); f.position.copy(p); f.quaternion.setFromUnitVectors(V(0,1,0),axis); EXTRA.add(f); }
+  // face piping (schematic 4-valve single-tank arrangement; the CAD model carries the tank and nozzles only)
+  const mPVC=mat(PVC), mValve=mat(0x2b6cc4), mHandle=mat(0xc8202f), mGlass=mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false});
+  const P_=(x,y,z)=>V(x,y,z);
+  function buildFace(){
+    run([P_(0,OVER_Y,968),P_(0,OVER_Y,FACE_Z)],57,mPVC); run([P_(0,UNDER_Y+110,968),P_(0,UNDER_Y+110,FACE_Z)],57,mPVC);
+    run([P_(-HDR_X,OVER_Y,FACE_Z),P_(HDR_X,OVER_Y,FACE_Z)],57,mPVC); run([P_(-HDR_X,-330,FACE_Z),P_(HDR_X,-330,FACE_Z)],57,mPVC);
+    run([P_(-HDR_X,-330,FACE_Z),P_(-HDR_X,OVER_Y,FACE_Z)],57,mPVC);                        // pump header
+    run([P_(-HDR_X,0,FACE_Z),P_(-HDR_X,0,1500)],57,mPVC);                                  // from pump
+    run([P_(HDR_X,OVER_Y,FACE_Z),P_(HDR_X,780,FACE_Z)],57,mPVC);                           // backwash to waste
+    run([P_(HDR_X,-330,FACE_Z),P_(HDR_X,-330,1500)],57,mPVC);                              // to pool
+    [[-HDR_X,0,1500],[HDR_X,-330,1500],[HDR_X,780,FACE_Z]].forEach(([x,y,z],i)=>flange(P_(x,y,z),i<2?V(0,0,1):V(0,1,0),mPVC));
+    const sg=new THREE.Mesh(new THREE.CylinderGeometry(66,66,150,24,1,true),mGlass); sg.position.set(HDR_X,580,FACE_Z); EXTRA.add(sg); GLASS.mesh=sg;
+    const sgw=new THREE.Mesh(new THREE.CylinderGeometry(52,52,146,20),mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false})); sgw.position.copy(sg.position); EXTRA.add(sgw); GLASS.water=sgw;
+    for(const [k,v] of Object.entries(VALVES)){
+      const g=new THREE.Group(); g.position.copy(v.pos); EXTRA.add(g);
+      const body=new THREE.Mesh(new THREE.CylinderGeometry(82,82,54,28,1,true),mValve.clone()); body.rotation.z=Math.PI/2; g.add(body);
+      const neck=new THREE.Mesh(new THREE.CylinderGeometry(16,16,70,12),mValve); neck.position.y=110; g.add(neck);
+      const disc=new THREE.Mesh(new THREE.CylinderGeometry(55,55,8,24),mat(0x9aa0a6)); g.add(disc);
+      const handle=new THREE.Mesh(new THREE.BoxGeometry(200,14,26),mHandle.clone()); handle.position.set(0,150,0); const hp=new THREE.Group(); hp.add(handle); hp.position.y=0; g.add(hp);
+      v.g=g; v.disc=disc; v.hp=hp; v.body=body;
+    }
+  }
+  const GLASS={};
+  // internals: overdrain and underdrain headers with slotted laterals (schematic), sand bed and dirt layer
+  let bedMesh, dirtMesh, grainCloud;
+  const LAT_Z=[]; for(let z=-520;z<=520;z+=130) LAT_Z.push(z);
+  const chord=y=>Math.sqrt(Math.max(0,R_IN*R_IN-y*y));
+  function buildInternals(){
+    const m=mat(WHITE_PVC), IN=new THREE.Group(); EXTRA.add(IN);
+    run([P_(0,OVER_Y,556),P_(0,OVER_Y,-560)],30,m,IN);
+    run([P_(0,UNDER_Y+110,556),P_(0,UNDER_Y,470),P_(0,UNDER_Y,-560)],30,m,IN);
+    const wo=chord(OVER_Y)-40, wu=chord(UNDER_Y)-30;
+    for(const z of LAT_Z){ run([P_(-wo,OVER_Y,z),P_(wo,OVER_Y,z)],15,m,IN); run([P_(-wu,UNDER_Y,z),P_(wu,UNDER_Y,z)],15,m,IN); }
+    const seg=(top,bot)=>{ const s=new THREE.Shape(), a0=Math.asin(clamp(bot/R_IN,-1,1)), a1=Math.asin(clamp(top/R_IN,-1,1));
+      s.moveTo(-Math.cos(a1)*R_IN, top); s.lineTo(Math.cos(a1)*R_IN, top);
+      for(let i=0;i<=24;i++){ const a=a1+(a0-a1)*i/24; s.lineTo(Math.cos(a)*R_IN, Math.sin(a)*R_IN); }
+      for(let i=0;i<=24;i++){ const a=a0+(a1-a0)*i/24; s.lineTo(-Math.cos(a)*R_IN, Math.sin(a)*R_IN); }
+      const g=new THREE.ExtrudeGeometry(s,{depth:2*SHELL_Z,bevelEnabled:false,curveSegments:24}); g.translate(0,-BOT,-SHELL_Z); return g; };
+    bedMesh=new THREE.Mesh(seg(BED_TOP,BOT),mat(0xd8c08a,{transparent:true,opacity:0.5,depthWrite:false,shininess:5})); bedMesh.position.y=BOT; bedMesh.renderOrder=2; EXTRA.add(bedMesh);
+    dirtMesh=new THREE.Mesh(seg(BED_TOP,BED_TOP-90),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false,shininess:5})); dirtMesh.position.y=BOT; dirtMesh.renderOrder=3; EXTRA.add(dirtMesh);
+    grainCloud=mkPoints(900,0.6); const c=grainCloud.geometry.attributes.color.array; for(let i=0;i<900;i++){ const k=0.8+0.2*h1(i); c[3*i]=0.85*k; c[3*i+1]=0.75*k; c[3*i+2]=0.53*k; }
+  }
+
+  // ---- ghost the tank shell and manway so the inside can be seen ----------------------------------------------------------
+  let ghostMeshes=[], ghostLines=[], lastGhost=-1;
+  function buildGhost(){ [2,3,6,9,17,18].forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh){ o.userData.base=1; ghostMeshes.push(o); } else if(o.isLineSegments) ghostLines.push(o); })); }
+  const ghostAt=t=>smooth((t-4)/1.6)*(1-smooth((t-44)/1.6));
+  function applyGhost(t){
+    const g=ghostAt(t); if(Math.abs(g-lastGhost)<0.004) return; lastGhost=g;
+    for(const o of ghostMeshes){ const m=o.material, op=1-0.82*g; m.transparent=op<0.999; m.opacity=op; m.depthWrite=op>0.6; }
+    for(const l of ghostLines) l.visible=g<0.4;
+  }
+
+  // ---- particle streams ---------------------------------------------------------------------------------------------------------
+  const dotTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d'); const gr=g.createRadialGradient(16,16,0,16,16,16); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,32,32); return new THREE.CanvasTexture(c); })();
+  const POINTS=[];
+  function mkPoints(n,scale){
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e6),3)); g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3).fill(1),3));
+    const p=new THREE.Points(g,new THREE.PointsMaterial({size:6,vertexColors:true,map:dotTex,transparent:true,opacity:0.92,depthWrite:false,depthTest:false,sizeAttenuation:false}));
+    p.frustumCulled=false; p.renderOrder=10; p.userData.scale=scale||1; scene.add(p); POINTS.push(p); return p;
+  }
+  function prep(pts){ let L=0; pts.forEach((q,i)=>{ if(i) L+=q.p.distanceTo(pts[i-1].p); q.s=L; }); pts.L=L; return pts; }
+  function across(d,a,b,r,out){ _r.copy(Math.abs(d.y)<0.9?V(0,1,0):V(1,0,0)).cross(d).normalize(); _u.copy(d).cross(_r); return out.addScaledVector(_r,a*r).addScaledVector(_u,b*r); }
+  const _d=V(0,0,0), _q=V(0,0,0);
+  function onPath(pts,s,a,b,out){ let i=1; while(i<pts.length-1 && s>pts[i].s) i++; const p0=pts[i-1], p1=pts[i], k=clamp((s-p0.s)/Math.max(1e-6,p1.s-p0.s),0,1); out.lerpVectors(p0.p,p1.p,k); _d.subVectors(p1.p,p0.p).normalize(); return across(_d,a,b,p0.r+(p1.r-p0.r)*k,out); }
+  const BLUE=new THREE.Color(0x1597c9), DIRT=new THREE.Color(0x7a5a2c);
+  const STREAMS=[];
+  function stream(n,wins,build,opt){ opt=opt||{}; const pts=mkPoints(n,opt.scale), parts=[];
+    for(let i=0;i<n;i++){ const ang=h1(i*1.7+(opt.seed||0))*6.283, rad=Math.sqrt(h1(i*2.3+(opt.seed||0))); const path=prep(build(i)); parts.push({path,a:Math.cos(ang)*rad,b:Math.sin(ang)*rad,ph:h1(i*13.7+(opt.seed||0)),k:h1(i*7.3+(opt.seed||0))}); }
+    STREAMS.push({pts,parts,wins,color:opt.color||BLUE,dirty:opt.dirty||null,speed:opt.speed||900,dyn:opt.dyn||null}); }
+  let flowClock=0;
+  function placeStreams(t){
+    for(const S_ of STREAMS){
+      const arr=S_.pts.geometry.attributes.position.array, col=S_.pts.geometry.attributes.color.array;
+      let w=null; for(const x of S_.wins){ if(t>=x[0]&&t<=x[1]+S_.parts[0].path.L/S_.speed+1) w=x; }
+      S_.pts.visible=!!w; if(!w) continue;
+      const front=(t-w[0])*S_.speed, tail=t>w[1]?(t-w[1])*S_.speed:-1, dirty=S_.dirty?S_.dirty(t):0, dens=w[2]==null?1:w[2];
+      for(let i=0;i<S_.parts.length;i++){
+        const f=S_.parts[i], L=f.path.L, s=(f.ph*L+flowClock*S_.speed)%L;
+        if(f.k>dens||s>front||s<tail){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
+        onPath(f.path,s,f.a,f.b,_q); if(S_.dyn) S_.dyn(_q,t);
+        arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
+        const c=f.k<dirty*dens?DIRT:S_.color; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
+      }
+      S_.pts.geometry.attributes.position.needsUpdate=true; S_.pts.geometry.attributes.color.needsUpdate=true;
+    }
+  }
+  const Q=(x,y,z,r)=>({p:V(x,y,z),r:r==null?40:r});
+  function lat(i,seed){ const z=LAT_Z[(h1(i*3.1+seed)*LAT_Z.length)|0], x=(h1(i*4.7+seed)*2-1); return {z,x}; }
+  function buildStreams(){
+    // filter mode: pump -> influent valve -> upper nozzle -> overdrain -> down through the sand -> underdrain -> lower nozzle -> effluent valve -> pool
+    const filt=i=>{ const o=lat(i,0), u=lat(i,5), zs=o.z+(h1(i*8.1)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
+      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,OVER_Y,FACE_Z,45),Q(0,OVER_Y,FACE_Z,45),Q(0,OVER_Y,968,45),Q(0,OVER_Y,556,22),Q(0,OVER_Y,o.z,18),
+        Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(xs*0.9,OVER_Y-120,zs,6),Q(xs,BED_TOP+10,zs,6),Q(u.x*(chord(UNDER_Y)-50)*0.9,UNDER_Y+60,u.z,6),Q(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),
+        Q(0,UNDER_Y,u.z,18),Q(0,UNDER_Y,470,22),Q(0,UNDER_Y+110,556,22),Q(0,UNDER_Y+110,968,45),Q(0,-330,FACE_Z,45),Q(HDR_X,-330,FACE_Z,45),Q(HDR_X,-330,1500,45)]; };
+    stream(1400,EV.filter.map(([a,b])=>[a,b,1]),filt,{seed:1});
+    // dirt carried in and trapped in the top of the bed
+    const dirt=i=>{ const o=lat(i,9), zs=o.z+(h1(i*8.7)-0.5)*100, xs=o.x*(chord(BED_TOP)-60);
+      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,OVER_Y,FACE_Z,45),Q(0,OVER_Y,FACE_Z,45),Q(0,OVER_Y,968,45),Q(0,OVER_Y,556,22),Q(0,OVER_Y,o.z,18),
+        Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(xs*0.9,OVER_Y-120,zs,6),Q(xs,BED_TOP-20-h1(i*6.2)*60,zs,4)]; };
+    stream(260,[[EV.dirt[0],EV.dirt[1],1]],dirt,{color:DIRT,scale:0.75,seed:3});
+    // backwash: pump -> backwash supply valve -> lower nozzle -> underdrain -> up through the expanded bed -> overdrain -> upper nozzle -> backwash waste valve -> sight glass -> waste
+    const bw=i=>{ const o=lat(i,11), u=lat(i,13), x1=(h1(i*5.3)*2-1)*(chord(BED_TOP)-80), z1=(h1(i*6.9)*2-1)*(SHELL_Z-80);
+      return [Q(-HDR_X,0,1500,45),Q(-HDR_X,0,FACE_Z,45),Q(-HDR_X,-330,FACE_Z,45),Q(0,-330,FACE_Z,45),Q(0,UNDER_Y+110,968,45),Q(0,UNDER_Y+110,556,22),Q(0,UNDER_Y,470,22),Q(0,UNDER_Y,u.z,18),
+        Q(u.x*(chord(UNDER_Y)-50),UNDER_Y,u.z,8),Q(x1*0.7,-250,(u.z+z1)/2,10),Q(x1,120,z1,12),Q(o.x*(chord(OVER_Y)-60),OVER_Y,o.z,8),Q(0,OVER_Y,o.z,18),Q(0,OVER_Y,556,22),
+        Q(0,OVER_Y,968,45),Q(0,OVER_Y,FACE_Z,45),Q(HDR_X,OVER_Y,FACE_Z,45),Q(HDR_X,780,FACE_Z,45),Q(HDR_X,900,FACE_Z,50)]; };
+    stream(1500,[[EV.bw[0],EV.bw[1],1]],bw,{dirty:bwDirty,seed:7,speed:1000});
+  }
+  // sand grains tumbling in the expanded bed during backwash
+  function placeGrains(t){
+    const k=(bedAt(t)-1)/0.28, a=grainCloud.geometry.attributes.position.array; grainCloud.visible=k>0.02&&ghostAt(t)>0.1;
+    if(!grainCloud.visible) return;
+    const top=BOT+(BED_TOP-BOT)*bedAt(t);
+    for(let i=0;i<900;i++){
+      if(h1(i*2.9)>k){ a[3*i]=a[3*i+1]=a[3*i+2]=1e6; continue; }
+      const y=top-40-h1(i*3.7)*260+Math.sin(flowClock*2.2+i)*35, w=chord(y)-40;
+      a[3*i]=(h1(i*4.4)*2-1)*w+Math.sin(flowClock*1.3+i*0.7)*20; a[3*i+1]=y; a[3*i+2]=(h1(i*5.9)*2-1)*(SHELL_Z-40);
+    }
+    grainCloud.geometry.attributes.position.needsUpdate=true;
+  }
+
+  // ---- apply state ------------------------------------------------------------------------------------------------------------
+  const GREEN=0x1e9a4a, RED=0xd1202b, AMBER=0xd08a12, CLEAR=new THREE.Color(0x9fd3ec), MUD=new THREE.Color(0x7a5a2c);
+  function applyState(t){
+    applyGhost(t);
+    for(const v of Object.values(VALVES)){ const {s,mv}=valveAt(v,t); v.disc.rotation.z=0; v.disc.rotation.x=0;
+      v.disc.quaternion.setFromAxisAngle(V(0,1,0),0); v.disc.rotation.set(Math.PI/2,0,(1-s)*Math.PI/2);   // open: disc edge-on to the flow
+      v.hp.rotation.y=(1-s)*Math.PI/2;
+      v.body.material.emissive.setHex(mv?AMBER:s>0.5?GREEN:0); v.body.material.emissiveIntensity=mv?0.5:s>0.5?0.25:0; }
+    const sc=bedAt(t); bedMesh.scale.y=sc; bedMesh.material.opacity=(0.5-0.18*(sc-1)/0.28)*ghostAt(t)+0.02; bedMesh.visible=ghostAt(t)>0.01;
+    const d=dirtAt(t); dirtMesh.scale.y=sc; dirtMesh.material.opacity=0.75*d*ghostAt(t); dirtMesh.visible=d>0.01&&ghostAt(t)>0.01;
+    const bwOn=t>=EV.bw[0]&&t<EV.bw[1]+1;
+    GLASS.water.visible=bwOn; GLASS.water.material.color.copy(CLEAR).lerp(MUD,bwDirty(t)/0.88);
+    // status
+    const set=(el,txt,cls)=>{ if(!el) return; if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; };
+    const inBW=t>=EV.bw[0]-3.6&&t<EV.bw[1]+2.6, filtering=!inBW;
+    set(RD.mode,...(t>=EV.bw[0]&&t<EV.bw[1]?['Backwash','mid']:inBW?['Switching','mid']:['Filter','go']));
+    set(RD.dp, inBW? '—' : dpAt(t).toFixed(1)+' psi', dpAt(t)>=12&&!inBW?'stop':dpAt(t)>=8&&!inBW?'mid':'go');
+    for(const k of ['V1','V2','V3','V4']){ const {s,mv}=valveAt(VALVES[k],t); set(RD[k],...(mv?[mv,'mid']:s>0.5?['Open','go']:['Closed','stop'])); }
+    set(RD.glass, bwOn? (bwDirty(t)>0.4?'Dirty':bwDirty(t)>0.1?'Clearing':'Clear') : '—', bwOn?(bwDirty(t)>0.4?'stop':bwDirty(t)>0.1?'mid':'go'):'');
+    set(RD.bed, sc>1.03?'Expanded':d>0.3?'Loaded':'Settled', sc>1.03?'mid':d>0.6?'stop':'go');
+  }
+
+  // ---- callouts ---------------------------------------------------------------------------------------------------------------
+  const NS='http://www.w3.org/2000/svg', LBL=[]; let labelsOn=true;
+  const NAMED=[
+    {txt:'Influent (upper) nozzle', p:V(0,OVER_Y,900), steps:[0]},
+    {txt:'Effluent (lower) nozzle', p:V(0,-330,900), steps:[0]},
+    {txt:'Manway', p:V(-560,250,0), steps:[0]},
+    {txt:'Air relief', p:V(0,540,0), steps:[0]},
+    {txt:'Drain', p:V(-78,-545,0), steps:[0]},
+    {txt:'Overdrain laterals', p:V(300,OVER_Y,-260), steps:[1,4]},
+    {txt:'Sand bed, 21 in', p:V(-300,-250,-100), steps:[1]},
+    {txt:'Underdrain laterals', p:V(260,UNDER_Y,-390), steps:[1,4]},
+    {txt:'Dirt held in the top of the bed', p:V(200,BED_TOP-40,150), steps:[2]},
+    {txt:'Influent valve', p:VALVES.V1.pos, steps:[3,5]},
+    {txt:'Effluent valve', p:VALVES.V2.pos, steps:[3,5]},
+    {txt:'Backwash waste valve', p:VALVES.V3.pos, steps:[3,5]},
+    {txt:'Backwash supply valve', p:VALVES.V4.pos, steps:[3,5]},
+    {txt:'Expanded bed', p:V(-250,120,200), steps:[4]},
+    {txt:'Sight glass', p:V(HDR_X,580,FACE_Z), steps:[4]}
+  ];
+  function mkLabel(txt){ const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl n'); const ln=document.createElementNS(NS,'polyline'), h=document.createElementNS(NS,'text'), t=document.createElementNS(NS,'text'); h.setAttribute('class','halo'); t.setAttribute('class','t'); h.textContent=t.textContent=txt; g.append(ln,h,t); overlay.appendChild(g); return {g,ln,h,t}; }
+  function buildLabels(){ for(const n of NAMED) LBL.push({c:n.p,steps:n.steps,...mkLabel(n.txt)}); }
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const moving=PATH.some(([ta],i)=>i&&PATH[i-1][1]!==PATH[i][1]&&T>PATH[i-1][0]&&T<ta);
+    const cx=w/2, cy=h/2, items=[];
+    for(const L of LBL){
+      const on=labelsOn && !moving && L.steps.includes(curStep); L.g.style.opacity=on?1:0; if(!on) continue;
+      _v.copy(L.c).project(camera); const x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; if(x<0||x>w||y<0||y>h){ L.g.style.opacity=0; continue; }
+      const dx=x-cx||1, dy=y-cy, len=Math.hypot(dx,dy)||1; items.push({L,x,y,tx:x+dx/len*80,ty:y+dy/len*55});
+    }
+    for(let it=0;it<40;it++) for(let i=0;i<items.length;i++) for(let j=i+1;j<items.length;j++){ const a=items[i], b=items[j], ddx=b.tx-a.tx, ddy=b.ty-a.ty, d=Math.hypot(ddx,ddy); if(d<30){ const push=(30-d)/2, ux=(ddx||0.1)/(d||1), uy=(ddy||1)/(d||1); a.tx-=ux*push; a.ty-=uy*push; b.tx+=ux*push; b.ty+=uy*push; } }
+    drawTags(w,h);
+    for(const it of items){ let tx=clamp(it.tx,16,w-16), ty=clamp(it.ty,14,h-10); const left=tx<it.x;
+      it.L.ln.setAttribute('points',`${tx+(left?6:-6)},${ty-4} ${it.x},${it.y}`);
+      for(const t of [it.L.h,it.L.t]){ t.setAttribute('x',tx); t.setAttribute('y',ty); t.setAttribute('text-anchor',left?'end':'start'); } }
+  }
+  document.getElementById('labels').addEventListener('click',e=>{ labelsOn=!labelsOn; e.target.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  // tags
+  const WAVES='<path d="M6 9c2-2 4-2 6 0s4 2 6 0M6 14c2-2 4-2 6 0s4 2 6 0" stroke="var(--water)" stroke-width="1.7" fill="none" stroke-linecap="round"/>', DOWN='<path d="M13 6v9M9 11l4 4 4-4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>', RIGHT='<path d="M6 11h11M13 7l4 4-4 4" stroke="var(--ink)" stroke-width="1.6" fill="none"/>';
+  function tag(txt,icon,wd){ const g=document.createElementNS(NS,'g'); g.innerHTML=`<rect rx="3" ry="3" width="${wd}" height="22" fill="var(--panel)" stroke="var(--ink)" stroke-width="1"/>${icon}<text x="24" y="15" style="font:600 11px Barlow Semi Condensed,system-ui,sans-serif;letter-spacing:.08em;fill:var(--ink)">${txt}</text>`; overlay.appendChild(g); return g; }
+  const TAGS=[
+    {g:null, txt:'FROM PUMP', icon:RIGHT, wd:96, p:V(-HDR_X,0,1560), dir:V(0,0,1)},
+    {g:null, txt:'TO POOL', icon:WAVES, wd:82, p:V(HDR_X,-330,1560), dir:V(0,0,1)},
+    {g:null, txt:'TO WASTE', icon:DOWN, wd:86, p:V(HDR_X,850,FACE_Z), dir:V(0,1,0)}
+  ];
+  function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
+    _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*30; y+=dy/l*20;
+    const off=x<-40||x>w+40||y<-20||y>h+20; T_.g.style.display=off?'none':''; if(off) continue;
+    T_.g.setAttribute('transform',`translate(${Math.round(clamp(x-T_.wd/2,4,w-T_.wd-4))},${Math.round(clamp(y-11,4,h-26))})`); } }
+
+  // ---- steps -----------------------------------------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){ let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
+
+  // ---- load -----------------------------------------------------------------------------------------------------------------
+  fetch('/assets/shffg/shffg4248.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
+    A.root.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); } });
+    const shell=A.objs[2]; if(shell) shell.traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x5a6b7a); });   // fibreglass shell in a neutral grey-blue
+    [10,11].forEach(i=>A.objs[i]&&A.objs[i].traverse(o=>{ if(o.isMesh) o.material.color.setHex(0x2b4f86); }));   // saddles
+    Object.values(KEYS).forEach(fitKey);
+    buildFace(); buildInternals(); buildGhost(); buildStreams(); buildLabels();
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T); if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // ---- time and playback ----------------------------------------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){ T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T); updateSteps(T); if(ready) applyState(T); needRender=true; }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+  let playing=false, loop=false, last=performance.now();
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=STEPS[1].t+2;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
+  function frame(now){
+    requestAnimationFrame(frame);
+    const dt=Math.min(0.05,(now-last)/1000); last=now; if(!ready) return;
+    if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
+    if(!reduced){ flowClock+=dt; needRender=true; }
+    if(needRender){ needRender=false; updateCamera(); placeStreams(T); placeGrains(T); renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, get T(){ return T; }, camera, scene };
+})();
+</script>
+
+</body>
+</html>
