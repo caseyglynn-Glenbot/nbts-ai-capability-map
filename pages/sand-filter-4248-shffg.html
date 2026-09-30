@@ -288,6 +288,10 @@
   const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:35,specular:0x222222,side:THREE.DoubleSide},o||{}));
   const PVC=0x4b5157, WHITE_PVC=0xe9e9e4, STEEL=0xaeb3b9, VALVE=0x3a4048, HANDLE=0xc8202f;
   function pipe(a,b,r,m,parent){ const d=V(0,0,0).subVectors(b,a), L=d.length(); const g=new THREE.CylinderGeometry(r,r,L,20,1,false); const me=new THREE.Mesh(g,m); me.position.copy(a).addScaledVector(d,0.5); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); parent.add(me); return me; }
+  // open-ended pipe with a real wall (pump, pool and waste runs), so the bore shows at the cut ends
+  function hollow(a,b,r,m,parent,wall){ const d=V(0,0,0).subVectors(b,a), L=d.length(), ri=r-(wall||Math.max(6,r*0.12));
+    const g=new THREE.LatheGeometry([new THREE.Vector2(ri,0),new THREE.Vector2(r,0),new THREE.Vector2(r,L),new THREE.Vector2(ri,L),new THREE.Vector2(ri,0)],28);
+    const me=new THREE.Mesh(g,m); me.position.copy(a); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); parent.add(me); return me; }
   function joint(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),m); s.position.copy(p); parent.add(s); return s; }
   function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) pipe(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) joint(pts[i],r,m,parent); }
   const P_=(x,y,z)=>V(x,y,z);
@@ -386,7 +390,7 @@
   }
   const GLASS=[];
   function sightRun(FG,a,dir,r,len){ const mP=mat(PVC), mR=mat(0x3d4247), at=d=>a.clone().addScaledVector(dir,d);
-    pipe(a,at(60),r,mP,FG); pipe(at(230),at(len),r,mP,FG); for(const d of [60,230]) pipe(at(d-8),at(d+8),r*1.3,mR,FG);
+    hollow(a,at(60),r,mP,FG); hollow(at(230),at(len),r,mP,FG); for(const d of [60,230]) hollow(at(d-8),at(d+8),r*1.3,mR,FG,r*0.42);
     const sg=pipe(at(68),at(222),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
     const sw=pipe(at(70),at(220),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
     GLASS.push({glass:sg,water:sw,p:at(145)}); }
@@ -407,13 +411,13 @@
     // short runs off the ends of the nest: pump, pool and waste (with the sight glass), schematic
     const mP=mat(PVC);
     if(C.stack){
-      pipe(P_(C.xB,C.inTop+C.dY,C.zv),P_(C.xB,C.inTop+C.dY+160,C.zv),C.rIn,mP,FG);
-      pipe(P_(C.xPool,C.poolTop,C.zh),P_(C.xPool,C.poolTop+260,C.zh),C.rP,mP,FG);
+      hollow(P_(C.xB,C.inTop+C.dY,C.zv),P_(C.xB,C.inTop+C.dY+160,C.zv),C.rIn,mP,FG);
+      hollow(P_(C.xPool,C.poolTop,C.zh),P_(C.xPool,C.poolTop+260,C.zh),C.rP,mP,FG);
       sightRun(FG,P_(C.wOut,C.bwY+C.dY,C.zv),V(C.wDir,0,0),C.rW,320);
     } else {
       const z=C.zc, r=C.pr;
-      if(C.inlet.side!=null) pipe(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else pipe(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
-      pipe(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
+      if(C.inlet.side!=null) hollow(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else hollow(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
+      hollow(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
       sightRun(FG,P_(C.outX,0,z),V(1,0,0),r,320);
     }
     FG.matrixAutoUpdate=false; FG.matrix.copy(NAT[ti]); CUR.add(FG);
