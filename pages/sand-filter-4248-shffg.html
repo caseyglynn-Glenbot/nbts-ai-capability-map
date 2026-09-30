@@ -389,11 +389,11 @@
     ASM.push({lv, set(k){ const th=k*Math.PI/2; disc.rotation.z=th; if(op) setNat(op,rotAbout(s.p,s.axis,th).multiply(op.userData.M0)); }});
   }
   const GLASS=[];
-  function sightRun(FG,a,dir,r,len){ const mP=mat(PVC), mR=mat(0x3d4247), at=d=>a.clone().addScaledVector(dir,d);
-    hollow(a,at(60),r,mP,FG); hollow(at(230),at(len),r,mP,FG); for(const d of [60,230]) hollow(at(d-8),at(d+8),r*1.3,mR,FG,r*0.42);
-    const sg=pipe(at(68),at(222),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
-    const sw=pipe(at(70),at(220),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
-    GLASS.push({glass:sg,water:sw,p:at(145)}); }
+  function sightRun(FG,a,dir,r,len){ const mP=mat(PVC), mR=mat(0x3d4247), at=d=>a.clone().addScaledVector(dir,d), g0=60, g1=g0+255;   // glass 255 mm long
+    hollow(a,at(g0),r,mP,FG); hollow(at(g1),at(len),r,mP,FG); for(const d of [g0,g1]) hollow(at(d-8),at(d+8),r*1.3,mR,FG,r*0.42);
+    const sg=pipe(at(g0+8),at(g1-8),r*1.12,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),FG);
+    const sw=pipe(at(g0+10),at(g1-10),r*0.9,mat(0x7a5a2c,{transparent:true,opacity:0.8,depthWrite:false}),FG);
+    GLASS.push({glass:sg,water:sw,p:at((g0+g1)/2)}); }
   function buildFace(buf,ti){
     const F=loadAssembly(buf), FG=new THREE.Group(), C=CFG;
     const top=F.objs.filter((o,i)=>F.nodes[i].parent===0);
@@ -413,12 +413,12 @@
     if(C.stack){
       hollow(P_(C.xB,C.inTop+C.dY,C.zv),P_(C.xB,C.inTop+C.dY+160,C.zv),C.rIn,mP,FG);
       hollow(P_(C.xPool,C.poolTop,C.zh),P_(C.xPool,C.poolTop+260,C.zh),C.rP,mP,FG);
-      sightRun(FG,P_(C.wOut,C.bwY+C.dY,C.zv),V(C.wDir,0,0),C.rW,320);
+      sightRun(FG,P_(C.wOut,C.bwY+C.dY,C.zv),V(C.wDir,0,0),C.rW,420);
     } else {
       const z=C.zc, r=C.pr;
       if(C.inlet.side!=null) hollow(P_(C.inlet.side,0,z),P_(C.inlet.side-260,0,z),r,mP,FG); else hollow(P_(C.px,C.inlet.top,z),P_(C.px,C.inlet.top+150,z),r,mP,FG);
       hollow(P_(C.outX,LOW,z),P_(C.outX+300,LOW,z),r,mP,FG);
-      sightRun(FG,P_(C.outX,0,z),V(1,0,0),r,320);
+      sightRun(FG,P_(C.outX,0,z),V(1,0,0),r,420);
     }
     FG.matrixAutoUpdate=false; FG.matrix.copy(NAT[ti]); CUR.add(FG);
   }
@@ -508,7 +508,7 @@
     const inTop=[...pump,N(-C.vx,0,z),N(0,0,z),N(0,0,0)];
     const inBot=[...pump,N(C.px,LOW,z),N(-C.vx,LOW,z),N(0,LOW,z),N(0,LOW,0)];
     const toPool=[N(0,LOW,0),N(0,LOW,z),N(C.vx,LOW,z),N(C.outX+300,LOW,z)];
-    const toWaste=[N(0,0,0),N(0,0,z),N(C.vx,0,z),N(C.outX+320,0,z),N(C.outX+520,0,z,R*1.1)];
+    const toWaste=[N(0,0,0),N(0,0,z),N(C.vx,0,z),N(C.outX+420,0,z),N(C.outX+620,0,z,R*1.1)];
     stream(1300,M.EV.filter.map(([a,b])=>[a,b]),i=>[...inTop,...downPts(0,i,0),...toPool],{seed:1});
     stream(240,[M.EV.dirt],i=>[...inTop,...dirtPts(0,i,9)],{color:DIRT,scale:0.75,seed:3});
     stream(1400,[M.BW[0].t],i=>[...inBot,...upPts(0,i,11),...toWaste],{dirty:dirtyAt,seed:7,speed:1000});
@@ -518,7 +518,7 @@
     const pump=[Pm(C.xB,C.inTop+160,C.zv,C.R*1.4),Pm(C.xB,C.yT,C.zv,C.R*1.4)];
     const infA=[Pm(0,C.yT,C.zv),Pm(0,C.BU,C.zv),Pm(0,C.BU,0)];
     const infB=[Pm(C.xB,C.BU,C.zv),Pm(C.xB,C.BU,C.zr),Pm(C.xB,C.TU,C.zr),Pm(0,C.TU,C.zr),Pm(0,C.TU,0)];
-    const out=(x)=>[Pm(x,C.BU,C.zv),Pm(x,C.bwY,C.zv),Pm(C.wOut,C.bwY,C.zv),Pm(C.wOut+C.wDir*540,C.bwY,C.zv,R*1.1)];
+    const out=(x)=>[Pm(x,C.BU,C.zv),Pm(x,C.bwY,C.zv),Pm(C.wOut,C.bwY,C.zv),Pm(C.wOut+C.wDir*640,C.bwY,C.zv,R*1.1)];
     const lowA=[Pf(0,0,0),Pf(0,0,C.zh),Pf(C.xPool,0,C.zh),Pf(C.xPool,TANK_DY,C.zh)], lowB=[Pf(0,TANK_DY,0),Pf(0,TANK_DY,C.zh),Pf(C.xPool,TANK_DY,C.zh)];
     const pool=[Pf(C.xPool,C.poolTop+260,C.zh,C.R*1.4)];
     const fw=M.EV.filter.map(([a,b])=>[a,b]);
@@ -614,11 +614,11 @@
     if(C.stack){
       TAGS=[{txt:'FROM PUMP', icon:RIGHT, wd:96, p:W_(0,C.xB,C.inTop+C.dY+160,C.zv), dir:up},
         {txt:'TO POOL', icon:WAVES, wd:82, p:W_(0,C.xPool,C.poolTop+260,C.zh), dir:up},
-        {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.wOut+C.wDir*320,C.bwY+C.dY,C.zv), dir:V(0,-1,0)}]; return; }
+        {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.wOut+C.wDir*420,C.bwY+C.dY,C.zv), dir:V(0,-1,0)}]; return; }
     const z=C.zc, inP=C.inlet.side!=null? W_(0,C.inlet.side-260,0,z) : W_(0,C.px,C.inlet.top+150,z), inD=C.inlet.side!=null? W_(0,C.inlet.side-360,0,z).sub(inP) : up.clone();
     TAGS=[{txt:'FROM PUMP', icon:RIGHT, wd:96, p:inP, dir:inD.normalize()},
       {txt:'TO POOL', icon:WAVES, wd:82, p:W_(0,C.outX+300,LOW,z), dir:W_(0,C.outX+400,LOW,z).sub(W_(0,C.outX+300,LOW,z)).normalize()},
-      {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.outX+320,0,z), dir:up}]; }
+      {txt:'TO WASTE', icon:DOWN, wd:86, p:W_(0,C.outX+420,0,z), dir:up}]; }
   function drawTags(w,h){ for(const T_ of TAGS){ if(!T_.g) T_.g=tag(T_.txt,T_.icon,T_.wd);
     _v.copy(T_.p).project(camera); let x=(_v.x+1)/2*w, y=(1-_v.y)/2*h; _u.copy(T_.p).add(T_.dir).project(camera); const dx=(_u.x+1)/2*w-x, dy=(1-_u.y)/2*h-y, l=Math.hypot(dx,dy)||1; x+=dx/l*50; y+=dy/l*20;
     const off=x<-40||x>w+40||y<-20||y>h+20; T_.g.style.display=off?'none':''; if(off) continue;
