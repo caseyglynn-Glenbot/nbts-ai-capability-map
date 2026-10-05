@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBTS Ticket Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: Xylem datasheet look. Blue header band with teal swoosh, white page, bold blue section titles over a teal rule,
+   one vertical decision spine (gate -> exit right, continue down), product fork, then flat playbook blocks linked from the chart.
+   Single light theme by design: the brand is always on white. */
+:root{
+  --xylem-teal:#0085AD; --defender-blue:#1E4B8C; --blue-mid:#3060A8; --blue-light:#5A8FD0; --blue-shadow:#16386B;
+  --page-bg:#FFFFFF; --row-stripe:#E8EEF2; --rule-grey:#D0D0D0; --text-primary:#333333; --text-secondary:#5A5A5A;
+  --teal-tint:#E5F3F8; --alert:#A33A3A; --alert-tint:#F6E7E7;
+  /* legacy aliases used by the markup */
+  --bg:var(--page-bg); --surface:var(--page-bg); --ink:var(--text-primary); --muted:var(--text-secondary); --line:var(--rule-grey);
+  --navy:var(--defender-blue); --teal:var(--xylem-teal); --chip:var(--row-stripe);
+  --font-sans:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  --ease-standard:cubic-bezier(0.4,0.0,0.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--page-bg)}
+body{background:var(--page-bg);color:var(--text-primary);font-family:var(--font-sans);font-size:15px;line-height:1.55;padding-inline:16px;padding-block:0 48px;font-variant-numeric:lining-nums}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{text-wrap:balance;margin:0;color:var(--defender-blue)}
+h2{font-size:22px;font-weight:700;padding-bottom:6px;position:relative}
+h2::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:var(--xylem-teal);transform-origin:left}
+h3{font-size:16.5px;font-weight:700}
+.lede{max-width:68ch;color:var(--text-secondary);margin:10px 0 0}
+.num,.cnt{font-variant-numeric:tabular-nums lining-nums}
+
+/* ---------- header band ---------- */
+.band{margin-inline:-16px;background:var(--defender-blue);color:#fff;position:relative;overflow:hidden}
+.band-in{max-width:1040px;margin:0 auto;padding:22px 16px 30px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;position:relative;z-index:1}
+.brand{font-weight:800;font-size:15px;letter-spacing:.3px;line-height:1.25}
+.brand small{display:block;font-weight:400;font-size:12.5px;opacity:.85;letter-spacing:.2px}
+.title{text-align:right}
+.title h1{color:#fff;font-size:clamp(26px,4.4vw,38px);font-weight:700;line-height:1.1}
+.title .sub{font-weight:600;font-size:14px;opacity:.9;margin-top:4px}
+.swoosh{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.swoosh path{fill:none;stroke:var(--xylem-teal);stroke-width:5;stroke-linecap:round}
+.intro{display:flex;flex-direction:column;gap:4px;padding-top:26px}
+.stats{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:12px;font-size:13px;color:var(--text-secondary)}
+.stats b{color:var(--defender-blue);font-weight:700}
+
+/* ---------- flowchart ---------- */
+.flow{display:flex;flex-direction:column;align-items:stretch}
+.node{background:var(--page-bg);border:1px solid var(--rule-grey);padding:12px 14px;min-width:0}
+.node .t{font-weight:700;font-size:15.5px;line-height:1.3;color:var(--text-primary)}
+.node .d{font-size:13px;color:var(--text-secondary);margin-top:3px}
+.start{border:0;background:var(--defender-blue);text-align:center;align-self:center;max-width:520px;width:100%}
+.start .t{color:#fff}.start .d{color:#fff;opacity:.85}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);align-items:center}
+.gate{border:0;border-left:4px solid var(--xylem-teal);background:var(--teal-tint);position:relative;padding-left:44px}
+.gate::before{content:"?";position:absolute;left:12px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--xylem-teal);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+.gate .step{font-size:11.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--xylem-teal);font-weight:700}
+.gate .t{color:var(--defender-blue)}
+.yes{position:relative;height:2px;background:var(--xylem-teal);margin:0 4px}
+.yes::after{content:"";position:absolute;right:-2px;top:-5px;border:6px solid transparent;border-left:8px solid var(--xylem-teal);border-right:0}
+.yes span{position:absolute;left:50%;top:-19px;transform:translateX(-50%);font-weight:700;font-size:11.5px;letter-spacing:1px;color:var(--xylem-teal)}
+.yes.neg{background:var(--defender-blue)}.yes.neg::after{border-left-color:var(--defender-blue)}.yes.neg span{color:var(--defender-blue)}
+a.out{display:block;text-decoration:none;color:inherit;border-left:4px solid var(--xylem-teal)}
+a.out:hover,a.out:focus-visible{outline:2px solid var(--xylem-teal);outline-offset:1px}
+a.out.warn{border-left-color:var(--alert)} a.out.warn:hover,a.out.warn:focus-visible{outline-color:var(--alert)}
+a.out.amb{border-left-color:var(--blue-mid)} a.out.amb:hover,a.out.amb:focus-visible{outline-color:var(--blue-mid)}
+.out .k{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.cnt{font-size:12.5px;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+.no{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);height:34px}
+.no div{border-right:2px solid var(--rule-grey);position:relative;width:50%}
+.no span{white-space:nowrap;position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);font-weight:700;font-size:11.5px;letter-spacing:1px;color:var(--text-secondary)}
+.down{display:flex;justify-content:center;height:30px}
+.down i{width:2px;background:var(--rule-grey);position:relative}
+.down i::after{content:"";position:absolute;bottom:-1px;left:-5px;border:6px solid transparent;border-top:8px solid var(--rule-grey);border-bottom:0}
+.fork{border-top:2px solid var(--defender-blue);border-bottom:1px solid var(--rule-grey);padding:14px 0 16px;display:flex;flex-direction:column;gap:12px}
+.fork-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline}
+.prods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--rule-grey);border:1px solid var(--rule-grey)}
+a.prod{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:inherit;background:var(--page-bg);padding:11px 13px}
+a.prod:nth-child(n+5){background:var(--row-stripe)}
+a.prod:hover,a.prod:focus-visible{outline:2px solid var(--defender-blue);outline-offset:-2px}
+a.prod .t{font-weight:700;font-size:14.5px;line-height:1.25;color:var(--defender-blue)}
+a.prod .q{font-size:12.5px;color:var(--text-secondary)}
+
+/* ---------- rules ---------- */
+.rules{display:flex;flex-direction:column;gap:6px}
+.rules ol{margin:6px 0 0;padding-left:22px}
+.rules li{padding:6px 8px}
+.rules li:nth-child(odd){background:var(--row-stripe)}
+
+/* ---------- playbooks ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:13px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;display:inline-block}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px}
+.card{padding:18px 0 20px;border-top:1px solid var(--rule-grey);display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.card:target{background:var(--teal-tint);box-shadow:-12px 0 0 var(--teal-tint),12px 0 0 var(--teal-tint)}
+.card-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.card-h h3{color:var(--defender-blue)}
+.tag{font-weight:700;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;padding:2px 8px;white-space:nowrap}
+.tag.route{background:var(--teal-tint);color:var(--xylem-teal)}
+.tag.hand{background:var(--alert-tint);color:var(--alert)}
+.tag.tech{background:var(--defender-blue);color:#fff}
+.tag.fast{background:var(--row-stripe);color:var(--blue-mid)}
+.bar{height:5px;background:var(--row-stripe);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--xylem-teal)}
+.meta{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--text-secondary)}
+.meta .num{white-space:nowrap;font-weight:600}
+.lbl{font-weight:700;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--defender-blue);margin-bottom:2px}
+.card ul,.card ol{margin:0;padding-left:20px;font-size:14px}
+.card li{margin:2px 0}
+.done{font-size:13.5px;background:var(--row-stripe);padding:8px 10px}
+.done b{color:var(--defender-blue)}
+.ex{font-size:12.5px;color:var(--text-secondary);font-style:italic}
+.contact{font-size:13px;font-weight:600;user-select:all;color:var(--defender-blue);white-space:nowrap}
+footer{font-size:12px;color:var(--text-secondary);border-top:1px solid var(--rule-grey);padding-top:14px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.wordmark{font-weight:700;font-size:30px;color:var(--xylem-teal);letter-spacing:-.5px;line-height:1}
+
+@media (max-width:760px){
+  .band-in{flex-direction:column;gap:14px}.title{text-align:left}
+  .row,.no{grid-template-columns:minmax(0,1fr)}
+  .yes{width:2px;height:26px;margin:0 auto}
+  .yes::after{right:auto;left:-5px;top:auto;bottom:-2px;border:6px solid transparent;border-top:8px solid var(--xylem-teal);border-bottom:0}
+  .yes span{left:12px;top:50%;transform:translateY(-50%)}
+  .yes.neg::after{border-top-color:var(--defender-blue);border-left-color:transparent}
+  .no{height:30px}.no div{width:auto;border-right:0;border-left:2px solid var(--rule-grey);margin-left:22px}
+  .no span{left:10px}
+  .prods{grid-template-columns:repeat(2,minmax(0,1fr))}
+  a.prod:nth-child(n+5){background:var(--page-bg)}
+  a.prod:nth-child(4n+3),a.prod:nth-child(4n+4){background:var(--row-stripe)}
+  .cards{grid-template-columns:minmax(0,1fr)}
+  footer{flex-direction:column;align-items:flex-start}
+}
+@media (prefers-reduced-motion:no-preference){
+  h2::after{animation:draw 420ms var(--ease-standard) both}
+  .swoosh path{stroke-dasharray:1400;animation:sweep 500ms var(--ease-standard) both}
+  @keyframes draw{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes sweep{from{stroke-dashoffset:1400}to{stroke-dashoffset:0}}
+}
+</style>
+
+
+<style>
+.portal-back{display:inline-block;color:#fff;opacity:.85;font-size:12.5px;text-decoration:none;margin-top:6px}
+.portal-back:hover{opacity:1;text-decoration:underline}
+body{margin:0}
+@page{size:letter;margin:0.45in 0.45in 0.5in}
+@media print{
+  body{padding-inline:0;font-size:12.5px}
+  .band{margin-inline:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;animation:none!important}
+  .portal-back{display:none}
+  .wrap{gap:26px}
+  .row,.no{grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr)}
+  .card,.gate,.node,a.prod,.rules li,.fork,.row{break-inside:avoid}
+  section[aria-labelledby="pb-h"]{break-before:page}
+  h2{break-after:avoid}
+}
+</style>
+</head>
+<body>
+<div class="band">
+  <svg class="swoosh" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 158 C 300 150, 520 120, 700 70 S 1050 -10, 1240 -6"/></svg>
+  <div class="band-in">
+    <div class="brand">Neptune Benson<small>Technical Support</small><a class="portal-back" href="/technical-support">&larr; Technical Support</a></div>
+    <div class="title"><h1>NBTS Ticket Triage</h1><div class="sub">New Engineer Guide</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+<header class="intro">
+  <p class="lede" style="margin-top:0">How to answer any ticket that lands in the NBTS queue. Every ticket goes through the same five checks before it splits by product. Tap any box to jump to its playbook.</p>
+  <div class="stats"><span>Built from <b>537</b> customer tickets, Jul 1 – Sep 30 2026</span><span>Phone, email, SMS and voicemail</span><span>Submittal-generator notices excluded</span></div>
+</header>
+
+<section aria-labelledby="flow-h">
+  <h2 id="flow-h" style="margin-bottom:16px">The flow</h2>
+  <div class="flow">
+    <div class="node start"><div class="t">New ticket arrives</div><div class="d">AI phone intake, email, SMS or forwarded voicemail</div></div>
+    <div class="down"><i></i></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 1</div><div class="t">Can you name the site, product, model/serial and the problem?</div><div class="d">Listen to the call recording or read the full thread first.</div></div>
+      <div class="yes neg" aria-hidden="true"><span>NO</span></div>
+      <a class="node out warn" href="#p-nodetail"><div class="k"><div class="t">Get the details</div><div class="cnt">89 + ~40</div></div><div class="d">Callback, voicemail, empty call, site-name-only email</div></a>
+    </div>
+    <div class="no"><div><span>YES</span></div></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 2</div><div class="t">Is it a warranty claim, a defect, damage or a safety issue?</div></div>
+      <div class="yes" aria-hidden="true"><span>YES</span></div>
+      <a class="node out warn" href="#p-warranty"><div class="k"><div class="t">Warranty &amp; safety</div><div class="cnt">40</div></div><div class="d">Route to Customer Experience. Never confirm coverage.</div></a>
+    </div>
+    <div class="no"><div><span>NO</span></div></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 3</div><div class="t">Are they asking for a document or certificate?</div></div>
+      <div class="yes" aria-hidden="true"><span>YES</span></div>
+      <a class="node out" href="#p-docs"><div class="k"><div class="t">Send the document</div><div class="cnt">25 + 14</div></div><div class="d">Manuals, drawings, specs, submittals, VGB / NSF / COC certificates</div></a>
+    </div>
+    <div class="no"><div><span>NO</span></div></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 4</div><div class="t">Is it a part, a quote, a PO or order status?</div></div>
+      <div class="yes" aria-hidden="true"><span>YES</span></div>
+      <a class="node out amb" href="#p-parts"><div class="k"><div class="t">Part number, then hand off</div><div class="cnt">28 + 18</div></div><div class="d">You supply the right part number. Pricing and orders go to CX / sales.</div></a>
+    </div>
+    <div class="no"><div><span>NO</span></div></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 5</div><div class="t">Is it internal admin, or a product NBTS does not support?</div></div>
+      <div class="yes" aria-hidden="true"><span>YES</span></div>
+      <a class="node out amb" href="#p-admin"><div class="k"><div class="t">Reassign or redirect</div><div class="cnt">15 + 9</div></div><div class="d">PN creation, CRM leads, misdials; CO2, Strantrol, WLC, Blue Sentinel</div></a>
+    </div>
+    <div class="no"><div><span>NO: it's a technical question</span></div></div>
+
+    <div class="fork">
+      <div class="fork-h"><h3>Pick the product branch</h3><span class="cnt">277 tickets · about half of all volume</span></div>
+      <div class="prods">
+        <a class="prod" href="#p-def-ops"><span class="t">Defender operation</span><span class="q">Bump, precoat, air, media, valves</span><span class="cnt">69</span></a>
+        <a class="prod" href="#p-drains"><span class="t">Drains, grates &amp; strainers</span><span class="q">Fit, install, custom grates</span><span class="cnt">42</span></a>
+        <a class="prod" href="#p-uv"><span class="t">UV systems</span><span class="q">ETS, Wafer, Barrier, Spectra</span><span class="cnt">40</span></a>
+        <a class="prod" href="#p-vfd"><span class="t">VFD, pumps &amp; flow meters</span><span class="q">Danfoss, ABB, Green Drive, Signet</span><span class="cnt">33</span></a>
+        <a class="prod" href="#p-def-ctrl"><span class="t">Defender controls</span><span class="q">RMF12 / RMF7, HMI, PLC</span><span class="cnt">32</span></a>
+        <a class="prod" href="#p-def-mech"><span class="t">Defender leaks &amp; mechanical</span><span class="q">Gaskets, lids, shafts, corrosion</span><span class="cnt">25</span></a>
+        <a class="prod" href="#p-service"><span class="t">Start-ups &amp; service</span><span class="q">Start-up, 5 / 10-year maintenance</span><span class="cnt">10</span></a>
+        <a class="prod" href="#p-sand"><span class="t">Sand filters</span><span class="q">Laterals, media, MFP4 controller</span><span class="cnt">8</span></a>
+      </div>
+    </div>
+    <div class="down"><i></i></div>
+
+    <div class="row">
+      <div class="node gate"><div class="step">Check 6</div><div class="t">Solved on the first contact?</div></div>
+      <div class="yes" aria-hidden="true"><span>YES</span></div>
+      <div class="node" style="border-left:4px solid var(--xylem-teal)"><div class="t">Close it out</div><div class="d">Write the answer and source in the ticket, then set Resolved.</div></div>
+    </div>
+    <div class="no"><div><span>NO</span></div></div>
+    <div class="node" style="border-left:4px solid var(--blue-mid)"><div class="t">Escalate</div><div class="d">To the lead engineer with your notes, photos and what you already checked. If the equipment has to be opened or the pool is down, ask for field service the same day.</div></div>
+  </div>
+</section>
+
+<section class="rules" aria-labelledby="rules-h">
+  <h2 id="rules-h">Rules for every ticket</h2>
+  <ol>
+    <li><b>Same-day first response.</b> Call or email back the same business day, even if the full answer takes longer.</li>
+    <li><b>Collect before you troubleshoot:</b> site, contact, product, model and serial, job or PO number, photos.</li>
+    <li><b>No warranty promises.</b> Coverage depends on registration, start-up date and contract. Only Customer Experience decides it.</li>
+    <li><b>Platinum, Gold and Urgent flags go first.</b> Pool-down and safety issues go to the top of the queue.</li>
+    <li><b>Write it down.</b> Put the answer, its source document and any part numbers in the ticket so the next person can reuse it.</li>
+  </ol>
+</section>
+
+<section aria-labelledby="pb-h" style="display:flex;flex-direction:column;gap:14px">
+  <div>
+    <h2 id="pb-h">Playbooks</h2>
+    <p class="lede">One card per question type, in flow order. Bars show the share of the 537 tickets.</p>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--alert-tint);border:1px solid var(--alert)"></i>Hand off: not ours to decide</span>
+    <span><i class="sw" style="background:var(--row-stripe);border:1px solid var(--blue-mid)"></i>Fast answer: should close same day</span>
+    <span><i class="sw" style="background:var(--teal-tint);border:1px solid var(--xylem-teal)"></i>Route: collect, then send on</span>
+    <span><i class="sw" style="background:var(--defender-blue)"></i>Technical: troubleshoot</span>
+  </div>
+  <div class="cards">
+
+    <article class="card" id="p-nodetail">
+      <div class="card-h"><h3>No details given</h3><span class="tag route">Route</span></div>
+      <div><div class="bar"><i style="width:16.6%"></i></div><div class="meta"><span>Callbacks, voicemails, empty calls, SMS</span><span class="num">89 · 17%</span></div></div>
+      <div><div class="lbl">Do this</div><ol>
+        <li>Open the call recording link, voicemail audio or the whole email thread before you call.</li>
+        <li>Call back. Ask for site, product, model/serial and what is happening.</li>
+        <li>No answer after two tries: email, then set <i>Waiting for customer</i>.</li>
+        <li>Once you know the issue, rename the ticket and send it through Check 2.</li>
+      </ol></div>
+      <div class="done"><b>Done when</b> the ticket names a product and a problem.</div>
+      <div class="ex">Also covers ~40 email threads titled only with a site or job name (e.g. "RE: Hampton Aquaplex").</div>
+    </article>
+
+    <article class="card" id="p-warranty">
+      <div class="card-h"><h3>Warranty, defects &amp; safety</h3><span class="tag hand">Hand off</span></div>
+      <div><div class="bar"><i style="width:7.4%"></i></div><div class="meta"><span>Claims, RMAs, freight damage, failures</span><span class="num">40 · 7%</span></div></div>
+      <div><div class="lbl">Collect</div><ul><li>Serial number, start-up date, PO / order number</li><li>Photos and a description of the failure</li><li>Whether the failed part can be returned</li></ul></div>
+      <div><div class="lbl">Do this</div><ol>
+        <li>Do not say whether it is covered.</li>
+        <li>Send it to Customer Experience using the CX template: <span class="contact">customerexperience@xylem.com</span> · <span class="contact">855-267-9201</span></li>
+        <li>Keep helping with the technical problem at the same time.</li>
+        <li>Injury or safety risk (e.g. drain cover cuts): escalate to the lead engineer the same day.</li>
+      </ol></div>
+      <div class="done"><b>Done when</b> CX has the claim and the customer knows who owns it.</div>
+    </article>
+
+    <article class="card" id="p-docs">
+      <div class="card-h"><h3>Documents &amp; certificates</h3><span class="tag fast">Fast answer</span></div>
+      <div><div class="bar"><i style="width:7.3%"></i></div><div class="meta"><span>Manuals, drawings, specs, submittals, CAD, VGB / NSF 61 / COC</span><span class="num">25 + 14 · 7%</span></div></div>
+      <div><div class="lbl">Do this</div><ol>
+        <li>Get the exact model number. That is all you need.</li>
+        <li>Pull certificates from the COC SharePoint. Manuals and specs come from the knowledge base; submittals go through the Submittal Generator.</li>
+        <li><b>Custom grates:</b> fill in the grate dimensions and grate information on the certificate. Only the 2008 version is available for these grates.</li>
+        <li>If no document exists for the model, say so and escalate.</li>
+      </ol></div>
+      <div class="done"><b>Done when</b> the file is sent and attached to the ticket. Target: same day.</div>
+    </article>
+
+    <article class="card" id="p-parts">
+      <div class="card-h"><h3>Parts, quotes &amp; orders</h3><span class="tag route">Route</span></div>
+      <div><div class="bar"><i style="width:8.6%"></i></div><div class="meta"><span>Part numbers, pricing, POs, lead time, shipping</span><span class="num">28 + 18 · 9%</span></div></div>
+      <div><div class="lbl">Do this</div><ol>
+        <li>Identify the part with the Parts Assistant or the product's exploded diagram, using the model / serial.</li>
+        <li>Give the correct part number, then use the CX template for quote and warranty requests.</li>
+        <li>Pricing, quotes, PO changes and order status go to CX / inside sales with the SO or PO number.</li>
+        <li>Platinum-flagged requests go first.</li>
+      </ol></div>
+      <div class="done"><b>Done when</b> the right part number is in the ticket and sales has it.</div>
+    </article>
+
+    <article class="card" id="p-admin">
+      <div class="card-h"><h3>Admin &amp; other products</h3><span class="tag route">Route</span></div>
+      <div><div class="bar"><i style="width:4.5%"></i></div><div class="meta"><span>PN creation, CRM leads, misdials, tests; non-NBTS products</span><span class="num">15 + 9 · 4%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Part-number creation and CRM leads: reassign to the owner.</li>
+        <li>Misdials, tests, empty summaries: close with a one-line note.</li>
+        <li>CO2 / Trident, Strantrol / Sanitrol, WLC, Blue Sentinel: check whether NBTS supports it. If not, give the customer the right contact.</li>
+      </ul></div>
+      <div class="done"><b>Done when</b> the ticket has an owner or is closed.</div>
+    </article>
+
+    <article class="card" id="p-def-ops">
+      <div class="card-h"><h3>Defender operation</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:12.8%"></i></div><div class="meta"><span>Bump, precoat, air pressure, media, valves, solenoids</span><span class="num">69 · 13%</span></div></div>
+      <div><div class="lbl">Collect</div><ul><li>Model (SP-xx-xx-xxx), serial, controller (RMF12 / RMF7)</li><li>Photos of the HMI screen, alarms and gauges</li></ul></div>
+      <div><div class="lbl">Check in this order</div><ol>
+        <li>Media and precoat coverage. If spotty, run a Chem Clean Express and check for turbulence.</li>
+        <li>Air pressure at the regulator on the side of the Defender.</li>
+        <li>Valves not working: check the solenoid LED and the PLC LED.</li>
+      </ol></div>
+      <div class="done"><b>Escalate</b> if media is in the pool or the tank must be opened. Use the Defender O&amp;M and the Procedure Guide Generator.</div>
+    </article>
+
+    <article class="card" id="p-drains">
+      <div class="card-h"><h3>Drains, grates &amp; strainers</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:7.8%"></i></div><div class="meta"><span>Sumps, grates, gutters, strainers, anti-vortex</span><span class="num">42 · 8%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Get the model number off the grate or sump (MLD, Lawson, Aegis, custom).</li>
+        <li><b>Install or fit question:</b> send the install sheet and spec; confirm the flow rating.</li>
+        <li><b>Replacement or custom grate:</b> part number, then quote path.</li>
+        <li><b>Leak, crack or injury:</b> treat as warranty / safety.</li>
+        <li><b>Certificate:</b> go to Documents.</li>
+      </ul></div>
+    </article>
+
+    <article class="card" id="p-uv">
+      <div class="card-h"><h3>UV systems</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:7.4%"></i></div><div class="meta"><span>ETS, Wafer, Barrier, Spectra, Delta</span><span class="num">40 · 7%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Get model and serial. Barrier and Spectra are legacy Evoqua units, so confirm before answering.</li>
+        <li><b>Lamps, ballasts, sleeves, cables:</b> parts path.</li>
+        <li><b>Error codes, low dose, wiper calibration:</b> the manual's fault table, then escalate.</li>
+        <li><b>Start-up or software update:</b> schedule with ETS service.</li>
+      </ul></div>
+    </article>
+
+    <article class="card" id="p-vfd">
+      <div class="card-h"><h3>VFD, pumps &amp; flow meters</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:6.1%"></i></div><div class="meta"><span>Wiring, commissioning, interlocks, flow signal</span><span class="num">33 · 6%</span></div></div>
+      <div><div class="lbl">Collect</div><ul><li>Drive make and model (Danfoss FC202, ABB, Green Drive), controller, pump</li><li>What they are wiring: start/stop, run confirm, analog flow, interlock</li></ul></div>
+      <div><div class="lbl">Do this</div><ol>
+        <li>Send the wiring guide for that drive and controller pair.</li>
+        <li>Flow meter problems: check Signet wiring and polarity first.</li>
+        <li>New install: send the start-up checklist.</li>
+      </ol></div>
+    </article>
+
+    <article class="card" id="p-def-ctrl">
+      <div class="card-h"><h3>Defender controls</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:6%"></i></div><div class="meta"><span>RMF12 / RMF7, HMI, PLC, programming</span><span class="num">32 · 6%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li><b>Passwords, Modbus register list, SD card / Rev 5 program:</b> send from the standard controls pack.</li>
+        <li><b>Frozen or blank HMI, PLC fault:</b> power-cycle steps, then photos, then escalate.</li>
+        <li><b>Hardware failure:</b> parts path (warranty if it's new).</li>
+        <li><b>Remote programming help:</b> book a scheduled call.</li>
+      </ul></div>
+    </article>
+
+    <article class="card" id="p-def-mech">
+      <div class="card-h"><h3>Defender leaks &amp; mechanical</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:4.7%"></i></div><div class="meta"><span>Gaskets, lids, O-rings, bolts, shafts, corrosion</span><span class="num">25 · 5%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Get photos and the exact leak location.</li>
+        <li><b>Gasket, O-ring, bolt kit, torque:</b> part number and the O&amp;M torque spec.</li>
+        <li><b>Crack, corrosion, bent or broken shaft:</b> warranty path.</li>
+      </ul></div>
+    </article>
+
+    <article class="card" id="p-service">
+      <div class="card-h"><h3>Start-ups &amp; service</h3><span class="tag route">Route</span></div>
+      <div><div class="bar"><i style="width:1.9%"></i></div><div class="meta"><span>Start-ups, on-site visits, 5 / 10-year maintenance</span><span class="num">10 · 2%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Send to field service scheduling with site, equipment and dates.</li>
+        <li>Maintenance programs: send the recommended spare parts list.</li>
+      </ul></div>
+    </article>
+
+    <article class="card" id="p-sand">
+      <div class="card-h"><h3>Sand filters</h3><span class="tag tech">Technical</span></div>
+      <div><div class="bar"><i style="width:1.5%"></i></div><div class="meta"><span>Laterals, media, channeling, MFP4 controller</span><span class="num">8 · 1.5%</span></div></div>
+      <div><div class="lbl">Do this</div><ul>
+        <li>Get the model off the tank label (e.g. 3448SHFFG), serial, and controller (MFP4).</li>
+        <li>MFP4 questions (backwash dwell time, wiring): use the MFP4 manual.</li>
+        <li>Media quantity and specs from the model data sheet.</li>
+        <li>Channeling or media loss: check laterals, then escalate.</li>
+      </ul></div>
+    </article>
+
+  </div>
+</section>
+
+<footer><span>Counts come from ticket titles, so they are approximate; email replies on the same issue count separately. Response rules and routing contacts are a draft for the lead engineer to confirm before onboarding use.</span><span class="wordmark">xylem</span></footer>
+</div>
+
+</body>
+</html>
