@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Barrier Ti UV: Parts &amp; Exploded View</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden} /* keeps the closed parts panel from covering the control bar on phones */
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1}
+  #overlay line, #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:500 clamp(9.5px, 0.7vw + 5px, 13px)/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .lbl{transition:opacity .2s linear}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  /* title block, like the sheet's lower strip */
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  button:hover{background:var(--track)}
+  button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;z-index:1;left:16px;top:12px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+  #scale{position:absolute;right:16px;bottom:10px;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;pointer-events:none;display:flex;align-items:center;gap:6px}
+  #scale i{display:block;height:0;border-top:1.5px solid var(--ink-2);border-left:1.5px solid var(--ink-2);border-right:1.5px solid var(--ink-2);height:6px}
+  /* part detail panel */
+  #overlay .lbl text{pointer-events:auto;cursor:pointer}
+  #overlay .lbl.sel text.tx{font-weight:600}
+  #overlay .lbl.sel line{stroke-width:2}
+  #overlay .lbl.hov text.tx{font-weight:600}
+  #overlay .lbl.hov polyline{stroke-width:2.2}
+  #overlay .lbl.hov circle{r:4}
+  #panel{position:absolute;z-index:2;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--panel);border-left:1.5px solid var(--ink);box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:16px 18px 24px;box-sizing:border-box;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;gap:14px}
+  #panel.open{transform:none}
+  #panel .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  #panel h2{margin:0;font:600 18px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  #panel .kicker{font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--leader);margin-bottom:4px}
+  #panel p{margin:0;font-size:13.5px;line-height:1.5}
+  #panel h3{margin:0 0 6px;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule);padding-bottom:4px}
+  #panel table{width:100%;border-collapse:collapse;font-size:12.5px}
+  #panel td{padding:5px 6px 5px 0;vertical-align:top;border-bottom:1px solid var(--rule)}
+  #panel td.pn{font:600 12.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;font-variant-numeric:tabular-nums}
+  #panel td .note{display:block;color:var(--ink-2);font-size:11.5px;margin-top:2px}
+  #panel details{border-bottom:1px solid var(--rule);padding:6px 0}
+  #panel summary{cursor:pointer;font-size:13px;font-weight:500;list-style:none;display:flex;gap:8px}
+  #panel summary::before{content:'+';color:var(--leader);font-weight:600;width:10px}
+  #panel details[open] summary::before{content:'\2013'}
+  #panel details p{margin-top:6px;padding-left:18px;color:var(--ink);font-size:12.5px}
+  #panel .src{font-size:11px;color:var(--ink-2);line-height:1.4}
+  #panel .index{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;list-style:none;margin:0;padding:0}
+  #panel .index button{border:0;padding:5px 0;text-align:left;text-transform:none;letter-spacing:0;font:400 13px "Barlow",system-ui,sans-serif;color:var(--ink);border-bottom:1px solid var(--rule);border-radius:0;width:100%}
+  #panel .index button:hover{color:var(--accent);background:transparent}
+  #panel .x{border:0;font-size:20px;line-height:1;padding:2px 6px}
+  #panel .x:hover{background:var(--track)}
+  #partsbtn[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  #panel .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+  #panel .acts button{font-size:11px;padding:5px 9px;letter-spacing:.07em}
+  #panel .acts button.order{background:var(--accent);border-color:var(--accent);color:#fff}
+  #panel .acts button.order:hover{filter:brightness(1.1);background:var(--accent)}
+  #panel .acts button.warr{border-color:var(--leader);color:var(--leader)}
+  #panel .acts button.warr:hover{background:var(--track)}
+  #panel .actnote{display:block;font-size:11.5px;color:var(--ink-2);margin-top:5px}
+  #panel .actnote:empty{display:none}
+  @media (max-width:640px){
+    #panel{top:auto;height:70%;width:100%;border-left:0;border-top:1.5px solid var(--ink);transform:translateY(102%)}
+    #panel.open{transform:none}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+  }
+  #models{display:flex;gap:4px;margin-right:6px}
+  #models button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  #panel .spec{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0}
+  #panel .spec dt{color:var(--ink-2)} #panel .spec dd{margin:0;font-weight:500}
+  #panel .tag{display:inline-block;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px dashed var(--rule);padding:1px 5px;margin-left:6px}
+  #panel .warnnote{display:block;color:#b26a00;font-size:11.5px;margin-top:3px}
+  @media (prefers-reduced-motion: reduce){ #overlay .lbl{transition:none} }
+
+  /* portal chrome */
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+  @media (max-width:640px){ #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%} }
+</style>
+</head>
+<body>
+
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Barrier Ti UV Parts</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
+    <div id="scale"><i style="width:60px"></i><span id="scaletxt">100 mm</span></div>
+    <div id="loading">Loading Barrier Ti geometry…</div>
+    <aside id="panel" aria-label="Part details"></aside>
+  </div>
+  <div id="bar">
+    <h1 id="title">Barrier Ti UV · Parts<small>Click any callout or part for part numbers and FAQ.</small></h1>
+    <div class="ctrl">
+      <span class="tick">Collapsed</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Explode progress">
+      <span class="tick">Exploded</span>
+    </div>
+    <div class="btns">
+      <div id="models" role="group" aria-label="Model">
+        <button data-m="1200" aria-pressed="false">TI-1200-4</button><button data-m="2200" aria-pressed="false">TI-2200-8</button><button data-m="4200" aria-pressed="false">TI-4200-8</button>
+      </div>
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="partsbtn" aria-pressed="false">Parts</button>
+      <button id="resetview">Drawing view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/defender-schematic/assembly-loader.js"></script>
+<script src="/assets/barrier-ti/barrier-ti-parts.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
+  const DATA=window.BARRIER_TI, SRC=window.BARRIER_TI_SRC;
+  const ORDER=['lamps','quartz','wiper','lampflange','branch-lamp','flange-lamp','body','uvsensor','tempsensor','branch-far','flange-far','endcap','brackets','panel'];
+  const LABEL={lamps:'UV lamps', quartz:'Quartz thimbles', wiper:'Manual wiper', lampflange:'Lamp flange', 'branch-lamp':'Branch and collar', 'flange-lamp':'Split backing ring',
+    body:'Chamber body', uvsensor:'UV sensor', tempsensor:'Temperature sensor', 'branch-far':'Branch and collar', 'flange-far':'Split backing ring', endcap:'End cap', brackets:'Fixing brackets'};
+  const TI=0x9fa5ad, TI2=0x8a9098;
+  const COLOR={lamps:0xf4f1e6, quartz:0xcfe6f2, wiper:0x2c2f33, lampflange:TI2, 'branch-lamp':TI, 'flange-lamp':0x7d838b, body:0xb2b7be, uvsensor:0x3b4f73, tempsensor:0x8d939b, 'branch-far':TI, 'flange-far':0x7d838b, endcap:TI2, brackets:0x767c84};
+  const RIGHT_COL=new Set(['body','uvsensor','tempsensor','branch-far','flange-far','endcap','brackets']);
+
+  // ---- scene ----------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-20000,20000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8a9098,0.72));
+  const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(-0.5,1,0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.4,-0.6); scene.add(fill);
+  const target=new THREE.Vector3(), _v=new THREE.Vector3(), _r=new THREE.Vector3(), _u=new THREE.Vector3();
+  const DRAW={theta:2.05, phi:1.0};
+  let theta=DRAW.theta, phi=DRAW.phi, zoom=1, pan=new THREE.Vector3(), needRender=true;
+
+  // ---- model state -------------------------------------------------------------------------------
+  let cur=null, A=null, root=null;
+  const parts={};
+  function clearModel(){ if(root){ scene.remove(root); root.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose&&o.material.dispose(); }); } root=null; for(const k in parts) delete parts[k]; for(const k in labelEls){ labelEls[k].grp.remove(); delete labelEls[k]; } }
+  const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:45,specular:0x3a3a3a,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1},o||{}));
+  function rod(x0,x1,r,y,z,m,parent,seg){ const g=new THREE.CylinderGeometry(r,r,x1-x0,seg||24); g.rotateZ(Math.PI/2); const me=new THREE.Mesh(g,m); me.position.set((x0+x1)/2,y,z); parent.add(me); return me; }
+  // where each part goes when exploded (chamber axis along x, lamp flange at -x), and when it moves
+  function plan(big){ const s=big?1:0.7;
+    return {lamps:[[-1230,330*s,0],0,0.4], quartz:[[-1110,170*s,0],0.12,0.55], wiper:[[-330,-250*s,0],0.3,0.65], lampflange:[[-260,0,0],0.35,0.72],
+      'branch-lamp':[[-110,0,0],0.55,0.9], 'flange-lamp':[[-110,190*s,0],0.6,1], body:[[0,0,0],0,1], uvsensor:[[0,0,220*s],0.6,1], tempsensor:[[0,210*s,0],0.6,1],
+      'branch-far':[[120,0,0],0.55,0.9], 'flange-far':[[120,190*s,0],0.6,1], endcap:[[290,0,0],0.6,1], brackets:[[0,-200*s,0],0.6,1]}; }
+  function loadModel(m){
+    if(!DATA[m]) m='4200';
+    cur=m; document.querySelectorAll('#models button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+    const d=DATA[m];
+    document.getElementById('title').innerHTML=`Barrier Ti UV · ${d.model}<small>${d.lamps} x 200 W lamp${d.lamps>1?'s':''}, ${d.conn} connections, up to ${d.flow} (NSF). Click any callout or part for part numbers and FAQ.</small>`;
+    try{ history.replaceState(null,'','?m='+m); }catch(e){}
+    closePanel(); stopPlay();
+    const ld=document.getElementById('loading')||(()=>{ const x=document.createElement('div'); x.id='loading'; view.appendChild(x); return x; })();
+    ld.textContent='Loading '+d.model+' geometry…';
+    fetch('/assets/barrier-ti/'+d.file,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+      if(cur!==m) return;
+      clearModel();
+      A=loadAssembly(buf); root=new THREE.Group(); root.add(A.root); scene.add(root);
+      const big=d.key!=='1200', P=plan(big), groups={};
+      const grp=k=>groups[k]||(groups[k]=(()=>{ const g=new THREE.Group(); root.add(g); return g; })());
+      A.nodes.forEach((n,i)=>{ if(n.mesh===undefined||n.mesh<0) return; let k=n.name; if(/^bracket/.test(k)) k='brackets'; if(!LABEL[k]) return;
+        const obj=A.objs[i]; obj.traverse(o=>{ if(o.isMesh){ o.material=mat(COLOR[k]); o.userData.part=k; } }); grp(k).add(obj); });
+      // drawn internals: lamps inside quartz thimbles at each lamp port, and the wiper plate and shaft
+      const X0=-517.5, QL=1025;
+      const mQ=mat(COLOR.quartz,{transparent:true,opacity:0.38,depthWrite:false,shininess:90,specular:0xffffff}), mL=mat(COLOR.lamps,{emissive:0x6a5cff,emissiveIntensity:0.18}), mC=mat(0x30343a), mW=mat(COLOR.wiper), mR=mat(0x1d1f22);
+      for(const [y,z] of d.ports){
+        const q=rod(X0,X0+QL,15,y,z,mQ,grp('quartz'),28); q.renderOrder=2;
+        const dome=new THREE.Mesh(new THREE.SphereGeometry(15,20,12,0,Math.PI*2,0,Math.PI/2),mQ); dome.rotation.z=-Math.PI/2; dome.position.set(X0+QL,y,z); grp('quartz').add(dome);
+        rod(X0-40,X0+10,11,y,z,mC,grp('lamps'),20); rod(X0+10,X0+QL-40,9.5,y,z,mL,grp('lamps'),20);
+      }
+      if(d.wiper){
+        const W=grp('wiper'), xw=X0+120, plate=new THREE.Mesh(new THREE.CylinderGeometry(98,98,8,40),mW); plate.rotation.z=Math.PI/2; plate.position.set(xw,0,0); W.add(plate);
+        for(const [y,z] of d.ports){ const ring=new THREE.Mesh(new THREE.TorusGeometry(16.5,3,10,28),mR); ring.rotation.y=Math.PI/2; ring.position.set(xw-6,y,z); W.add(ring); }
+        rod(X0-50,xw,6,0,0,mat(0x9aa0a6),W,16);
+      }
+      // centre the chamber body on the origin
+      root.updateMatrixWorld(true);
+      const bb0=new THREE.Box3().setFromObject(groups.body||root), c=bb0.getCenter(new THREE.Vector3()); root.position.set(-c.x,-c.y,-c.z); root.updateMatrixWorld(true);
+      for(const [k,g] of Object.entries(groups)){ const pl=P[k]||[[0,0,0],0,1]; g.traverse(o=>{ if(o.isMesh) o.userData.part=k; });
+        const b=new THREE.Box3().setFromObject(g); b.min.add(root.position.clone().negate()); b.max.add(root.position.clone().negate());
+        parts[k]={obj:g, bb:[b.min.x+root.position.x,b.min.y+root.position.y,b.min.z+root.position.z,b.max.x+root.position.x,b.max.y+root.position.y,b.max.z+root.position.z], off:new THREE.Vector3(...pl[0]), s:pl[1], e:pl[2], k:0, base:g.position.clone()}; }
+      ld.remove(); buildLabels(); resize(); setProgress(0);
+      if(reduced) setProgress(1); else setTimeout(()=>{ if(cur===m && !playing && Pg===0){ dirn=1; startPlay(); } },600);
+    }).catch(err=>{ ld.textContent='Could not load the model: '+err.message; });
+  }
+  document.getElementById('models').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&b.dataset.m!==cur) loadModel(b.dataset.m); });
+
+  // ---- camera ------------------------------------------------------------------------------------
+  const ease=t=>t<0?0:t>1?1:(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2);
+  function contentExtent(right, up){
+    let a=1e9,b=-1e9,c=1e9,d=-1e9,any=false;
+    for(const p of Object.values(parts)){ const bb=p.bb;
+      for(let k=0;k<8;k++){ _v.set(bb[k&1?3:0]+p.off.x*p.k, bb[k&2?4:1]+p.off.y*p.k, bb[k&4?5:2]+p.off.z*p.k); const x=_v.dot(right), y=_v.dot(up); a=Math.min(a,x); b=Math.max(b,x); c=Math.min(c,y); d=Math.max(d,y); any=true; } }
+    return any?{w:b-a,h:d-c,cr:(a+b)/2,cu:(c+d)/2}:null;
+  }
+  function fullExtent(right,up){ const save=Object.values(parts).map(p=>p.k); Object.values(parts).forEach(p=>p.k=1); const e=contentExtent(right,up); Object.values(parts).forEach((p,i)=>p.k=save[i]); return e; }
+  function columnPx(w){ if(!labelsOn) return 8; let mx=0; for(const el of Object.values(labelEls)) if(el.tw) mx=Math.max(mx,el.tw); if(!mx) mx=Math.min(120,w*0.18); return Math.min(mx+26,w*0.22); }
+  function updateCamera(){
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h;
+    const dir=new THREE.Vector3(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
+    _r.set(0,1,0).cross(dir).normalize(); _u.copy(dir).cross(_r).normalize();
+    const ext=root?fullExtent(_r,_u):null; let halfW=900;
+    if(ext){ const pw=(panel.classList.contains('open')&&w>640)?panel.offsetWidth:0, col=columnPx(w), availW=Math.max(140,w-pw-2*col), availH=Math.max(140,h-30);
+      halfW=Math.max(ext.w/2*(w/availW), ext.h/2*(h/availH)*asp)*1.06/zoom;
+      target.set(0,0,0).addScaledVector(_r, ext.cr+pw/2*(2*halfW/w)).addScaledVector(_u, ext.cu); }
+    camera.left=-halfW; camera.right=halfW; camera.top=halfW/asp; camera.bottom=-halfW/asp;
+    const t=target.clone().add(pan); camera.position.copy(t).add(dir.multiplyScalar(8000)); camera.up.set(0,1,0); camera.lookAt(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const px=2*halfW/w, mm=Math.max(10,Math.round(80*px/50)*50); document.getElementById('scaletxt').textContent=mm+' mm'; document.querySelector('#scale i').style.width=(mm/px)+'px';
+  }
+  function resize(){ renderer.setSize(view.clientWidth,view.clientHeight,false); measuredAt=0; updateCamera(); needRender=true; }
+  addEventListener('resize',resize);
+  let drag=null, moved=0;
+  view.addEventListener('pointerdown',e=>{ if(e.target.closest('#panel')) return; moved=0; const lg=e.target.closest&&e.target.closest('.lbl'); drag={x:e.clientX,y:e.clientY,b:e.button,t:theta,p:phi,pan:pan.clone(),lbl:lg?lg.dataset.part:null}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved=Math.max(moved,Math.abs(dx),Math.abs(dy));
+    if(drag.b===2||e.shiftKey){ const px=(camera.right-camera.left)/view.clientWidth, R=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0), U=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1); pan.copy(drag.pan).addScaledVector(R,-dx*px).addScaledVector(U,dy*px); }
+    else { theta=drag.t+dx*0.008; phi=Math.min(Math.PI-0.05,Math.max(0.05,drag.p-dy*0.008)); }
+    updateCamera(); needRender=true; });
+  view.addEventListener('pointerup',e=>{ const wasDrag=moved>4, lbl=drag&&drag.lbl; drag=null; if(wasDrag||e.button!==0||e.target.closest('#panel')) return; if(lbl) select(lbl); else pick(e); });
+  view.addEventListener('pointercancel',()=>{drag=null});
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  view.addEventListener('wheel',e=>{ if(e.target.closest('#panel')) return; e.preventDefault(); zoom=Math.min(12,Math.max(0.3,zoom*Math.exp(-e.deltaY*0.0012))); updateCamera(); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ theta=DRAW.theta; phi=DRAW.phi; zoom=1; pan.set(0,0,0); updateCamera(); needRender=true; });
+
+  // ---- picking, tint and the part panel -------------------------------------------------------------
+  const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
+  let selected=null, hovered=null;
+  function pick(e){
+    if(!root) return; const r=view.getBoundingClientRect(); ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(ndc,camera);
+    const list=[]; root.traverse(o=>{ if(o.isMesh) list.push(o); }); const h=ray.intersectObjects(list,false); select(h.length?h[0].object.userData.part:null);
+  }
+  function setTint(k,on){ const p=parts[k]; if(!p) return; p.obj.traverse(o=>{ if(o.isMesh){ o.material.emissive.setHex(on?0xd1202b:(k==='lamps'?0x6a5cff:0)); o.material.emissiveIntensity=on?0.55:(k==='lamps'?0.18:0); } }); }
+  function select(k){
+    hovered=null; if(selected) setTint(selected,false); selected=k;
+    if(k){ setTint(k,true); showPart(k); if(Pg<0.95&&parts[k]){ stopPlay(); dirn=1; startPlay(); } } else closePanel();
+    needRender=true;
+  }
+  const panel=document.getElementById('panel'), partsBtn=document.getElementById('partsbtn');
+  const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function openPanel(){ panel.classList.add('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
+  function closePanel(){ if(hovered){ const h=hovered; hovered=null; if(h!==selected) setTint(h,false); } panel.classList.remove('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; } }
+  function showIndex(){
+    const d=DATA[cur], info=d.parts;
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">Barrier Ti UV</div><h2>${esc(d.model)} parts</h2></div><button class="x" aria-label="Close">×</button></div>
+      <dl class="spec"><dt>Lamps</dt><dd>${d.lamps} x 200 W amalgam, 16,000 h</dd><dt>Connections</dt><dd>${esc(d.conn)}</dd><dt>Max flow (NSF)</dt><dd>${esc(d.flow)}</dd><dt>Power</dt><dd>${esc(d.power)}</dd><dt>Chamber</dt><dd>${esc(d.weight)}, 3.5 bar / 50 psi</dd></dl>
+      <p>Click a callout or a part in the view, or pick from the list. Part numbers are from the Barrier Ti IOM replacement components and spares kits.</p>
+      <ul class="index">${ORDER.filter(k=>info[k]).map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${info[k].nomodel?'<span class="tag">Not modelled</span>':''}</button></li>`).join('')}</ul>`;
+    openPanel();
+  }
+  function showPart(k){
+    const d=DATA[cur], p=d.parts[k==='brackets'?'brackets':k]; if(!p){ showIndex(); return; }
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">Barrier Ti UV · ${esc(d.model)}</div><h2>${esc(p.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
+      <p>${esc(p.desc)}</p>
+      <section><h3>Part numbers</h3><table>${p.parts.map(r=>`<tr><td class="pn">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}</td></tr>`).join('')}</table></section>
+      <section><h3>FAQ</h3>${p.faq.map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}</section>
+      <div class="src">Source: ${esc(SRC)}</div>
+      <button data-index="1">All parts</button>`;
+    openPanel(); panel.scrollTop=0;
+  }
+  panel.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
+    if(b.classList.contains('x')){ closePanel(); return; }
+    if(b.dataset.index){ if(selected){ setTint(selected,false); selected=null; needRender=true; } showIndex(); return; }
+    if(b.dataset.part){ if(parts[b.dataset.part]) select(b.dataset.part); else { if(selected){ setTint(selected,false); selected=null; } showPart(b.dataset.part); } } });
+  function hover(k){ if(k&&!parts[k]) k=null; if(hovered===k) return; if(hovered&&hovered!==selected) setTint(hovered,false); hovered=k; if(k&&k!==selected) setTint(k,true); needRender=true; }
+  panel.addEventListener('pointerover',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
+  panel.addEventListener('pointerleave',()=>hover(null));
+  panel.addEventListener('focusin',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
+  panel.addEventListener('focusout',()=>hover(null));
+  partsBtn.addEventListener('click',()=>panel.classList.contains('open')?closePanel():showIndex());
+  addEventListener('keydown',e=>{ if(e.key==='Escape') closePanel(); });
+
+  // ---- explode and callouts ------------------------------------------------------------------------------
+  let Pg=0, labelsOn=true, measuredAt=0; const labelEls={};
+  function buildLabels(){ const ns='http://www.w3.org/2000/svg'; measuredAt=0;
+    for(const k of Object.keys(parts)){ if(!LABEL[k]) continue; const grp=document.createElementNS(ns,'g'); grp.setAttribute('class','lbl'); grp.style.opacity=0; grp.dataset.part=k;
+      const ln=document.createElementNS(ns,'polyline'), dot=document.createElementNS(ns,'circle'); dot.setAttribute('r','2.2');
+      const halo=document.createElementNS(ns,'text'); halo.setAttribute('class','halo'); const tx=document.createElementNS(ns,'text'); tx.setAttribute('class','tx');
+      halo.textContent=tx.textContent=LABEL[k]; grp.append(ln,dot,halo,tx); overlay.appendChild(grp); labelEls[k]={grp,ln,dot,halo,tx}; } }
+  function setProgress(v){ Pg=v; prog.value=Math.round(v*1000);
+    for(const p of Object.values(parts)){ const k=ease((Pg-p.s)/(p.e-p.s)); p.k=k; p.obj.position.copy(p.base).addScaledVector(p.off,k); }
+    needRender=true; }
+  prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
+  const v3=new THREE.Vector3();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ measuredAt=0; needRender=true; });
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const items=[];
+    for(const [k,el] of Object.entries(labelEls)){ const p=parts[k]; if(!p) continue;
+      const still=k==='body', vis=(labelsOn||hovered===k)&&(still?Pg>0.5:p.k>0.92);
+      el.grp.style.opacity=vis?(still?1:Math.min(1,(p.k-0.92)/0.08)):0; el.grp.classList.toggle('sel',selected===k); el.grp.classList.toggle('hov',hovered===k); if(!vis) continue;
+      const right=RIGHT_COL.has(k); let best=null, cx=0, cy=0; const bb=p.bb;
+      for(let n=0;n<8;n++){ v3.set(bb[n&1?3:0],bb[n&2?4:1],bb[n&4?5:2]).addScaledVector(p.off,p.k).project(camera); const px=(v3.x+1)/2*w, py=(1-v3.y)/2*h; cx+=px/8; cy+=py/8; if(!best||(right?px>best.x:px<best.x)) best={x:px,y:py}; }
+      items.push({el,x:best.x+(cx-best.x)*0.3,y:best.y+(cy-best.y)*0.3,right}); }
+    if(!items.length) return;
+    if(measuredAt!==w){ measuredAt=w; for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength()||0; }catch(e){ it.el.tw=0; } } updateCamera(); }
+    for(const it of items) if(!it.el.tw){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){} if(!it.el.tw) it.el.tw=110; }
+    const fs=parseFloat(getComputedStyle(overlay).fontSize)||13, lh=Math.max(15,fs+5), pad=12, top=lh*0.7, bottom=h-lh*0.4, panelW=(panel.classList.contains('open')&&w>640)?panel.offsetWidth:0;
+    for(const right of [false,true]){ const col=items.filter(i=>i.right===right).sort((a,b)=>a.y-b.y); if(!col.length) continue;
+      const maxW=Math.min(Math.max(...col.map(i=>i.el.tw||70)),Math.max(70,w*0.28)), ys=col.map(i=>i.y);
+      ys[0]=Math.max(ys[0],top); for(let i=1;i<ys.length;i++) ys[i]=Math.max(ys[i],ys[i-1]+lh);
+      if(ys[ys.length-1]>bottom){ ys[ys.length-1]=bottom; for(let i=ys.length-2;i>=0;i--) ys[i]=Math.min(ys[i],ys[i+1]-lh); }
+      const edge=right?(w-pad-panelW-maxW):(pad+maxW);
+      for(let i=0;i<col.length;i++){ const it=col[i], ly=Math.round(ys[i]), dir=right?-1:1, sx=edge+dir*8, kx=sx+dir*16;
+        it.el.ln.setAttribute('points',`${sx},${ly} ${kx},${ly} ${Math.round(it.x)},${Math.round(it.y)}`); it.el.dot.setAttribute('cx',it.x); it.el.dot.setAttribute('cy',it.y);
+        for(const t of [it.el.halo,it.el.tx]){ t.setAttribute('x',edge); t.setAttribute('y',ly+fs*0.34); t.setAttribute('text-anchor',right?'start':'end'); } } }
+  }
+
+  // ---- playback ------------------------------------------------------------------------------------------------
+  let playing=false, dirn=1, last=0; const DUR=4200;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function startPlay(){ playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); if(Pg>=1) dirn=-1; }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=>playing?stopPlay():startPlay());
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); measuredAt=0; updateCamera(); needRender=true; });
+  function frame(now){ requestAnimationFrame(frame);
+    if(playing){ const dt=reduced?DUR:(now-last); last=now; let np=Pg+dirn*dt/DUR; if(np>=1){ np=1; stopPlay(); } if(np<=0){ np=0; stopPlay(); dirn=1; } setProgress(np); }
+    if(needRender&&root){ needRender=false; renderer.render(scene,camera); drawLabels(); } }
+  requestAnimationFrame(frame);
+  const q=new URLSearchParams(location.search).get('m'); loadModel(q&&DATA[q]?q:'4200');
+  window.BarrierTiParts={ load:loadModel, setProgress:v=>{ stopPlay(); setProgress(v); }, select, showIndex };
+})();
+</script>
+
+</body>
+</html>
