@@ -176,7 +176,7 @@
   function rod(x0,x1,r,y,z,m,parent,seg){ const g=new THREE.CylinderGeometry(r,r,x1-x0,seg||24); g.rotateZ(Math.PI/2); const me=new THREE.Mesh(g,m); me.position.set((x0+x1)/2,y,z); parent.add(me); return me; }
   // where each part goes when exploded (chamber axis along x, lamp flange at -x), and when it moves
   function plan(big){ const s=big?1:0.7;
-    return {lamps:[[-1230,330*s,0],0,0.4], quartz:[[-1110,170*s,0],0.12,0.55], wiper:[[-330,-250*s,0],0.3,0.65], lampflange:[[-260,0,0],0.35,0.72],
+    return {lamps:[[-1500,-40*s,520*s],0,0.45], quartz:[[-1500,0,0],0.12,0.6], wiper:[[-300,-330*s,-60],0.3,0.65], lampflange:[[-260,0,0],0.35,0.72],
       'branch-lamp':[[-110,0,0],0.55,0.9], 'flange-lamp':[[-110,190*s,0],0.6,1], body:[[0,0,0],0,1], uvsensor:[[0,0,220*s],0.6,1], tempsensor:[[0,210*s,0],0.6,1],
       'branch-far':[[120,0,0],0.55,0.9], 'flange-far':[[120,190*s,0],0.6,1], endcap:[[290,0,0],0.6,1], brackets:[[0,-200*s,0],0.6,1]}; }
   function loadModel(m){
