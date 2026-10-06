@@ -154,7 +154,6 @@
     body:'Chamber body', uvsensor:'UV sensor', tempsensor:'Temperature sensor', 'branch-far':'Branch and collar', 'flange-far':'Split backing ring', endcap:'End cap', brackets:'Fixing brackets'};
   const TI=0x9fa5ad, TI2=0x8a9098;
   const COLOR={lamps:0xf4f1e6, quartz:0xcfe6f2, wiper:0x2c2f33, lampflange:TI2, 'branch-lamp':TI, 'flange-lamp':0x7d838b, body:0xb2b7be, uvsensor:0x3b4f73, tempsensor:0x8d939b, 'branch-far':TI, 'flange-far':0x7d838b, endcap:TI2, brackets:0x767c84};
-  const RIGHT_COL=new Set(['body','uvsensor','tempsensor','branch-far','flange-far','endcap','brackets']);
 
   // ---- scene ----------------------------------------------------------------------------------
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -172,7 +171,7 @@
   // ---- model state -------------------------------------------------------------------------------
   let cur=null, A=null, root=null;
   const parts={};
-  function clearModel(){ if(root){ scene.remove(root); root.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose&&o.material.dispose(); }); } root=null; for(const k in parts) delete parts[k]; for(const k in labelEls){ labelEls[k].grp.remove(); delete labelEls[k]; } }
+  function clearModel(){ if(root){ scene.remove(root); root.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose&&o.material.dispose(); }); } root=null; for(const k in parts) delete parts[k]; for(const k in labelEls){ labelEls[k].grp.remove(); delete labelEls[k]; } SAMPLES.clear(); }
   const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:45,specular:0x3a3a3a,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1},o||{}));
   function rod(x0,x1,r,y,z,m,parent,seg){ const g=new THREE.CylinderGeometry(r,r,x1-x0,seg||24); g.rotateZ(Math.PI/2); const me=new THREE.Mesh(g,m); me.position.set((x0+x1)/2,y,z); parent.add(me); return me; }
   // where each part goes when exploded (chamber axis along x, lamp flange at -x), and when it moves
@@ -231,7 +230,7 @@
     return any?{w:b-a,h:d-c,cr:(a+b)/2,cu:(c+d)/2}:null;
   }
   function fullExtent(right,up){ const save=Object.values(parts).map(p=>p.k); Object.values(parts).forEach(p=>p.k=1); const e=contentExtent(right,up); Object.values(parts).forEach((p,i)=>p.k=save[i]); return e; }
-  function columnPx(w){ if(!labelsOn) return 8; let mx=0; for(const el of Object.values(labelEls)) if(el.tw) mx=Math.max(mx,el.tw); if(!mx) mx=Math.min(120,w*0.18); return Math.min(mx+26,w*0.22); }
+  function columnPx(w){ if(!labelsOn) return 8; /* label column plus the leader gutter */ let mx=0; for(const el of Object.values(labelEls)) if(el.tw) mx=Math.max(mx,el.tw); if(!mx) mx=Math.min(120,w*0.18); return Math.min(mx+56,w*0.24); }
   function updateCamera(){
     const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h;
     const dir=new THREE.Vector3(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
@@ -318,26 +317,60 @@
   prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
   const v3=new THREE.Vector3();
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ measuredAt=0; needRender=true; });
+  // ---- callout placement: each leader runs level from a clear point on its part's outline into the label column ----------
+  // Every mesh is reduced to a screen-space convex hull; each label picks the outline point and side whose level run to the
+  // column crosses the fewest other parts, and any jog to the stacked label row happens in the empty gutter.
+  const SAMPLES=new Map();
+  function samplesOf(mesh){ let s=SAMPLES.get(mesh); if(s) return s; const a=mesh.geometry.attributes.position, n=a.count, step=Math.max(1,Math.floor(n/140)); s=[];
+    for(let i=0;i<n;i+=step) s.push(new THREE.Vector3(a.getX(i),a.getY(i),a.getZ(i))); SAMPLES.set(mesh,s); return s; }
+  function hull(P){ if(P.length<3) return P; P.sort((a,b)=>a[0]-b[0]||a[1]-b[1]); const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]); const lo=[],up=[];
+    for(const p of P){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
+    for(let i=P.length-1;i>=0;i--){ const p=P[i]; while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0) up.pop(); up.push(p); }
+    up.pop(); lo.pop(); return lo.concat(up); }
+  // where a level (or plumb) line crosses a convex hull: the [lo,hi] interval along it, or null
+  function crossAt(H,c,vert){ let lo=1e9,hi=-1e9; const A=vert?0:1, B=vert?1:0;
+    for(let i=0;i<H.length;i++){ const p=H[i], q=H[(i+1)%H.length]; if((p[A]-c)*(q[A]-c)>0||p[A]===q[A]) continue; const t=(c-p[A])/(q[A]-p[A]), v=p[B]+(q[B]-p[B])*t; lo=Math.min(lo,v); hi=Math.max(hi,v); }
+    return lo<=hi?[lo,hi]:null; }
+  function overlapLen(H,c,vert,a0,a1){ if(vert?(c<H.bx0||c>H.bx1):(c<H.by0||c>H.by1)) return 0; const lo=Math.min(a0,a1), hi=Math.max(a0,a1);
+    if(vert?(hi<H.by0||lo>H.by1):(hi<H.bx0||lo>H.bx1)) return 0; const iv=crossAt(H,c,vert); if(!iv) return 0; return Math.max(0,Math.min(hi,iv[1])-Math.max(lo,iv[0])); }
+  function screenHulls(w,h){ const out=[]; root.updateMatrixWorld(true);
+    for(const [k,p] of Object.entries(parts)){ p.obj.traverse(o=>{ if(!o.isMesh) return; const P=[];
+        for(const v of samplesOf(o)){ v3.copy(v).applyMatrix4(o.matrixWorld).project(camera); P.push([(v3.x+1)/2*w,(1-v3.y)/2*h]); }
+        const H=hull(P); let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9; for(const q of H){ x0=Math.min(x0,q[0]); x1=Math.max(x1,q[0]); y0=Math.min(y0,q[1]); y1=Math.max(y1,q[1]); }
+        H.bx0=x0; H.bx1=x1; H.by0=y0; H.by1=y1; H.k=k; out.push(H); }); }
+    return out; }
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
-    const items=[];
+    const vis=[];
     for(const [k,el] of Object.entries(labelEls)){ const p=parts[k]; if(!p) continue;
-      const still=k==='body', vis=(labelsOn||hovered===k)&&(still?Pg>0.5:p.k>0.92);
-      el.grp.style.opacity=vis?(still?1:Math.min(1,(p.k-0.92)/0.08)):0; el.grp.classList.toggle('sel',selected===k); el.grp.classList.toggle('hov',hovered===k); if(!vis) continue;
-      const right=RIGHT_COL.has(k); let best=null, cx=0, cy=0; const bb=p.bb;
-      for(let n=0;n<8;n++){ v3.set(bb[n&1?3:0],bb[n&2?4:1],bb[n&4?5:2]).addScaledVector(p.off,p.k).project(camera); const px=(v3.x+1)/2*w, py=(1-v3.y)/2*h; cx+=px/8; cy+=py/8; if(!best||(right?px>best.x:px<best.x)) best={x:px,y:py}; }
-      items.push({el,x:best.x+(cx-best.x)*0.3,y:best.y+(cy-best.y)*0.3,right}); }
-    if(!items.length) return;
-    if(measuredAt!==w){ measuredAt=w; for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength()||0; }catch(e){ it.el.tw=0; } } updateCamera(); }
-    for(const it of items) if(!it.el.tw){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){} if(!it.el.tw) it.el.tw=110; }
+      const still=k==='body', on=(labelsOn||hovered===k)&&(still?Pg>0.5:p.k>0.92);
+      el.grp.style.opacity=on?(still?1:Math.min(1,(p.k-0.92)/0.08)):0; el.grp.classList.toggle('sel',selected===k); el.grp.classList.toggle('hov',hovered===k); if(on) vis.push([k,el]); }
+    if(!vis.length) return;
+    if(measuredAt!==w){ measuredAt=w; for(const [,el] of vis){ try{ el.tw=el.tx.getComputedTextLength()||0; }catch(e){ el.tw=0; } } updateCamera(); }
+    for(const [,el] of vis) if(!el.tw){ try{ el.tw=el.tx.getComputedTextLength(); }catch(e){} if(!el.tw) el.tw=110; }
     const fs=parseFloat(getComputedStyle(overlay).fontSize)||13, lh=Math.max(15,fs+5), pad=12, top=lh*0.7, bottom=h-lh*0.4, panelW=(panel.classList.contains('open')&&w>640)?panel.offsetWidth:0;
+    const maxW=Math.min(Math.max(...vis.map(([,el])=>el.tw||70)),Math.max(70,w*0.28)), edgeL=pad+maxW, edgeR=w-pad-panelW-maxW, gutL=edgeL+30, gutR=edgeR-30;
+    const H=screenHulls(w,h), items=[], SOFT={quartz:0.3, lamps:0.5};
+    const DY=[0,-22,22,-50,50,-90,90,-150,150,-230,230];
+    for(const [k,el] of vis){ const own=H.filter(q=>q.k===k), others=H.filter(q=>q.k!==k); if(!own.length) continue;
+      // candidate anchors: every hull corner plus edge midpoints
+      const cand=[]; for(const hh of own) for(let i=0;i<hh.length;i++){ const p=hh[i], q=hh[(i+1)%hh.length]; cand.push(p,[(p[0]+q[0])/2,(p[1]+q[1])/2]); }
+      const stride=Math.max(1,Math.floor(cand.length/40));
+      let best=null;
+      for(let ci=0;ci<cand.length;ci+=stride){ const a=cand[ci];
+        for(const right of [false,true]){ const ex=right?gutR:gutL; if(right?a[0]>ex-4:a[0]<ex+4) continue;
+          for(const dy of DY){ const y2=a[1]+dy; if(y2<top||y2>bottom) continue; let cost=Math.abs(ex-a[0])/w*6+Math.abs(dy)*0.02;
+            for(const q of others){ const wt=SOFT[q.k]||1, hL=overlapLen(q,y2,false,a[0],ex), vL=dy?overlapLen(q,a[0],true,a[1],y2):0; if(hL>0.5) cost+=wt*(30+hL*0.08); if(vL>0.5) cost+=wt*(30+vL*0.08); if(cost>(best?best.cost:1e9)) break; }
+            for(const q of own){ const d=right?1:-1, hL=overlapLen(q,y2,false,a[0]+d*5,ex), vL=Math.abs(dy)>5?overlapLen(q,a[0],true,a[1]+Math.sign(dy)*5,y2):0; if(hL>0.5) cost+=12+hL*0.1; if(vL>0.5) cost+=12+vL*0.1; }
+            if(!best||cost<best.cost) best={cost,x:a[0],y:a[1],y2,right}; } } }
+      if(best) items.push({el,x:best.x,y:best.y2,ax:best.x,ay:best.y,right:best.right}); }
     for(const right of [false,true]){ const col=items.filter(i=>i.right===right).sort((a,b)=>a.y-b.y); if(!col.length) continue;
-      const maxW=Math.min(Math.max(...col.map(i=>i.el.tw||70)),Math.max(70,w*0.28)), ys=col.map(i=>i.y);
+      const ys=col.map(i=>i.y);
       ys[0]=Math.max(ys[0],top); for(let i=1;i<ys.length;i++) ys[i]=Math.max(ys[i],ys[i-1]+lh);
       if(ys[ys.length-1]>bottom){ ys[ys.length-1]=bottom; for(let i=ys.length-2;i>=0;i--) ys[i]=Math.min(ys[i],ys[i+1]-lh); }
-      const edge=right?(w-pad-panelW-maxW):(pad+maxW);
-      for(let i=0;i<col.length;i++){ const it=col[i], ly=Math.round(ys[i]), dir=right?-1:1, sx=edge+dir*8, kx=sx+dir*16;
-        it.el.ln.setAttribute('points',`${sx},${ly} ${kx},${ly} ${Math.round(it.x)},${Math.round(it.y)}`); it.el.dot.setAttribute('cx',it.x); it.el.dot.setAttribute('cy',it.y);
+      const edge=right?edgeR:edgeL, dir=right?-1:1, gut=right?gutR:gutL;
+      for(let i=0;i<col.length;i++){ const it=col[i], ly=Math.round(ys[i]), sx=edge+dir*8, ax=Math.round(it.ax), ay=Math.round(it.ay), y2=Math.round(it.y);
+        it.el.ln.setAttribute('points',`${sx},${ly} ${Math.round(gut-dir*10)},${ly} ${Math.round(gut)},${y2} ${ax},${y2} ${ax},${ay}`); it.el.dot.setAttribute('cx',ax); it.el.dot.setAttribute('cy',ay);
         for(const t of [it.el.halo,it.el.tx]){ t.setAttribute('x',edge); t.setAttribute('y',ly+fs*0.34); t.setAttribute('text-anchor',right?'start':'end'); } } }
   }
 
