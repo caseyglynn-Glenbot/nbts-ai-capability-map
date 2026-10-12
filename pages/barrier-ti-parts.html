@@ -87,8 +87,10 @@
     #bar{grid-template-columns:1fr;gap:8px}
     .btns{justify-content:flex-start}
   }
-  #models{display:flex;gap:4px;margin-right:6px}
-  #models button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  #models{display:flex;margin-right:6px}
+  #model{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--ink);border-radius:2px;padding:5px 6px;cursor:pointer}
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #panel td.pn.need,#panel .need{color:var(--leader)}
   #panel .spec{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0}
   #panel .spec dt{color:var(--ink-2)} #panel .spec dd{margin:0;font-weight:500}
   #panel .tag{display:inline-block;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px dashed var(--rule);padding:1px 5px;margin-left:6px}
@@ -130,9 +132,7 @@
       <span class="tick">Exploded</span>
     </div>
     <div class="btns">
-      <div id="models" role="group" aria-label="Model">
-        <button data-m="1200" aria-pressed="false">TI-1200-4</button><button data-m="2200" aria-pressed="false">TI-2200-8</button><button data-m="4200" aria-pressed="false">TI-4200-8</button>
-      </div>
+      <label id="models"><span class="vh">Model</span><select id="model" aria-label="Barrier Ti model"></select></label>
       <button id="play" aria-pressed="false">Play</button>
       <button id="labels" aria-pressed="true">Labels</button>
       <button id="partsbtn" aria-pressed="false">Parts</button>
@@ -144,16 +144,20 @@
 <script src="/assets/sp55-exploded/three.min.js"></script>
 <script src="/assets/defender-schematic/assembly-loader.js"></script>
 <script src="/assets/barrier-ti/barrier-ti-parts.js"></script>
+<script src="/assets/parts-request.js"></script>
 <script>
 (function(){
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
   const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
-  const DATA=window.BARRIER_TI, SRC=window.BARRIER_TI_SRC;
+  const DATA=window.BARRIER_TI, SRC=window.BARRIER_TI_SRC, NEED_PN='SAP # needed';
+  const modelSel=document.getElementById('model');
+  for(const k of ['1200','2200','4200']){ if(!DATA[k]) continue; const o=document.createElement('option'); o.value=k; o.textContent=DATA[k].model; modelSel.appendChild(o); }
+  modelSel.addEventListener('change',()=>{ if(modelSel.value!==cur) loadModel(modelSel.value); });
   const ORDER=['lamps','quartz','wiper','lampflange','branch-lamp','flange-lamp','body','uvsensor','tempsensor','branch-far','flange-far','endcap','brackets','panel'];
   const LABEL={lamps:'UV lamps', quartz:'Quartz thimbles', wiper:'Manual wiper', lampflange:'Lamp flange', 'branch-lamp':'Branch and collar', 'flange-lamp':'Split backing ring',
-    body:'Chamber body', uvsensor:'UV sensor', tempsensor:'Temperature sensor', 'branch-far':'Branch and collar', 'flange-far':'Split backing ring', endcap:'End cap', brackets:'Fixing brackets'};
+    body:'Chamber body', uvsensor:'UV sensor', tempsensor:'Temperature sensor', 'branch-far':'Branch and collar', 'flange-far':'Split backing ring', endcap:'End cap', brackets:'Fixing brackets', panel:'Control panel'};
   const TI=0x9fa5ad, TI2=0x8a9098;
-  const COLOR={lamps:0xf4f1e6, quartz:0xcfe6f2, wiper:0x2c2f33, lampflange:TI2, 'branch-lamp':TI, 'flange-lamp':0x7d838b, body:0xb2b7be, uvsensor:0x3b4f73, tempsensor:0x8d939b, 'branch-far':TI, 'flange-far':0x7d838b, endcap:TI2, brackets:0x767c84};
+  const COLOR={lamps:0xf4f1e6, quartz:0xcfe6f2, wiper:0x2c2f33, lampflange:TI2, 'branch-lamp':TI, 'flange-lamp':0x7d838b, body:0xb2b7be, uvsensor:0x3b4f73, tempsensor:0x8d939b, 'branch-far':TI, 'flange-far':0x7d838b, endcap:TI2, brackets:0x767c84, panel:0xdcdfe3};
 
   // ---- scene ----------------------------------------------------------------------------------
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -178,10 +182,10 @@
   function plan(big){ const s=big?1:0.7;
     return {lamps:[[-1500,-40*s,520*s],0,0.45], quartz:[[-1500,0,0],0.12,0.6], wiper:[[-300,-330*s,-60],0.3,0.65], lampflange:[[-260,0,0],0.35,0.72],
       'branch-lamp':[[-110,0,0],0.55,0.9], 'flange-lamp':[[-110,190*s,0],0.6,1], body:[[0,0,0],0,1], uvsensor:[[0,0,220*s],0.6,1], tempsensor:[[0,210*s,0],0.6,1],
-      'branch-far':[[120,0,0],0.55,0.9], 'flange-far':[[120,190*s,0],0.6,1], endcap:[[290,0,0],0.6,1], brackets:[[0,-200*s,0],0.6,1]}; }
+      'branch-far':[[120,0,0],0.55,0.9], 'flange-far':[[120,190*s,0],0.6,1], endcap:[[290,0,0],0.6,1], brackets:[[0,-200*s,0],0.6,1], panel:[[0,0,-260*s],0.5,1]}; }
   function loadModel(m){
     if(!DATA[m]) m='4200';
-    cur=m; document.querySelectorAll('#models button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+    cur=m; modelSel.value=m;
     const d=DATA[m];
     document.getElementById('title').innerHTML=`Barrier Ti UV · ${d.model}<small>${d.lamps} x 200 W lamp${d.lamps>1?'s':''}, ${d.conn} connections, up to ${d.flow} (NSF). Click any callout or part for part numbers and FAQ.</small>`;
     try{ history.replaceState(null,'','?m='+m); }catch(e){}
@@ -219,7 +223,6 @@
       if(reduced) setProgress(1); else setTimeout(()=>{ if(cur===m && !playing && Pg===0){ dirn=1; startPlay(); } },600);
     }).catch(err=>{ ld.textContent='Could not load the model: '+err.message; });
   }
-  document.getElementById('models').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&b.dataset.m!==cur) loadModel(b.dataset.m); });
 
   // ---- camera ------------------------------------------------------------------------------------
   const ease=t=>t<0?0:t>1?1:(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2);
@@ -276,17 +279,20 @@
   function closePanel(){ if(hovered){ const h=hovered; hovered=null; if(h!==selected) setTint(h,false); } panel.classList.remove('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; } }
   function showIndex(){
     const d=DATA[cur], info=d.parts;
+    const need=[], seen=new Set(); for(const k of ORDER) if(info[k]) for(const r of info[k].parts) if(r[0]===NEED_PN && !seen.has(r[1])){ seen.add(r[1]); need.push([info[k].title,r]); }
     panel.innerHTML=`<div class="ph"><div><div class="kicker">Barrier Ti UV</div><h2>${esc(d.model)} parts</h2></div><button class="x" aria-label="Close">×</button></div>
       <dl class="spec"><dt>Lamps</dt><dd>${d.lamps} x 200 W amalgam, 16,000 h</dd><dt>Connections</dt><dd>${esc(d.conn)}</dd><dt>Max flow (NSF)</dt><dd>${esc(d.flow)}</dd><dt>Power</dt><dd>${esc(d.power)}</dd><dt>Chamber</dt><dd>${esc(d.weight)}, 3.5 bar / 50 psi</dd></dl>
-      <p>Click a callout or a part in the view, or pick from the list. Part numbers are from the Barrier Ti IOM replacement components and spares kits.</p>
-      <ul class="index">${ORDER.filter(k=>info[k]).map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${info[k].nomodel?'<span class="tag">Not modelled</span>':''}</button></li>`).join('')}</ul>`;
+      <p>Click a callout or a part in the view, or pick from the list. Part numbers are from the Barrier Ti IOM replacement components and spares kits. None of the Barrier Ti numbers are in the master product list yet.</p>
+      <ul class="index">${ORDER.filter(k=>info[k]).map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${info[k].nomodel?'<span class="tag">Not modelled</span>':''}</button></li>`).join('')}</ul>
+      ${need.length?`<section><h3 class="need">SAP numbers needed (${need.length})</h3><table>${need.map(([t,r])=>`<tr><td class="pn need">Needed</td><td>${esc(r[1])}<span class="note">${esc(t)}${r[2]?' · '+esc(r[2]):''}</span></td></tr>`).join('')}</table></section>`:''}`;
     openPanel();
   }
   function showPart(k){
-    const d=DATA[cur], p=d.parts[k==='brackets'?'brackets':k]; if(!p){ showIndex(); return; }
+    const d=DATA[cur], p=d.parts[k==='brackets'?'brackets':k]; if(!p){ showIndex(); return; } shown=k;
     panel.innerHTML=`<div class="ph"><div><div class="kicker">Barrier Ti UV · ${esc(d.model)}</div><h2>${esc(p.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
       <p>${esc(p.desc)}</p>
-      <section><h3>Part numbers</h3><table>${p.parts.map(r=>`<tr><td class="pn">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}</td></tr>`).join('')}</table></section>
+      <section><h3>Part numbers</h3><table>${p.parts.map((r,i)=>`<tr><td class="pn${r[0]===NEED_PN?' need':''}">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}
+        <div class="acts"><button class="order" data-act="order" data-row="${i}">Order part</button><button class="warr" data-act="warranty" data-row="${i}">Warranty replacement</button></div></td></tr>`).join('')}</table></section>
       <section><h3>FAQ</h3>${p.faq.map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}</section>
       <div class="src">Source: ${esc(SRC)}</div>
       <button data-index="1">All parts</button>`;
@@ -295,14 +301,24 @@
   panel.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
     if(b.classList.contains('x')){ closePanel(); return; }
     if(b.dataset.index){ if(selected){ setTint(selected,false); selected=null; needRender=true; } showIndex(); return; }
+    if(b.dataset.act){ partAction(b.dataset.act,+b.dataset.row); return; }
     if(b.dataset.part){ if(parts[b.dataset.part]) select(b.dataset.part); else { if(selected){ setTint(selected,false); selected=null; } showPart(b.dataset.part); } } });
+  // Order / warranty: the same request form and webhook as the Defender SP-55 page (assets/parts-request.js).
+  let shown=null;
+  function partAction(act,row){
+    const d=DATA[cur], p=d.parts[shown]; if(!p||!p.parts[row]) return; const r=p.parts[row];
+    const req={action:act, part:shown, partTitle:p.title, partNumber:r[0], description:r[1], note:r[2]||'', model:'Barrier Ti UV '+d.model, modelKey:'barrier-ti-'+cur, modelLabel:d.model};
+    window.dispatchEvent(new CustomEvent('barrier-ti-part-action',{detail:req}));
+    const h=(window.BARRIER_TI_ACTIONS||{})[act]; if(typeof h==='function') h(req);
+    window.PartsRequest.open(req,{serialLabel:'Chamber serial number'});
+  }
   function hover(k){ if(k&&!parts[k]) k=null; if(hovered===k) return; if(hovered&&hovered!==selected) setTint(hovered,false); hovered=k; if(k&&k!==selected) setTint(k,true); needRender=true; }
   panel.addEventListener('pointerover',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
   panel.addEventListener('pointerleave',()=>hover(null));
   panel.addEventListener('focusin',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
   panel.addEventListener('focusout',()=>hover(null));
   partsBtn.addEventListener('click',()=>panel.classList.contains('open')?closePanel():showIndex());
-  addEventListener('keydown',e=>{ if(e.key==='Escape') closePanel(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape' && !(document.getElementById('reqdlg')||{}).open) closePanel(); });
 
   // ---- explode and callouts ------------------------------------------------------------------------------
   let Pg=0, labelsOn=true, measuredAt=0; const labelEls={};

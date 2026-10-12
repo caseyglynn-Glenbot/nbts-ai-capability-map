@@ -75,11 +75,13 @@
         parts:[['—','PT100 temperature sensor','No part number in the IOM']], faq:FAQ.temp},
       brackets:{title:'Fixing brackets', desc:'Mounting brackets under each branch for horizontal or vertical installation.',
         parts:[['—','Chamber fixing bracket','No part number in the IOM']], faq:FAQ.body},
-      panel:{title:'Control panel', nomodel:true, desc:`Spectra control panel, ${o.panel}. Not part of the chamber model.`,
+      panel:{title:'Control panel', desc:`Spectra control panel, ${o.panel}. Geometry from the PGA_1-4x200 STEP (the panel general arrangement for 1 to 4 x 200 W), placed behind the chamber in this view.`,
         parts:[['ATUV-1010','Spectra membrane main board','Board reference from the IOM'],['ATUV-1220','I/O module','Board reference from the IOM'],['—','LP electronic ballast','One per lamp']], faq:FAQ.panel}
     };
     if(o.wiper) parts.wiper={title:'Manual wiper', desc:`Manual wiper (option): handwheel knob on the lamp flange driving the wiper shaft and plate with 30 mm EPDM wiper rings along the quartz thimbles.`,
       parts:[row(k.wseal,'Wiper seal kit, '+o.model),['—','Manual wiper shaft, TI, Q30, '+o.lamps+'L, 8"','No part number in the IOM']], faq:FAQ.wiper};
+    // rows with no part number: flag that a SAP number is needed
+    for(const v of Object.values(parts)) v.parts=v.parts.map(r=> (r[0]==='—'||/^ATUV-|^W\dT/.test(r[0])) ? ['SAP # needed', r[1]+(r[0]!=='—'?' ('+r[0]+')':''), (r[2]?r[2]+'. ':'')+'Not in the master product list'] : r);
     return Object.assign({},o,{parts});
   }
   window.BARRIER_TI={
