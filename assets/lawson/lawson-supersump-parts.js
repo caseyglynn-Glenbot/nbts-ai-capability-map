@@ -48,4 +48,50 @@
       assemblyNote:'O&M parts list gives 1001-9893; the MLD-SG-1212 certificate shows 1001-9896 (the MLD-FG-1212 frame and grate number). Confirm before ordering.'}),
     '1818':model({model:'MLD-SG-1818', size:'18 x 18', assembly:'1001-9894', grate:'1000-8346', sump:'1000-8358', port:'8 in', holes:[[72.9,149.1],[-372.9,-295.3],[-372.9,149.1],[72.9,-295.3]], sumpTop:-167.4, boltLen:23.8, floor:816, wall:696, area:183.06, blockable:false, bolt:'BOLT-02-SS', boltDesc:'1/4-20 x 15/16 stainless hex socket screw, (4) per grate'})
   };
+
+  // ---- molded 18 in channel sumps (18 x 36, 18 x 54, 18 x 72) -------------------------------------------------
+  // Geometry from the Lawson "Sump Inventor Files - Updated NSF Dataplate" STEP assemblies (18X36 / 18X54_ / 18X72_ASSEMBLY).
+  // Each drain is one molded sump with 2, 3 or 4 flat 18 x 18 grate sections, four 1/4-20 screws per section.
+  // Part numbers from the master product list (SAP). Where the list has no matching line the row says SAP # needed.
+  const NEED='SAP # needed';
+  const SRC2='Lawson molded sump STEP assembly (Updated NSF Dataplate); master product list (SAP). Care, inspection and torque from the Lawson Aquatic Grate O&M.';
+  function channel(o){
+    const n=o.sections, scr=n*4;
+    const m=model({model:o.model, size:o.size, assembly:NEED, grate:NEED, sump:NEED, port:'See submittal', holes:o.holes, sumpTop:o.sumpTop, boltLen:o.boltLen,
+      floor:null, wall:null, area:null, blockable:null, bolt:NEED, boltDesc:''});
+    m.bin='mld-'+o.code.replace('X','')+'.bin'; m.sections=n; m.ratingNote='Flow ratings and open area for the '+o.size+' are not in the documents I have. Take them from the '+o.size+' certificate of conformity.';
+    const P=m.parts;
+    P.grate.title=o.size+' grate sections';
+    P.grate.desc=`${n} flat 18 x 18 in molded grate sections side by side across the ${o.size} sump. Each section screws down with four 1/4-20 stainless screws into inserts in the sump.`;
+    P.grate.parts=[[o.frameGrate,'FRAME & GRT MOLDED '+o.code+' WT SUPERFLOW','Frame and grates, white'],[o.frame,'MAIN DRAIN FRAME ONLY '+o.code+'-WT','Frame only, white'],[NEED,'Grate section only, 18 x 18 flat (STEP '+o.code+'_FLAT_GRATE)','No grate-only line for the '+o.size+' in the master product list']].concat(o.extra||[]);
+    P.grate.src=SRC2;
+    P.sump.title=o.size+' sump';
+    P.sump.desc=`One-piece molded channel sump, 18 in wide and ${o.len} in long, carrying ${n} grate sections. Suction connection on the side.`;
+    P.sump.parts=[[NEED,'Molded sump only, '+o.size+' (STEP '+o.code+' SUMP)','The master product list only has fiberglass '+o.code+' sumps (1003-8xxx); no molded sump-only line'],[NEED,'Complete '+o.size+' molded sump and grate assembly','No sump-and-grate assembly line for the '+o.size+' in the master product list']];
+    P.sump.src=SRC2;
+    P.plate.desc='Not included in the '+o.size+' STEP assembly. '+P.plate.desc;
+    P.plate.parts=[[NEED,'Test plate / inner cover, '+o.size,'Not a separate line in the master product list']];
+    P.plate.src=SRC2;
+    P.coupling={title:'Side connection', desc:'Pipe coupling on the side suction outlet of the '+o.size+' sump, as modeled in the STEP assembly.',
+      parts:[[NEED,'Side outlet coupling, '+o.size+' (STEP '+o.couplingName+')','Not in the master product list']],
+      faq:[['How is the suction line tested?','Water test only, never compressed air, at no more than 15 psi (Lawson grate O&M).']], src:SRC2};
+    P.plate.nomodel=true;
+    P.screws.desc=`${scr} 1/4-20 stainless steel screws, four per grate section, threading into inserts in the sump. Tighten with a hex key to 10 in-lb. Length shown is measured from the model (about 1-1/4 in); confirm against the submittal.`;
+    P.screws.parts=[[NEED,'1/4-20 stainless hex socket screw, about 1-1/4 in, ('+scr+') per drain','Screw length measured from the STEP model. Confirm before ordering.']];
+    P.screws.src=SRC2;
+    P.inserts.desc=`${scr} threaded inserts in the 3/8 in bores around the top of the sump, one under each grate screw.`;
+    P.inserts.parts=[[NEED,'Threaded insert, 1/4-20, for 3/8 in sump bore, ('+scr+') per drain','Not in the master product list']];
+    P.inserts.src=SRC2;
+    return m;
+  }
+  const D=window.LAWSON_SUPERSUMP;
+  const rowHoles=(xs,zs)=>{ const h=[]; for(const z of zs) for(const x of xs) h.push([x,z]); return h; };
+  D['1836']=channel({model:'Molded 18 x 36', size:'18 x 36', code:'18X36', len:36, sections:2, frameGrate:'1000-8329', frame:'1000-8314', noPlate:true, couplingName:'18X36_SCH40_NEW_COUPLING',
+    holes:rowHoles([-458.7,-14.2],[-373.2,-4.9,84.0,452.3]), sumpTop:494.7, boltLen:32.1});
+  D['1854']=channel({model:'Molded 18 x 54', size:'18 x 54', code:'18X54', len:54, sections:3, frameGrate:'1000-8330', frame:'1000-1443', couplingName:'INNER_COVER',
+    holes:rowHoles([-455.6,-11.1],[416.7,785.0,873.9,1242.2,1331.1,1699.4]), sumpTop:-409.8, boltLen:32.1});
+  D['1872']=channel({model:'Molded 18 x 72', size:'18 x 72', code:'18X72', len:72, sections:4, frameGrate:'1000-8331', frame:'1002-1095', couplingName:'INNER_COVER',
+    holes:rowHoles([-455.6,-11.1],[1772.1,2140.4,2229.3,2597.6,2686.5,3054.8,3143.7,3512.0]), sumpTop:724.0, boltLen:32.1,
+    extra:[['1000-8270','HANDHOLD - WT 85401 - 1872','Grate handhold for the 18 x 72']]});
+  window.LAWSON_MODEL_ORDER=['0909','1212','1818','1836','1854','1872'];
 })();

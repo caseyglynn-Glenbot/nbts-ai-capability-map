@@ -41,6 +41,14 @@
   #overlay g.lbl.hov polyline, #overlay g.lbl.sel polyline{stroke-width:2.2}
   #overlay g.lbl.hov circle.bal, #overlay g.lbl.sel circle.bal{fill:var(--leader);stroke:var(--leader)}
   #overlay g.lbl.hov text.bn, #overlay g.lbl.sel text.bn{fill:#fff}
+  #bar .mtitle{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+  #model{font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--ink);border-radius:2px;padding:3px 4px;cursor:pointer}
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #nogeo{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;font:500 13px/1.5 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;color:var(--ink-2)}
+  #nogeo b{display:block;color:var(--leader);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+  .neednote{display:block;color:var(--leader);font:500 10.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+  .needbox{margin:8px 0 4px;font-size:11.5px;line-height:1.45;color:var(--ink-2);border-left:3px solid var(--leader);padding:4px 8px;background:var(--sheet)}
+  .needbox b{color:var(--leader)}
   #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
   #hint{position:absolute;z-index:1;left:14px;top:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);pointer-events:none}
   #scale{position:absolute;right:14px;bottom:8px;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;pointer-events:none;display:flex;align-items:center;gap:6px}
@@ -119,7 +127,7 @@
 
 <div id="pbar">
   <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
-  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/tools">Tools</a><span class="sep">&middot;</span><span>ETS-UV Wafer Parts &amp; Warranty</span></nav>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/tools">Tools</a><span class="sep">&middot;</span><span id="crumbmodel">ETS-UV Wafer Parts &amp; Warranty</span></nav>
 </div>
 <div id="work">
   <div id="view">
@@ -137,7 +145,7 @@
   </aside>
 </div>
 <div id="bar">
-  <h1>ETS-UV Wafer WF-215-8 · Parts &amp; Warranty<small>Item numbers match the spares sheet drawings. Hover a row to find the part.</small></h1>
+  <h1><span class="mtitle">ETS-UV Wafer <label><span class="vh">Model</span><select id="model" aria-label="ETS-UV Wafer model"></select></label> · Parts &amp; Warranty</span><small>Item numbers match the spares sheet drawings. Hover a row to find the part.</small></h1>
   <div class="ctrl">
     <span class="tick">Collapsed</span>
     <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Explode progress">
@@ -152,9 +160,16 @@
 
 <script src="/assets/sp55-exploded/three.min.js"></script>
 <script src="/assets/ets-wf/wf-spares.js"></script>
+<script src="/assets/parts-request.js"></script>
 <script>
 (function(){
-  const MODEL='WF-215-8', MI=(window.WF_SPARES.models||[]).indexOf(MODEL);
+  // Models: every chamber on the spares matrix. 3D geometry exists only where a STEP file was supplied
+  // (WF-115-3 and WF-125-6 general arrangements, plus the original WF-215-8 model); the rest show the parts list only.
+  const GEO={'WF-115-3':{bin:'/assets/ets-wf/wf-115-3-model.bin', zflip:true}, 'WF-125-6':{bin:'/assets/ets-wf/wf-125-6-model.bin', zflip:true}, 'WF-215-8':{bin:'/assets/ets-wf/wf-215-8-model.bin'}};
+  const MODELS=window.WF_SPARES.models||['WF-215-8'];
+  const q0=(new URLSearchParams(location.search).get('model')||'').toUpperCase();
+  let MODEL=MODELS.includes(q0)?q0:'WF-215-8', MI=MODELS.indexOf(MODEL);
+  const NEED_PN='SAP # needed', needsSap=r=>!r.fastenal && !/^\d{4}-\d{4}$/.test(r.pn||'');
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
   const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
   const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -272,11 +287,21 @@
   document.getElementById('resetview').addEventListener('click',()=>{ theta=DRAW.theta; phi=DRAW.phi; zoom=1; pan.set(0,0,0); updateCamera(); needRender=true; });
 
   // ---- load the model -------------------------------------------------------------------------
-  fetch('/assets/ets-wf/wf-215-8-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+  let loadSeq=0;
+  function clearGeo(){ for(const [n,m] of Object.entries(meshes)){ scene.remove(m.obj); m.obj.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); delete meshes[n]; } for(const [p,L] of Object.entries(LBL)){ L.g.remove(); delete LBL[p]; } }
+  function loadGeo(){
+  const seq=++loadSeq; clearGeo(); stopPlay(); setProgress(0);
+  const ng=document.getElementById('nogeo'); if(ng) ng.remove();
+  let ld=document.getElementById('loading'); if(!ld){ ld=document.createElement('div'); ld.id='loading'; view.appendChild(ld); }
+  const g=GEO[MODEL];
+  if(!g){ ld.remove(); const d=document.createElement('div'); d.id='nogeo'; d.innerHTML=`<div><b>No 3D model for ${esc(MODEL)}</b>A ${esc(MODEL)} STEP file is needed to show this chamber.<br>The parts list, prices and order / warranty requests work as normal.</div>`; view.appendChild(d); resize(); needRender=true; renderer.clear(); return; }
+  ld.textContent='Loading '+MODEL+' geometry…';
+  fetch(g.bin,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    if(seq!==loadSeq) return;
     const dv=new DataView(buf), hl=dv.getUint32(0,true);
     const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), base=4+hl;
     for(const e of hdr){
-      const cfg=MESH[e.name]; if(!cfg) continue;
+      const mcfg=MESH[e.name]; if(!mcfg) continue; const cfg={...mcfg, off:mcfg.off.slice()}; if(GEO[MODEL]&&GEO[MODEL].zflip) cfg.off[2]=-cfg.off[2];
       const g=new THREE.Group();
       const q=new Int16Array(buf, base+e.V[0], e.nv*3), pos=new Float32Array(q.length); for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
       const idx=e.itype==='u16'? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
@@ -291,10 +316,11 @@
       }
       scene.add(g); meshes[e.name]={obj:g, bb:e.bbox, cfg, k:0};
     }
-    document.getElementById('loading').remove();
+    const ldn=document.getElementById('loading'); if(ldn) ldn.remove();
     buildLabels(); resize(); setProgress(0);
     if(reduced) setProgress(1); else setTimeout(()=>{ if(!playing && P===0) startPlay(); },600);
-  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+  }).catch(err=>{ if(seq!==loadSeq) return; const ldn=document.getElementById('loading'); if(ldn) ldn.textContent='Could not load the model: '+err.message; });
+  }
 
   // ---- highlight: a part (sheet sense) lights every mesh that belongs to it --------------------
   let hovered=null, selected=null;
@@ -363,9 +389,19 @@
   labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); updateCamera(); needRender=true; });
 
   // ---- parts list, laid out like the spares sheet --------------------------------------------
-  const DATA=window.WF_SPARES, SECS=DATA.sections.map(s=>({...s, rows:s.rows.filter(r=>r.qty[MI]>0)})).filter(s=>s.rows.length);
-  document.getElementById('mtitle').textContent='ETS-UV Wafer '+MODEL;
-  document.getElementById('msrc').innerHTML=`Part numbers, prices and quantities from ${esc(DATA.source)}. Quantities are per ${esc(MODEL)} chamber.`;
+  const DATA=window.WF_SPARES; let SECS=[];
+  function setModelText(){
+    SECS=DATA.sections.map(s=>({...s, rows:s.rows.filter(r=>r.qty[MI]>0)})).filter(s=>s.rows.length);
+    document.getElementById('mtitle').textContent='ETS-UV Wafer '+MODEL;
+    const need=[]; for(const s of SECS) for(const r of s.rows) if(needsSap(r)) need.push(r);
+    document.getElementById('msrc').innerHTML=`Part numbers, prices and quantities from ${esc(DATA.source)}. Quantities are per ${esc(MODEL)} chamber.`
+      +(GEO[MODEL]?'':`<div class="needbox"><b>No 3D model:</b> a ${esc(MODEL)} STEP file is needed. Parts list only.</div>`)
+      +(need.length?`<div class="needbox"><b>SAP numbers needed (${need.length}):</b> ${need.map(r=>esc(r.desc)).join('; ')}. The spares sheet says "Contact Manufacturer" for these.</div>`:'');
+    document.title='NBTS AI Platform | ETS-UV Wafer '+MODEL+': Parts & Warranty';
+    document.getElementById('crumbmodel').textContent='ETS-UV Wafer '+MODEL+' Parts & Warranty';
+    modelSel.value=MODEL;
+    tabs.innerHTML=SECS.map((s,i)=>`<button role="tab" data-i="${i}" aria-selected="${i===0}">${s.letter?`<b>${s.letter}</b>`:''}${esc(s.title)}</button>`).join('');
+  }
   const NOTES={
     chamber:{src:'NBTS KB: WF model number decoding and configuration options (AS SOLD BOMs)', faq:[
       ['What does WF-215-8 mean?','WF codes are [lamp count][kW x10]-[connection inches]: 2 lamps at 1.5 kW with an 8 inch connection. BOMs zero-pad it as WF-0215-08.'],
@@ -387,8 +423,8 @@
     kits:{src:DATA.source, list:(DATA.kitNotes||[]).filter(Boolean)}
   };
   NOTES.wiper1=NOTES.wiper2; NOTES.probe_v=NOTES.probe;
-  const tabs=document.getElementById('tabs'), secEl=document.getElementById('sec');
-  tabs.innerHTML=SECS.map((s,i)=>`<button role="tab" data-i="${i}" aria-selected="${i===0}">${s.letter?`<b>${s.letter}</b>`:''}${esc(s.title)}</button>`).join('');
+  const tabs=document.getElementById('tabs'), secEl=document.getElementById('sec'), modelSel=document.getElementById('model');
+  for(const m of MODELS){ const o=document.createElement('option'); o.value=m; o.textContent=m+(GEO[m]?'':' (list only)'); modelSel.appendChild(o); }
   let cur=0, showDrawing=false;
   const money=v=>v==null?'–':'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   function renderSection(i){
@@ -399,7 +435,7 @@
       <table class="sp"><thead><tr><th>Item</th><th>Part no.</th><th>Description</th><th>Qty</th><th>MSRP ea.</th><th class="d">Dist. ea.</th></tr></thead><tbody>
       ${s.rows.map((r,j)=>`<tr class="row" data-j="${j}" data-parts="${esc(r.groups.join(' '))}">
         <td class="it">${r.item&&r.item!=='NA'?`<span>${esc(r.item)}</span>`:'–'}</td>
-        <td class="pn">${esc(r.pn)}</td>
+        <td class="pn">${esc(r.pn)}${needsSap(r)?'<span class="neednote">SAP # needed</span>':''}</td>
         <td>${esc(r.desc)}
           <div class="acts">${r.fastenal?`<span class="tag">Fastenal part, not available from Neptune Benson</span>`:
             `<button class="order" data-act="order" data-j="${j}">${r.contact?'Request from manufacturer':'Order part'}</button><button class="warr" data-act="warranty" data-j="${j}">Warranty replacement</button>`}</div>
@@ -438,17 +474,26 @@
   }
 
   // ---- order / warranty ---------------------------------------------------------------------
-  // Placeholder until the flows are defined. Each click builds the request below, fires a
-  // 'wf-part-action' event on window, and calls window.WF_ACTIONS.order / .warranty if set.
+  // Same request form and webhook as the Defender SP-55 page (assets/parts-request.js).
+  // Still fires 'wf-part-action' and calls window.WF_ACTIONS.order / .warranty if set.
   function partAction(act,j){
     const s=SECS[cur], r=s.rows[j]; if(!r) return;
-    const req={action:act, model:'ETS-UV Wafer '+MODEL, section:s.title, item:r.item, partNumber:r.pn, description:r.desc, qtyPerChamber:r.qty[MI], msrp:r.msrp, distributorPrice:r.dist};
-    window.dispatchEvent(new CustomEvent('wf-part-action',{detail:req}));
-    const h=(window.WF_ACTIONS||{})[act], note=secEl.querySelector(`[data-note="${j}"]`);
-    if(typeof h==='function'){ h(req); if(note) note.textContent=''; }
-    else if(note) note.textContent=(act==='order'?'Ordering':'Warranty replacement')+' for '+r.pn+' is being set up. Nothing has been submitted.';
+    const legacy={action:act, model:'ETS-UV Wafer '+MODEL, section:s.title, item:r.item, partNumber:r.pn, description:r.desc, qtyPerChamber:r.qty[MI], msrp:r.msrp, distributorPrice:r.dist};
+    window.dispatchEvent(new CustomEvent('wf-part-action',{detail:legacy}));
+    const h=(window.WF_ACTIONS||{})[act]; if(typeof h==='function') h(legacy);
+    const pn=needsSap(r)?NEED_PN:r.pn;
+    window.PartsRequest.open({action:act, part:(r.groups||[])[0]||s.id, partTitle:s.title+(r.item&&r.item!=='NA'?' · item '+r.item:''), partNumber:pn, description:r.desc,
+      note:needsSap(r)?'Spares sheet: Contact Manufacturer':'', model:'ETS-UV Wafer '+MODEL, modelKey:'ets-'+MODEL.toLowerCase(), modelLabel:MODEL,
+      defaultQty:act==='order'?r.qty[MI]:undefined,
+      extra:{section:s.title, item:r.item, qtyPerChamber:r.qty[MI], msrp:r.msrp, distributorPrice:r.dist}}, {serialLabel:'Chamber serial number'});
   }
-  renderSection(0);
+  function switchModel(m){
+    MODEL=m; MI=MODELS.indexOf(m); selected=null; selRow=null; hovered=null;
+    try{ const u=new URL(location.href); if(m==='WF-215-8') u.searchParams.delete('model'); else u.searchParams.set('model',m); history.replaceState(null,'',u); }catch(e){}
+    setModelText(); renderSection(0); loadGeo();
+  }
+  modelSel.addEventListener('change',()=>switchModel(modelSel.value));
+  setModelText(); renderSection(0);
 
   // ---- playback -----------------------------------------------------------------------------
   let playing=false, last=0; const DUR=5000;
@@ -463,6 +508,7 @@
   }
   requestAnimationFrame(frame);
   resize();
+  loadGeo();
 })();
 </script>
 </body>

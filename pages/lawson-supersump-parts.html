@@ -87,8 +87,10 @@
     #bar{grid-template-columns:1fr;gap:8px}
     .btns{justify-content:flex-start}
   }
-  #models{display:flex;gap:4px;margin-right:6px}
-  #models button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  #models{display:flex;margin-right:6px}
+  #model{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--ink);border-radius:2px;padding:5px 6px;cursor:pointer}
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #panel td.pn.need,#panel .need{color:var(--leader)}
   #panel .spec{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0}
   #panel .spec dt{color:var(--ink-2)} #panel .spec dd{margin:0;font-weight:500}
   #panel .tag{display:inline-block;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);border:1px dashed var(--rule);padding:1px 5px;margin-left:6px}
@@ -130,9 +132,7 @@
       <span class="tick">Exploded</span>
     </div>
     <div class="btns">
-      <div id="models" role="group" aria-label="Model">
-        <button data-m="0909" aria-pressed="false">9 x 9</button><button data-m="1212" aria-pressed="false">12 x 12</button><button data-m="1818" aria-pressed="false">18 x 18</button>
-      </div>
+      <label id="models"><span class="vh">Model</span><select id="model" aria-label="Lawson model"></select></label>
       <button id="play" aria-pressed="false">Play</button>
       <button id="labels" aria-pressed="true">Labels</button>
       <button id="partsbtn" aria-pressed="false">Parts</button>
@@ -144,14 +144,20 @@
 <script src="/assets/sp55-exploded/three.min.js"></script>
 <script src="/assets/defender-schematic/assembly-loader.js"></script>
 <script src="/assets/lawson/lawson-supersump-parts.js"></script>
+<script src="/assets/parts-request.js"></script>
 <script>
 (function(){
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
   const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), labelsBtn=document.getElementById('labels');
-  const DATA=window.LAWSON_SUPERSUMP;
-  const ORDER=['grate','screws','inserts','sump','plate'];
-  const LABEL={grate:'Grate', sump:'Sump', plate:'Test plate', screws:'Grate screws', inserts:'Brass inserts'};
-  const COLOR={grate:0xf2f2ee, sump:0xd5d9de, plate:0x8b9199, screws:0x9aa3ad, inserts:0xc9a24a};
+  const DATA=window.LAWSON_SUPERSUMP, MODEL_ORDER=window.LAWSON_MODEL_ORDER||Object.keys(DATA), NEED_PN='SAP # needed';
+  const mname=d=>d.model.includes(d.size)?d.model:d.size+' · '+d.model;
+  const modelSel=document.getElementById('model');
+  for(const k of MODEL_ORDER){ if(!DATA[k]) continue; const o=document.createElement('option'); o.value=k; o.textContent=mname(DATA[k]); modelSel.appendChild(o); }
+  modelSel.addEventListener('change',()=>{ if(modelSel.value!==cur) loadModel(modelSel.value); });
+  const BASE_ORDER=['grate','screws','inserts','sump','plate','coupling'];
+  const orderFor=info=>BASE_ORDER.filter(k=>info[k]);
+  const LABEL={grate:'Grate', sump:'Sump', plate:'Test plate', coupling:'Side connection', screws:'Grate screws', inserts:'Brass inserts'};
+  const COLOR={grate:0xf2f2ee, sump:0xd5d9de, plate:0x8b9199, coupling:0xb7bcc3, screws:0x9aa3ad, inserts:0xc9a24a};
 
   // ---- scene ----------------------------------------------------------------------------------
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
@@ -170,17 +176,17 @@
   let cur=null, A=null, root=null;
   const parts={};                 // key -> {obj, bb:[minx..maxz] in root frame, off:Vector3, s, e, k}
   function clearModel(){ if(root){ scene.remove(root); root.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose&&o.material.dispose(); }); } root=null; for(const k in parts) delete parts[k]; for(const k in labelEls){ labelEls[k].grp.remove(); delete labelEls[k]; } }
-  function keyOf(name){ name=name.toLowerCase(); return /inner cover/.test(name)?'plate': /sump/.test(name)?'sump': /cover|grate/.test(name)?'grate':null; }
+  function keyOf(name){ name=name.toLowerCase(); if(/coupling/.test(name) || (DATA[cur]&&DATA[cur].sections && /inner[ _]cover/.test(name))) return 'coupling'; return /inner[ _]cover/.test(name)?'plate': /sump/.test(name)?'sump': /cover|grate/.test(name)?'grate':null; }
   function loadModel(m){
     if(!DATA[m]) m='0909';
-    cur=m; document.querySelectorAll('#models button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m===m)));
+    cur=m; modelSel.value=m;
     const d=DATA[m];
-    document.getElementById('title').innerHTML=`Lawson SuperSump ${d.size} · ${d.model}<small>Click any callout or part for part numbers and FAQ, then order the part or start a warranty replacement.</small>`;
+    document.getElementById('title').innerHTML=`Lawson ${d.sections?'':'SuperSump '}${mname(d)}<small>Click any callout or part for part numbers and FAQ, then order the part or start a warranty replacement.</small>`;
     try{ history.replaceState(null,'','?m='+m); }catch(e){}
     closePanel(); stopPlay();
     const ld=document.getElementById('loading')||(()=>{ const x=document.createElement('div'); x.id='loading'; view.appendChild(x); return x; })();
     ld.textContent='Loading '+d.model+' geometry…';
-    fetch('/assets/lawson/mld-sg-'+m+'.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    fetch('/assets/lawson/'+(d.bin||('mld-sg-'+m+'.bin')),{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
       if(cur!==m) return;
       clearModel();
       A=loadAssembly(buf); root=A.root; scene.add(root); root.updateMatrixWorld(true);
@@ -189,13 +195,17 @@
       A.nodes.forEach((n,i)=>{ if(keyOf(n.name)==='sump') bSump.expandByObject(A.objs[i]); });
       const c=bSump.getCenter(new THREE.Vector3()); root.position.set(-c.x,-bAll.max.y,-c.z); root.updateMatrixWorld(true);
       const sz=bSump.getSize(new THREE.Vector3()), H=sz.y, halfW=Math.max(sz.x,sz.z)/2;
-      A.nodes.forEach((n,i)=>{ const k=keyOf(n.name); if(!k||n.mesh===undefined||n.mesh<0) return;
-        const obj=A.objs[i]; obj.traverse(o=>{ if(o.isMesh){ o.material=new THREE.MeshPhongMaterial({color:COLOR[k],shininess:30,specular:0x2a2a2a,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}); o.userData.part=k; } });
-        const b=new THREE.Box3().setFromObject(obj), bb=[b.min.x,b.min.y,b.min.z,b.max.x,b.max.y,b.max.z];
+      // every node of a part key (e.g. the 2 to 4 grate sections of a channel sump) moves as one group
+      const keyGroups={};
+      A.nodes.forEach((n,i)=>{ const k=keyOf(n.name); if(!k||n.mesh===undefined||n.mesh<0) return; if(!keyGroups[k]){ keyGroups[k]=new THREE.Group(); root.add(keyGroups[k]); } keyGroups[k].attach(A.objs[i]); });
+      Object.entries(keyGroups).forEach(([k,obj])=>{
+        obj.traverse(o=>{ if(o.isMesh){ o.material=new THREE.MeshPhongMaterial({color:COLOR[k],shininess:30,specular:0x2a2a2a,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}); o.userData.part=k; } });
+        root.updateMatrixWorld(true); const b=new THREE.Box3().setFromObject(obj), bb=[b.min.x,b.min.y,b.min.z,b.max.x,b.max.y,b.max.z];
         // the test plate sits across the side port: find which way it faces from its thinnest box axis
         let off=new THREE.Vector3(), s=0, e=1;
         if(k==='grate'){ off.set(0,H*0.95,0); s=0; e=0.6; }
-        if(k==='plate'){ const pc=b.getCenter(new THREE.Vector3()), ps=b.getSize(new THREE.Vector3()); const ax=ps.x<ps.z?'x':'z', sg=Math.sign(pc[ax]||1);
+        if(k==='plate'||k==='coupling'){ const pc=b.getCenter(new THREE.Vector3()), ps=b.getSize(new THREE.Vector3()); const sc=bSump.getCenter(new THREE.Vector3()).add(root.position); const dx=Math.abs(pc.x-sc.x)/Math.max(1,sz.x), dz=Math.abs(pc.z-sc.z)/Math.max(1,sz.z);
+          const ax=Math.abs(ps.x-ps.z)>0.25*Math.max(ps.x,ps.z) ? (ps.x<ps.z?'x':'z') : (dx>dz?'x':'z'), sg=Math.sign((pc[ax]-sc[ax])||1);
           off.set(0,0,0); off[ax]=sg*(halfW*1.25); s=0.35; e=1; }
         parts[k]={obj, bb, off, s, e, k:0, base:obj.position.clone()};
       });
@@ -288,17 +298,19 @@
   function closePanel(){ if(hovered){ const h=hovered; hovered=null; if(h!==selected) setTint(h,false); } panel.classList.remove('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; } }
   function showIndex(){
     const d=DATA[cur], info=d.parts;
+    const need=[]; for(const k of orderFor(info)) for(const r of info[k].parts) if(r[0]===NEED_PN) need.push([info[k].title,r]);
     panel.innerHTML=`<div class="ph"><div><div class="kicker">${esc(d.model)}</div><h2>Parts index</h2></div><button class="x" aria-label="Close">×</button></div>
-      <dl class="spec"><dt>Assembly</dt><dd>${esc(d.assembly)}</dd><dt>Side port</dt><dd>${esc(d.port)}</dd><dt>Floor rating</dt><dd>${d.floor} gpm</dd><dt>Wall rating</dt><dd>${d.wall} gpm</dd><dt>Open area</dt><dd>${d.area} sq in</dd></dl>
-      <p>Click a callout or a part in the view, or pick from the list. Part numbers are from the Lawson grate O&amp;M parts list and the ${esc(d.model)} certificate of conformity.</p>
-      <ul class="index">${ORDER.map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${info[k].nomodel?'<span class="tag">Not modelled</span>':''}</button></li>`).join('')}</ul>`;
+      <dl class="spec"><dt>Assembly</dt><dd>${esc(d.assembly)}</dd><dt>Side port</dt><dd>${esc(d.port)}</dd>${d.floor!=null?`<dt>Floor rating</dt><dd>${d.floor} gpm</dd><dt>Wall rating</dt><dd>${d.wall} gpm</dd><dt>Open area</dt><dd>${d.area} sq in</dd>`:`<dt>Grate sections</dt><dd>${d.sections}</dd><dt>Ratings</dt><dd class="need">Not in source docs</dd>`}</dl>
+      <p>Click a callout or a part in the view, or pick from the list. ${d.sections?`Geometry from the ${esc(d.size)} STEP assembly; part numbers from the master product list.${d.ratingNote?' '+esc(d.ratingNote):''}`:`Part numbers are from the Lawson grate O&amp;M parts list and the ${esc(d.model)} certificate of conformity.`}</p>
+      <ul class="index">${orderFor(info).map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${info[k].nomodel?'<span class="tag">Not modelled</span>':''}</button></li>`).join('')}</ul>
+      ${need.length?`<section><h3 class="need">SAP numbers needed (${need.length})</h3><table>${need.map(([t,r])=>`<tr><td class="pn need">Needed</td><td>${esc(r[1])}<span class="note">${esc(t)}${r[2]?' · '+esc(r[2]):''}</span></td></tr>`).join('')}</table></section>`:''}`;
     openPanel();
   }
   function showPart(k){
     const d=DATA[cur], p=d.parts[k]; if(!p){ showIndex(); return; }
     panel.innerHTML=`<div class="ph"><div><div class="kicker">${esc(d.model)} · ${esc(d.size)}</div><h2>${esc(p.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
       <p>${esc(p.desc)}</p>
-      <section><h3>Part numbers</h3><table>${p.parts.map((r,i)=>`<tr><td class="pn">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="${/Confirm/.test(r[2])?'warnnote':'note'}">${esc(r[2])}</span>`:''}
+      <section><h3>Part numbers</h3><table>${p.parts.map((r,i)=>`<tr><td class="pn${r[0]===NEED_PN?' need':''}">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="${/Confirm/.test(r[2])?'warnnote':'note'}">${esc(r[2])}</span>`:''}
         <div class="acts"><button class="order" data-act="order" data-row="${i}">Order part</button><button class="warr" data-act="warranty" data-row="${i}">Warranty replacement</button></div>
         <span class="actnote" data-note="${i}"></span></td></tr>`).join('')}</table></section>
       <section><h3>FAQ</h3>${p.faq.map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}</section>
@@ -311,13 +323,14 @@
     if(b.dataset.index){ if(selected){ setTint(selected,false); selected=null; needRender=true; } showIndex(); return; }
     if(b.dataset.act){ partAction(b.dataset.act,+b.dataset.row); return; }
     if(b.dataset.part) select(b.dataset.part); });
-  // Order / warranty: placeholder until the flows are defined. Fires 'lawson-part-action' and calls window.LAWSON_ACTIONS.order / .warranty if set.
+  // Order / warranty: the same request form and webhook as the Defender SP-55 page (assets/parts-request.js).
+  // Also fires 'lawson-part-action' and calls window.LAWSON_ACTIONS.order / .warranty if set, as before.
   function partAction(act,row){
     const d=DATA[cur], p=d.parts[selected]; if(!p||!p.parts[row]) return; const r=p.parts[row];
-    const req={action:act, part:selected, partTitle:p.title, partNumber:r[0], description:r[1], note:r[2]||'', model:d.model};
+    const req={action:act, part:selected, partTitle:p.title, partNumber:r[0], description:r[1], note:r[2]||'', model:'Lawson '+mname(d), modelKey:'lawson-'+cur, modelLabel:mname(d)};
     window.dispatchEvent(new CustomEvent('lawson-part-action',{detail:req}));
-    const h=(window.LAWSON_ACTIONS||{})[act], note=panel.querySelector(`[data-note="${row}"]`);
-    if(typeof h==='function'){ h(req); if(note) note.textContent=''; } else if(note) note.textContent=(act==='order'?'Ordering':'Warranty replacement')+' for '+r[0]+' is being set up. Nothing has been submitted.';
+    const h=(window.LAWSON_ACTIONS||{})[act]; if(typeof h==='function') h(req);
+    window.PartsRequest.open(req,{serialLabel:'Date code / data plate no.'});
   }
   function hover(k){ if(k&&!parts[k]) k=null; if(hovered===k) return; if(hovered&&hovered!==selected) setTint(hovered,false); hovered=k; if(k&&k!==selected) setTint(k,true); needRender=true; }
   panel.addEventListener('pointerover',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
@@ -325,7 +338,7 @@
   panel.addEventListener('focusin',e=>{ const b=e.target.closest('button[data-part]'); hover(b?b.dataset.part:null); });
   panel.addEventListener('focusout',()=>hover(null));
   partsBtn.addEventListener('click',()=>panel.classList.contains('open')?closePanel():showIndex());
-  addEventListener('keydown',e=>{ if(e.key==='Escape') closePanel(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape' && !(document.getElementById('reqdlg')||{}).open) closePanel(); });
 
   // ---- explode and callouts ------------------------------------------------------------------------------
   let P=0, labelsOn=true, measuredAt=0; const labelEls={};
@@ -338,7 +351,7 @@
     for(const p of Object.values(parts)){ const k=ease((P-p.s)/(p.e-p.s)); p.k=k; p.obj.position.copy(p.base).addScaledVector(p.off,k); }
     needRender=true; }
   prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
-  const RIGHT_COL=new Set(['plate','screws']), v3=new THREE.Vector3();
+  const RIGHT_COL=new Set(['plate','coupling','screws']), v3=new THREE.Vector3();
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ measuredAt=0; needRender=true; });
   function drawLabels(){
     const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
