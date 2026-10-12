@@ -562,7 +562,7 @@
       let on=vis && L.show(T);
       const g=L.o&&O[L.o]; if(g && !g.visible) on=false;
       L.el.g.style.opacity=on?1:0; if(!on) continue;
-      pv.copy(L.p); if(g) g.localToWorld(pv);
+      pv.copy(L.p); if(g){ pv.sub(g.userData.base); g.localToWorld(pv); }
       pv.project(camera);
       const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
       if(x<0||x>w||y<0||y>h||pv.z>1){ L.el.g.style.opacity=0; continue; }

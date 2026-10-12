@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Barrier Ti UV TI-4200-8: Maintenance Procedures</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas.gl{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:500 12px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:210px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.stop{color:var(--leader)} #readout dd.mid{color:var(--warn)}
+  #readout .pips{display:flex;gap:4px;justify-content:flex-end;padding-top:6px}
+  #readout .pips i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-2)}
+  #readout .pips i.on{background:var(--ink);border-color:var(--ink)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:188px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #overlay{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Barrier Ti UV Procedures</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading TI-4200-8 geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Operation &amp; maintenance</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">TI-4200-8 status</div>
+      <dl>
+        <dt>Mode</dt><dd id="r-mode">Treating</dd>
+        <dt>Flow</dt><dd id="r-flow">75 m³/h</dd>
+        <dt>Lamps</dt><dd id="r-lamps">4 / 4 on</dd>
+        <dt>UV intensity</dt><dd id="r-uv">100%</dd>
+        <dt>Wiper</dt><dd id="r-wiper">Parked</dd>
+        <dt>Spectra</dt><dd id="r-spec">Healthy</dd>
+      </dl>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>Barrier Ti UV TI-4200-8 · Operation &amp; Maintenance<small>Built from the TI-4200-8 STEP model with the manual wiper. Steps follow the Barrier Ti IOM and Wiper manual (SIII-M-LP200). Lamps, thimbles, seals and wiper internals drawn to the IOM parts lists.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Procedure timeline">
+      <span class="tick" id="tend">1:48</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="ghost" aria-pressed="true" title="See through the chamber">X-ray</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/defender-schematic/assembly-loader.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const ghostBtn=document.getElementById('ghost'), labelsBtn=document.getElementById('labels');
+  const tnow=document.getElementById('tnow');
+
+  // ---- procedure timeline (seconds) ------------------------------------------------------------
+  const T_END=108;
+  const STEPS=[
+    {t:0,   h:'The TI-4200-8 chamber', d:'Titanium chamber with four 200 W LPHO lamps in QTH-30 x 1025 quartz thimbles, 4 in flanged branches and up to 115 m³/h (NSF). This unit has the optional manual wiper.'},
+    {t:5,   h:'Treating', d:'Water enters one branch, runs the length of the chamber past the four thimbles and leaves by the other. The UV sensor reads intensity through its window. Deposits build up on the quartz and the reading falls until the Spectra shows the wipe reminder (every 24 h by default).'},
+    {t:12,  h:'Manual wipe', d:'Loosen the knurled nut ½ turn. Pull the wiper handle out slowly, in line with the chamber, until it stops (about 450 mm / 18 in), then push it back in to the stop. The rings clean the thimbles and the flap wipes the sensor window. Re-tighten the nut, check for leaks and press RESET on the Spectra.'},
+    {t:24,  h:'Shut down, isolate and drain', d:'Isolate from power and flow. Unscrew the ¾ in vent / drain plug at each end, keeping the plug seals, and let the chamber drain fully. Allow 15 minutes for the lamps to cool before removal.'},
+    {t:30.5,h:'UV sensor and window', d:'Unscrew the cable connector, then the sensor cap, and lift out the validated UV sensor (W2T898830). Unscrew the sensor window housing and check the sensor seal. Clean the window with a non-abrasive cleaner, then refit in reverse.'},
+    {t:40,  h:'Remove the UV lamps', d:'Twist the locking ring on the TwistLok+ plug anticlockwise and remove it. Unscrew the clamp ring retainer (1003-8551). Turn the TwistLok+ connector (1000-3291) about 2 turns anticlockwise and draw the lamp and connector out, parallel to the chamber.'},
+    {t:52.3,h:'Remove the quartz thimbles', d:'Unscrew the clamp ring (stiff at first; that is the secondary seal working). Remove the primary seal from around the thimble, then slide the quartz thimble out parallel to the chamber.'},
+    {t:64,  h:'Clean the quartz', d:'Soap and water; soak in 5% citric acid or wipe with vinegar for stubborn deposits; surgical spirit and a lint-free cloth for fingerprints. Move the soft seat and spring to any new thimble. Replace the seals whenever a thimble is removed (seal kit 1003-8531).'},
+    {t:69.3,h:'Lamp flange and wiper shaft', d:'For chamber access: unscrew the wiper handle, knurled nut and wiper housing. Remove the flange bolts, holding the connecting nuts with a spanner, then lift off the lamp flange (1003-8540) and flange seal. The wiper shaft and both carriages slide out. Fit new wiper rings, narrow opening toward the rear (wiper seal kit 1003-8533).'},
+    {t:83,  h:'Reassemble', d:'Reverse order: wiper shaft with the sensor flap aligned to the window, flange seal and lamp flange, flange bolts evenly to 20 Nm / 15 lbf ft, wiper housing, nut and handle. Guide each thimble through its wiper ring, primary seal, clamp ring to 20 Nm or hand tight + ¾ turn, lamp and connector 2 turns clockwise, retainer, plug. Drain plugs to 10 Nm.'},
+    {t:98,  h:'Refill and restart', d:'Re-apply flow slowly and check for leaks. Start the lamps, confirm UV intensity, and check the wipe reminder interval on the Spectra (Operator menu, Wipe Reminder Int.). Log the work and lamp run hours.'}
+  ];
+
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const ramp=(t,a,b)=>smooth((t-a)/(b-a));
+  const h1=i=>{ const s=Math.sin(i*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // refit windows play the removal backwards
+  const MAPS=[ {a:37.4,b:40, s0:36.4,s1:30.5},     // sensor and window refit
+               {a:83,  b:98, s0:80,  s1:25.8} ];   // full reassembly, ends with the drain plugs
+  function mapT(t){ for(const m of MAPS) if(t>=m.a && t<=m.b) return m.s0+(m.s1-m.s0)*((t-m.a)/(m.b-m.a)); return t; }
+
+  // ---- geometry from the STEP model (mm; chamber axis along x, lamp flange at -x, y up, UV sensor on +z) ----
+  const PORTS=[{y:60,z:0},{y:0,z:60},{y:-60,z:0},{y:0,z:-60}];
+  const QX0=-517.5, QX1=507.5, QR=15;           // QTH-30 x 1025 thimble
+  const PARK=[440,0], STROKE=450;               // wiper carriages when pushed home; pull-out stroke
+  const SENS={x:-148.5,y:0};                    // UV sensor axis (along z)
+  const INLET={x:-422.5}, OUTLET={x:422.5};     // branch flange centres, top at y 190
+
+  // ---- state that is not geometry -----------------------------------------------------------
+  const lampsOn=t=> t<24.5? 1 : t<25.3? 1-ramp(t,24.5,25.3) : t<101.5? 0 : ramp(t,101.5,102.6);
+  const flowOn =t=> t<25? 1 : t<100.4? 1-ramp(t,25,26) : ramp(t,100.4,101.4);
+  const waterLv=t=> t<27? 1 : t<98.5? 1-ramp(t,27,29.5) : ramp(t,98.5,100.3);
+  function strokeX(t){
+    if(t<13.5||t>20.6) return 0;
+    if(t<17) return -STROKE*ease((t-13.5)/3.5);
+    if(t<17.4) return -STROKE;
+    return -STROKE*(1-ease((t-17.4)/3.2));
+  }
+  const softFoul=t=> t<5? 0.08 : t<13.5? 0.08+0.62*ramp(t,5,12) : t<20.6? 0.7 : 0;
+  const scaleAmt=t=> 0.5;
+  const cleanX  =t=> t<64.3? -1e4 : -540+1060*ease((t-64.3)/3.6);   // scale left where x > cleanX
+  function uvPct(t){
+    let soft=softFoul(t);
+    if(t>=13.5&&t<20.6) soft*=t<17? 1-0.85*(t-13.5)/3.5 : 0.15;
+    const sc=t<67.5? 0.5 : 0;
+    return Math.round(100-36*soft-10*sc);
+  }
+
+  // ---- scene ---------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled=true;
+  renderer.domElement.className='gl';
+  view.insertBefore(renderer.domElement, view.firstChild);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(34,1,5,30000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(-0.6,1,0.8); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.3,-0.6); scene.add(fill);
+
+  const TI=0x9fa5ad, TI2=0x8a9098, GREY=0x8b9199, BLACK=0x232528, CABLE=0x2f3338, KNOB=0x2a2d31, SENSOR=0x3b4f73;
+  const COLORS={body:0xb2b7be, 'branch-lamp':TI, 'branch-far':TI, 'flange-lamp':0x7d838b, 'flange-far':0x7d838b, 'bracket-lamp':0x767c84, 'bracket-far':0x767c84,
+    endcap:TI2, tempsensor:0x8d939b, lampflange:TI2, fbolts:0x6f757d, drain_lamp:0x6f757d, drain_far:0x6f757d,
+    ring_1:0x5d636b, ring_2:0x5d636b, ring_3:0x5d636b, ring_4:0x5d636b, ret_1:0x7a8088, ret_2:0x7a8088, ret_3:0x7a8088, ret_4:0x7a8088,
+    plug_1:BLACK, plug_2:BLACK, plug_3:BLACK, plug_4:BLACK, wiper_handle:KNOB, wiper_nut:0x9aa0a6, wiper_house:0x9aa0a6,
+    sens_cap:SENSOR, sens_conn:BLACK, sens_house:0x8d939b};
+  const GHOST=new Set(['body','branch-lamp','branch-far','endcap','flange-lamp','flange-far','tempsensor']);
+
+  const O={};
+  function grp(name,parent,px,py,pz){ const g=new THREE.Group(); g.position.set(px||0,py||0,pz||0); g.userData.base=g.position.clone(); (parent||scene).add(g); O[name]=g; return g; }
+  function mat(col,o){ o=o||{}; const m=new THREE.MeshPhongMaterial(Object.assign({color:col, shininess:30, specular:0x333333, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1},o)); m.userData.op=m.opacity; m.userData.tr=m.transparent; return m; }
+  function setOpacity(g,a){
+    g.visible=a>0.01;
+    g.traverse(o=>{ const m=o.material; if(!m||m.userData.op===undefined) return; m.opacity=m.userData.op*a; m.transparent=m.userData.tr||a<0.999; m.depthWrite=!m.transparent||m.userData.dw===true; });
+  }
+
+  // tracks: keys [t, dx,dy,dz, rot, opacity]; eased between keys, held after the last one.
+  // until: once the (mapped) time passes this, the part is home. raw: ignore the refit time map.
+  const TR=[];
+  function track(g,keys,o){ o=o||{}; TR.push({g,keys:keys.map(k=>[k[0],k[1]||0,k[2]||0,k[3]||0,k[4]||0,k[5]===undefined?1:k[5]]),axis:o.axis||'x',until:o.until,raw:o.raw}); }
+  function evalTrack(tr,t){
+    const tt=tr.raw? t : mapT(t), K=tr.keys;
+    if(tr.until!==undefined && tt>tr.until) return [0,0,0,0,1];
+    if(tt<=K[0][0]) return K[0].slice(1);
+    for(let i=0;i<K.length-1;i++){
+      const a=K[i], b=K[i+1];
+      if(tt<=b[0]){ const k=ease((tt-a[0])/Math.max(1e-6,b[0]-a[0])); return [1,2,3,4,5].map(j=>a[j]+(b[j]-a[j])*k); }
+    }
+    return K[K.length-1].slice(1);
+  }
+  function applyTracks(t){
+    for(const tr of TR){
+      const v=evalTrack(tr,t), g=tr.g, b=g.userData.base;
+      g.position.set(b.x+v[0],b.y+v[1],b.z+v[2]);
+      g.rotation[tr.axis]=v[3];
+      setOpacity(g,v[4]);
+    }
+  }
+
+  // ---- quartz thimble: soft deposits (wiped) and scale (cleaned by hand) -----------------------
+  const QU={uSoft:{value:0}, uC1:{value:1e4}, uC2:{value:1e4}, uP1:{value:PARK[0]+16}, uP2:{value:PARK[1]+16}, uScale:{value:0.5}, uClean:{value:-1e4}};
+  function quartzMat(){
+    const m=mat(0xe4eef6,{transparent:true, opacity:0.3, shininess:90, specular:0xffffff, polygonOffset:false});
+    m.userData.dw=false;
+    m.onBeforeCompile=sh=>{
+      Object.assign(sh.uniforms,QU);
+      sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vQ;').replace('#include <begin_vertex>','#include <begin_vertex>\nvQ=position;');
+      sh.fragmentShader=sh.fragmentShader
+        .replace('#include <common>','#include <common>\nuniform float uSoft,uC1,uC2,uP1,uP2,uScale,uClean;\nvarying vec3 vQ;\nfloat hq(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nfloat nq(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.0-2.0*f);return mix(mix(hq(i),hq(i+vec2(1,0)),f.x),mix(hq(i+vec2(0,1)),hq(i+vec2(1,1)),f.x),f.y);}')
+        .replace('#include <color_fragment>',`#include <color_fragment>
+          float ang=atan(vQ.z,vQ.y);
+          vec2 np=vec2(vQ.x*0.05, ang*3.0);
+          float n=nq(np)*0.6+nq(np*2.7+5.0)*0.4;
+          float wiped=max(step(uC1,vQ.x)*step(vQ.x,uP1), step(uC2,vQ.x)*step(vQ.x,uP2));
+          float soft=uSoft*(1.0-wiped)*smoothstep(0.2,0.6,n+uSoft*0.6);
+          float sc=uScale*step(uClean,vQ.x)*(0.55+0.45*nq(np*4.0+9.0));
+          diffuseColor.rgb=mix(diffuseColor.rgb, vec3(0.74,0.69,0.55), min(1.0,sc*1.4));
+          diffuseColor.rgb=mix(diffuseColor.rgb, vec3(0.42,0.29,0.13), min(1.0,soft*1.3));
+          diffuseColor.a=max(diffuseColor.a, max(sc*1.1, min(0.95,soft*1.3)));`);
+    };
+    return m;
+  }
+
+  // ---- load the chamber ---------------------------------------------------------------------
+  let ready=false;
+  const ghostMats=[];
+  fetch('/assets/barrier-ti/ti-4200-anim.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const A=loadAssembly(buf), M={};
+    A.nodes.forEach((n,i)=>{
+      const obj=A.objs[i], col=COLORS[n.name]; if(col===undefined) return;
+      obj.traverse(o=>{
+        if(o.isMesh){ o.material=mat(col); if(GHOST.has(n.name)) ghostMats.push(o.material); }
+        else if(o.isLineSegments){ const lm=new THREE.LineBasicMaterial({color:(col===BLACK||col===KNOB||col===SENSOR)?0x6a6f76:0x15171a,transparent:true,opacity:0.5}); lm.userData.op=0.5; lm.userData.tr=true; o.material=lm; if(GHOST.has(n.name)) ghostMats.push(lm); }
+      });
+      obj.parent&&obj.parent.remove(obj);
+      M[n.name]=obj;
+    });
+    build(M);
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced && !new URLSearchParams(location.search).has('t')) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  function pivot(name,obj,parent,px,py,pz){ const g=grp(name,parent,px,py,pz); obj.position.set(-px,-py,-pz); g.add(obj); return g; }
+  function cylX(r,x0,x1,col,o,seg){ const g=new THREE.CylinderGeometry(r,r,x1-x0,seg||32,1,!!(o&&o.open)); g.rotateZ(Math.PI/2); g.translate((x0+x1)/2,0,0); return new THREE.Mesh(g, o&&o.material||mat(col,o&&o.m)); }
+  function ringX(r0,r1,x0,x1,col,o){ const s=new THREE.Shape(); s.absarc(0,0,r1,0,Math.PI*2,false); const h=new THREE.Path(); h.absarc(0,0,r0,0,Math.PI*2,true); s.holes.push(h);
+    const g=new THREE.ExtrudeGeometry(s,{depth:x1-x0,bevelEnabled:false,curveSegments:36}); g.rotateY(Math.PI/2); g.translate(x0,0,0); return new THREE.Mesh(g,mat(col,o)); }
+  function torusX(R,r,x,col){ const g=new THREE.TorusGeometry(R,r,10,40); g.rotateY(Math.PI/2); g.translate(x,0,0); return new THREE.Mesh(g,mat(col)); }
+
+  let water, flow, F, lampGlow=[], lampTubes=[], windowDisc, oldRings, newRings, wstroke;
+  function build(M){
+    for(const n of ['body','branch-lamp','branch-far','flange-lamp','flange-far','bracket-lamp','bracket-far','endcap','tempsensor']) grp(n).add(M[n]);
+    grp('lampflange').add(M.lampflange);
+    // flange seal, behind the lamp flange
+    const fs=grp('fseal'); const fsm=torusX(104,3,-519,0x111214); fs.add(fsm);
+    grp('fbolts').add(M.fbolts);
+    grp('drain_lamp').add(M.drain_lamp); grp('drain_far').add(M.drain_far);
+
+    // per lamp port: TwistLok+ plug, clamp ring retainer, clamp ring with secondary + tertiary seals,
+    // primary seal, quartz thimble (soft seat and spring in the dome), lamp with its TwistLok+ connector
+    PORTS.forEach((P,i)=>{
+      const k=i+1;
+      pivot('plug_'+k,M['plug_'+k],null,0,P.y,P.z);
+      pivot('ret_'+k,M['ret_'+k],null,0,P.y,P.z);
+      const rg=pivot('ring_'+k,M['ring_'+k],null,0,P.y,P.z);
+      rg.add(ringX(13,24.5,-541,-526,0x5d636b), torusX(21.5,1.2,-530,0x111214), torusX(13.2,1.1,-544,0x111214));
+      const ps=grp('pseal_'+k,null,0,P.y,P.z); ps.add(torusX(QR+2.4,2.5,-523,0x111214));
+      const q=grp('quartz_'+k,null,0,P.y,P.z);
+      const qm=cylX(QR,QX0,QX1,0,{open:true, material:quartzMat()},40); q.add(qm);
+      const dome=new THREE.Mesh(new THREE.SphereGeometry(QR,24,12,0,Math.PI*2,0,Math.PI/2),qm.material); dome.rotation.z=-Math.PI/2; dome.position.x=QX1; q.add(dome);
+      q.add(cylX(12,488,492,0xf2f2ee));
+      const pts=[]; for(let a=0;a<=Math.PI*12;a+=0.25) pts.push(new THREE.Vector3(492+a/(Math.PI*12)*14,Math.cos(a)*8,Math.sin(a)*8));
+      q.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),120,1,6),mat(0xb8bec6)));
+      const lamp=grp('lamp_'+k,null,0,P.y,P.z);
+      const tube=cylX(9.5,-507,470,0xf2efff,{m:{emissive:0x000000, shininess:80}},20); lamp.add(tube); lampTubes.push(tube.material);
+      const glow=cylX(14,-500,465,0x8c6bff,{m:{transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}},20); glow.material.userData.op=0; lamp.add(glow); lampGlow.push(glow.material);
+      lamp.add(cylX(11,-517,-507,0xf4f1e8,{},20), cylX(11.8,-566,-517,0x1d1f22,{},20));
+      const arc=new THREE.Mesh(new THREE.TorusGeometry(26,1.8,8,30,Math.PI*1.3), new THREE.MeshBasicMaterial({color:0xd1202b,transparent:true,opacity:0}));
+      arc.rotation.y=Math.PI/2; arc.position.x=-600; lamp.add(arc); lamp.userData.arc=arc;
+    });
+
+    // manual wiper: handle, knurled nut, housing (from the model), shaft and two carriages (drawn)
+    const wsh=grp('wshaft'); wstroke=grp('wstroke',wsh);
+    const shaft=cylX(6,-575,PARK[0]+8,0xc4c9cf,{m:{shininess:70}},16); wstroke.add(shaft);
+    oldRings=grp('oldRings',null); newRings=grp('newRings',null);
+    PARK.forEach((px,ci)=>{
+      const c=grp('carriage_'+(ci+1),wstroke,px,0,0);
+      c.add(cylX(14,-7,7,0x3d6fb5));
+      PORTS.forEach(P=>{
+        const rgm=ringX(QR+2,QR+9,-6,6,0x3d6fb5); rgm.position.set(0,P.y,P.z); c.add(rgm);
+        const len=Math.hypot(P.y,P.z)-QR-9-12, arm=new THREE.Mesh(new THREE.BoxGeometry(8,len,6),mat(0x3d6fb5));
+        const u=[P.y/60,P.z/60]; arm.position.set(0,u[0]*(12+len/2),u[1]*(12+len/2)); arm.rotation.x=Math.atan2(u[1],u[0]); c.add(arm);
+      });
+      if(ci===1){ // sensor wiper flap on carriage 2, toward the UV sensor window (+z)
+        const br=new THREE.Mesh(new THREE.BoxGeometry(8,10,22),mat(0x3d6fb5)); br.position.set(0,0,QR+9+60+11); c.add(br);
+        const flap=new THREE.Mesh(new THREE.BoxGeometry(3,25,14),mat(0x15171a)); flap.position.set(0,0,100); c.add(flap);
+      }
+    });
+    // EPDM wiper rings: old ones swapped for new during the wiper service. They ride with the carriages.
+    for(const [g,cl] of [[oldRings,0x6b4f2c],[newRings,0x15171a]]){
+      g.parent.remove(g); wstroke.add(g);
+      PARK.forEach(px=>PORTS.forEach(P=>{ const r=torusX(QR+1.3,1.4,px-6.5,cl); r.position.y=P.y; r.position.z=P.z; g.add(r); const r2=r.clone(); r2.position.x+=13; g.add(r2); }));
+    }
+    pivot('wiper_house',M.wiper_house,null,0,0,0);
+    pivot('wiper_nut',M.wiper_nut,null,0,0,0);
+    pivot('wiper_handle',M.wiper_handle,null,0,0,0);
+
+    // UV sensor: connector and cable, cap, validated sensor, window housing with window and seal
+    const sc=pivot('sens_conn',M.sens_conn,null,SENS.x,SENS.y,0);
+    sc.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0,0,186),new THREE.Vector3(0,0,215),new THREE.Vector3(0,25,240),new THREE.Vector3(0,90,250)]),24,3.6,8),mat(CABLE)));
+    pivot('sens_cap',M.sens_cap,null,SENS.x,SENS.y,0);
+    const pr=grp('probe',null,SENS.x,SENS.y,0); const prm=new THREE.Mesh(new THREE.CylinderGeometry(9,9,58,24),mat(0xb8bec6)); prm.rotation.x=Math.PI/2; prm.position.z=150; pr.add(prm);
+    const sh=pivot('sens_house',M.sens_house,null,SENS.x,SENS.y,0);
+    windowDisc=new THREE.Mesh(new THREE.CylinderGeometry(13,13,4,32),mat(0xb9dcff,{transparent:true,opacity:0.8,shininess:120,specular:0xffffff})); windowDisc.rotation.x=Math.PI/2; windowDisc.position.z=111; sh.add(windowDisc);
+    const ss=grp('sens_seal',null,SENS.x,SENS.y,0); const ssm=new THREE.Mesh(new THREE.TorusGeometry(19,1.8,8,32),mat(0x111214)); ssm.position.z=113.5; ss.add(ssm);
+
+    // pipe spools on both branches, and the water in the chamber
+    const pipeM=new THREE.MeshPhongMaterial({color:0x9db4cc,transparent:true,opacity:0.16,depthWrite:false,side:THREE.DoubleSide});
+    for(const x of [INLET.x,OUTLET.x]){
+      const fl=new THREE.Mesh(new THREE.CylinderGeometry(114,114,20,40),pipeM); fl.position.set(x,200,0); scene.add(fl);
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(57,57,230,40,1,true),pipeM); p.position.set(x,325,0); scene.add(p);
+    }
+    const wclip=new THREE.Plane(new THREE.Vector3(0,-1,0),110);
+    water=new THREE.Mesh(new THREE.CylinderGeometry(104,104,1034,40),new THREE.MeshPhongMaterial({color:0x4a90d9,transparent:true,opacity:0.1,depthWrite:false,clippingPlanes:[wclip],side:THREE.DoubleSide}));
+    water.rotation.z=Math.PI/2; water.userData.clip=wclip; scene.add(water);
+    buildFlow();
+    buildTracks();
+  }
+
+  // ---- the procedures as keyframes ------------------------------------------------------------
+  function buildTracks(){
+    // drain plugs, out until the end of reassembly
+    // UV sensor and window, 30.5 to 36.4, refit by the time map
+    const U=40;
+    track(O.sens_conn, [[30.6,0,0,0,0],[31.4,0,0,30,7],[31.8,0,0,55,7,0]],{axis:'z',until:U});
+    track(O.sens_cap,  [[31.8,0,0,0,0],[32.9,0,0,24,-8],[33.4,0,0,55,-8,1],[33.8,0,0,75,-8,0]],{axis:'z',until:U});
+    track(O.probe,     [[32.9,0,0,0],[33.9,0,0,110],[34.3,0,0,140,0,0]],{until:U});
+    track(O.sens_house,[[34.3,0,0,0,0],[35.3,0,0,38,-8],[35.7,0,0,64,-8,1]],{axis:'z',until:U});
+    track(O.sens_seal, [[35.2,0,0,0],[36,0,0,26,0,1]],{until:U});
+    // lamps: lamp 1 in full, then 2 to 4 together
+    function lampKeys(k,b,s){ // s: time scale
+      track(O['plug_'+k],[[b,0,0,0,0],[b+0.5*s,0,0,0,1.6],[b+1.1*s,-60,0,0,1.6,1],[b+1.4*s,-80,0,0,1.6,0]],{until:83});
+      track(O['ret_'+k], [[b+1.3*s,0,0,0,0],[b+2.3*s,-35,0,0,12],[b+2.7*s,-55,0,0,12,0]],{until:83});
+      track(O['lamp_'+k],[[b+2.7*s,0,0,0,0],[b+3.7*s,-6,0,0,12.6],[b+5.9*s,-1050,0,0,12.6,1],[b+6.5*s,-1100,0,0,12.6,0]],{until:83});
+    }
+    lampKeys(1,40.3,1);
+    [2,3,4].forEach((k,i)=>lampKeys(k,46.9+0.3*i,0.66));
+    // quartz thimbles
+    function qKeys(k,b,s){
+      track(O['ring_'+k], [[b,0,0,0,0],[b+1.6*s,-45,0,0,-12],[b+2*s,-65,0,0,-12,0]],{until:83});
+      track(O['pseal_'+k],[[b+1.9*s,0,0,0],[b+2.6*s,-40,0,0,0,1],[b+2.9*s,-55,0,0,0,0]],{until:83});
+      track(O['quartz_'+k],[[b+2.9*s,0,0,0],[b+5.3*s,-1060,0,0,0,1],[68.4,-1060,0,0,0,1],[69.2,-1060,-40,0,0,0]],{until:83});
+    }
+    qKeys(1,52.4,1);
+    [2,3,4].forEach((k,i)=>qKeys(k,58.2+0.35*i,0.8));
+    // wiper handle, knurled nut and housing; the nut is also loosened and re-tightened for the manual wipe
+    track(O.wiper_nut,[[12.4,0,0,0,0],[13.1,-1.5,0,0,-3.14],[21,-1.5,0,0,-3.14],[21.7,0,0,0,0],[70.5,0,0,0,0],[71.3,-35,0,0,-6],[71.6,-50,0,0,-6,0]],{until:83});
+    track(O.wiper_handle,[[69.4,0,0,0,0],[70.3,-30,0,0,-8],[70.6,-45,0,0,-8,0]],{until:83});
+    track(O.wiper_house,[[71.5,0,0,0,0],[72.6,-40,0,0,-8],[72.9,-60,0,0,-8,0]],{until:83});
+    track(O.fbolts,[[72.9,0,0,0],[73.9,-35,0,0,0,1],[74.2,-50,0,0,0,0]],{until:83});
+    track(O.lampflange,[[74.3,0,0,0],[75.8,-170,0,0,0,1],[77.2,-190,0,0,0,0]],{until:83});
+    track(O.fseal,[[75.6,0,0,0],[76.4,-70,0,0,0,1],[76.8,-90,0,0,0,0]],{until:83});
+    track(O.wshaft,[[76.8,0,0,0],[79.6,-760,0,0]],{until:83});
+    // wiper rings: real time, the old set never comes back
+    track(oldRings,[[80.2,0,0,0,0,1],[81,-30,0,0,0,0]],{raw:true});
+    track(newRings,[[81.1,-30,0,0,0,0],[81.15,-30,0,0,0,1],[82,0,0,0,0,1]],{raw:true});
+  }
+
+  // ---- water flow: down the inlet branch, along the chamber past the thimbles, up the outlet ----
+  function canvasTex(draw,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); return new THREE.CanvasTexture(c); }
+  const dotTex=canvasTex((g,w)=>{ const gr=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,w,w); },32,32);
+  const FLOW_N=700;
+  let flowPhase=0;
+  function buildFlow(){
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(FLOW_N*3).fill(1e5),3));
+    geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(FLOW_N*3),3));
+    flow=new THREE.Points(geo,new THREE.PointsMaterial({size:11,vertexColors:true,map:dotTex,transparent:true,opacity:0.9,depthWrite:false}));
+    flow.frustumCulled=false; flow.renderOrder=3; scene.add(flow);
+    F=[]; for(let i=0;i<FLOW_N;i++){ const a=h1(i*2.3)*6.283, r=Math.sqrt(h1(i*3.7)); F.push({ph:h1(i*13.7), a, r, sp:0.85+h1(i*7.1)*0.3}); }
+  }
+  const cIn=new THREE.Color(0x2f8fd0), cOut=new THREE.Color(0x8a6cff), cTmp=new THREE.Color();
+  function placeFlow(t){
+    const fo=flowOn(t); flow.visible=fo>0.01; if(!flow.visible) return;
+    flow.material.opacity=0.9*fo;
+    const a=flow.geometry.attributes.position.array, c=flow.geometry.attributes.color.array, lo=lampsOn(t);
+    for(let i=0;i<FLOW_N;i++){
+      const f=F[i], p=(f.ph+flowPhase*f.sp)%1;
+      const ca=Math.cos(f.a), sa=Math.sin(f.a);
+      let x,y,z;
+      if(p<0.16){ const k=p/0.16; x=INLET.x+ca*f.r*45; z=sa*f.r*45; y=430-430*k; }                          // down the inlet branch
+      else if(p<0.84){ const k=(p-0.16)/0.68, u=smooth(Math.min(1,k*6)), v=smooth(Math.max(0,k*6-5));
+        const yy=ca*f.r*92, zz=sa*f.r*92;
+        x=INLET.x+(OUTLET.x-INLET.x)*k; y=yy*u*(1-v); z=(sa*f.r*45)*(1-u)+zz*u*(1-v)+(sa*f.r*45)*v; }
+      else { const k=(p-0.84)/0.16; x=OUTLET.x+ca*f.r*45; z=sa*f.r*45; y=430*k; }                          // up the outlet branch
+      if(p>=0.16&&p<0.84) for(const P of PORTS){ const dy=y-P.y, dz=z-P.z, d=Math.hypot(dy,dz), R=QR+8; if(d<R&&d>1e-3){ y=P.y+dy/d*R; z=P.z+dz/d*R; } }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+      const tr=lo*smooth((x-INLET.x-60)/400); cTmp.copy(cIn).lerp(cOut,tr); c[3*i]=cTmp.r; c[3*i+1]=cTmp.g; c[3*i+2]=cTmp.b;
+    }
+    flow.geometry.attributes.position.needsUpdate=true; flow.geometry.attributes.color.needsUpdate=true;
+  }
+
+  // ---- camera -----------------------------------------------------------------------------------
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const K={
+    all:   {p:V(-1250,720,1300), t:V(-60,40,0),   f:34},
+    side:  {p:V(-520,620,1500),  t:V(-60,0,0),    f:34},
+    wipe:  {p:V(-1050,620,1500), t:V(-420,0,0),   f:34},
+    drain: {p:V(-200,250,1450), t:V(0,-40,0),  f:36},
+    sensor:{p:V(330,300,620),    t:V(-150,0,190), f:28},
+    lamp:  {p:V(-1100,330,560),  t:V(-590,0,0),   f:32},
+    out:   {p:V(-1750,620,1500), t:V(-1000,0,0),  f:34},
+    bench: {p:V(-1280,640,1800), t:V(-1200,0,0),  f:32},
+    access:{p:V(-1350,520,1250), t:V(-760,0,0),   f:34},
+    wide:  {p:V(-1550,650,1500), t:V(-520,20,0),  f:34}
+  };
+  const PATH=[[0,K.all],[4,K.all],[6.5,K.side],[11.8,K.side],[13.2,K.wipe],[22.5,K.wipe],[24,K.side],[25.4,K.side],[26.6,K.drain],[29.8,K.drain],[31,K.sensor],[39.6,K.sensor],[41,K.lamp],[44.5,K.lamp],[45.6,K.out],[46.6,K.out],[47.6,K.lamp],[50,K.lamp],[51.6,K.out],[52.6,K.lamp],[55.4,K.lamp],[57.2,K.out],[58.2,K.lamp],[60.6,K.lamp],[62.4,K.out],[64.2,K.bench],[68.4,K.bench],[69.6,K.lamp],[74.4,K.lamp],[76.6,K.access],[83,K.access],[84.6,K.wide],[97,K.wide],[99,K.side],[106,K.side],[108,K.all]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k;
+    return out;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:34};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    d.multiplyScalar(zoomOff);
+    const asp=camera.aspect, f=asp<1? Math.min(80, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.8)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
+  function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{ if(!drag) return; yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.35,3); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+  let ghostOn=true;
+  ghostBtn.addEventListener('click',()=>{ ghostOn=!ghostOn; ghostBtn.setAttribute('aria-pressed',String(ghostOn)); setTime(T); });
+
+  // ---- callouts ---------------------------------------------------------------------------------
+  const W=(a,b)=>t=>t>=a&&t<b;
+  const LABELS=[
+    {txt:'Lamp flange',          o:'lampflange', p:V(-540,-95,-60),  show:t=>W(1,5)(t)||W(74,76.5)(t)},
+    {txt:'TwistLok+ plugs',      o:'plug_1',     p:V(-605,60,0),     show:W(1,5)},
+    {txt:'Manual wiper handle',  o:'wiper_handle',p:V(-585,0,18),    show:t=>W(1,5)(t)||W(13.3,20.6)(t)},
+    {txt:'UV sensor',            o:'sens_cap',   p:V(-148,0,176),    show:W(1,5)},
+    {txt:'Temperature sensor',   o:'tempsensor', p:V(-285,198,0),    show:W(1,5)},
+    {txt:'Branch',               o:'branch-far', p:V(422,150,60),    show:W(1,5)},
+    {txt:'Inlet',                o:null,         p:V(INLET.x,380,0), show:t=>W(1,12)(t)||W(101,108)(t)},
+    {txt:'Outlet',               o:null,         p:V(OUTLET.x,380,0),show:t=>W(1,12)(t)||W(101,108)(t)},
+    {txt:'Quartz thimble',       o:'quartz_2',   p:V(150,0,QR),      show:t=>W(6,12)(t)||W(57.5,64)(t)},
+    {txt:'UV lamp',              o:'lamp_2',     p:V(-200,0,9.5),    show:t=>W(6,12)(t)},
+    {txt:'Knurled nut',          o:'wiper_nut',  p:V(-578,0,20),     show:t=>W(12.2,13.4)(t)||W(20.8,21.8)(t)||W(70.4,71.4)(t)},
+    {txt:'Wiper carriage',       o:'carriage_1', p:V(0,QR+9,PORTS[1].z),show:t=>W(13.4,20.6)(t)||W(77.5,80)(t)},
+    {txt:'Sensor wiper flap',    o:'carriage_2', p:V(0,12,100),      show:W(13.4,20.6)},
+    {txt:'Wiper rings',          o:'newRings',   p:V(PARK[0]+6,PORTS[0].y+QR+1,0), show:W(80.2,83)},
+    {txt:'Vent / drain plug, far end', o:'endcap', p:V(533,-105,0), show:W(25.8,29.8)},
+    {txt:'Vent / drain plug, lamp end', o:'lampflange', p:V(-530,-105,0), show:W(25.8,29.8)},
+    {txt:'Cable connector',      o:'sens_conn',  p:V(-148.5,0,186),  show:W(30.5,31.8)},
+    {txt:'Sensor cap',           o:'sens_cap',   p:V(-130,0,168),    show:W(31.8,33)},
+    {txt:'Validated UV sensor',  o:'probe',      p:V(-139.5,0,165),  show:W(33,34.3)},
+    {txt:'Sensor window housing',o:'sens_house', p:V(-128,0,140),    show:W(34.3,35.4)},
+    {txt:'Sensor seal',          o:'sens_seal',  p:V(-129.5,0,113.5),show:W(35.4,36.4)},
+    {txt:'Sensor window',        o:'sens_house', p:V(-135.5,0,111),  show:W(36.4,37.4)},
+    {txt:'TwistLok+ plug',       o:'plug_1',     p:V(-600,69,0),     show:W(40.3,41.5)},
+    {txt:'Clamp ring retainer',  o:'ret_1',      p:V(-560,72,0),     show:W(41.6,43)},
+    {txt:'TwistLok+ connector',  o:'lamp_1',     p:V(-550,11.8,0),   show:W(43,44.8)},
+    {txt:'Clamp ring',           o:'ring_1',     p:V(-541,84,0),     show:W(52.4,54.4)},
+    {txt:'Primary seal',         o:'pseal_1',    p:V(-523,QR+4.5,0), show:W(54.3,55.3)},
+    {txt:'Soft seat & spring',   o:'quartz_1',   p:V(498,8,0),       show:W(64.3,68.4)},
+    {txt:'Wiper housing',        o:'wiper_house',p:V(-570,9,0),      show:W(71.5,72.9)},
+    {txt:'Flange bolts',         o:'fbolts',     p:V(-545,122,0),    show:W(72.9,74.2)},
+    {txt:'Flange seal',          o:'fseal',      p:V(-519,104,0),    show:W(75.6,76.8)},
+    {txt:'Wiper shaft',          o:'wstroke',    p:V(-300,0,6),      show:W(77,80)}
+  ];
+  let labelsOn=true;
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  const NS='http://www.w3.org/2000/svg';
+  for(const L of LABELS){
+    const g=document.createElementNS(NS,'g'), ln=document.createElementNS(NS,'polyline'), dot=document.createElementNS(NS,'circle'), halo=document.createElementNS(NS,'text'), tx=document.createElementNS(NS,'text');
+    dot.setAttribute('r','2.4'); halo.setAttribute('class','halo'); halo.textContent=tx.textContent=L.txt;
+    g.append(ln,dot,halo,tx); g.style.opacity=0; overlay.appendChild(g); L.el={g,ln,dot,halo,tx};
+  }
+  const pv=V(0,0,0);
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const vis=labelsOn && w>760, items=[];
+    for(const L of LABELS){
+      let on=vis && L.show(T);
+      const g=L.o&&O[L.o]; if(g && !g.visible) on=false;
+      L.el.g.style.opacity=on?1:0; if(!on) continue;
+      pv.copy(L.p); if(g){ pv.sub(g.userData.base); g.localToWorld(pv); }
+      pv.project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      if(x<0||x>w||y<0||y>h||pv.z>1){ L.el.g.style.opacity=0; continue; }
+      items.push({L,x,y});
+    }
+    items.sort((a,b)=>a.y-b.y);
+    const lh=20, colX=w-16-200, top=232;
+    let prev=top-lh;
+    for(const it of items){
+      const ly=Math.max(it.y, prev+lh, top); prev=ly;
+      const e=it.L.el;
+      e.ln.setAttribute('points',`${colX-6},${ly} ${colX-20},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+      e.dot.setAttribute('cx',it.x); e.dot.setAttribute('cy',it.y);
+      for(const t of [e.halo,e.tx]){ t.setAttribute('x',colX); t.setAttribute('y',ly+4); }
+    }
+  }
+
+  // ---- steps and readout ----------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s || t>=T_END-0.01); });
+  }
+  const R={mode:'r-mode',flow:'r-flow',lamps:'r-lamps',uv:'r-uv',wiper:'r-wiper',spec:'r-spec'}; for(const k in R) R[k]=document.getElementById(R[k]);
+  function set(el,txt,cls){ if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; }
+  function lampsOut(t){ const tt=mapT(t); if(t>=98) return 0; let n=0; if(tt>45.6) n=1; if(tt>49.7) n=4; else if(tt>49.1) n=3; else if(tt>48.9) n=2; return n; }
+  function updateReadout(t){
+    const mode= t<12? 'Treating' : t<22? 'Manual wipe' : t<24? 'Treating' : t<30.5? 'Isolating' : t<40? 'Sensor service' : t<52.3? 'Lamp change' : t<64? 'Quartz removal' : t<69.3? 'Cleaning' : t<83? 'Chamber access' : t<98? 'Reassembly' : t<102.6? 'Restarting' : 'Treating';
+    set(R.mode,mode, mode==='Treating'?'go':'mid');
+    const fo=flowOn(t), wl=waterLv(t);
+    set(R.flow, fo>0.98? '75 m³/h' : fo>0.02? Math.round(75*fo)+' m³/h' : wl<0.05? 'Drained' : wl<0.98? (t<50?'Draining':'Filling') : 'Isolated', fo>0.98?'go':fo>0.02?'mid':'stop');
+    const lo=lampsOn(t), n=lampsOut(t);
+    set(R.lamps, lo>0.5? '4 / 4 on' : t>101.5 && lo>0.02? 'Striking' : n>0? (n===4?'All removed':n+' removed') : 'Off', lo>0.5?'go':n>0?'stop':'mid');
+    const uv=lo>0.5? uvPct(t) : null;
+    set(R.uv, uv===null? '-' : uv+'%', uv===null?'':uv>=90?'go':uv>=80?'mid':'stop');
+    const tt=mapT(t);
+    const w= t>=12.4&&t<13.5? 'Nut loosened' : t>=13.5&&t<17.2? 'Pulling out' : t>=17.2&&t<20.6? 'Pushing in' : t>=20.6&&t<21.8? 'Nut tightened'
+      : (t>=69.3&&t<83)||(t>=83&&t<98&&tt>69.3)? ((t<83?t:tt)>76.8? 'Removed' : 'Dismantling') : t>=81.1&&t<108&&t<98.5? 'Parked, new rings' : 'Parked';
+    set(R.wiper, w, w.startsWith('Parked')?'':w==='Removed'?'stop':'mid');
+    const sp= t<10.5? 'Healthy' : t<21.8? 'Wipe reminder' : t<24.5? 'Healthy' : t<25.5? 'Cool-down' : t<101.5? 'Off' : t<102.6? 'Warming up' : 'Healthy';
+    set(R.spec, sp, sp==='Healthy'?'go':sp==='Off'?'stop':'mid');
+  }
+
+  // ---- apply a point in time -------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(!ready){ needRender=true; return; }
+    applyTracks(T);
+    const sx=strokeX(T);
+    O.wstroke.position.x=sx; O.wiper_handle.position.x+=sx;
+    const g=ghostOn? ramp(T,3,4.5) : 0;
+    for(const m of ghostMats){ const a=m.userData.op*(1-0.84*g); m.opacity=a; m.transparent=a<0.999; if(m.isMeshPhongMaterial) m.depthWrite=!m.transparent; }
+    QU.uSoft.value=softFoul(T); QU.uScale.value=scaleAmt(T); QU.uClean.value=cleanX(T);
+    const wiping=T>=13.5&&T<20.6, reach=wiping? (T<17? sx : -STROKE) : 0;
+    QU.uC1.value=wiping? PARK[0]+reach-16 : 1e4; QU.uC2.value=wiping? PARK[1]+reach-16 : 1e4;
+    const lo=lampsOn(T);
+    lampTubes.forEach(m=>m.emissive.setRGB(0.45*lo,0.36*lo,0.85*lo));
+    lampGlow.forEach(m=>{ m.userData.op=0.3*lo; m.opacity=0.3*lo; });
+    PORTS.forEach((P,i)=>{ const k=i+1, arc=O['lamp_'+k].userData.arc, tt=mapT(T), b=k===1?40.3:46.9+0.3*(k-2), s=k===1?1:0.66; arc.material.opacity=(tt>b+2.6*s&&tt<b+3.8*s)?0.95:0; });
+    water.userData.clip.constant=-110+220*waterLv(T); water.visible=waterLv(T)>0.01 && g>0.5;
+    // sensor window: fouls with the quartz, wiped as the flap passes, glints when cleaned by hand
+    const flapX=PARK[1]+sx, wipedW= wiping && (T>=17 || flapX<SENS.x+10);
+    const wf= wipedW||T>=20.6? 0 : softFoul(T), gl=T>36.4&&T<37.4? Math.sin((T-36.4)*Math.PI):0;
+    windowDisc.material.color.setRGB(0.73+(0.42-0.73)*wf,0.86+(0.29-0.86)*wf,1+(0.13-1)*wf); windowDisc.material.emissive.setRGB(0.5*gl,0.6*gl,0.7*gl);
+    updateReadout(T);
+    updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback -----------------------------------------------------------------------------------
+  let playing=false, loop=false, last=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=6;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+  const q=new URLSearchParams(location.search); if(q.has('t')) T=+q.get('t');
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(playing){
+      let t=T+dt;
+      if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } }
+      setTime(t);
+    }
+    const fo=flowOn(T);
+    if(fo>0.01 && !reduced){ flowPhase=(flowPhase+dt*0.12*fo)%1; needRender=true; }
+    if(needRender){ needRender=false; placeFlow(T); updateCamera(); renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  resize();
+})();
+</script>
+
+</body>
+</html>
