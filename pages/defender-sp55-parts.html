@@ -39,6 +39,14 @@
   button:hover{background:var(--track)}
   button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
   button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #bar .mtitle{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+  #model{font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--ink);border-radius:2px;padding:3px 4px;cursor:pointer}
+  #model:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  #modelnote{position:absolute;z-index:1;left:16px;top:30px;max-width:min(420px,60%);font:400 11px/1.4 "Barlow",system-ui,sans-serif;color:var(--ink-2);pointer-events:none}
+  #panel .nogeo{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-left:4px}
+  #panel .need{color:var(--leader)}
+  #panel td.pn.need{color:var(--leader)}
   #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
   #hint{position:absolute;z-index:1;left:16px;top:12px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
   #scale{position:absolute;right:16px;bottom:10px;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;pointer-events:none;display:flex;align-items:center;gap:6px}
@@ -138,7 +146,7 @@
 
 <div id="pbar">
   <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
-  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/tools">Tools</a><span class="sep">&middot;</span><span>Defender SP-55 Parts &amp; Warranty</span></nav>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/tools">Tools</a><span class="sep">&middot;</span><span id="crumbmodel">Defender SP-55 Parts &amp; Warranty</span></nav>
 </div>
 <div id="stage">
   <div id="view">
@@ -146,6 +154,7 @@
     <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
     <div id="scale"><i style="width:60px"></i><span id="scaletxt">500 mm</span></div>
     <div id="loading">Loading SP-55 geometry…</div>
+    <div id="modelnote" hidden></div>
     <aside id="panel" aria-label="Part details"></aside>
   </div>
   <dialog id="reqdlg" aria-labelledby="reqtitle">
@@ -189,7 +198,7 @@
     </form>
   </dialog>
   <div id="bar">
-    <h1>Defender SP-55 · Parts &amp; Warranty<small>Click any callout or part for part numbers and FAQ, then order the part or start a warranty replacement.</small></h1>
+    <h1><span class="mtitle">Defender <label class="msel"><span class="vh">Model</span><select id="model" aria-label="Defender model"></select></label> · Parts &amp; Warranty</span><small>Click any callout or part for part numbers and FAQ, then order the part or start a warranty replacement.</small></h1>
     <div class="ctrl">
       <span class="tick">Collapsed</span>
       <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Explode progress">
@@ -207,6 +216,7 @@
 
 <script src="/assets/sp55-exploded/three.min.js"></script>
 <script src="/assets/sp55-exploded/sp55-parts.js"></script>
+<script src="/assets/sp55-exploded/defender-models.js"></script>
 <script>
 (function(){
   const view=document.getElementById('view'), overlay=document.getElementById('overlay');
@@ -218,7 +228,12 @@
 
   // Explode offsets are in mm, in the collapsed model frame (Y up, viewing window faces -Z).
   // s/e: the slice of the 0..1 progress during which the group moves.
-  const LIFT=420, SWING=2.72, POST={x:-519,z:620}; // head jacks up LIFT mm on the davit, then swings SWING rad about the post axis
+  // per model (defender-models.js): head jacks up LIFT mm on the davit, then swings SWING rad about the davit post axis
+  const MODELS=window.DEFENDER_MODELS||{}, MODEL_ORDER=window.DEFENDER_MODEL_ORDER||['sp-55'];
+  let MODEL=MODELS['sp-55']||{key:'sp-55',label:'SP-55 Auto',name:'Defender3 SP-55 Auto',bin:'/assets/sp55-exploded/sp55-model.bin',parts:window.SP55_PARTS,post:[-519,620],lift:420,swing:2.72,internalsShown:true};
+  let LIFT=420, SWING=2.72, POST={x:-519,z:620};
+  const PARTS=()=>MODEL.parts||{};
+  const NEED_PN='SAP # needed';
   const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
   const TS=[1180,760,-1180];     // screen-left and up
   const WIN=(d)=>[0,-d*0.08,-d];
@@ -347,7 +362,20 @@
   // ---- load geometry --------------------------------------------------------
   const parts={}; // name -> {obj, base(bbox), cfg}
   let needRender=true;
-  fetch('/assets/sp55-exploded/sp55-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+  let loadSeq=0;
+  function loadModel(key){
+  const seq=++loadSeq;
+  const m=MODELS[key]||MODEL; MODEL=m;
+  LIFT=m.lift||420; SWING=(m.swing==null?2.72:m.swing); POST={x:(m.post||[0,0])[0], z:(m.post||[0,0])[1]};
+  stopPlay(); select(null); closePanel();
+  for(const [n,p] of Object.entries(parts)){ scene.remove(p.obj); p.obj.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); delete parts[n]; }
+  for(const [n,el] of Object.entries(labelEls)){ el.grp.remove(); delete labelEls[n]; }
+  measuredAt=0; setProgress(0);
+  applyModelText();
+  let ld=document.getElementById('loading'); if(!ld){ ld=document.createElement('div'); ld.id='loading'; view.insertBefore(ld, panel); }
+  ld.textContent='Loading '+m.label+' geometry…';
+  fetch(m.bin,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    if(seq!==loadSeq) return;
     const dv=new DataView(buf); const hl=dv.getUint32(0,true);
     const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
     const base=4+hl;
@@ -376,11 +404,12 @@
       scene.add(g);
       parts[e.name]={obj:g, bb:e.bbox, cfg};
     }
-    document.getElementById('loading').remove();
+    const ldn=document.getElementById('loading'); if(ldn) ldn.remove();
     buildLabels(); resize(); setProgress(0); needRender=true;
     // run the full explode once on open, then hold exploded
     if(reduced) setProgress(1); else setTimeout(()=>{ if(!playing && P===0){ dirn=1; startPlay(); } }, 700);
-  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+  }).catch(err=>{ if(seq!==loadSeq) return; const ldn=document.getElementById('loading'); if(ldn) ldn.textContent='Could not load the model: '+err.message; });
+  }
 
   // ---- picking, highlight and the part detail panel ------------------------------
   const ray=new THREE.Raycaster(); const ndc=new THREE.Vector2();
@@ -402,6 +431,7 @@
     if(selected && parts[selected]) setTint(selected,false);
     selected=n;
     if(n && parts[n]){ setTint(n,true); showPart(n); if(P<0.95 && n!=='body'){ stopPlay(); dirn=1; startPlay(); } }
+    else if(n && PARTS()[n]){ showPart(n); }
     else closePanel();
     needRender=true;
   }
@@ -414,18 +444,22 @@
   function openPanel(){ panel.classList.add('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
   function closePanel(){ if(hovered){ const h=hovered; hovered=null; if(h!==selected) setTint(h,false); } panel.classList.remove('open'); measuredAt=0; updateCamera(); needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; needRender=true; } }
   function showIndex(){
-    const info=window.SP55_PARTS||{};
+    const info=PARTS();
     const order=Object.keys(GROUPS).filter(k=>info[k]);
-    panel.innerHTML=`<div class="ph"><div><div class="kicker">SP-55 Auto</div><h2>Parts index</h2></div><button class="x" aria-label="Close">×</button></div>
-      <p>Click a callout or a part in the view, or pick from the list. Each entry carries the SP-55 part numbers from the parts list and notes from the Defender O&amp;M and technical bulletins.</p>
-      <ul class="index">${order.map(k=>`<li><button data-part="${k}">${esc(info[k].title)}</button></li>`).join('')}</ul>`;
+    const need=[]; for(const k of order) for(const r of info[k].parts) if(r[0]===NEED_PN || /SAP # needed/.test(r[2]||'')) need.push([info[k].title, r]);
+    const missing=order.filter(k=>!parts[k]);
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">${esc(MODEL.label)}</div><h2>Parts index</h2></div><button class="x" aria-label="Close">×</button></div>
+      <p>Click a callout or a part in the view, or pick from the list. Each entry carries the ${esc(MODEL.label)} part numbers from the master product list and notes from the Defender O&amp;M and technical bulletins.</p>
+      <ul class="index">${order.map(k=>`<li><button data-part="${k}">${esc(info[k].title)}${parts[k]?'':'<span class="nogeo">not in 3D</span>'}</button></li>`).join('')}</ul>
+      ${missing.length?`<p class="src">"Not in 3D": the ${esc(MODEL.label)} STEP file is externals only, so ${missing.length===1?'this part is':'these parts are'} listed for ordering but not drawn. An internals STEP file for this model is needed to show them.</p>`:''}
+      ${need.length?`<section><h3 class="need">SAP numbers needed (${need.length})</h3><table>${need.map(([t,r])=>`<tr><td class="pn need">${esc(r[0]===NEED_PN?'Needed':r[0])}</td><td>${esc(r[1])}<span class="note">${esc(t)}${r[2]?' · '+esc(r[2]):''}</span></td></tr>`).join('')}</table></section>`:''}`;
     openPanel();
   }
   function showPart(n){
-    const d=(window.SP55_PARTS||{})[n]; if(!d){ showIndex(); return; }
-    panel.innerHTML=`<div class="ph"><div><div class="kicker">SP-55 Auto · ${esc(GROUPS[n].label||'Filter')}</div><h2>${esc(d.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
-      <p>${esc(d.desc)}</p>
-      <section><h3>Part numbers</h3><table>${d.parts.map((r,i)=>`<tr><td class="pn">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}
+    const d=PARTS()[n]; if(!d){ showIndex(); return; }
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">${esc(MODEL.label)} · ${esc(GROUPS[n].label||'Filter')}</div><h2>${esc(d.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
+      <p>${esc(d.desc)}</p>${parts[n]?'':`<p class="src">Not drawn in this view: the ${esc(MODEL.label)} STEP file does not include this part.</p>`}
+      <section><h3>Part numbers</h3><table>${d.parts.map((r,i)=>`<tr><td class="pn${r[0]===NEED_PN?' need':''}">${esc(r[0]===NEED_PN?'SAP # needed':r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}
         <div class="acts"><button class="order" data-act="order" data-row="${i}">Order part</button><button class="warr" data-act="warranty" data-row="${i}">Warranty replacement</button></div>
         <span class="actnote" data-note="${i}"></span></td></tr>`).join('')}</table></section>
       <section><h3>FAQ</h3>${d.faq.map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}</section>
@@ -453,16 +487,16 @@
   let reqCtx=null;
   const CONTACT_KEY='sp55-req-contact';
   function partAction(act, row){
-    const d=(window.SP55_PARTS||{})[selected]; if(!d || !d.parts[row]) return;
+    const d=PARTS()[selected]; if(!d || !d.parts[row]) return;
     const r=d.parts[row];
-    reqCtx={action:act, part:selected, partTitle:d.title, partNumber:r[0], description:r[1], note:r[2]||'', model:'Defender3 SP-55 Auto'};
+    reqCtx={action:act, part:selected, partTitle:d.title, partNumber:r[0], description:r[1], note:r[2]||'', model:MODEL.name, modelKey:MODEL.key};
     document.getElementById('reqbody').innerHTML=reqBodyHTML;
     form.querySelector('.rf').hidden=false; form.reset();
     dlg.className=act;
-    document.getElementById('reqkicker').textContent='SP-55 Auto · '+(act==='order'?'Parts order':'Warranty replacement');
+    document.getElementById('reqkicker').textContent=MODEL.label+' · '+(act==='order'?'Parts order':'Warranty replacement');
     document.getElementById('reqtitle').textContent=act==='order'?'Order part':'Warranty replacement';
     reqSubmit.textContent=act==='order'?'Submit order request':'Submit warranty claim';
-    document.getElementById('reqpart').innerHTML=`<b>${esc(r[0])}</b> · ${esc(r[1])}${r[2]?`<br><span style="color:var(--ink-2)">${esc(r[2])}</span>`:''}<br><span style="color:var(--ink-2)">${esc(d.title)} · Defender3 SP-55 Auto</span>`;
+    document.getElementById('reqpart').innerHTML=`<b>${esc(r[0])}</b> · ${esc(r[1])}${r[2]?`<br><span style="color:var(--ink-2)">${esc(r[2])}</span>`:''}<br><span style="color:var(--ink-2)">${esc(d.title)} · ${esc(MODEL.name)}</span>`;
     form.querySelectorAll('fieldset[data-for]').forEach(f=>{ const on=f.dataset.for===act; f.hidden=!on; f.disabled=!on; });
     try{ const c=JSON.parse(localStorage.getItem(CONTACT_KEY)||'{}'); for(const k in c){ const el=form.elements[k]; if(el && !el.value) el.value=c[k]; } }catch(e){}
     reqMsg.textContent='';
@@ -498,7 +532,7 @@
         const out=new FormData(form);
         out.delete('shipToW'); out.set('shipTo', vals.shipTo||'');
         out.set('request', JSON.stringify(req));
-        for(const k of ['action','part','partTitle','partNumber','description','model']) out.set(k, req[k]);
+        for(const k of ['action','part','partTitle','partNumber','description','model','modelKey']) out.set(k, req[k]);
         const res=await fetch(REQUEST_WEBHOOK,{method:'POST',body:out});
         let data={}; try{ data=await res.json(); }catch(_){}
         if(!res.ok || data.ok===false) throw new Error(data.error||('HTTP '+res.status));
@@ -653,7 +687,26 @@
     if(needRender){ needRender=false; renderer.render(scene,camera); drawLabels(); }
   }
   requestAnimationFrame(frame);
+  // ---- model picker ------------------------------------------------------------------------
+  const modelSel=document.getElementById('model');
+  for(const k of MODEL_ORDER){ if(!MODELS[k]) continue; const o=document.createElement('option'); o.value=k; o.textContent=MODELS[k].label; modelSel.appendChild(o); }
+  function applyModelText(){
+    const lbl=MODEL.label;
+    document.title='NBTS AI Platform | Defender '+lbl+': Parts & Warranty';
+    document.getElementById('crumbmodel').textContent='Defender '+lbl+' Parts & Warranty';
+    modelSel.value=MODEL.key;
+    const note=document.getElementById('modelnote');
+    note.hidden=!!MODEL.internalsShown;
+    note.textContent=MODEL.internalsShown?'':'Externals from the '+lbl+' STEP file. Internals are listed under Parts but not drawn.';
+  }
+  modelSel.addEventListener('change',()=>{
+    const k=modelSel.value;
+    try{ const u=new URL(location.href); if(k==='sp-55') u.searchParams.delete('model'); else u.searchParams.set('model',k); history.replaceState(null,'',u); }catch(e){}
+    loadModel(k);
+  });
+  const q=(new URLSearchParams(location.search).get('model')||'').toLowerCase();
   resize();
+  loadModel(MODELS[q]?q:'sp-55');
 })();
 </script>
 
