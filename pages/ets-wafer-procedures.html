@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | ETS-UV Wafer WF-215-8: Maintenance Procedures</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas.gl{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:500 12px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:210px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 6px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout dd.go{color:var(--ok)} #readout dd.stop{color:var(--leader)} #readout dd.mid{color:var(--warn)}
+  #readout .pips{display:flex;gap:4px;justify-content:flex-end;padding-top:6px}
+  #readout .pips i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-2)}
+  #readout .pips i.on{background:var(--ink);border-color:var(--ink)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:188px;padding:6px 8px 4px}
+    #readout dt,#readout dd{white-space:nowrap;font-size:10px;padding:4px 0}
+    #overlay{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>ETS-UV Wafer Procedures</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading WF-215-8 geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Operation &amp; maintenance</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">WF-215-8 status</div>
+      <dl>
+        <dt>Mode</dt><dd id="r-mode">Treating</dd>
+        <dt>Flow</dt><dd id="r-flow">931 gpm</dd>
+        <dt>Lamps</dt><dd id="r-lamps">2 / 2 on</dd>
+        <dt>UV intensity</dt><dd id="r-uv">100%</dd>
+        <dt>Wiper</dt><dd id="r-wiper">Parked</dd>
+      </dl>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom</div>
+  </div>
+  <div id="bar">
+    <h1>ETS-UV Wafer WF-215-8 · Operation &amp; Maintenance<small>Built from the WF-215-8 STEP model. Steps follow the Wafer Product Range IOM. Internals drawn to the IOM parts lists.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Procedure timeline">
+      <span class="tick" id="tend">1:48</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="ghost" aria-pressed="true" title="See through the chamber body">X-ray</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const ghostBtn=document.getElementById('ghost'), labelsBtn=document.getElementById('labels');
+  const tnow=document.getElementById('tnow');
+
+  // ---- procedure timeline (seconds) ------------------------------------------------------------
+  const T_END=108;
+  const STEPS=[
+    {t:0,   h:'The WF-215-8 chamber', d:'Two 1.5 kW lamps in QSL 49 x 385 quartz sleeves, crossing an 8 in wafer chamber clamped between the pipe flanges. Lamps are always installed horizontal.'},
+    {t:5,   h:'Treating', d:'Water flows through the chamber past both quartz sleeves. The UV sensor on top reports intensity to the panel. Deposits slowly build up on the quartz and the reading falls.'},
+    {t:12,  h:'Automatic wiper cycle', d:'The wiper motor turns the ACME lead screw and the carriage runs the length of the sleeves and back. The blades strip the soft deposits and UV intensity recovers.'},
+    {t:20,  h:'Shut down and isolate', d:'Electrically isolate the system, fully isolate it from the process and drain the chamber. Allow 15 minutes for the lamps and other parts to cool before removal.'},
+    {t:25,  h:'UV sensor window', d:'Unscrew the probe cable, then the adaptor cap (1000-3266) and lift out the probe. Remove the 3 screws and the window housing (1001-8616), then the upper seal, the quartz window (1001-8615) and lower O-ring. Clean, then refit and tighten the screws in a radial pattern a quarter turn at a time.'},
+    {t:37,  h:'Remove the UV lamps', d:'For each lamp: unscrew the clamp ring retaining nut (1000-3143), disconnect the Twistlok connector, twist the lamp until it unlocks and pull it straight out, parallel to the sleeve.'},
+    {t:49,  h:'Remove the quartz sleeves', d:'Remove the 6 M6 clamp ring screws, keeping a hand on the ring. Lift off the screwed clamp ring (1000-3142), PTFE gasket (1000-3046) and O-ring (1000-2997). Repeat at the rear clamp ring (1001-8607), then slide the quartz (1001-8377) out parallel.'},
+    {t:63,  h:'Clean the quartz', d:'Soap and water, 5% citric acid or vinegar for stubborn scale, surgical spirit for fingerprints. Wear gloves. Replace the seals whenever the quartz is removed.'},
+    {t:68,  h:'Wiper cover and motor', d:'Remove the cover screws and lid, disconnect the motor noting the cable positions, then remove the cover fixing screws and lift away the motor and cover assembly.'},
+    {t:73,  h:'Wiper blades', d:'With the motor, lamps and quartz out, unscrew the 12 flange retaining bolts. The front flange (1001-8463), wiper carriage and ACME shaft come out together. Fit new blades to the carriage.'},
+    {t:85,  h:'Reassemble', d:'Reverse order: flange, carriage and shaft back in, bolts, motor and cover (sensor cam coupling mated with the rubber coupler), quartz with new seals guided through the wiper rings, clamp rings, lamps, connectors and nuts.'},
+    {t:99,  h:'Calibrate and restart', d:'Run the wiper calibration so the controller learns the carriage end positions, refill and vent the chamber, restore flow, then strike the lamps. Log the work and the lamp hours.'}
+  ];
+
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const ramp=(t,a,b)=>smooth((t-a)/(b-a));
+  const h1=i=>{ const s=Math.sin(i*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // Reassembly plays the disassembly backwards: map a time in a refit window to the matching time
+  // in the removal window. State that is not geometry (fouling, lamps, flow) uses the real time.
+  const MAPS=[ {a:33.8,b:37,  s0:32.6,s1:26},     // sensor window refit
+               {a:85,  b:99,  s0:79,  s1:37} ];   // full reassembly
+  function mapT(t){ for(const m of MAPS) if(t>=m.a && t<=m.b) return m.s0+(m.s1-m.s0)*((t-m.a)/(m.b-m.a)); return t; }
+
+  // ---- geometry facts from the STEP model (mm; y up, lamps along x, lamp connections at +x, flow along z) ----
+  const LAMP=[{y:54.4,z:-25.4},{y:-54.4,z:25.4}];
+  const SHAFT={y:-17.5,z:-32};
+  const PARK=150;                     // wiper carriage park position, near end
+  const QR=24.5, QX0=-197, QX1=197;   // quartz sleeve
+  const SENS={x:25,z:0};              // UV sensor axis (vertical)
+
+  // ---- lighting-independent state functions -------------------------------------------------
+  const lampsOn=t=> t<20.5? 1 : t<21.5? 1-ramp(t,20.5,21.5) : t<102.5? 0 : ramp(t,102.5,103.6);
+  const flowOn =t=> t<21? 1 : t<102? 1-ramp(t,21,22.5) : ramp(t,102,103.2);
+  const waterLv=t=> t<22.5? 1 : t<100? 1-ramp(t,22.5,24.5) : ramp(t,100,101.6);
+  function carriageX(t){
+    if(t<12.5) return PARK;
+    if(t<16)   return PARK+(-150-PARK)*ease((t-12.5)/3.5);
+    if(t<16.5) return -150;
+    if(t<19.5) return -150+(PARK+150)*ease((t-16.5)/3);
+    if(t<99.5) return PARK;
+    if(t<101.8) return PARK+(-150-PARK)*ease((t-99.5)/2.3);
+    if(t<102.2) return -150;
+    if(t<104.5) return -150+(PARK+150)*ease((t-102.2)/2.3);
+    return PARK;
+  }
+  const softFoul=t=> t<5? 0.08 : t<12.5? 0.08+0.62*ramp(t,5,12) : t<16? 0.7 : 0;
+  const sweepX =t=> (t>=12.5 && t<16)? carriageX(t) : 1e4;   // sleeve cleaned where x > sweepX
+  const scale  =t=> 0.5;
+  const cleanX =t=> t<63.6? 1e4 : 220-440*ease((t-63.6)/3.4);  // scale left where x < cleanX (quartz frame), cleaned from the outer end
+  function uvPct(t){
+    let soft=softFoul(t); if(t>=12.5&&t<16) soft*= (carriageX(t)-(-150))/(PARK+150)*0.85+0.15;
+    const sc= t<66.5? 0.5 : 0;
+    return Math.round(100-34*soft-12*sc);
+  }
+
+  // ---- scene ---------------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled=true;
+  renderer.domElement.className='gl';
+  view.insertBefore(renderer.domElement, view.firstChild);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(34,1,5,20000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.7); sun.position.set(0.6,1,0.8); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(-1,0.3,-0.6); scene.add(fill);
+
+  const STEEL=0xa9b1ba, PLATE=0x959da7, GREY=0x8b9199, BLACK=0x232528, CABLE=0x2f3338, BOX=0xdfe3e7, MOTOR=0x6d7580, SENSOR=0x3a3f45, BLUEC=0x2a63b8;
+  const COLORS={body:STEEL, feet:PLATE, foot_hardware:GREY, end_plate_near:PLATE, end_bolts_near:GREY, end_plate_far:PLATE, end_bolts_far:GREY,
+    nut_1:BLACK, nut_2:BLACK, ring_1:0x4a4f56, ring_2:0x4a4f56, cs_n_1:GREY, cs_n_2:GREY, cable_1:CABLE, cable_2:CABLE,
+    ring_f_1:0x4a4f56, ring_f_2:0x4a4f56, cs_f_1:GREY, cs_f_2:GREY, end_cover_far:PLATE, plugs_far:GREY, plug_near:GREY, plug_top:GREY,
+    junction_box:BOX, box_glands:BLACK, uv_sensor:SENSOR, sensor_cable:CABLE, wiper_motor:MOTOR, motor_screws:GREY, dust_cover:BLACK};
+
+  // every movable thing is a group with a base position; tracks add offsets, a rotation and an opacity
+  const O={};
+  function grp(name,parent,px,py,pz){ const g=new THREE.Group(); g.position.set(px||0,py||0,pz||0); g.userData.base=g.position.clone(); (parent||scene).add(g); O[name]=g; return g; }
+  function mat(col,o){ o=o||{}; const m=new THREE.MeshPhongMaterial(Object.assign({color:col, shininess:28, specular:0x333333, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1},o)); m.userData.op=m.opacity; m.userData.tr=m.transparent; return m; }
+  function setOpacity(g,a){
+    g.visible=a>0.01;
+    g.traverse(o=>{ const m=o.material; if(!m||m.userData.op===undefined) return; m.opacity=m.userData.op*a; m.transparent=m.userData.tr||a<0.999; m.depthWrite=!m.transparent||m.userData.dw===true; });
+  }
+
+  // tracks: keys [t, dx,dy,dz, rot, opacity]; eased between keys, held after the last one.
+  // until: after this real time the part is home again. raw: ignore the refit time mapping.
+  const TR=[];
+  function track(g,keys,o){ o=o||{}; TR.push({g,keys:keys.map(k=>[k[0],k[1]||0,k[2]||0,k[3]||0,k[4]||0,k[5]===undefined?1:k[5]]),axis:o.axis||'x',until:o.until,raw:o.raw}); }
+  function evalTrack(tr,t){
+    const tt=tr.raw? t : mapT(t), K=tr.keys;
+    if(tr.until!==undefined && tt>tr.until) return [0,0,0,0,1];
+    if(tt<=K[0][0]) return K[0].slice(1);
+    for(let i=0;i<K.length-1;i++){
+      const a=K[i], b=K[i+1];
+      if(tt<=b[0]){ const k=ease((tt-a[0])/Math.max(1e-6,b[0]-a[0])); return [1,2,3,4,5].map(j=>a[j]+(b[j]-a[j])*k); }
+    }
+    return K[K.length-1].slice(1);
+  }
+  function applyTracks(t){
+    for(const tr of TR){
+      const v=evalTrack(tr,t), g=tr.g, b=g.userData.base;
+      g.position.set(b.x+v[0],b.y+v[1],b.z+v[2]);
+      g.rotation[tr.axis]=v[3];
+      setOpacity(g,v[4]);
+    }
+  }
+
+  // ---- quartz sleeve material: soft deposits (wiped off) and scale (cleaned off by hand) -------
+  const QU={uSoft:{value:0}, uSweep:{value:1e4}, uScale:{value:0.5}, uClean:{value:1e4}};
+  function quartzMat(){
+    const m=mat(0xe4eef6,{transparent:true, opacity:0.3, shininess:90, specular:0xffffff, polygonOffset:false});
+    m.userData.dw=false;
+    m.onBeforeCompile=sh=>{
+      Object.assign(sh.uniforms,QU);
+      sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vQ;').replace('#include <begin_vertex>','#include <begin_vertex>\nvQ=position;');
+      sh.fragmentShader=sh.fragmentShader
+        .replace('#include <common>','#include <common>\nuniform float uSoft,uSweep,uScale,uClean;\nvarying vec3 vQ;\nfloat hq(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\nfloat nq(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.0-2.0*f);return mix(mix(hq(i),hq(i+vec2(1,0)),f.x),mix(hq(i+vec2(0,1)),hq(i+vec2(1,1)),f.x),f.y);}')
+        .replace('#include <color_fragment>',`#include <color_fragment>
+          float ang=atan(vQ.z,vQ.y);
+          vec2 np=vec2(vQ.x*0.06, ang*3.0);
+          float n=nq(np)*0.6+nq(np*2.7+5.0)*0.4;
+          float soft=uSoft*step(vQ.x,uSweep)*smoothstep(0.2,0.6,n+uSoft*0.6);
+          float sc=uScale*step(vQ.x,uClean)*(0.55+0.45*nq(np*4.0+9.0));
+          diffuseColor.rgb=mix(diffuseColor.rgb, vec3(0.74,0.69,0.55), min(1.0,sc*1.4));
+          diffuseColor.rgb=mix(diffuseColor.rgb, vec3(0.42,0.29,0.13), min(1.0,soft*1.3));
+          diffuseColor.a=max(diffuseColor.a, max(sc*1.1, min(0.95,soft*1.3)));`);
+    };
+    return m;
+  }
+
+  // ---- load the chamber ---------------------------------------------------------------------
+  let ready=false;
+  const bodyMats=[];
+  function meshFrom(buf,base,e,col){
+    const g=new THREE.Group();
+    if(e.nv){
+      const q=new Int16Array(buf, base+e.V[0], e.nv*3); const pos=new Float32Array(q.length);
+      for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+      const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+      geo.computeVertexNormals();
+      const m=mat(col); if(e.name==='body') bodyMats.push(m);
+      g.add(new THREE.Mesh(geo,m));
+    }
+    if(e.nl){
+      const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
+      for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+      const lg=new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      const dark=(col===BLACK||col===CABLE||col===SENSOR);
+      const lm=new THREE.LineBasicMaterial({color: dark?0x6a6f76:0x15171a, transparent:true, opacity: dark?0.55:0.6});
+      lm.userData.op=lm.opacity; lm.userData.tr=true; if(e.name==='body') bodyMats.push(lm);
+      g.add(new THREE.LineSegments(lg, lm));
+    }
+    return g;
+  }
+
+  fetch('/assets/ets-wf/wf-215-8-anim.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl, M={};
+    for(const e of hdr){ const c=COLORS[e.name]; if(c!==undefined) M[e.name]=meshFrom(buf,base,e,c); }
+    build(M);
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+    if(!reduced && !new URLSearchParams(location.search).has('t')) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+
+  // pivot: a group at (px,py,pz) holding the mesh shifted back, so rotations turn about that axis
+  function pivot(name,mesh,parent,px,py,pz){ const g=grp(name,parent,px,py,pz); mesh.position.set(-px,-py,-pz); g.add(mesh); return g; }
+  function cyl(r,len,col,o,seg){ const g=new THREE.CylinderGeometry(r,r,len,seg||40,1,!!(o&&o.open)); g.rotateZ(Math.PI/2); return new THREE.Mesh(g, o&&o.material||mat(col,o&&o.m)); }
+  function ring(r0,r1,len,col,o){ const s=new THREE.Shape(); s.absarc(0,0,r1,0,Math.PI*2,false); const h=new THREE.Path(); h.absarc(0,0,r0,0,Math.PI*2,true); s.holes.push(h);
+    const g=new THREE.ExtrudeGeometry(s,{depth:len,bevelEnabled:false,curveSegments:40}); g.rotateY(Math.PI/2); g.translate(-len/2,0,0); return new THREE.Mesh(g,mat(col,o)); }
+  function torus(R,r,col){ const g=new THREE.TorusGeometry(R,r,10,48); g.rotateY(Math.PI/2); return new THREE.Mesh(g,mat(col)); }
+
+  let water, flow, F, lampGlow=[], lampTubes=[], windowDisc, oldBlades, newBlades;
+  function build(M){
+    // static chamber
+    for(const n of ['body','feet','foot_hardware','end_plate_far','end_bolts_far','plugs_far','plug_top','end_cover_far','uv_sensor','sensor_cable']) grp(n).add(M[n]);
+
+    // front flange assembly: flange, anode plug, ACME shaft and the wiper carriage come out together
+    const front=grp('front');
+    front.add(M.end_plate_near, M.plug_near);
+    const shaft=cyl(8,388,0xc9a227,{m:{shininess:60}}); shaft.position.set(6,SHAFT.y,SHAFT.z); front.add(shaft);
+    // thread hint on the shaft
+    for(let x=-180;x<=190;x+=9){ const th=torus(8.2,0.9,0x9c7c14); th.position.set(x,SHAFT.y,SHAFT.z); front.add(th); }
+    const car=grp('carriage',front,PARK,0,0);
+    const boss=cyl(17,30,0x3d6fb5); boss.position.set(0,SHAFT.y,SHAFT.z); car.add(boss);
+    for(const L of LAMP){
+      const rg=ring(QR+1.5,QR+11,18,0x3d6fb5); rg.position.set(0,L.y,L.z); car.add(rg);
+      const dy=L.y-SHAFT.y, dz=L.z-SHAFT.z, len=Math.hypot(dy,dz)-QR-20;
+      const arm=new THREE.Mesh(new THREE.BoxGeometry(14,len,12),mat(0x3d6fb5));
+      const mid=0.5*(len)+17; const ux=dy/Math.hypot(dy,dz), uz=dz/Math.hypot(dy,dz);
+      arm.position.set(0,SHAFT.y+ux*mid,SHAFT.z+uz*mid); arm.rotation.x=Math.atan2(uz,ux); car.add(arm);
+    }
+    oldBlades=grp('oldBlades',car); newBlades=grp('newBlades',car);
+    for(const [g,c] of [[oldBlades,0x6b4f2c],[newBlades,0x15171a]]) for(const L of LAMP) for(const dx of [-10.5,10.5]){ const b=torus(QR+3,2.2,c); b.position.set(dx,L.y,L.z); g.add(b); }
+    grp('front_bolts').add(M.end_bolts_near);
+
+    // wiper motor and cover
+    const mot=grp('motor'); mot.add(M.junction_box, M.box_glands);
+
+    // per lamp: lamp, nut, connector, clamp rings, screws, seals, quartz
+    LAMP.forEach((L,i)=>{
+      const k=i+1;
+      const q=grp('quartz_'+k,null,0,L.y,L.z);
+      const qm=cyl(QR,QX1-QX0,0,{open:true, material:quartzMat()},48); qm.position.x=(QX0+QX1)/2; q.add(qm);
+      const lamp=grp('lamp_'+k,null,0,L.y,L.z);
+      const tube=cyl(9,364,0xf2efff,{m:{emissive:0x000000, shininess:80}},24); tube.position.x=4; lamp.add(tube); lampTubes.push(tube.material);
+      const glow=cyl(19,350,0x8c6bff,{m:{transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}},24); glow.position.x=4; glow.material.userData.op=0; lamp.add(glow); lampGlow.push(glow.material);
+      const cap=cyl(12.5,22,0xf4f1e8,{},24); cap.position.x=197; lamp.add(cap);
+      for(const a of [0.6,2.2,3.7,5.3]){ const pin=cyl(1.2,8,0xc0a060,{},8); pin.position.set(212,Math.cos(a)*6,Math.sin(a)*6); lamp.add(pin); }
+      // twist arrow drawn round the lamp cap, shown while unlocking
+      const arc=new THREE.Mesh(new THREE.TorusGeometry(20,1.6,8,30,Math.PI*1.2), new THREE.MeshBasicMaterial({color:0xd1202b,transparent:true,opacity:0}));
+      arc.rotation.y=Math.PI/2; arc.position.x=214; lamp.add(arc); lamp.userData.arc=arc;
+      pivot('nut_'+k,M['nut_'+k],null,0,L.y,L.z);
+      grp('cable_'+k).add(M['cable_'+k]);
+      grp('ring_'+k).add(M['ring_'+k]);
+      grp('cs_n_'+k).add(M['cs_n_'+k]);
+      grp('ring_f_'+k).add(M['ring_f_'+k]);
+      grp('cs_f_'+k).add(M['cs_f_'+k]);
+      const pt=grp('ptfe_'+k,null,0,L.y,L.z); const ptm=ring(QR+0.5,QR+12,3,0xf3f3ef); ptm.position.x=191.5; pt.add(ptm);
+      const on=grp('oring_'+k,null,0,L.y,L.z); const onm=torus(QR+2.2,2.5,0x111214); onm.position.x=186; on.add(onm);
+      const orr=grp('oringf_'+k,null,0,L.y,L.z); const orm=torus(QR+2.2,2.5,0x111214); orm.position.x=-186; orr.add(orm);
+    });
+
+    // UV sensor: adaptor cap, probe and cable connector, window housing, screws, window and seals
+    pivot('sens_cap',M.dust_cover,null,SENS.x,0,SENS.z);
+    const probe=grp('probe',null,SENS.x,0,SENS.z);
+    const pr=new THREE.Mesh(new THREE.CylinderGeometry(7,7,72,24),mat(0xb8bec6)); pr.position.y=170; probe.add(pr);
+    const conn=grp('sens_conn',null,SENS.x,0,SENS.z);
+    const cn=new THREE.Mesh(new THREE.CylinderGeometry(6.5,6.5,22,20),mat(0x1b1d20)); cn.position.y=236; conn.add(cn);
+    const cbl=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0,246,0),new THREE.Vector3(0,268,0),new THREE.Vector3(30,282,0),new THREE.Vector3(90,284,0)]),20,3.2,8),mat(CABLE)); conn.add(cbl);
+    grp('sens_house').add(M.wiper_motor);
+    grp('sens_screws').add(M.motor_screws);
+    const win=grp('sens_win',null,SENS.x,0,SENS.z);
+    windowDisc=new THREE.Mesh(new THREE.CylinderGeometry(15,15,5,32),mat(0xb9dcff,{transparent:true,opacity:0.8,shininess:120,specular:0xffffff})); windowDisc.position.y=136; win.add(windowDisc);
+    const us=new THREE.Mesh(new THREE.TorusGeometry(14,1.6,8,32),mat(0x111214)); us.rotation.x=Math.PI/2; us.position.y=140; win.add(us);
+    const lo=grp('sens_oring',null,SENS.x,0,SENS.z);
+    const ls=new THREE.Mesh(new THREE.TorusGeometry(14,1.6,8,32),mat(0x111214)); ls.rotation.x=Math.PI/2; ls.position.y=131.5; lo.add(ls);
+
+    // pipe spools either side of the wafer, and the water in the chamber
+    const pipeM=new THREE.MeshPhongMaterial({color:0x9db4cc,transparent:true,opacity:0.16,depthWrite:false,side:THREE.DoubleSide});
+    for(const s of [-1,1]){
+      const fl=new THREE.Mesh(new THREE.CylinderGeometry(171,171,26,48,1,false),pipeM); fl.rotation.x=Math.PI/2; fl.position.z=s*103; scene.add(fl);
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(110,110,240,48,1,true),pipeM); p.rotation.x=Math.PI/2; p.position.z=s*(116+120); scene.add(p);
+    }
+    const wclip=new THREE.Plane(new THREE.Vector3(0,-1,0),170);
+    water=new THREE.Mesh(new THREE.CylinderGeometry(162,162,178,48),new THREE.MeshPhongMaterial({color:0x4a90d9,transparent:true,opacity:0.1,depthWrite:false,clippingPlanes:[wclip],side:THREE.DoubleSide}));
+    water.rotation.x=Math.PI/2; water.userData.clip=wclip; scene.add(water);
+    buildFlow();
+    buildTracks();
+  }
+
+  // ---- the procedures as keyframes ------------------------------------------------------------
+  function buildTracks(){
+    // UV sensor window, 26 to 32.6, refit by the time map
+    const U=37;
+    track(O.sens_conn,  [[26,0,0,0,0,1],[26.4,0,0,0,0,1],[27.3,0,45,0,0,1],[27.8,0,70,0,0,0]],{axis:'y',until:U});
+    track(O.sens_cap,   [[27.6,0,0,0,0],[28.8,0,26,0,-9],[29.4,0,60,0,-9,1],[29.9,0,90,0,-9,0]],{axis:'y',until:U});
+    track(O.probe,      [[27.6,0,0,0,0],[28.8,0,26,0,0],[29.6,0,110,0,0,1],[30.1,0,140,0,0,0]],{until:U});
+    track(O.sens_screws,[[29.6,0,0,0],[30.3,0,24,0,0,1],[30.7,0,40,0,0,0]],{until:U});
+    track(O.sens_house, [[30.5,0,0,0],[31.4,0,70,0,0,1],[31.8,0,95,0,0,0]],{until:U});
+    track(O.sens_win,   [[31.6,0,0,0],[32.4,0,48,0,0,1]],{until:U});
+    track(O.sens_oring, [[31.9,0,0,0],[32.6,0,26,0,0,1]],{until:U});
+
+    // lamps: nut, connector, twist, withdraw
+    [37,43].forEach((b,i)=>{
+      const k=i+1;
+      track(O['nut_'+k],  [[b+0.3,0,0,0,0],[b+1.7,30,0,0,18],[b+2.3,60,0,0,18,0]],{until:85});
+      track(O['cable_'+k],[[b+1.6,0,0,0],[b+2.6,90,0,0,0,1],[b+3.1,130,0,0,0,0]],{until:85});
+      track(O['lamp_'+k], [[b+2.8,0,0,0,0],[b+3.4,0,0,0,0.7],[b+5.3,420,0,0,0.7,1],[b+5.9,470,0,0,0.7,0]],{until:85});
+    });
+    // quartz: clamp ring screws, ring and PTFE gasket, O-ring, rear ring, then the sleeve
+    [49,56].forEach((b,i)=>{
+      const k=i+1;
+      track(O['cs_n_'+k],  [[b+0.2,0,0,0],[b+1.0,32,0,0,0,1],[b+1.4,45,0,0,0,0]],{until:85});
+      track(O['ring_'+k],  [[b+1.2,0,0,0],[b+2.2,60,0,0,0,1],[b+2.7,80,0,0,0,0]],{until:85});
+      track(O['ptfe_'+k],  [[b+1.5,0,0,0],[b+2.4,48,0,0,0,1],[b+2.8,64,0,0,0,0]],{until:85});
+      track(O['oring_'+k], [[b+2.4,0,0,0],[b+3.0,34,0,0,0,1],[b+3.3,46,0,0,0,0]],{until:85});
+      track(O['cs_f_'+k],  [[b+3.6,0,0,0],[b+4.2,-32,0,0,0,1],[b+4.5,-45,0,0,0,0]],{until:85});
+      track(O['ring_f_'+k],[[b+4.0,0,0,0],[b+4.8,-55,0,0,0,1],[b+5.1,-75,0,0,0,0]],{until:85});
+      track(O['oringf_'+k],[[b+4.5,0,0,0],[b+5.0,-30,0,0,0,1],[b+5.3,-42,0,0,0,0]],{until:85});
+      track(O['quartz_'+k],[[b+5.3,0,0,0],[b+6.9,430,0,0,0,1],[67.4,430,0,0,0,1],[68.2,430,40,0,0,0]],{until:85});
+    });
+    // wiper motor and cover
+    track(O.motor,[[68.6,0,0,0],[69.5,30,0,0],[71.2,240,0,0,0,1],[72.2,270,0,0,0,0]],{until:85});
+    // flange bolts, then flange + carriage + shaft out
+    track(O.front_bolts,[[73.4,0,0,0],[74.6,34,0,0,0,1],[75.1,50,0,0,0,0]],{until:85});
+    track(O.front,[[75.4,0,0,0],[78.6,400,0,0]],{until:85});
+    // blades: real time, the old set never comes back
+    track(O.oldBlades,[[79.2,0,0,0,0,1],[80.4,70,0,0,0,0]],{raw:true});
+    track(O.newBlades,[[80.6,70,0,0,0,0],[80.7,70,0,0,0,1],[82,0,0,0,0,1]],{raw:true});
+  }
+
+  // ---- water flow particles -------------------------------------------------------------------
+  function canvasTex(draw,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); return new THREE.CanvasTexture(c); }
+  const dotTex=canvasTex((g,w)=>{ const gr=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,w,w); },32,32);
+  const FLOW_N=520, ZIN=-350, ZOUT=350;
+  let flowPhase=0;
+  function buildFlow(){
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(FLOW_N*3).fill(1e5),3));
+    geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(FLOW_N*3),3));
+    flow=new THREE.Points(geo,new THREE.PointsMaterial({size:9,vertexColors:true,map:dotTex,transparent:true,opacity:0.9,depthWrite:false}));
+    flow.frustumCulled=false; flow.renderOrder=3; scene.add(flow);
+    F=[]; for(let i=0;i<FLOW_N;i++){ const a=h1(i*2.3)*6.283, r=Math.sqrt(h1(i*3.7))*96; F.push({ph:h1(i*13.7), x:Math.cos(a)*r*1.25, y:Math.sin(a)*r, sp:0.85+h1(i*7.1)*0.3}); }
+  }
+  const cIn=new THREE.Color(0x2f8fd0), cOut=new THREE.Color(0x8a6cff), cTmp=new THREE.Color();
+  function placeFlow(t){
+    const fo=flowOn(t); flow.visible=fo>0.01; if(!flow.visible) return;
+    flow.material.opacity=0.9*fo;
+    const a=flow.geometry.attributes.position.array, c=flow.geometry.attributes.color.array, lo=lampsOn(t);
+    for(let i=0;i<FLOW_N;i++){
+      const f=F[i], p=(f.ph+flowPhase*f.sp)%1;
+      const z=ZIN+(ZOUT-ZIN)*p; let x=f.x, y=f.y;
+      if(Math.abs(z)<95) x*=1+0.25*Math.cos(z/95*Math.PI/2);         // spreads a little in the chamber
+      for(const L of LAMP){ const dz=z-L.z, dy=y-L.y, R=33; if(Math.abs(dz)<R && Math.abs(dy)<R){ const m=Math.sqrt(R*R-dz*dz); if(Math.abs(dy)<m) y=L.y+(dy>=0?1:-1)*m; } }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+      const k=lo*smooth((z+30)/80); cTmp.copy(cIn).lerp(cOut,k); c[3*i]=cTmp.r; c[3*i+1]=cTmp.g; c[3*i+2]=cTmp.b;
+    }
+    flow.geometry.attributes.position.needsUpdate=true; flow.geometry.attributes.color.needsUpdate=true;
+  }
+
+  // ---- camera -----------------------------------------------------------------------------------
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const K={
+    all:  {p:V(980,560,1080), t:V(110,30,0), f:34},
+    side: {p:V(420,520,760),  t:V(20,0,0),  f:34},
+    top:  {p:V(330,470,300),  t:V(25,175,0), f:30},
+    near: {p:V(760,280,520),  t:V(250,10,0), f:34},
+    out:  {p:V(1000,380,720), t:V(360,10,0), f:34},
+    over: {p:V(60,980,760),   t:V(0,0,0),   f:34},
+    far:  {p:V(-560,250,520), t:V(-160,10,0), f:34},
+    bench:{p:V(470,480,1180), t:V(420,0,0), f:30},
+    wiper:{p:V(400,340,860), t:V(440,0,0), f:32},
+    motor:{p:V(820,300,-640), t:V(330,-15,-30), f:32},
+    wide: {p:V(1080,540,960), t:V(250,20,0), f:34}
+  };
+  const PATH=[[0,K.all],[4,K.all],[6.5,K.side],[20,K.side],[22,K.all],[25,K.all],[26.2,K.top],[36.6,K.top],[38.2,K.near],[48.5,K.near],[52.1,K.near],[52.6,K.over],[53.2,K.far],[54.4,K.far],[55.4,K.out],[59.1,K.near],[59.6,K.over],[60.2,K.far],[61.4,K.far],[62.4,K.out],[63.4,K.bench],[67.6,K.bench],[68.6,K.motor],[72.6,K.motor],[73.6,K.near],[75.2,K.near],[76.8,K.wiper],[83.8,K.wiper],[85.4,K.wide],[98.5,K.wide],[100,K.side],[106,K.side],[108,K.all]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k;
+    return out;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:34};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    d.multiplyScalar(zoomOff);
+    const asp=camera.aspect, f=asp<1? Math.min(80, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.8)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
+  function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{ if(!drag) return; yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); needRender=true; });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.35,3); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=0; zoomOff=1; needRender=true; });
+  let ghostOn=true;
+  ghostBtn.addEventListener('click',()=>{ ghostOn=!ghostOn; ghostBtn.setAttribute('aria-pressed',String(ghostOn)); setTime(T); });
+
+  // ---- callouts: right-hand column, leaders to points on the parts --------------------------------
+  const W=(a,b)=>t=>t>=a&&t<b;
+  const LABELS=[
+    {txt:'Chamber body',        o:'body',   p:V(-60,150,90),   show:W(1,5)},
+    {txt:'Front flange',        o:'front',  p:V(190,-110,40),  show:t=>W(1,5)(t)||W(75,85)(t)},
+    {txt:'Twistlok connector',  o:'cable_1',p:V(300,60,-25),   show:t=>W(1,5)(t)||W(38.4,40.2)(t)},
+    {txt:'Wiper motor & cover', o:'motor',  p:V(330,-20,-32),  show:t=>W(1,5)(t)||W(68.4,71.5)(t)},
+    {txt:'UV sensor',           o:'sens_house',p:V(25,190,20), show:W(1,5)},
+    {txt:'Temperature probe',   o:'uv_sensor',p:V(-30,215,-40),show:W(1,5)},
+    {txt:'Inlet',               o:null,     p:V(0,110,-300),   show:t=>W(1,20)(t)||W(102,108)(t)},
+    {txt:'Outlet',              o:null,     p:V(0,110,300),    show:t=>W(1,20)(t)||W(102,108)(t)},
+    {txt:'Quartz sleeve',       o:'quartz_1',p:V(-60,0,QR),    show:t=>W(6,12)(t)||W(55.4,63)(t)},
+    {txt:'UV lamp',             o:'lamp_1', p:V(-100,9,0),     show:t=>W(6,12)(t)||W(40.5,43)(t)},
+    {txt:'Wiper carriage',      o:'carriage',p:V(0,SHAFT.y+18,SHAFT.z), show:t=>W(12.5,20)(t)||W(76,79)(t)||W(99.5,105)(t)},
+    {txt:'ACME lead screw',     o:'front',  p:V(-60,SHAFT.y+8,SHAFT.z), show:t=>W(12.5,20)(t)},
+    {txt:'Wiper blades',        o:'newBlades',p:V(0,LAMP[0].y+QR,LAMP[0].z), show:W(79.2,85)},
+    {txt:'Probe cable',         o:'sens_conn',p:V(0,240,0),    show:W(25.6,27.6)},
+    {txt:'Adaptor cap',         o:'sens_cap',p:V(0,214,8),     show:W(27.6,29.6)},
+    {txt:'UV probe',            o:'probe',  p:V(0,190,7),      show:W(27.6,29.6)},
+    {txt:'3 screws',            o:'sens_screws',p:V(40,137,10),show:W(29.6,30.6)},
+    {txt:'Window housing',      o:'sens_house',p:V(50,170,0),  show:W(30.4,31.8)},
+    {txt:'Quartz window',       o:'sens_win',p:V(15,136,0),    show:W(31.8,36.6)},
+    {txt:'Retaining nut',       o:'nut_1',  p:V(212,LAMP[0].y+35,LAMP[0].z), show:W(37,38.4)},
+    {txt:'Clamp ring screws',   o:'cs_n_1', p:V(195,90,-40),   show:W(49,50.4)},
+    {txt:'Clamp ring',          o:'ring_1', p:V(211,LAMP[0].y-38,LAMP[0].z), show:W(50.2,51.4)},
+    {txt:'PTFE gasket',         o:'ptfe_1', p:V(193,QR+12,0),  show:W(50.4,51.6)},
+    {txt:'O-ring',              o:'oring_1',p:V(186,QR+2,0),   show:W(51.3,52.2)},
+    {txt:'Rear clamp ring',     o:'ring_f_1',p:V(-202,LAMP[0].y+36,LAMP[0].z), show:W(53.1,54.2)},
+    {txt:'Flange bolts (12)',   o:'front_bolts',p:V(198,120,60), show:W(73,75)}
+  ];
+  let labelsOn=true;
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  const NS='http://www.w3.org/2000/svg';
+  for(const L of LABELS){
+    const g=document.createElementNS(NS,'g'), ln=document.createElementNS(NS,'polyline'), dot=document.createElementNS(NS,'circle'), halo=document.createElementNS(NS,'text'), tx=document.createElementNS(NS,'text');
+    dot.setAttribute('r','2.4'); halo.setAttribute('class','halo'); halo.textContent=tx.textContent=L.txt;
+    g.append(ln,dot,halo,tx); g.style.opacity=0; overlay.appendChild(g); L.el={g,ln,dot,halo,tx};
+  }
+  const pv=V(0,0,0);
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const vis=labelsOn && w>760, items=[];
+    for(const L of LABELS){
+      let on=vis && L.show(T);
+      const g=L.o&&O[L.o]; if(g && !g.visible) on=false;
+      L.el.g.style.opacity=on?1:0; if(!on) continue;
+      pv.copy(L.p); if(g) g.localToWorld(pv);
+      pv.project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      if(x<0||x>w||y<0||y>h||pv.z>1){ L.el.g.style.opacity=0; continue; }
+      items.push({L,x,y});
+    }
+    items.sort((a,b)=>a.y-b.y);
+    const lh=20, colX=w-16-200, top=Math.max(206,0);
+    let prev=top-lh;
+    for(const it of items){
+      const ly=Math.max(it.y, prev+lh, top); prev=ly;
+      const e=it.L.el, lx=Math.min(colX, Math.max(it.x+40, colX));
+      e.ln.setAttribute('points',`${lx-6},${ly} ${lx-20},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+      e.dot.setAttribute('cx',it.x); e.dot.setAttribute('cy',it.y);
+      for(const t of [e.halo,e.tx]){ t.setAttribute('x',lx); t.setAttribute('y',ly+4); }
+    }
+  }
+
+  // ---- steps and readout ----------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s || t>=T_END-0.01); });
+  }
+  const R={mode:'r-mode',flow:'r-flow',lamps:'r-lamps',uv:'r-uv',wiper:'r-wiper'}; for(const k in R) R[k]=document.getElementById(R[k]);
+  function set(el,txt,cls){ if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; }
+  function lampsIn(t){ let n=2; const tt=mapT(t); if(t<99){ if(tt>40.2) n--; if(tt>46.2) n--; } return n; }
+  function updateReadout(t){
+    const mode= t<20? 'Treating' : t<25? 'Isolating' : t<37? 'Sensor service' : t<49? 'Lamp change' : t<63? 'Quartz removal' : t<68? 'Cleaning' : t<85? 'Wiper service' : t<99? 'Reassembly' : t<102.5? 'Calibrating' : 'Treating';
+    set(R.mode,mode, mode==='Treating'?'go':'mid');
+    const fo=flowOn(t); set(R.flow, fo>0.98? '931 gpm' : fo>0.02? Math.round(931*fo)+' gpm' : waterLv(t)<0.05? 'Drained' : waterLv(t)<0.98? (t<50?'Draining':'Filling') : 'Isolated', fo>0.98?'go':fo>0.02?'mid':'stop');
+    const lo=lampsOn(t), n=lampsIn(t);
+    set(R.lamps, lo>0.5? '2 / 2 on' : t>102 && lo>0.02? 'Striking' : n<2? (n===0?'Both removed':'1 removed') : 'Off', lo>0.5?'go':t>=37&&t<99&&n<2?'stop':'mid');
+    const uv=lo>0.5? uvPct(t) : null;
+    set(R.uv, uv===null? '-' : uv+'%', uv===null?'':uv>=90?'go':uv>=80?'mid':'stop');
+    const cx=carriageX(t), tt=mapT(t);
+    const w= t>=12.5&&t<19.5? (t<16?'Sweeping out':'Returning') : t>=99.5&&t<104.5? 'Calibrating' : (tt>68.6&&tt<99&&t<99)||(t>=68.6&&t<85)? (tt>75.4||t>75.4&&t<85? 'Removed' : 'Motor off') : 'Parked';
+    set(R.wiper, w, w==='Parked'?'':w==='Removed'?'stop':'mid');
+  }
+
+  // ---- apply a point in time -------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(!ready){ needRender=true; return; }
+    applyTracks(T);
+    O.carriage.position.x=carriageX(T);
+    // see-through body after the opening view
+    const g=ghostOn? ramp(T,3,4.5) : 0;
+    for(const m of bodyMats){ const a=m.userData.op*(1-0.82*g); m.opacity=a; m.transparent=a<0.999; if(m.isMeshPhongMaterial) m.depthWrite=!m.transparent; }
+    QU.uSoft.value=softFoul(T); QU.uSweep.value=sweepX(T); QU.uScale.value=scale(T); QU.uClean.value=cleanX(T);
+    const lo=lampsOn(T);
+    lampTubes.forEach(m=>m.emissive.setRGB(0.45*lo,0.36*lo,0.85*lo));
+    lampGlow.forEach(m=>{ m.userData.op=0.32*lo; m.opacity=0.32*lo; });
+    for(const k of [1,2]){ const arc=O['lamp_'+k].userData.arc, tt=mapT(T), b=k===1?37:43; arc.material.opacity= (tt>b+2.6&&tt<b+3.8)?0.95:0; }
+    water.userData.clip.constant=-175+350*waterLv(T); water.visible=waterLv(T)>0.01 && g>0.5;
+    windowDisc.material.emissive.setRGB(0,0,0); const sp=T>32.6&&T<33.8? Math.sin((T-32.6)/1.2*Math.PI):0; windowDisc.material.emissive.setRGB(0.5*sp,0.6*sp,0.7*sp);
+    updateReadout(T);
+    updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback -----------------------------------------------------------------------------------
+  let playing=false, loop=false, last=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=6;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+  const q=new URLSearchParams(location.search); if(q.has('t')) T=+q.get('t');
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(playing){
+      let t=T+dt;
+      if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } }
+      setTime(t);
+    }
+    const fo=flowOn(T);
+    if(fo>0.01 && !reduced){ flowPhase=(flowPhase+dt*0.16*fo)%1; needRender=true; }
+    if(needRender){ needRender=false; placeFlow(T); updateCamera(); renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  resize();
+})();
+</script>
+
+</body>
+</html>
