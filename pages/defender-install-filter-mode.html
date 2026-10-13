@@ -38,9 +38,9 @@
   #steps ol{list-style:none;margin:0;padding:0}
   #steps li{border-top:1px solid var(--rule)}
   #steps li:first-child{border-top:0}
-  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
-  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps li button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps li button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
   #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
   #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
   #steps li.on button{color:var(--ink)}
@@ -76,6 +76,15 @@
   #pbar .crumbs a:hover{text-decoration:underline}
   #pbar .crumbs .sep{color:var(--rule)}
 
+  #stepnav{display:none;align-items:center;gap:8px;margin-top:6px;padding-top:7px;border-top:1.5px solid var(--ink)}
+  #stepnav.on{display:flex}
+  #stepnav button{font:600 11.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:5px 10px;cursor:pointer}
+  #stepnav button:disabled{opacity:.35;cursor:default}
+  #stepnav #snext{margin-left:auto;background:var(--ink);color:var(--panel)}
+  #stepnav #snext.ready{animation:nudge 1.4s ease-in-out infinite}
+  @keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(42,99,184,0)}50%{box-shadow:0 0 0 4px rgba(42,99,184,.35)}}
+  #stepnav .count{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion: reduce){ #stepnav #snext.ready{animation:none} }
   @media (max-width:760px){
     #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
     #bar{grid-template-columns:1fr;gap:8px}
@@ -105,6 +114,7 @@
     <div id="steps" aria-live="polite">
       <div class="kicker">Filter mode · water path</div>
       <ol id="steplist"></ol>
+      <div id="stepnav" aria-label="Walkthrough"><button id="sback">&lsaquo; Back</button><span class="count" id="scount">Step 1 / 6</span><button id="snext">Next &rsaquo;</button></div>
     </div>
     <div id="readout" aria-hidden="true">
       <div class="kicker">Filter status</div>
@@ -116,7 +126,7 @@
         <dt>Water at</dt><dd id="r-where" class="wet">Suction</dd>
       </dl>
     </div>
-    <div id="hint">Drag to look around · scroll to zoom</div>
+    <div id="hint">Drag to look around · scroll to zoom · Walkthrough: click or &rarr; for the next step</div>
   </div>
   <div id="bar">
     <h1>Defender SP-41 · Filter Mode<small>Pool to pool through the installation piping. Built from Schematic.stp.</small></h1>
@@ -128,6 +138,7 @@
     <div class="btns">
       <button id="play" aria-pressed="false">Play</button>
       <button id="loop" aria-pressed="false">Loop</button>
+      <button id="walk" aria-pressed="false" title="Pause at the end of each step; click the model or press the right arrow for the next one">Walkthrough</button>
       <button id="labels" aria-pressed="true">Labels</button>
       <button id="resetview">Reset view</button>
     </div>
@@ -442,12 +453,13 @@
   const stepList=document.getElementById('steplist');
   stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
   const stepLis=[...stepList.children];
-  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(walk){ goStep(+b.dataset.i); return; } setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
   let curStep=-1;
   function updateSteps(t){
     let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
     if(s===curStep) return; curStep=s;
     stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); });
+    updateNav();
   }
 
   // ---- load -------------------------------------------------------------------------------------------------------
@@ -458,7 +470,7 @@
     buildFlow(); buildFront(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
-    if(!reduced) startPlay();
+    if(walk) goStep(0); else if(!reduced) startPlay();
   }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
 
   // ---- time and playback ------------------------------------------------------------------------------------------
@@ -480,11 +492,42 @@
   loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
   document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
 
+  // ---- walkthrough: play one step, hold at its end, click or press the right arrow for the next ----------
+  var walkBtn=document.getElementById('walk'), nav=document.getElementById('stepnav'), sBack=document.getElementById('sback'), sNext=document.getElementById('snext'), sCount=document.getElementById('scount');
+  var walk=new URLSearchParams(location.search).has('walk'), stopAt=null;
+  function stepEnd(i){ return i<STEPS.length-1? STEPS[i+1].t-0.02 : T_END; }
+  function goStep(i){ i=clamp(i,0,STEPS.length-1); loop=false; loopBtn.setAttribute('aria-pressed','false'); setTime(STEPS[i].t+0.01); stopAt=stepEnd(i); startPlay(); updateNav(); }
+  function nextStep(){ const i=Math.max(curStep,0); goStep(i>=STEPS.length-1? 0 : i+1); }
+  function prevStep(){ const i=Math.max(curStep,0); goStep(T>STEPS[i].t+1.5? i : i-1); }
+  function setWalk(on){ walk=on; walkBtn.setAttribute('aria-pressed',String(on)); nav.classList.toggle('on',on); if(on){ if(ready) goStep(Math.max(curStep,0)); } else stopAt=null; updateNav(); }
+  function updateNav(){
+    if(!sCount) return;
+    const i=Math.max(curStep,0), held=walk && !playing && stopAt!==null && T>=stopAt-0.05;
+    sCount.textContent='Step '+(i+1)+' / '+STEPS.length;
+    sBack.disabled=i===0 && T<STEPS[0].t+1.5;
+    sNext.textContent=i>=STEPS.length-1 && held? 'Restart \u21ba' : 'Next \u203a';
+    sNext.classList.toggle('ready',held);
+  }
+  walkBtn.addEventListener('click',()=>setWalk(!walk));
+  sNext.addEventListener('click',nextStep); sBack.addEventListener('click',prevStep);
+  // a click (not a drag) on the model moves to the next step
+  let tap=null;
+  view.addEventListener('pointerdown',e=>{ tap=e.target.closest('#steps')? null : {x:e.clientX,y:e.clientY,t:performance.now()}; });
+  view.addEventListener('pointerup',e=>{ if(!tap||!walk) return; const moved=Math.hypot(e.clientX-tap.x,e.clientY-tap.y); if(moved<6 && performance.now()-tap.t<450) nextStep(); tap=null; });
+  addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.altKey||e.ctrlKey||e.metaKey) return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'){ e.preventDefault(); if(!walk) setWalk(true); else nextStep(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); if(!walk) setWalk(true); prevStep(); }
+  });
+  playBtn.addEventListener('click',()=>{ if(walk && playing){ if(stopAt!==null && T>=stopAt-0.05) nextStep(); else stopAt=stepEnd(Math.max(curStep,0)); } updateNav(); });
+  prog.addEventListener('input',()=>{ stopAt=walk? stepEnd(Math.max(curStep,0)) : null; updateNav(); });
+  if(walk){ walkBtn.setAttribute('aria-pressed','true'); nav.classList.add('on'); }
+
   function frame(now){
     requestAnimationFrame(frame);
     const dt=Math.min(0.05,(now-last)/1000); last=now;
     if(!ready) return;
-    if(playing){ let t=T+dt; if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); }
+    if(playing){ let t=T+dt; if(walk && stopAt!==null && t>=stopAt){ t=stopAt; stopPlay(); setTime(t); updateNav(); } else { if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } } setTime(t); } }
     if(!reduced){ flowClock+=dt; needRender=true; }       // water keeps moving while paused
     if(needRender){ needRender=false; updateCamera(); placeFlow(T); renderer.render(scene,camera); drawLabels(); }
   }
