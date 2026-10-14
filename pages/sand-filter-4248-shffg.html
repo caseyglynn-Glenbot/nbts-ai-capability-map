@@ -76,6 +76,15 @@
   #pbar .crumbs a:hover{text-decoration:underline}
   #pbar .crumbs .sep{color:var(--rule)}
 
+  #stepnav{display:none;align-items:center;gap:8px;margin-top:6px;padding-top:7px;border-top:1.5px solid var(--ink)}
+  #stepnav.on{display:flex}
+  #stepnav button{font:600 11.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:5px 10px;cursor:pointer}
+  #stepnav button:disabled{opacity:.35;cursor:default}
+  #stepnav #snext{margin-left:auto;background:var(--ink);color:var(--panel)}
+  #stepnav #snext.ready{animation:nudge 1.4s ease-in-out infinite}
+  @keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(42,99,184,0)}50%{box-shadow:0 0 0 4px rgba(42,99,184,.35)}}
+  #stepnav .count{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion: reduce){ #stepnav #snext.ready{animation:none} }
   @media (max-width:760px){
     #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
     #bar{grid-template-columns:1fr;gap:8px}
@@ -115,12 +124,13 @@
       <div id="cfg" role="group" aria-label="Face piping configuration"></div>
       <div id="cfgnote"></div>
       <ol id="steplist"></ol>
+      <div id="stepnav" aria-label="Walkthrough"><button id="sback">&lsaquo; Back</button><span class="count" id="scount">Step 1</span><button id="snext">Next &rsaquo;</button></div>
     </div>
     <div id="readout" aria-hidden="true">
       <div class="kicker">Filter status</div>
       <dl id="rdl"></dl>
     </div>
-    <div id="hint">Drag to look around · scroll to zoom</div>
+    <div id="hint">Drag to look around · scroll to zoom · Walkthrough: click or &rarr; for the next step</div>
   </div>
   <div id="bar">
     <h1>48048SHFFGS · Sand Filter<small id="sub">48 in horizontal sand filter, filter mode and backwash.</small></h1>
@@ -132,6 +142,7 @@
     <div class="btns">
       <button id="play" aria-pressed="false">Play</button>
       <button id="loop" aria-pressed="false">Loop</button>
+      <button id="walk" aria-pressed="false" title="Pause at the end of each step; click the model or press the right arrow for the next one">Walkthrough</button>
       <button id="labels" aria-pressed="true">Labels</button>
       <button id="resetview">Reset view</button>
     </div>
@@ -628,8 +639,8 @@
   const stepList=document.getElementById('steplist');
   let stepLis=[], curStep=-1;
   function buildSteps(){ stepList.innerHTML=M.STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join(''); stepLis=[...stepList.children]; curStep=-1; tend.textContent=fmt(M.T_END); }
-  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(M.STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
-  function updateSteps(t){ let s=0; for(let i=0;i<M.STEPS.length;i++) if(t>=M.STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); }
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(walk){ goStep(+b.dataset.i); return; } setTime(M.STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  function updateSteps(t){ let s=0; for(let i=0;i<M.STEPS.length;i++) if(t>=M.STEPS[i].t) s=i; if(s===curStep) return; curStep=s; stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s); }); updateNav(); }
 
   // ---- configuration switch and load -------------------------------------------------------------------------------------------
   const cfgBox=document.getElementById('cfg'), cfgNote=document.getElementById('cfgnote'), sub=document.getElementById('sub');
@@ -687,6 +698,7 @@
       try{ const u=new URL(location.href); u.searchParams.set('c',k); history.replaceState(null,'',u); }catch(e){}
       if(ld) ld.style.display='none';
       loading=false; ready=true; resize(); setTime(T);
+      if(walk) goStep(Math.max(curStep,0)); else updateNav();     // a piping change mid-walkthrough replays the current step on the new piping
     }).catch(err=>{ loading=false; console.error(err); if(ld){ ld.style.display=''; ld.textContent='Could not load the model: '+err.message; } });
   }
 
@@ -703,16 +715,49 @@
   playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
   loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
   document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){ e.preventDefault(); playing?stopPlay():startPlay(); } });
+
+  // ---- walkthrough: play one step, hold at its end, click or press the right arrow for the next ----------
+  // M.STEPS and M.T_END change with the piping (single or stacked), so every lookup goes through M
+  var walkBtn=document.getElementById('walk'), nav=document.getElementById('stepnav'), sBack=document.getElementById('sback'), sNext=document.getElementById('snext'), sCount=document.getElementById('scount');
+  var walk=new URLSearchParams(location.search).has('walk'), stopAt=null;
+  function stepEnd(i){ return i<M.STEPS.length-1? M.STEPS[i+1].t-0.02 : M.T_END; }
+  function goStep(i){ i=clamp(i,0,M.STEPS.length-1); loop=false; loopBtn.setAttribute('aria-pressed','false'); setTime(M.STEPS[i].t+0.01); stopAt=stepEnd(i); startPlay(); updateNav(); }
+  function nextStep(){ const i=Math.max(curStep,0); goStep(i>=M.STEPS.length-1? 0 : i+1); }
+  function prevStep(){ const i=Math.max(curStep,0); goStep(T>M.STEPS[i].t+1.5? i : i-1); }
+  function setWalk(on){ walk=on; walkBtn.setAttribute('aria-pressed',String(on)); nav.classList.toggle('on',on); if(on){ if(ready) goStep(Math.max(curStep,0)); } else stopAt=null; updateNav(); }
+  function updateNav(){
+    if(!sCount) return;
+    const i=Math.max(curStep,0), held=walk && !playing && stopAt!==null && T>=stopAt-0.05;
+    sCount.textContent='Step '+(i+1)+' / '+M.STEPS.length;
+    sBack.disabled=i===0 && T<M.STEPS[0].t+1.5;
+    sNext.textContent=i>=M.STEPS.length-1 && held? 'Restart ↺' : 'Next ›';
+    sNext.classList.toggle('ready',held);
+  }
+  walkBtn.addEventListener('click',()=>setWalk(!walk));
+  sNext.addEventListener('click',nextStep); sBack.addEventListener('click',prevStep);
+  // a click (not a drag) on the model moves to the next step
+  let tap=null;
+  view.addEventListener('pointerdown',e=>{ tap=e.target.closest('#steps')? null : {x:e.clientX,y:e.clientY,t:e.timeStamp}; });
+  view.addEventListener('pointerup',e=>{ if(!tap||!walk) return; const moved=Math.hypot(e.clientX-tap.x,e.clientY-tap.y); if(moved<6 && e.timeStamp-tap.t<450) nextStep(); tap=null; });
+  addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.altKey||e.ctrlKey||e.metaKey) return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'){ e.preventDefault(); if(!walk) setWalk(true); else nextStep(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); if(!walk) setWalk(true); prevStep(); }
+  });
+  playBtn.addEventListener('click',()=>{ if(walk && playing){ if(stopAt!==null && T>=stopAt-0.05) nextStep(); else stopAt=stepEnd(Math.max(curStep,0)); } updateNav(); });
+  prog.addEventListener('input',()=>{ stopAt=walk? stepEnd(Math.max(curStep,0)) : null; updateNav(); });
+  if(walk){ walkBtn.setAttribute('aria-pressed','true'); nav.classList.add('on'); }
+
   function frame(now){
     requestAnimationFrame(frame);
     const dt=Math.min(0.05,(now-last)/1000); last=now; if(!ready||loading) return;
-    if(playing){ let t=T+dt; if(t>=M.T_END){ if(loop) t=0; else { t=M.T_END; stopPlay(); } } setTime(t); }
+    if(playing){ let t=T+dt; if(walk && stopAt!==null && t>=stopAt){ t=stopAt; stopPlay(); setTime(t); updateNav(); } else { if(t>=M.T_END){ if(loop) t=0; else { t=M.T_END; stopPlay(); } } setTime(t); } }
     if(!reduced){ flowClock+=dt; needRender=true; }
     if(needRender){ needRender=false; updateCamera(); placeStreams(T); placeGrains(T); renderer.render(scene,camera); drawLabels(); }
   }
   requestAnimationFrame(frame);
   const startCfg=new URLSearchParams(location.search).get('c')||'C4';
-  choose(CFGS[startCfg]?startCfg:startCfg.toUpperCase()).then(()=>{ if(!reduced&&ready) startPlay(); });
+  choose(CFGS[startCfg]?startCfg:startCfg.toUpperCase()).then(()=>{ if(!walk&&!reduced&&ready) startPlay(); });
   window.SandFilter={ setTime:t=>{ stopPlay(); setTime(t); }, choose, get T(){ return T; }, get ASM(){ return ASM; }, get VOBJ(){ return VOBJ; }, camera, scene };
 })();
 </script>
