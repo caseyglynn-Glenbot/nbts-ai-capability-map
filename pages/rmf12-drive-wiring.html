@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | RMF 12 to GreenDrive Wiring</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.92);
+    --ok:#1e7a46; --warn:#b26a00; --brand:#1E4B8C; --brand2:#0085AD;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.93); --ok:#5cc28a; --warn:#f0a640; --brand:#8fb4ea; --brand2:#4fc0e0; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.93); --ok:#5cc28a; --warn:#f0a640; --brand:#8fb4ea; --brand2:#4fc0e0; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:600 12px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.9}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(310px,calc(100% - 32px));max-height:calc(100% - 50px);overflow:auto;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.45;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:262px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{color:var(--ink-2);margin-bottom:4px}
+  #readout table{width:100%;border-collapse:collapse}
+  #readout th{font:600 9.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:0 0 3px}
+  #readout td{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border-top:1px solid var(--rule);padding:4px 4px 4px 0;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+  #readout td.grp{color:var(--ink-2);font-size:9.5px;letter-spacing:.1em}
+  #readout td.st{text-align:right;font-weight:600;padding-right:0}
+  #readout tr.live td{color:var(--ink)}
+  #readout tr.live td.st{color:var(--warn)}
+  #readout tr.done td{color:var(--ink)}
+  #readout tr.done td.st{color:var(--ok)}
+  #readout i.sw{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+  #readout dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:4px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink)}
+  #readout dd.go{color:var(--ok)} #readout dd.mid{color:var(--warn)} #readout dd.stop{color:var(--leader)}
+  #calib{margin-top:8px;display:none}
+  #calib.on{display:block}
+  #calib td{white-space:nowrap}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px;max-width:560px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:var(--brand);letter-spacing:.01em}
+  #pbar .brand span{color:var(--brand2)}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:var(--brand2);text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px;max-height:45%}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:214px;padding:6px 8px 4px}
+    #readout td{font-size:9.5px;padding:3px 3px 3px 0}
+    #rows tr:not(.cur){display:none}
+    #calib{display:none !important}
+    #readout thead{display:none}
+    #readout dt,#readout dd{font-size:9.5px;padding:3px 0}
+    #overlay text{font-size:10px}
+    #hint{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){ #steps .d{transition:none} }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>RMF 12 to GreenDrive Wiring</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading RMF 12 and drive geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">Control wiring · step by step</div>
+      <ol id="steplist"></ol>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">Field wiring</div>
+      <table>
+        <thead><tr><th>From</th><th>To</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <dl>
+        <dt>S202 (A54)</dt><dd id="r-s202">Off</dd>
+        <dt>RMF12 P45</dt><dd id="r-p45">Not set</dd>
+        <dt>Drive</dt><dd id="r-drive">Running</dd>
+      </dl>
+      <div id="calib">
+        <div class="kicker" style="margin-top:4px">Magmeter 20 mA range · 6-25</div>
+        <table>
+          <thead><tr><th>Part no.</th><th>Pipe</th><th style="text-align:right">GPM</th></tr></thead>
+          <tbody>
+            <tr><td>3-2551-P0-12</td><td>2 in</td><td class="st">151</td></tr>
+            <tr><td></td><td>3 in</td><td class="st">338</td></tr>
+            <tr><td></td><td>4 in</td><td class="st">588</td></tr>
+            <tr><td>3-2551-P1-12</td><td>6 in</td><td class="st">1333</td></tr>
+            <tr><td></td><td>8 in</td><td class="st">2335</td></tr>
+            <tr><td>3-2551-P2-12</td><td>10 in</td><td class="st">3673</td></tr>
+            <tr><td></td><td>12 in</td><td class="st">5197</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="hint">Drag to look around · scroll to zoom · click a step to jump</div>
+  </div>
+  <div id="bar">
+    <h1>RMF 12 to GreenDrive · Control Wiring<small>Defender RMF12 panel (drawing set 20807800) to the GreenDrive VFD, Danfoss FC 202 B2 (no bypass panel), and the GF Signet magmeter, per the RMF12 / GreenDrive / Magmeter wiring and commissioning document. Wire colours are for the animation only.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Procedure timeline">
+      <span class="tick" id="tend">1:44</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/rmf12/rmf12-scene.js"></script>
+<script>
+(function(){
+  const RMF_URL = window.RMF12_MODEL_URL || '/assets/rmf12/rmf12-model.bin';
+  const SCN_URL = window.FC202_SCENE_URL || '/assets/rmf12/fc202-wiring-scene.bin';
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>t<=0?0:t>=1?1:(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2);
+  const ramp=(t,a,b)=>ease((t-a)/(b-a));
+  const win=(t,a,b)=>t>=a&&t<b;
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), labelsBtn=document.getElementById('labels');
+  const tnow=document.getElementById('tnow');
+
+  // ---- procedure (seconds) ----------------------------------------------------------------
+  const T_END=104;
+  const STEPS=[
+    {t:0,    h:'Two panels, one control cable', d:'The Defender RMF12 controller on the left, the GreenDrive VFD (Danfoss FC 202, no bypass panel) on the right and the GF Signet magmeter on the pipe. One multi-conductor cable runs from the RMF12 field terminals (TB1) into the drive.'},
+    {t:6,    h:'De-energize and open up', d:'Both units must be de-energized while you work in them. Open the RMF12 cover, then take the front cover and the relay cover off the drive.'},
+    {t:15,   h:'S202 to ON', d:'S202 sits behind the keypad. Carefully lift the LCP out and set S202 to On, so analog input 54 reads the magmeter’s 4 to 20 mA signal. Refit the LCP.'},
+    {t:24.5, h:'Run confirm', d:'B-24+ to Relay 1 terminal 01, T-17 to Relay 1 terminal 02. When the drive runs, relay 1 closes 01 to 02 and 24 V comes back on T-17, the P-01 running input (PLC114 I0.0).'},
+    {t:38,   h:'Pump start / stop', d:'T-39 to terminal 12 (24 VDC) and T-40 to terminal 18 (start). The RMF12 closes a dry contact across T-39 and T-40 (PLC302 Q0.7): 18 goes high and the drive runs. Contact opens, the drive stops.'},
+    {t:51,   h:'Jumper T-40 to T-58', d:'On TB1, jumper T-40 over to T-58 so the precoat jog contact is fed from the start circuit.'},
+    {t:56.5, h:'Jog speed for precoat', d:'T-57 to terminal 19 (jog). When the RMF12 closes T-58 to T-57 (PLC302 Q0.13), 19 goes high and the drive runs at jog speed for precoat.'},
+    {t:68.5, h:'Magmeter', d:'Terminal 13 (24 VDC) powers magmeter terminal 1, and magmeter terminal 3 brings the 4 to 20 mA flow signal back to analog input 54. Ground the flow meter per its instructions. Set 6-25 to the GPM at 20 mA for the meter and pipe size.'},
+    {t:86.5, h:'Close up and program', d:'Refit the drive covers and close the RMF12. Before entering any drive parameters, back up the drive with Copy ALL to LCP. In the RMF12, set parameter 45 to OP2 for precoat jog.'}
+  ];
+
+  // ---- wiring table rows (the source document's control wiring table) ----------------------
+  const WCOL={b24:'#d64541', t17:'#2f6ec0', t39:'#e0922f', t40:'#7a52c7', jmp:'#a98be0', t57:'#1f9d8a', m13:'#d9a21b', m54:'#8e9aa8'};
+  const ROWS=[
+    {id:'b24', grp:'Run confirm', a:'B-24+', b:'Relay 1 · 01'},
+    {id:'t17', a:'T-17', b:'Relay 1 · 02'},
+    {id:'t39', grp:'Start / stop', a:'T-39', b:'12 · 24 VDC'},
+    {id:'t40', a:'T-40', b:'18'},
+    {id:'jmp', grp:'Jumper', a:'T-40', b:'T-58'},
+    {id:'t57', grp:'Jog for precoat', a:'T-57', b:'19'},
+    {id:'m13', grp:'Magmeter', a:'13 · 24 VDC', b:'Meter 1'},
+    {id:'m54', a:'Meter 3', b:'54'}
+  ];
+  const rowsEl=document.getElementById('rows');
+  let html='';
+  for(const r of ROWS){
+    if(r.grp) html+=`<tr class="g-${r.id}"><td class="grp" colspan="3">${r.grp}</td></tr>`;
+    html+=`<tr id="row-${r.id}"><td><i class="sw" style="background:${WCOL[r.id]}"></i>${r.a}</td><td>${r.b}</td><td class="st">–</td></tr>`;
+  }
+  rowsEl.innerHTML=html;
+
+  // ---- three.js -------------------------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(30,1,5,20000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8d939b,0.8));
+  const sun=new THREE.DirectionalLight(0xffffff,0.6); sun.position.set(0.5,0.9,1.0); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.28); fill.position.set(-1,0.2,0.4); scene.add(fill);
+  const under=new THREE.DirectionalLight(0xffffff,0.18); under.position.set(0.2,-1,0.5); scene.add(under);
+
+  // camera keys: position, target, field of view
+  const K={
+    all:  {p:V(900,120,2350), t:V(330,-200,140), f:30},
+    open: {p:V(660,170,1850), t:V(250,-90,150),  f:30},
+    lcp:  {p:V(660,190,820),  t:V(495,128,240),  f:28},
+    s202: {p:V(575,132,480),  t:V(498,84,230),   f:20},
+    tb:   {p:V(90,-60,560),   t:V(-30,-165,55),  f:30},
+    tbc:  {p:V(40,-80,430),   t:V(0,-160,62),    f:26},
+    cable:{p:V(560,-120,1450),t:V(260,-260,170), f:30},
+    relay:{p:V(675,-250,560), t:V(600,-152,212), f:28},
+    ctrl: {p:V(560,-40,560),  t:V(488,40,236),   f:28},
+    both: {p:V(640,40,1900),  t:V(300,-150,150), f:30},
+    magw: {p:V(880,-150,1150),t:V(640,-320,200), f:30},
+    mag:  {p:V(900,-370,600), t:V(785,-470,205), f:28},
+    hmi:  {p:V(170,90,900),   t:V(1,5,228),      f:26}
+  };
+  const PATH=[[0,K.all],[5.5,K.all],[7,K.open],[14.5,K.open],
+    [16,K.lcp],[18.2,K.lcp],[19,K.s202],[21.4,K.s202],[22.4,K.lcp],[24,K.lcp],
+    [25.6,K.tb],[27.2,K.tb],[28.4,K.cable],[29.8,K.relay],[31,K.relay],[32.6,K.both],[37,K.both],
+    [39,K.tb],[40.8,K.tb],[41.9,K.cable],[43.3,K.ctrl],[44.4,K.ctrl],[45.8,K.both],[50.4,K.both],
+    [52,K.tbc],[55.6,K.tbc],
+    [57,K.tb],[58.4,K.tb],[59.5,K.cable],[60.9,K.ctrl],[62,K.ctrl],[63.4,K.both],[68,K.both],
+    [69.6,K.magw],[70.6,K.mag],[72.4,K.mag],[73.6,K.ctrl],[74.6,K.ctrl],[75.6,K.magw],[76.6,K.mag],[78.2,K.mag],[79.2,K.magw],[80.4,K.ctrl],[81.4,K.ctrl],[82.6,K.magw],[86,K.magw],
+    [87,K.open],[92.2,K.open],[93.6,K.hmi],[97.6,K.hmi],[99,K.lcp],[101.4,K.lcp],[103.6,K.all],[104,K.all]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k; return out;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:30};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    d.multiplyScalar(zoomOff);
+    const asp=camera.aspect, f=asp<1? Math.min(70, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.85)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
+  function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; updateCamera(); needRender=true; }
+  addEventListener('resize', resize);
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#steps')) return; drag={x:e.clientX,y:e.clientY,yo:yawOff,po:pitchOff}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{ if(!drag) return; yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); updateCamera(); needRender=true; });
+  view.addEventListener('pointerup', ()=>{drag=null}); view.addEventListener('pointercancel', ()=>{drag=null});
+  view.addEventListener('wheel', e=>{ if(e.target.closest('#steps')) return; e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.25,3); updateCamera(); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=0; pitchOff=0; zoomOff=1; updateCamera(); needRender=true; });
+
+  // ---- scene state --------------------------------------------------------------------------
+  let ready=false, needRender=true, T=0;
+  let R=null, S=null;                      // RMF12 model, drive scene
+  const O={};                              // all parts by name
+  const wires={}, bridges={}, leds={}, ferrules=[];
+  let pulses=null;
+
+  Promise.all([RMF12Scene.loadBin(RMF_URL), RMF12Scene.loadBin(SCN_URL)]).then(([rmf,scn])=>{
+    R=rmf; S=scn;
+    // RMF12: door on its hinge, door-mounted parts ride with it
+    const hx=R.meta.hinge[0], hz=R.meta.hinge[1];
+    const door=R.parts.door; door.rig.position.set(hx,0,hz); door.holder.position.set(-hx,0,-hz);
+    for(const [n,p] of Object.entries(R.parts)){
+      O[n]=p;
+      if(n==='hmi'||n==='door_gasket') door.holder.add(p.rig); else scene.add(p.rig);
+    }
+    for(const n of ['pt1','pt2','pt1_cable','pt2_cable']) if(R.parts[n]) R.parts[n].rig.visible=false;
+    RMF12Scene.addDecals(R.meta, R.parts);
+    for(const [n,p] of Object.entries(S.parts)){ O[n]=p; scene.add(p.rig); }
+    for(const n of ['field_cable','mag_cable']){ const m=O[n].mesh.material; m.transparent=true; m.opacity=0.5; m.depthWrite=false; }
+    for(const n of ['vfd_cover','vfd_fuse_cover','mag_cap','cat6_hmi']) if(O[n]){ O[n].mesh.material.transparent=true; }
+    magDecals();
+    driveInterior();
+    buildWires();
+    document.getElementById('loading').remove();
+    ready=true; resize(); setTime(T);
+  }).catch(err=>{ const l=document.getElementById('loading'); if(l) l.textContent='Could not load the model: '+err.message; console.error(err); });
+
+  function magDecals(){
+    const m=S.meta.mag, D=RMF12Scene.decal, tx=RMF12Scene.txt;
+    O.mag_terms.holder.add(D(32,7,20,(c,W,H,k)=>{ for(let i=0;i<4;i++) tx(c,String(i+1),(4+i*8)*k,H/2,4.2*k,'#1c1e21','center',700); },{at:[m.x,m.term_y-4.5,m.z+7.05]}));
+    // VLT AQUA Drive cover print, as on the installed drive
+    const vo=S.meta.vfd_off, sx=vo[0]-61.3, sz=vo[2]+107.75;
+    O.vfd_cover.holder.add(D(64,24,10,(c,W,H,k)=>{ tx(c,'VLT\u00ae',W/2,8*k,7.2*k,'#f2f3f4','center',600,'Arial'); tx(c,'AQUA Drive',W/2,17*k,5.4*k,'#f2f3f4','center',600,'Arial'); },{at:[sx,vo[1]+92,sz]}));
+    O.vfd_cover.holder.add(D(30,10,14,(c,W,H,k)=>{ for(const x0 of [8,20]){ c.beginPath(); c.moveTo(x0*k,1.4*k); c.lineTo((x0+4.2)*k,8.6*k); c.lineTo((x0-4.2)*k,8.6*k); c.closePath(); c.fillStyle='#f4c524'; c.fill(); c.lineWidth=0.5*k; c.strokeStyle='#111'; c.stroke(); tx(c,'!',x0*k,6.2*k,4.4*k,'#111','center',700,'Arial'); } },{at:[sx,vo[1]-300,sz]}));
+    O.mag_body.holder.add(D(44,14,10,(c,W,H,k)=>{ c.fillStyle='#e9ecef'; c.fillRect(0,0,W,H); tx(c,'GF SIGNET 2551',3*k,4.5*k,3.8*k,'#1c1e21','left',700,'Arial'); tx(c,'MAGMETER',3*k,10*k,3.6*k,'#2f6db5','left',600,'Arial'); },{at:[m.x,m.top+62,m.z+31.15]}));
+  }
+
+  // ---- drive interior: galvanized finish and printed parts (cover off, as on the installed unit) ----
+  function galvTexture(){
+    const N=256, cv=document.createElement('canvas'); cv.width=cv.height=N; const c=cv.getContext('2d'), img=c.createImageData(N,N);
+    const K=150, sx=new Float32Array(K), sy=new Float32Array(K), sb=new Float32Array(K), gx=new Float32Array(K), gy=new Float32Array(K);
+    let sd=11; const rnd=()=>{ sd=(sd*16807)%2147483647; return sd/2147483647; };
+    for(let i=0;i<K;i++){ sx[i]=rnd()*N; sy[i]=rnd()*N; sb[i]=0.93+rnd()*0.07; const a=rnd()*6.283; gx[i]=Math.cos(a); gy[i]=Math.sin(a); }
+    const wrap=d=>d>N/2?d-N:(d<-N/2?d+N:d);
+    for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+      let b1=1e9,b2=1e9,bi=0;
+      for(let i=0;i<K;i++){ const dx=wrap(x-sx[i]), dy=wrap(y-sy[i]), d=dx*dx+dy*dy; if(d<b1){ b2=b1; b1=d; bi=i; } else if(d<b2) b2=d; }
+      const dx=wrap(x-sx[bi]), dy=wrap(y-sy[bi]);
+      let v=sb[bi]+0.0018*(dx*gx[bi]+dy*gy[bi])+(rnd()-0.5)*0.015;
+      if(Math.sqrt(b2)-Math.sqrt(b1)<0.9) v*=0.975;
+      const g=Math.round(255*Math.max(0.86,Math.min(1,v))), k=(y*N+x)*4;
+      img.data[k]=g; img.data[k+1]=g; img.data[k+2]=Math.min(255,g+3); img.data[k+3]=255;
+    }
+    c.putImageData(img,0,0);
+    const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; if(THREE.sRGBEncoding) t.encoding=THREE.sRGBEncoding;
+    return t;
+  }
+  function planarUV(geo, mm){
+    const p=geo.attributes.position, n=geo.attributes.normal, uv=new Float32Array(p.count*2);
+    for(let i=0;i<p.count;i++){
+      const ax=Math.abs(n.getX(i)), ay=Math.abs(n.getY(i)), az=Math.abs(n.getZ(i));
+      let u,v; if(az>=ax&&az>=ay){ u=p.getX(i); v=p.getY(i); } else if(ax>=ay){ u=p.getZ(i); v=p.getY(i); } else { u=p.getX(i); v=p.getZ(i); }
+      uv[2*i]=u/mm; uv[2*i+1]=v/mm;
+    }
+    geo.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  }
+  function driveInterior(){
+    const tex=galvTexture();
+    for(const n of ['vfd_chassis','vfd_fuse_cover']) if(O[n]){ const m=O[n].mesh; planarUV(m.geometry,26); m.material.map=tex; m.material.shininess=42; m.material.specular=new THREE.Color(0x3a3a3a); m.material.needsUpdate=true; }
+    const D=RMF12Scene.decal, tx=RMF12Scene.txt, vo=S.meta.vfd_off;
+    const at=(x,y,z)=>[vo[0]+x, vo[1]+y, vo[2]+z];
+    // LCP 102 keypad print (x -95..-29, y 126..257 in drive mm)
+    if(O.vfd_lcp) O.vfd_lcp.holder.add(D(66,131,10,(c,W,H,k)=>{
+      const X=x=>(x+95)*k, Y=y=>(257-y)*k;
+      const lab=(s,x,y,px,col,w,rot)=>{ c.save(); c.translate(X(x),Y(y)); if(rot) c.rotate(rot); tx(c,s,0,0,px*k,col||'#1d1f22','center',w||600,'Arial'); c.restore(); };
+      c.save(); c.translate(X(-62),Y(247.6)); c.transform(1,0,-0.2,1,0,0); tx(c,'Danfoss',0,0,5.4*k,'#ffffff','center',700,'Arial'); c.restore();
+      [['Status'],['Quick','Menu'],['Main','Menu'],['Alarm','Log']].forEach((L,i)=>{ const x=[-83.5,-69.5,-54.5,-39.5][i]; if(L.length===1) lab(L[0],x,197,2.2); else { lab(L[0],x,198.3,2.0); lab(L[1],x,195.7,2.0); } });
+      const cx=-62, cy=161.5, rad=a=>a*Math.PI/180;
+      const arcLab=(s,a,r)=>lab(s, cx+r*Math.cos(rad(a)), cy+r*Math.sin(rad(a)), 2.3, '#1d1f22', 600, -rad(a-90));
+      arcLab('Back',141,22.9); arcLab('Cancel',39,22.9); arcLab('Info',-1.5,22.9);
+      lab('OK',cx,cy,2.7,'#1d1f22',700);
+      const tri=(x,y,a)=>{ c.save(); c.translate(X(x),Y(y)); c.rotate(-a); c.beginPath(); c.moveTo(1.7*k,0); c.lineTo(-1.1*k,-1.6*k); c.lineTo(-1.1*k,1.6*k); c.closePath(); c.fillStyle='#1d1f22'; c.fill(); c.restore(); };
+      tri(cx,cy+12.3,Math.PI/2); tri(cx,cy-12.3,-Math.PI/2); tri(cx-12.3,cy,Math.PI); tri(cx+12.3,cy,0);
+      [['On',165.5],['Warn.',158],['Alarm',150.5]].forEach(([s,y])=>tx(c,s,X(-93.6),Y(y),2.0*k,'#c4c8cc','left',600,'Arial'));
+      c.strokeStyle='rgba(150,155,160,.8)'; c.lineWidth=0.35*k; c.beginPath(); c.arc(X(cx),Y(cy),28.6*k,rad(150),rad(214)); c.stroke();
+      [['Hand','On'],['Off'],['Auto','On'],['Reset']].forEach((L,i)=>{ const x=[-83.5,-69.5,-54.5,-40.5][i]; if(L.length===1) lab(L[0],x,135,2.2); else { lab(L[0],x,136.3,2.0); lab(L[1],x,133.7,2.0); } });
+      const g=c.createLinearGradient(X(-85),Y(239.5),X(-55),Y(205)); g.addColorStop(0,'rgba(255,255,255,.22)'); g.addColorStop(0.5,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(X(-85),Y(239.5),46*k,34.5*k);
+    },{at:at(-62,191.5,107.86)}));
+    // rotary disconnect: terminal marks, switch positions, rating sticker
+    if(O.vfd_disconnect){
+      O.vfd_disconnect.holder.add(D(52,6,12,(c,W,H,k)=>{ ['T1','T2','T3'].forEach((s,i)=>tx(c,s,(9+17*i)*k,H/2,4.0*k,'#f2f4f6','center',700,'Arial')); },{at:at(-60,-145.4,64.06)}));
+      O.vfd_disconnect.holder.add(D(48,57,10,(c,W,H,k)=>{
+        const X=x=>(x+84)*k, Y=y=>(-150-y)*k;
+        c.fillStyle='#d9dcdf'; c.fillRect(X(-80),Y(-153),32*k,9*k);
+        ['3-POLE ROTARY DISCONNECT','IEC/EN 60947-3','AC-23A  600 V'].forEach((s,i)=>tx(c,s,X(-78.5),Y(-155-i*2.6),1.5*k,'#2a2d31','left',600,'Arial'));
+        tx(c,'I',X(-52),Y(-168),3.6*k,'#f2f4f6','center',700,'Arial'); tx(c,'ON',X(-46.5),Y(-168),3.0*k,'#f2f4f6','center',700,'Arial');
+        c.strokeStyle='#f2f4f6'; c.lineWidth=0.5*k; c.beginPath(); c.arc(X(-77),Y(-171.5),1.6*k,0,7); c.stroke();
+        tx(c,'OFF',X(-77),Y(-177.5),2.8*k,'#f2f4f6','center',700,'Arial');
+      },{at:at(-60,-178.5,72.06)}));
+    }
+    // drive power terminals 91 92 93 (mains) and 96 97 98 (motor)
+    if(O.vfd_power) O.vfd_power.holder.add(D(100,12,10,(c,W,H,k)=>{
+      const X=x=>x*k, Y=y=>(-180-y)*k;
+      [[9,'91','L1'],[22,'92','L2'],[35,'93','L3'],[62,'96','U'],[75,'97','V'],[88,'98','W']].forEach(([x,a,b])=>{ tx(c,a,X(x),Y(-184.5),2.8*k,'#e8eaec','center',700,'Arial'); tx(c,b,X(x),Y(-189.5),2.4*k,'#b9bdc2','center',600,'Arial'); });
+    },{at:at(50,-186,45.26)}));
+    // DC link marks moulded in the black top shroud
+    if(O.vfd_housing) O.vfd_housing.holder.add(D(90,14,8,(c,W,H,k)=>{ tx(c,'DC−',22*k,H/2,6*k,'#4b4f54','center',700,'Arial'); tx(c,'DC+',68*k,H/2,6*k,'#4b4f54','center',700,'Arial'); },{at:at(40,249,46.06)}));
+  }
+
+  // ---- wires --------------------------------------------------------------------------------
+  // RMF12 TB1: field wires land on the bottom-end entries (T level on the riser, B level on the end face)
+  const S0=284.7;
+  function tbIndex(top){ return R.meta.tb1.findIndex(t=>t.top===top); }
+  function tbEntry(top, level){
+    const P=R.meta.panel, k=tbIndex(top), t=R.meta.tb1[k];
+    const py = level==='B' ? S0+78 : S0+62, zz = level==='B' ? R.meta.zR+13.5 : R.meta.zR+39.5;
+    return {p:V(t.x, P.y0-py, zz), part:'tb1_'+String(k+1).padStart(2,'0'), x:t.x};
+  }
+  function land(name){ const a=S.meta.land[name]; return V(a[0],a[1],a[2]); }
+  function mland(n){ const a=S.meta.mag_land[n]; return V(a[0],a[1]+1.4,a[2]+6.5); }
+  const CABLE=()=>S.meta.cable.map(a=>V(a[0],a[1],a[2]));
+  const MCABLE=()=>S.meta.mag_cable.map(a=>V(a[0],a[1],a[2]));
+  function rmfLeg(e, lane, off){
+    const g=S.meta.field_grip, zl=34+lane*4.4;
+    return [e.p.clone(), V(e.x, e.p.y-10, e.p.z+1), V(e.x, -191, (e.p.z+zl)/2), V(e.x+(g[0]-e.x)*0.3, -197, zl),
+            V(g[0]-24, -198.5, zl), V(g[0]+off[0], -205, g[2]+off[1]), V(g[0]+off[0], -216, g[2]+off[1])];
+  }
+  function cableLeg(pts, off){ return pts.map(p=>V(p.x+off[0], p.y, p.z+off[1])); }
+  function vfdLeg(target, side, off){       // from the M25 gland up to a drive terminal
+    const g=S.meta.m25, L=target, top=g[1]+42;
+    const a=[V(g[0]+off[0], top, g[2]+off[1]), V(g[0]+off[0]*1.5, top+60, g[2]+6)];
+    const vo=S.meta.vfd_off, DL=(x,y,z)=>V(vo[0]+x, vo[1]+y, vo[2]+z);
+    if(side==='relay') a.push(V(L.x-12, L.y-70, L.z+16), V(L.x, L.y-34, L.z+12), V(L.x, L.y-10, L.z+5), L.clone());
+    else { a.length=1; a.push(DL(-30+off[0]*0.8, -262, 80+off[1]), DL(-27.5+off[0]*0.6, -200, 87+off[1]*0.5), DL(-27.5+off[0]*0.6, -140, 89), DL(-31+off[0]*0.5, -96, 92),
+                              V(L.x+4, L.y-60, L.z+14), V(L.x, L.y-28, L.z+12), V(L.x, L.y-9, L.z+6), L.clone()); }
+    return a;
+  }
+  function makeWire(id, legs, marks){
+    const pts=[]; const bounds=[];
+    for(const leg of legs){ for(const p of leg){ if(!pts.length || pts[pts.length-1].distanceTo(p)>0.6) pts.push(p); } bounds.push(pts.length-1); }
+    const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');
+    const segs=Math.min(900, Math.max(80, Math.round(curve.getLength()/2.2)));
+    const geo=new THREE.TubeGeometry(curve, segs, 1.25, 7, false);
+    const mat=new THREE.MeshPhongMaterial({color:WCOL[id], shininess:40, specular:0x333333});
+    const mesh=new THREE.Mesh(geo,mat); mesh.renderOrder=3; scene.add(mesh);
+    // arc length fraction at the leg boundaries, for pacing the draw-in
+    const lens=curve.getLengths(segs*4), total=lens[lens.length-1];
+    const fr=bounds.map(bi=>{ const p=pts[bi]; let best=0, bd=1e9; for(let i=0;i<=segs*4;i++){ const q=curve.getPointAt(i/(segs*4)); const d=q.distanceToSquared(p); if(d<bd){bd=d; best=i/(segs*4);} } return best; });
+    const w={id, curve, mesh, geo, segs, fr, total, ends:[]};
+    for(const [p,dir] of [[pts[0], pts[0].clone().sub(pts[1])],[pts[pts.length-1], pts[pts.length-1].clone().sub(pts[pts.length-2])]]){
+      dir.normalize(); const f=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.7,7,12), new THREE.MeshPhongMaterial({color:0xd5d8dc, shininess:50}));
+      f.position.copy(p).addScaledVector(dir,-2.2); f.quaternion.setFromUnitVectors(V(0,1,0), dir); f.visible=false; scene.add(f); w.ends.push(f);
+    }
+    wires[id]=w; return w;
+  }
+  function setWire(w, u){                   // u: 0..1 of the draw; legs paced RMF / cable / drive
+    let s;
+    const f1=w.fr[0], f2=w.fr[1];
+    if(w.fr.length===3){ s = u<0.36? f1*u/0.36 : u<0.64? f1+(f2-f1)*(u-0.36)/0.28 : f2+(1-f2)*(u-0.64)/0.36; }
+    else s=u;
+    const n=Math.floor(clamp(s,0,1)*w.segs)*7*6;
+    w.mesh.visible=n>0; w.geo.setDrawRange(0,n);
+    w.ends[0].visible=u>0.02; w.ends[1].visible=u>=0.999;
+  }
+  function buildWires(){
+    const cab=CABLE();
+    const e=(top,lvl)=>tbEntry(top,lvl);
+    makeWire('b24', [rmfLeg(e('T-17','B'),0,[-1.8,-1.2]), cableLeg(cab,[-1.8,-1.2]), vfdLeg(land('R1_01'),'relay',[-2.5,-1])]);
+    makeWire('t17', [rmfLeg(e('T-17','T'),1,[1.8,-1.2]),  cableLeg(cab,[1.8,-1.2]),  vfdLeg(land('R1_02'),'relay',[2.5,-1])]);
+    makeWire('t39', [rmfLeg(e('T-39','T'),2,[-1.8,1.4]),  cableLeg(cab,[-1.8,1.4]),  vfdLeg(land('12'),'ctrl',[-3,1.5])]);
+    makeWire('t40', [rmfLeg(e('T-40','T'),3,[1.8,1.4]),   cableLeg(cab,[1.8,1.4]),   vfdLeg(land('18'),'ctrl',[3,1.5])]);
+    makeWire('t57', [rmfLeg(e('T-57','T'),4,[0,0]),       cableLeg(cab,[0,0]),       vfdLeg(land('19'),'ctrl',[0,2.6])]);
+    // jumper on TB1, sharing the T-40 entry with the field wire (twin ferrule)
+    const a=e('T-40','T').p, b=e('T-58','T').p;
+    makeWire('jmp', [[V(a.x+0.8,a.y,a.z+1.6), V(a.x+1,a.y-12,a.z+7), V((a.x+b.x)/2,a.y-24,a.z+12), V(b.x,b.y-12,b.z+7), V(b.x,b.y,b.z+1.6)]]);
+    // magmeter: 13 -> meter 1 (power), meter 3 -> 54 (4-20 mA)
+    const mc=MCABLE(), m=S.meta.mag, g40=S.meta.m40r;
+    const meterLeg=(n,off)=>{ const L=mland(n); return [V(m.gland[0]+12, m.gland[1], m.z+off), V(m.x-12+off, m.top+86, m.z+14), V(m.x-14+off, m.top+99, m.z+16), V(L.x, L.y+10, L.z+6), V(L.x, L.y+2, L.z+1.5), L]; };
+    const vo=S.meta.vfd_off, DL=(x,y,z)=>V(vo[0]+x, vo[1]+y, vo[2]+z);
+    const drvLeg=(name,off)=>{ const L=land(name); return [V(g40[0]+off, g40[1]+42, g40[2]), DL(68+off, -296, 74), DL(30, -282+off, 84), DL(-8, -262, 90+off*0.5),
+      DL(-26.5+off*0.7, -228, 94), DL(-26.5+off*0.7, -150, 96), DL(-29+off*0.6, -96, 97.5), V(L.x+6, L.y-50, L.z+14), V(L.x, L.y-26, L.z+12), V(L.x, L.y-9, L.z+6), L]; };
+    makeWire('m13', [drvLeg('13',-2).reverse(), cableLeg(mc,[-1.4,0]).reverse(), meterLeg('1',-2)]);
+    makeWire('m54', [meterLeg('3',2).reverse(), cableLeg(mc,[1.4,0]), drvLeg('54',2)]);
+    // contacts that close in the "how it works" moments
+    const glowMat=c=>new THREE.MeshBasicMaterial({color:c, transparent:true, opacity:0});
+    const arc=(p,q,lift,dz)=>new THREE.CatmullRomCurve3([p, V((p.x+q.x)/2, Math.max(p.y,q.y)+lift, (p.z+q.z)/2+dz), q]);
+    const mkBridge=(id,p,q,lift,dz,col)=>{ const c=arc(p,q,lift,dz); const m=new THREE.Mesh(new THREE.TubeGeometry(c,24,1.1,8,false), glowMat(col)); scene.add(m); bridges[id]={curve:c, mesh:m}; };
+    mkBridge('r1', land('R1_01').add(V(0,-1,3)), land('R1_02').add(V(0,-1,3)), 9, 6, 0xffc93c);
+    mkBridge('q07', e('T-39','T').p.add(V(0,-4,4)), e('T-40','T').p.add(V(0,-4,4)), 6, 8, 0xffc93c);
+    mkBridge('q13', e('T-58','T').p.add(V(0,-4,4)), e('T-57','T').p.add(V(0,-4,4)), 6, 8, 0xffc93c);
+    mkBridge('mtr', mland('1').add(V(0,3,0)), mland('3').add(V(0,3,0)), 10, 4, 0xffc93c);
+    // status LEDs on the PLC (I0.0, Q0.7 = DQa.1, Q0.13 = DQa.7), from the model's LED layout
+    const P=R.meta.panel, X=px=>P.x0+px, Y=py=>P.y0-py, zL=R.meta.zR3+75.8;
+    const mkLed=(id,x,y)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(2.8,2.2,0.8), new THREE.MeshBasicMaterial({color:0x37f07a})); m.position.set(x,y,zL); m.visible=false; scene.add(m); leds[id]=m; };
+    mkLed('i00', X(33.3)+49.1, Y(146.8)); mkLed('q07', X(123.4)+14.5, Y(146.8)); mkLed('q13', X(123.4)+21.3, Y(193.5));
+    // signal pulses
+    const pg=new THREE.SphereGeometry(3.6,14,10), pm=new THREE.MeshBasicMaterial({color:0xffd34d});
+    const gc=document.createElement('canvas'); gc.width=gc.height=64; const gx=gc.getContext('2d'); const gr=gx.createRadialGradient(32,32,0,32,32,32);
+    gr.addColorStop(0,'rgba(255,220,90,0.95)'); gr.addColorStop(0.35,'rgba(255,200,60,0.45)'); gr.addColorStop(1,'rgba(255,190,40,0)'); gx.fillStyle=gr; gx.fillRect(0,0,64,64);
+    const sm=new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc), depthWrite:false, depthTest:false, transparent:true, blending:THREE.AdditiveBlending});
+    pulses=[]; for(let i=0;i<18;i++){ const s=new THREE.Mesh(pg,pm); const g=new THREE.Sprite(sm); g.scale.set(26,26,1); s.add(g); s.visible=false; s.renderOrder=4; scene.add(s); pulses.push(s); }
+  }
+  // pulse paths: sequences of [curve, reversed?]
+  function chain(list){
+    const pts=[];
+    for(const [c,rev] of list){ const n=Math.max(20, Math.round(c.getLength()/3)); const arr=c.getSpacedPoints(n); if(rev) arr.reverse(); pts.push(...arr); }
+    const cum=[0]; for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+pts[i].distanceTo(pts[i-1]));
+    return {pts, cum, len:cum[cum.length-1]};
+  }
+  let chains=null;
+  function getChains(){
+    if(chains) return chains;
+    const w=wires, b=bridges;
+    chains={
+      run:  chain([[w.b24.curve,false],[b.r1.curve,false],[w.t17.curve,true]]),
+      start:chain([[w.t39.curve,true],[b.q07.curve,false],[w.t40.curve,false]]),
+      jog:  chain([[w.t39.curve,true],[b.q07.curve,false],[w.jmp.curve,false],[b.q13.curve,false],[w.t57.curve,false]]),
+      mag:  chain([[w.m13.curve,false],[b.mtr.curve,false],[w.m54.curve,false]])
+    };
+    return chains;
+  }
+  function placePulses(ch, t, a, b){
+    const on=ch && t>=a && t<b; const k=on? Math.min(1,(t-a)/0.6, (b-t)/0.6) : 0;
+    for(let i=0;i<pulses.length;i++){
+      const s=pulses[i]; if(!on){ s.visible=false; continue; }
+      const L=ch.len, d=((t-a)*320 + i*L/pulses.length)%L;
+      let lo=0, hi=ch.cum.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(ch.cum[m]<d) lo=m; else hi=m; }
+      const f=(d-ch.cum[lo])/Math.max(1e-6,ch.cum[hi]-ch.cum[lo]);
+      s.position.lerpVectors(ch.pts[lo],ch.pts[hi],f); s.visible=true; s.scale.setScalar(0.4+0.6*k);
+    }
+  }
+
+  // ---- timeline tracks -----------------------------------------------------------------------
+  // draw windows per wire [start, end] in seconds
+  const DRAW={b24:[26,30], t17:[26.3,30.3], t39:[39.6,43.6], t40:[39.9,43.9], jmp:[52.6,55], t57:[57.2,61.2], m13:[72.6,76.8], m54:[77,81.2]};
+  const DEMO={run:[31.2,37.4], start:[45,50.6], jog:[63,68.2], mag:[82.4,86.2]};
+  const HL={  // terminal parts lit while their wire is drawn
+    b24:['tb1_08','vfd_r1_01'], t17:['tb1_08','vfd_r1_02'], t39:['tb1_24','vfd_t12'], t40:['tb1_23','vfd_t18'],
+    jmp:['tb1_23','tb1_33'], t57:['tb1_34','vfd_t19'], m13:['vfd_t13','mag_terms'], m54:['mag_terms','vfd_t54']};
+  function setPart(n, pos, opacity){
+    const p=O[n]; if(!p) return;
+    if(pos) p.rig.position.set(pos[0],pos[1],pos[2]);
+    if(opacity!==undefined){ const m=p.mesh.material; m.opacity=opacity; m.transparent=opacity<1; m.depthWrite=opacity>0.98; p.rig.visible=opacity>0.01; if(p.lines) p.lines.visible=opacity>0.6; }
+  }
+  const tint=new Set();
+  function applyTracks(t){
+    // RMF12 cover
+    const dOpen=ramp(t,7,9)*(1-ramp(t,90,92.2));
+    O.door.rig.rotation.y=-1.98*dOpen;
+    setPart('cat6_hmi',null, 1-ramp(t,6.8,7.4)+ramp(t,91.6,92.2));
+    // drive covers
+    const cov=ramp(t,9.4,11.6)*(1-ramp(t,88.2,90.2));
+    setPart('vfd_cover',[0,-cov*40,cov*330], 1-ramp(t,10.6,11.8)+ramp(t,88,89));
+    const fc=ramp(t,12,13.6)*(1-ramp(t,87,88.4));
+    setPart('vfd_fuse_cover',[0,0,fc*90], 1-ramp(t,12.8,13.8)+ramp(t,87,87.6));
+    const lcp=ramp(t,16.4,18)*(1-ramp(t,22.4,24));
+    setPart('vfd_lcp',[lcp*40,lcp*190,lcp*60]);
+    setPart('vfd_s202_slider',[0,S.meta.s202_slider_dy*ramp(t,19.6,20.4),0]);
+    const cap=ramp(t,70.8,72.2)*(1-ramp(t,87.2,88.6));
+    setPart('mag_cap',[0,cap*70,0], 1-ramp(t,71.6,72.4)+ramp(t,87.2,87.8));
+    // wires
+    for(const [id,[a,b]] of Object.entries(DRAW)) setWire(wires[id], clamp((t-a)/(b-a),0,1));
+    // contacts, LEDs and pulses
+    const ch=getChains();
+    const bOn={r1:win(t,...DEMO.run)&&t>DEMO.run[0]+0.5, q07:(win(t,...DEMO.start)&&t>DEMO.start[0]+0.5)||win(t,...DEMO.jog), q13:win(t,...DEMO.jog)&&t>DEMO.jog[0]+0.5, mtr:win(t,...DEMO.mag)};
+    for(const [id,on] of Object.entries(bOn)) bridges[id].mesh.material.opacity=on?0.95:0;
+    leds.i00.visible=win(t,DEMO.run[0]+1.2,DEMO.run[1]);
+    leds.q07.visible=win(t,...DEMO.start)||win(t,...DEMO.jog);
+    leds.q13.visible=win(t,...DEMO.jog);
+    const active=Object.entries(DEMO).find(([k,[a,b]])=>t>=a&&t<b);
+    placePulses(active? ch[active[0]] : null, t, active?active[1][0]:0, active?active[1][1]:0);
+    // terminal highlight while drawing
+    const want=new Set();
+    for(const [id,[a,b]] of Object.entries(DRAW)) if(t>=a-0.4 && t<b+1.2) for(const n of HL[id]) want.add(n);
+    if(win(t,18.8,21.6)) want.add('vfd_s202_slider');
+    const pulse=0.25+0.2*Math.sin(t*6);
+    for(const n of new Set([...tint,...want])){
+      const p=O[n]; if(!p) continue; const m=p.mesh.material;
+      if(want.has(n)){ m.emissive=m.emissive||new THREE.Color(); m.emissive.setRGB(0.82*pulse,0.12*pulse,0.16*pulse); tint.add(n); }
+      else { m.emissive.setRGB(0,0,0); tint.delete(n); }
+    }
+    RMF12Scene.setHMI(t>=94.2 && t<103 ? 'p45' : 'home');
+  }
+
+  // ---- readout ---------------------------------------------------------------------------------
+  const rowEls={}; for(const r of ROWS) rowEls[r.id]=document.getElementById('row-'+r.id);
+  const R_={s202:document.getElementById('r-s202'), p45:document.getElementById('r-p45'), drive:document.getElementById('r-drive')};
+  const calib=document.getElementById('calib');
+  function set(el,txt,cls){ if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; }
+  function updateReadout(t){
+    for(const r of ROWS){
+      const [a,b]=DRAW[r.id], el=rowEls[r.id], st=el.lastElementChild;
+      const live=t>=a-0.4 && t<b+0.8, done=t>=b;
+      el.classList.toggle('live', live && !done); el.classList.toggle('done', done); el.classList.toggle('cur', live);
+      const s= done?'✓' : live?'…' : '–'; if(st.textContent!==s) st.textContent=s;
+    }
+    set(R_.s202, t>=20.2?'On':'Off', t>=20.2?'go':'');
+    set(R_.p45, t>=95?'OP2':'Not set', t>=95?'go':'');
+    const drv= t<6.5? ['Running','go'] : win(t,...DEMO.run)||win(t,...DEMO.start)? ['Running','go'] : win(t,...DEMO.jog)? ['Jog speed','go'] : t>=92.2? ['Ready','go'] : ['Off · isolated','stop'];
+    set(R_.drive, drv[0], drv[1]);
+    calib.classList.toggle('on', t>=68.5 && t<86.5);
+  }
+
+  // ---- labels on the hardware ------------------------------------------------------------------
+  const LBL=[
+    {txt:'S202 · A54 → On', at:()=>V(500,94,228.5), dx:70, dy:-36, w:[18.6,22.2]},
+    {txt:'S201 · A53',      at:()=>V(493,94,228.5), dx:-70, dy:-30, w:[18.6,22.2]},
+    {txt:'B-24+',  at:()=>tbEntry('T-17','B').p, dx:-62, dy:30,  w:[25.4,28]},
+    {txt:'T-17',   at:()=>tbEntry('T-17','T').p, dx:-62, dy:-26, w:[25.4,28]},
+    {txt:'Relay 1 · 01', at:()=>land('R1_01'), dx:-90, dy:40, w:[29.4,32.4]},
+    {txt:'Relay 1 · 02', at:()=>land('R1_02'), dx:90,  dy:70, w:[29.4,32.4]},
+    {txt:'Relay 1 closes 01 – 02', at:()=>land('R1_02').add(V(0,8,4)), dx:80, dy:-40, w:[31.6,37.2]},
+    {txt:'PLC114 I0.0 · P-01 running', at:()=>leds.i00.position, dx:70, dy:-60, w:[32.4,37.2]},
+    {txt:'T-39',   at:()=>tbEntry('T-39','T').p, dx:60,  dy:30,  w:[39.2,41.6]},
+    {txt:'T-40',   at:()=>tbEntry('T-40','T').p, dx:-60, dy:30,  w:[39.2,41.6]},
+    {txt:'12 · 24 VDC', at:()=>land('12'), dx:-80, dy:46, w:[43,45.6]},
+    {txt:'18 · Start',  at:()=>land('18'), dx:60,  dy:52, w:[43,45.6]},
+    {txt:'PLC302 Q0.7 contact', at:()=>tbEntry('T-39','T').p, dx:70, dy:-40, w:[45.6,50.4]},
+    {txt:'T-40', at:()=>tbEntry('T-40','T').p, dx:-60, dy:36, w:[52,56]},
+    {txt:'T-58', at:()=>tbEntry('T-58','T').p, dx:60,  dy:36, w:[52,56]},
+    {txt:'T-57', at:()=>tbEntry('T-57','T').p, dx:60,  dy:30, w:[57,59.6]},
+    {txt:'19 · Jog', at:()=>land('19'), dx:60, dy:52, w:[60.6,63]},
+    {txt:'PLC302 Q0.13 contact', at:()=>tbEntry('T-57','T').p, dx:70, dy:-40, w:[63.6,68]},
+    {txt:'13 · 24 VDC', at:()=>land('13'), dx:-80, dy:44, w:[73,75]},
+    {txt:'Meter 1', at:()=>mland('1'), dx:-60, dy:-30, w:[76.2,78.4]},
+    {txt:'Meter 3', at:()=>mland('3'), dx:60, dy:-30, w:[76.6,79]},
+    {txt:'54 · Analog in', at:()=>land('54'), dx:70, dy:40, w:[80.2,82.4]},
+    {txt:'Parameter 45 = OP2', at:()=>V(40,10,228+6.5), dx:110, dy:-60, w:[94.4,97.8]},
+    {txt:'LCP · Copy ALL to LCP', at:()=>V(493,175,262), dx:110, dy:-40, w:[99.2,101.6]}
+  ];
+  let labelsOn=true;
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  const NS='http://www.w3.org/2000/svg';
+  for(const L of LBL){
+    const g=document.createElementNS(NS,'g'), ln=document.createElementNS(NS,'polyline'), dot=document.createElementNS(NS,'circle'), halo=document.createElementNS(NS,'text'), tx=document.createElementNS(NS,'text');
+    dot.setAttribute('r','2.4'); halo.setAttribute('class','halo'); halo.textContent=tx.textContent=L.txt;
+    g.append(ln,dot,halo,tx); g.style.opacity=0; overlay.appendChild(g); L.el={g,ln,dot,halo,tx};
+  }
+  const pv=V(0,0,0);
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight; overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const small=w<760, sc=small?0.7:1;
+    for(const L of LBL){
+      const on=labelsOn && ready && T>=L.w[0] && T<L.w[1];
+      L.el.g.style.opacity=on?1:0; if(!on) continue;
+      pv.copy(L.at()).project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      if(x<0||x>w||y<0||y>h||pv.z>1){ L.el.g.style.opacity=0; continue; }
+      const lx=clamp(x+L.dx*sc, 8, w-8), ly=clamp(y+L.dy*sc, 14, h-8), right=L.dx>=0;
+      const e=L.el, ex=lx+(right?-4:4);
+      e.ln.setAttribute('points',`${Math.round(x)},${Math.round(y)} ${Math.round(ex)},${Math.round(ly)} ${Math.round(ex+(right?2:-2))},${Math.round(ly)}`);
+      e.dot.setAttribute('cx',x); e.dot.setAttribute('cy',y);
+      for(const t of [e.halo,e.tx]){ t.setAttribute('x',lx+(right?2:-2)); t.setAttribute('y',ly+4); t.setAttribute('text-anchor',right?'start':'end'); }
+    }
+  }
+
+  // ---- steps -------------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s || t>=T_END-0.01); });
+  }
+
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  document.getElementById('tend').textContent=fmt(T_END);
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(!ready){ needRender=true; return; }
+    applyTracks(T); updateReadout(T); updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback ----------------------------------------------------------------------------------
+  let playing=false, loop=false, last=performance.now();
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function startPlay(){ if(T>=T_END-0.01) setTime(0); playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+  const q=new URLSearchParams(location.search); if(q.has('t')) T=+q.get('t');
+  function frame(now){
+    requestAnimationFrame(frame);
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(!ready) return;
+    if(playing){
+      let t=T+dt;
+      if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } }
+      setTime(t);
+    } else if(!reduced && Object.values(DEMO).some(([a,b])=>T>=a&&T<b)) needRender=true;
+    if(needRender){ needRender=false; renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  window.WIRING={ setTime, get T(){return T;}, O, wires };
+  resize();
+})();
+</script>
+
+</body>
+</html>

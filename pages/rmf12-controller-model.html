@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | RMF 12 Controller Model</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1}
+  #overlay line, #overlay polyline{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle{fill:var(--leader)}
+  #overlay text{font:500 clamp(9.5px, 0.6vw + 5px, 12.5px)/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay .lbl{transition:opacity .2s linear}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #overlay .lbl text{pointer-events:auto;cursor:pointer}
+  #overlay .lbl.sel text.tx{font-weight:600}
+  #overlay .lbl.sel polyline{stroke-width:2}
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px;max-width:520px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  button:hover{background:var(--track)}
+  button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;z-index:1;left:16px;top:12px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+  #scale{position:absolute;right:16px;bottom:10px;font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase;pointer-events:none;display:flex;align-items:center;gap:6px}
+  #scale i{display:block;height:6px;border-top:1.5px solid var(--ink-2);border-left:1.5px solid var(--ink-2);border-right:1.5px solid var(--ink-2)}
+  #panel{position:absolute;z-index:2;top:0;right:0;bottom:0;width:min(390px,100%);background:var(--panel);border-left:1.5px solid var(--ink);box-shadow:-8px 0 24px rgba(0,0,0,.08);overflow-y:auto;padding:16px 18px 24px;box-sizing:border-box;transform:translateX(102%);transition:transform .25s ease;display:flex;flex-direction:column;gap:14px}
+  #panel.open{transform:none}
+  #panel .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  #panel h2{margin:0;font:600 18px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+  #panel .kicker{font:500 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--leader);margin-bottom:4px}
+  #panel p{margin:0;font-size:13.5px;line-height:1.5}
+  #panel h3{margin:0 0 6px;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule);padding-bottom:4px}
+  #panel table{width:100%;border-collapse:collapse;font-size:12.5px}
+  #panel td{padding:5px 6px 5px 0;vertical-align:top;border-bottom:1px solid var(--rule)}
+  #panel td.pn{font:600 12.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;font-variant-numeric:tabular-nums}
+  #panel td .note{display:block;color:var(--ink-2);font-size:11.5px;margin-top:2px}
+  #panel details{border-bottom:1px solid var(--rule);padding:6px 0}
+  #panel summary{cursor:pointer;font-size:13px;font-weight:500;list-style:none;display:flex;gap:8px}
+  #panel summary::before{content:'+';color:var(--leader);font-weight:600;width:10px}
+  #panel details[open] summary::before{content:'\2013'}
+  #panel details p{margin-top:6px;padding-left:18px;color:var(--ink);font-size:12.5px}
+  #panel .src{font-size:11px;color:var(--ink-2);line-height:1.4}
+  #panel .index{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;list-style:none;margin:0;padding:0}
+  #panel .index button{border:0;padding:5px 0;text-align:left;text-transform:none;letter-spacing:0;font:400 13px "Barlow",system-ui,sans-serif;color:var(--ink);border-bottom:1px solid var(--rule);border-radius:0;width:100%}
+  #panel .index button b{font-weight:600;font-family:"Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.03em;margin-right:4px}
+  #panel .index button:hover{color:var(--accent);background:transparent}
+  #panel .x{border:0;font-size:20px;line-height:1;padding:2px 6px}
+  #panel .x:hover{background:var(--track)}
+  @media (max-width:640px){
+    #panel{top:auto;height:70%;width:100%;border-left:0;border-top:1.5px solid var(--ink);transform:translateY(102%)}
+    #panel.open{transform:none}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #hint{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){ #overlay .lbl{transition:none} }
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+  @media (max-width:640px){ #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%} }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>RMF 12 Controller Model</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan · click a part for details</div>
+    <div id="scale"><i style="width:60px"></i><span id="scaletxt">100 mm</span></div>
+    <div id="loading">Loading RMF 12 controller…</div>
+    <aside id="panel" aria-label="Part details"></aside>
+  </div>
+  <div id="bar">
+    <h1>Defender RMF 12 · Main Control Enclosure<small>Built from drawing set 20807800 (backpanel 20807851 r3, enclosure 20807850 r9). Open the cover and pull the panel apart, then click any part for part numbers and what the schematic says it does.</small></h1>
+    <div class="ctrl">
+      <span class="tick">Closed</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Explode progress">
+      <span class="tick">Exploded</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="partsbtn" aria-pressed="false">Parts</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script src="/assets/rmf12/rmf12-parts.js"></script>
+<script>
+(function(){
+  const MODEL_URL = window.RMF12_MODEL_URL || '/assets/rmf12/rmf12-model.bin';
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop'), labelsBtn=document.getElementById('labels');
+
+  // ---- selectable items: label text, member mesh parts, column ----------------
+  const SEL = {
+    door:       {label:'Cover (door)', short:'Cover',            parts:['door','door_gasket'], col:'L'},
+    hmi:        {label:'HMI · TP700 Comfort', short:'HMI',     parts:['hmi'], col:'L'},
+    enclosure:  {label:'Enclosure 16x14x8 FRP', short:'Enclosure', minor:true,   parts:['enclosure','brackets'], col:'R'},
+    backpanel:  {label:'Backpanel', short:'Backpanel', minor:true,               parts:['backpanel'], col:'R'},
+    din_rails:  {label:'DIN rails', short:'DIN rails', minor:true,               parts:['din_rails'], col:'R'},
+    end_anchors:{label:'End anchors', short:'End anchors', minor:true,             parts:['end_anchors'], col:'R'},
+    wire_duct:  {label:'Wire duct + covers', short:'Duct', minor:true,      parts:['wire_duct','duct_covers'], col:'R'},
+    switch:     {label:'ETH126 · Ethernet switch', short:'ETH126',parts:['switch'], col:'R'},
+    contactor:  {label:'M311 · Vacuum contactor', short:'M311', parts:['contactor'], col:'R'},
+    psu:        {label:'PS109 · 24 VDC supply', short:'PS109',   parts:['psu'], col:'R'},
+    plc_cpu:    {label:'PLC114 · CPU 1212C', short:'PLC114',      parts:['plc_cpu'], col:'R'},
+    plc_dq:     {label:'PLC302 · Relay outputs', short:'PLC302',  parts:['plc_dq'], col:'R'},
+    plc_ai:     {label:'PLC402 · Analog inputs', short:'PLC402',  parts:['plc_ai'], col:'R'},
+    breaker:    {label:'CB114 · PLC breaker', short:'CB114',     parts:['breaker'], col:'R'},
+    ground_lug: {label:'Ground lug', short:'Ground lug', minor:true,              parts:['ground_lug'], col:'R'},
+    tb1:        {label:'TB1 · Field terminals', short:'TB1',   parts:[], prefix:'tb1_', col:'R'},
+    tb2:        {label:'TB2 · Power terminals', short:'TB2',   parts:[], prefix:'tb2_', col:'R'},
+    cat6:       {label:'CAT6 patch cables', short:'CAT6',       parts:['cat6_plc','cat6_hmi'], col:'L', nolabel:true},
+    manifold:   {label:'Valve manifold', short:'Manifold',          parts:['manifold'], col:'L'},
+    fv01:       {label:'FV-01 · Bump', short:'FV-01',            parts:['valve_fv01','valve_fv01_cable'], col:'L'},
+    fv02:       {label:'FV-02 · Regen precoat', short:'FV-02',   parts:['valve_fv02','valve_fv02_cable'], col:'L'},
+    fv03:       {label:'FV-03 · Effluent', short:'FV-03',        parts:['valve_fv03','valve_fv03_cable'], col:'L'},
+    blanks:     {label:'Blank stations', short:'Blanks', minor:true,          parts:['valve_blanks'], col:'L'},
+    pt3:        {label:'PT-3 · Air pressure', short:'PT-3',     parts:['pt3','pt3_cable'], col:'L'},
+    pt1:        {label:'PT-1 · Influent', short:'PT-1',         parts:['pt1','pt1_cable'], col:'R'},
+    pt2:        {label:'PT-2 · Effluent', short:'PT-2',         parts:['pt2','pt2_cable'], col:'R'},
+    cord_grips: {label:'Cord grips PG16 / PG21', short:'Cord grips', minor:true,  parts:['cord_grips'], col:'R'},
+    lt_elbow:   {label:'Liquid tight 90°', short:'LT 90°',        parts:['lt_elbow'], col:'L'},
+    vac_jbox:   {label:'Vacuum transfer JB', short:'Vac JB',      parts:['vac_jbox','conduit','motor_cable'], col:'L'},
+  };
+
+  // ---- motion: off [x,y,z] mm over progress slice s..e; door swings on its hinge ----
+  const DOOR_OPEN = 1.98;   // rad (about 113 deg)
+  const MOVE = {
+    door:{rot:true, s:0, e:0.3}, door_gasket:{attach:'door'}, hmi:{attach:'door', off:[0,0,-105], s:0.28, e:0.55},
+    cat6_hmi:{fade:[0.0,0.08]}, cat6_plc:{fade:[0.22,0.32]},
+    duct_covers:{off:[0,0,90], s:0.22, e:0.45},
+    switch:{off:[0,0,150], s:0.32, e:0.62}, contactor:{off:[0,0,150], s:0.34, e:0.64}, ground_lug:{off:[0,0,110], s:0.36, e:0.66},
+    psu:{off:[0,0,175], s:0.36, e:0.68},
+    plc_cpu:{off:[0,0,165], s:0.38, e:0.7}, plc_dq:{off:[0,0,165], s:0.4, e:0.72}, plc_ai:{off:[0,0,165], s:0.42, e:0.74}, breaker:{off:[0,0,165], s:0.44, e:0.76},
+    tb1_covers:{off:[0,0,105], s:0.5, e:0.8}, tb2_cover:{off:[0,0,105], s:0.62, e:0.9},
+    end_anchors:{off:[0,0,55], s:0.66, e:0.95},
+    manifold:{off:[0,-55,0], s:0.45, e:0.75}, valve_fv01:{off:[0,-120,0], s:0.5, e:0.82}, valve_fv02:{off:[0,-120,0], s:0.52, e:0.84},
+    valve_fv03:{off:[0,-120,0], s:0.54, e:0.86}, valve_blanks:{off:[0,-120,0], s:0.56, e:0.88},
+    pt3:{off:[-70,-55,0], s:0.5, e:0.8}, pt3_cable:{fade:[0.4,0.5]}, pt1:{off:[0,-60,0], s:0.55, e:0.85}, pt2:{off:[0,-60,0], s:0.57, e:0.87},
+    pt1_cable:{fade:[0.4,0.5]}, pt2_cable:{fade:[0.4,0.5]},
+    valve_fv01_cable:{fade:[0.4,0.5]}, valve_fv02_cable:{fade:[0.4,0.5]}, valve_fv03_cable:{fade:[0.4,0.5]},
+    cord_grips:{off:[0,-38,0], s:0.6, e:0.9}, lt_elbow:{off:[-70,135,0], s:0.6, e:0.9},
+    vac_jbox:{off:[-60,-50,0], s:0.55, e:0.85}, conduit:{fade:[0.42,0.52]}, motor_cable:{fade:[0.42,0.52]},
+  };
+  for(let k=1;k<=41;k++){ const s=0.5+(k-1)*0.0042; MOVE['tb1_'+String(k).padStart(2,'0')]={off:[0,0,105], s, e:s+0.3}; }
+  for(let k=1;k<=8;k++){ const s=0.62+(k-1)*0.004; MOVE['tb2_'+String(k).padStart(2,'0')]={off:[0,0,105], s, e:s+0.28}; }
+
+  // ---- three.js scene -----------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  view.insertBefore(renderer.domElement, overlay);
+  const scene=new THREE.Scene();
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,-20000,20000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8d939b,0.78));
+  const sun=new THREE.DirectionalLight(0xffffff,0.62); sun.position.set(0.5,0.9,1.0); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.28); fill.position.set(-1,0.2,0.4); scene.add(fill);
+  const back=new THREE.DirectionalLight(0xffffff,0.18); back.position.set(0.2,-0.6,-1); scene.add(back);
+
+  const parts={}; let meta=null; let needRender=true;
+  const _v=new THREE.Vector3(), _r=new THREE.Vector3(), _u=new THREE.Vector3();
+  const target=new THREE.Vector3();
+  const DRAW={theta:1.02, phi:1.16};
+  let theta=DRAW.theta, phi=DRAW.phi, zoom=1, pan=new THREE.Vector3();
+  let extentPts=[];   // world points that must stay framed (closed + exploded)
+
+  function updateCamera(){
+    const w=view.clientWidth||1, h=view.clientHeight||1, asp=w/h;
+    const dir=new THREE.Vector3(Math.sin(phi)*Math.cos(theta), Math.cos(phi), Math.sin(phi)*Math.sin(theta));
+    _r.set(0,1,0).cross(dir).normalize(); if(!isFinite(_r.x)||_r.lengthSq()<1e-6) _r.set(1,0,0);
+    _u.copy(dir).cross(_r).normalize();
+    let minR=1e9,maxR=-1e9,minU=1e9,maxU=-1e9;
+    for(const p of extentPts){ const a=p.dot(_r), b=p.dot(_u); if(a<minR)minR=a; if(a>maxR)maxR=a; if(b<minU)minU=b; if(b>maxU)maxU=b; }
+    let halfW=600;
+    if(extentPts.length){
+      const col=columnPx(w), availW=Math.max(140, w-1.8*col), availH=Math.max(140, h-30);
+      halfW=Math.max((maxR-minR)/2*(w/availW), (maxU-minU)/2*(h/availH)*asp)*1.04/zoom;
+      target.set(0,0,0).addScaledVector(_r,(minR+maxR)/2).addScaledVector(_u,(minU+maxU)/2);
+    }
+    const halfH=halfW/asp;
+    camera.left=-halfW; camera.right=halfW; camera.top=halfH; camera.bottom=-halfH;
+    const t=target.clone().add(pan);
+    camera.position.copy(t).add(dir.multiplyScalar(6000));
+    camera.up.set(0,1,0); camera.lookAt(t); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    const px=(2*halfW)/w; const steps=[10,20,25,50,100,200,250,500]; let mm=steps[steps.length-1];
+    for(const s of steps){ if(s/px>=45){ mm=s; break; } }
+    document.getElementById('scaletxt').textContent=mm+' mm'; document.querySelector('#scale i').style.width=(mm/px)+'px';
+  }
+  function columnPx(w){
+    if(!labelsOn) return 8;
+    let mx=0; for(const el of Object.values(labelEls)) if(el.tw) mx=Math.max(mx,el.tw);
+    if(!mx) mx=Math.min(170, w*0.2);
+    return Math.min(mx+30, labelCap(w)+30);
+  }
+  const narrow=w=>w<640;
+  const labelCap=w=>narrow(w)? Math.max(46, w*0.17) : w*0.24;
+  function resize(){ renderer.setSize(view.clientWidth, view.clientHeight,false); updateCamera(); measuredAt=0; needRender=true; }
+  addEventListener('resize', resize);
+
+  // pointer orbit / pan / zoom (same feel as the SP-55 page)
+  let drag=null, moved=0;
+  view.addEventListener('pointerdown', e=>{ if(e.target.closest('#panel')) return; moved=0; const lg=e.target.closest&&e.target.closest('.lbl'); drag={x:e.clientX,y:e.clientY,b:e.button,t:theta,p:phi,pan:pan.clone(),lbl:lg?lg.dataset.sel:null}; view.setPointerCapture(e.pointerId); });
+  view.addEventListener('pointermove', e=>{
+    if(!drag) return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; moved=Math.max(moved,Math.abs(dx),Math.abs(dy));
+    if(drag.b===2 || e.shiftKey){
+      const px=(camera.right-camera.left)/view.clientWidth;
+      const right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0), up=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);
+      pan.copy(drag.pan).addScaledVector(right,-dx*px).addScaledVector(up,dy*px);
+    } else { theta=drag.t+dx*0.008; phi=Math.min(Math.PI-0.05,Math.max(0.05,drag.p-dy*0.008)); }
+    updateCamera(); needRender=true;
+  });
+  view.addEventListener('pointerup',e=>{ const wasDrag=moved>4, lbl=drag&&drag.lbl; drag=null; if(wasDrag || e.button!==0 || e.target.closest('#panel')) return; if(lbl) select(lbl); else pick(e); });
+  view.addEventListener('pointercancel',()=>{drag=null});
+  view.addEventListener('contextmenu',e=>e.preventDefault());
+  view.addEventListener('wheel',e=>{ if(e.target.closest('#panel')) return; e.preventDefault(); zoom*=Math.exp(-e.deltaY*0.0012); zoom=Math.min(14,Math.max(0.3,zoom)); updateCamera(); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ theta=DRAW.theta; phi=DRAW.phi; zoom=1; pan.set(0,0,0); updateCamera(); needRender=true; });
+
+  // ---- decals (labels printed on the hardware) ------------------------------------
+  function decal(w, h, ppm, draw, opts){
+    const W=Math.max(8,Math.round(w*ppm)), H=Math.max(8,Math.round(h*ppm));
+    const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    const ctx=cv.getContext('2d'); draw(ctx,W,H,ppm);
+    const tex=new THREE.CanvasTexture(cv); tex.anisotropy=4;
+    if(THREE.sRGBEncoding) tex.encoding=THREE.sRGBEncoding;
+    const mat=new THREE.MeshLambertMaterial({map:tex, transparent:true, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2, depthWrite:false});
+    const g=new THREE.PlaneGeometry(w,h);
+    const m=new THREE.Mesh(g,mat);
+    const f=(opts&&opts.face)||'+z';
+    if(opts&&opts.rot) g.rotateZ(opts.rot);
+    if(f==='-z') g.rotateY(Math.PI); else if(f==='+x') g.rotateY(Math.PI/2); else if(f==='-x') g.rotateY(-Math.PI/2);
+    else if(f==='-y') g.rotateX(Math.PI/2); else if(f==='+y') g.rotateX(-Math.PI/2);
+    m.position.set(opts.at[0],opts.at[1],opts.at[2]);
+    m.renderOrder=2; m.userData.decal=true;
+    return m;
+  }
+  const font=(px,w,fam)=>`${w||500} ${px}px ${fam||'"Barlow Semi Condensed", Arial, sans-serif'}`;
+  function txt(ctx, s, x, y, px, color, align, weight, fam){ ctx.font=font(px,weight,fam); ctx.fillStyle=color||'#fff'; ctx.textAlign=align||'left'; ctx.textBaseline='middle'; ctx.fillText(s,x,y); }
+  function siemens(ctx,x,y,px,color){ txt(ctx,'SIEMENS',x,y,px,color||'#e9ecef','left',700,'Arial, sans-serif'); }
+
+  function addDecals(){
+    const M=meta, zR=M.zR, zR3=M.zR3, zP=M.zP, P=M.panel;
+    const X=px=>P.x0+px, Y=py=>P.y0-py;
+    const at=(name,m)=>{ const p=parts[name]; if(p) p.holder.add(m); };
+    const dz=M.door_face_z, hc=M.hmi_centre;
+    // door overlay, original artwork in the spirit of the RMF12 overlay (item 24)
+    at('door', decal(340,385,2.6,(c,W,H,k)=>{
+      const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#f3f8fb'); g.addColorStop(0.3,'#e3f1f8'); g.addColorStop(0.55,'#5fb5dc'); g.addColorStop(1,'#1782bd');
+      c.fillStyle=g; c.fillRect(0,0,W,H);
+      c.fillStyle='rgba(255,255,255,.55)';
+      c.beginPath(); c.moveTo(0,H*0.27); for(let i=0;i<=40;i++){ const x=W*i/40; c.lineTo(x, H*0.27+Math.sin(i/40*Math.PI*3.2)*H*0.018); } c.lineTo(W,H*0.33); c.lineTo(0,H*0.33); c.fill();
+      for(let i=0;i<60;i++){ const r=(2+Math.random()*6)*k/3; c.beginPath(); c.arc(W*0.05+Math.random()*W*0.35, H*0.35+Math.random()*H*0.5, r, 0, 7); c.strokeStyle='rgba(255,255,255,.55)'; c.lineWidth=1.2; c.stroke(); }
+      c.fillStyle='#ffffff'; c.beginPath(); c.moveTo(0,H*0.9); c.quadraticCurveTo(W*0.5,H*0.78,W,H*0.86); c.lineTo(W,H); c.lineTo(0,H); c.fill();
+      const navy='#1E4B8C';
+      txt(c,'DEFENDER® RMF',W/2,H*0.085,22*k,navy,'center',600);
+      txt(c,'R E G E N E R A T I V E   M E D I A   F I L T E R',W/2,H*0.145,5.2*k,'#0085AD','center',600);
+      txt(c,'Neptune-Benson',W*0.78,H*0.92,9*k,'#1E4B8C','center',600,'Barlow, Arial, sans-serif');
+      c.strokeStyle='rgba(0,0,0,.18)'; c.lineWidth=2; c.strokeRect(1,1,W-2,H-2);
+    },{at:[0,0,dz+0.15]}));
+    // HMI bezel print + screen
+    at('hmi', decal(214,158,3,(c,W,H,k)=>{ siemens(c,8*k,7*k,5*k,'#d7dbe0'); txt(c,'SIMATIC HMI',W-8*k,7*k,4.2*k,'#c9cdd2','right',600); c.save(); c.translate(W-4*k,H/2); c.rotate(Math.PI/2); txt(c,'TOUCH',0,0,4*k,'#9aa0a6','center',600); c.restore(); },{at:[hc[0],hc[1],dz+6.05]}));
+    at('hmi', decal(154,86,4,(c,W,H,k)=>{
+      c.fillStyle='#e9eef2'; c.fillRect(0,0,W,H);
+      c.fillStyle='#1E4B8C'; c.fillRect(0,0,W,13*k); txt(c,'DEFENDER RMF  ·  SYSTEM CONTROLLER',5*k,6.5*k,5.4*k,'#fff','left',600);
+      const tiles=[['INFLUENT','PSI'],['EFFLUENT','PSI'],['AIR','PSI']];
+      tiles.forEach((t,i)=>{ const x=6*k+i*49*k, y=19*k; c.fillStyle='#fff'; c.fillRect(x,y,45*k,30*k); c.strokeStyle='#c4ccd3'; c.strokeRect(x,y,45*k,30*k);
+        txt(c,t[0],x+4*k,y+6*k,4.2*k,'#5c6168','left',600); txt(c,'--',x+4*k,y+18*k,10*k,'#1c1e21','left',600); txt(c,t[1],x+40*k,y+20*k,4*k,'#5c6168','right',500); });
+      ['FILTER','BUMP','PRECOAT','SETUP'].forEach((b,i)=>{ const x=6*k+i*36.5*k, y=56*k; c.fillStyle=i===0?'#0085AD':'#cfd8df'; c.fillRect(x,y,33*k,22*k); txt(c,b,x+16.5*k,y+11*k,5*k,i===0?'#fff':'#1c1e21','center',600); });
+    },{at:[hc[0],hc[1]-1,dz+6.4]}));
+    // inside of the cover: rating label, UL legends A-D, UL E476304 (assembly note 1)
+    const zin=dz-4.05;
+    at('door', decal(101.6,76.2,5,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); c.strokeStyle='#333'; c.lineWidth=2; c.strokeRect(2,2,W-4,H-4);
+      txt(c,'Neptune-Benson',W/2,9*k,7*k,'#1c1e21','center',600,'Barlow, Arial, sans-serif');
+      ['EVOQUA WATER TECHNOLOGIES','HOLLAND, MI','VOLTAGE: 120/230 VAC 1PH 60/50Hz','TOTAL FLA: 15/10 A','LARGEST MOTOR: 0.5 HP','SCCR: 5 KA','DRAWING SET 20807800','MFR DATE: ________'].forEach((s,i)=>txt(c,s,5*k,(22+i*6.6)*k,4.3*k,'#1c1e21','left',500,'Arial, sans-serif'));
+    },{at:[-70,40,zin], face:'-z'}));
+    at('door', decal(110,34,5,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H);
+      ['A  EVOQUA WATER TECHNOLOGIES','B  HOLLAND, MI','C  UL TYPE 1 / NEMA 4','D  MAINTAIN A COMPLETE SCHEMATIC WITH THIS ENCLOSURE'].forEach((s,i)=>txt(c,s,3*k,(5+i*7.8)*k,3.6*k,'#1c1e21','left',500,'Arial, sans-serif')); },{at:[60,140,zin], face:'-z'}));
+    at('door', decal(50,25,6,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); txt(c,'UL',8*k,H/2,9*k,'#1c1e21','center',700,'Arial'); txt(c,'DEFENDER D7',17*k,8*k,4*k,'#1c1e21','left',600,'Arial'); txt(c,'E476304',17*k,16*k,4*k,'#1c1e21','left',500,'Arial'); },{at:[90,-150,zin], face:'-z'}));
+    // outside of the enclosure: panel nameplate (left side) and QR label (right side), 20807852
+    at('enclosure', decal(127,76.2,4,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); c.strokeStyle='#222'; c.lineWidth=2; c.strokeRect(2,2,W-4,H-4);
+      txt(c,'EVOQUA WATER TECHNOLOGIES',W/2,8*k,6*k,'#111','center',700,'Arial'); txt(c,'USA HOLLAND, MI',30*k,20*k,4.4*k,'#111','left',500,'Arial'); txt(c,'CE',W-14*k,22*k,10*k,'#111','center',700,'Arial');
+      [['TYPE','IEC 61439-2'],['MODEL','RMF SYSTEM CONTROLLER'],['DATE OF MANUFACTURE','MONTH/YEAR']].forEach((r,i)=>{ txt(c,r[0],52*k,(38+i*10)*k,3.8*k,'#111','right',500,'Arial'); c.strokeRect(54*k,(34+i*10)*k,66*k,7.5*k); txt(c,r[1],56*k,(38+i*10)*k,3.8*k,'#111','left',500,'Arial'); });
+      c.fillStyle='#111'; c.fillRect(6*k,14*k,20*k,18*k); },{at:[-184.55,40,110], face:'-x'}));
+    at('enclosure', decal(76.2,76.2,5,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H);
+      const n=21, s=40*k/n, ox=W/2-20*k, oy=8*k; c.fillStyle='#111';
+      const fp=(x,y)=>{ c.fillRect(ox+x*s,oy+y*s,7*s,7*s); c.fillStyle='#fbfbf8'; c.fillRect(ox+(x+1)*s,oy+(y+1)*s,5*s,5*s); c.fillStyle='#111'; c.fillRect(ox+(x+2)*s,oy+(y+2)*s,3*s,3*s); };
+      fp(0,0); fp(14,0); fp(0,14);
+      for(let y=0;y<n;y++) for(let x=0;x<n;x++){ if((x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12)) continue; if(((x*7+y*13+x*y)%5)<2) c.fillRect(ox+x*s,oy+y*s,s,s); }
+      txt(c,'Scan QR Code To Access Current',W/2,56*k,3.6*k,'#111','center',500,'Calibri, Arial'); txt(c,'Operating & Maintenance Manual',W/2,61*k,3.6*k,'#111','center',500,'Calibri, Arial');
+    },{at:[184.55,0,110], face:'+x'}));
+    // S7-1200 fronts: face (v 24..76) and top terminal cover (v 2..23)
+    const s7face=(name,x0,w,draw)=>at(name, decal(w-1.4,52,8,draw,{at:[X(x0)+w/2,Y(120.7+50),zR3+75.05]}));
+    const s7top=(name,x0,w,draw)=>at(name, decal(w-1.4,21,8,draw,{at:[X(x0)+w/2,Y(120.7+12.5),zR3+64.05]}));
+    const L='#d3d8dd', B='#eef1f4';
+    s7top('plc_cpu',33.3,90.1,(c,W,H,k)=>{ c.fillStyle='#e9ecef'; c.fillRect(4*k,9*k,19*k,6*k); txt(c,'SIEMENS',13.5*k,12.1*k,3.6*k,'#2f343a','center',700,'Arial');
+      txt(c,'SIMATIC',W-5*k,8.5*k,4.2*k,B,'right',600); txt(c,'S7-1200',W-5*k,13.5*k,4.2*k,B,'right',600); });
+    s7face('plc_cpu',33.3,90.1,(c,W,H,k)=>{
+      c.save(); c.translate(6.5*k,15*k); c.rotate(-Math.PI/2); txt(c,'RUN / STOP',0,0,2.2*k,L,'center',500); c.restore();
+      c.save(); c.translate(9.5*k,15*k); c.rotate(-Math.PI/2); txt(c,'ERROR',0,0,2.2*k,L,'center',500); c.restore();
+      c.save(); c.translate(12.5*k,15*k); c.rotate(-Math.PI/2); txt(c,'MAINT',0,0,2.2*k,L,'center',500); c.restore();
+      txt(c,'.0 .1 .2 .3 .4 .5 .6 .7',47*k,6*k,2.4*k,L,'left',500); txt(c,'DIa',47*k,9.5*k,2.2*k,L,'left',500);
+      txt(c,'CPU 1212C',W-5*k,24*k,3.6*k,B,'right',600); txt(c,'AC/DC/RLY',W-5*k,28.5*k,3.2*k,B,'right',500);
+      txt(c,'DQa',47*k,41*k,2.2*k,L,'left',500); txt(c,'.0 .1 .2 .3 .4 .5',47*k,45*k,2.4*k,L,'left',500); });
+    s7face('plc_dq',123.4,69.9,(c,W,H,k)=>{ c.save(); c.translate(4.2*k,9*k); c.rotate(-Math.PI/2); txt(c,'DIAG',0,0,2.2*k,L,'center',500); c.restore();
+      txt(c,'.0 .1 .2 .3',10*k,6*k,2.4*k,L,'left',500); txt(c,'DQa',10*k,9.5*k,2.2*k,L,'left',500);
+      txt(c,'SM 1222',W-5*k,24*k,3.6*k,B,'right',600); txt(c,'RLY',W-5*k,28.5*k,3.2*k,B,'right',500);
+      txt(c,'DQa',10*k,41*k,2.2*k,L,'left',500); txt(c,'.4 .5 .6 .7',10*k,45*k,2.4*k,L,'left',500); });
+    s7face('plc_ai',193.3,45,(c,W,H,k)=>{ c.save(); c.translate(4.2*k,9*k); c.rotate(-Math.PI/2); txt(c,'DIAG',0,0,2.2*k,L,'center',500); c.restore();
+      txt(c,'0 1 2 3',10*k,6*k,2.4*k,L,'left',500); txt(c,'AI',10*k,9.5*k,2.2*k,L,'left',500);
+      txt(c,'SM 1231',W-4*k,24*k,3.6*k,B,'right',600); txt(c,'AI',W-4*k,28.5*k,3.2*k,B,'right',500); });
+    // SITOP PSU100S
+    at('psu', decal(30,52,8,(c,W,H,k)=>{ c.save(); c.translate(W*0.55,H/2); c.rotate(-Math.PI/2); txt(c,'SITOP PSU100S',0,0,5.2*k,'#2a2e33','center',600); c.restore(); },{at:[X(302.6),Y(110),zR+125.05]}));
+    at('psu', decal(16,6,10,(c,W,H,k)=>{ txt(c,'L1   N   PE',W/2,H/2,2.6*k,'#f1f3f5','center',600); },{at:[X(310.2),Y(161),zR+122.05]}));
+    at('psu', decal(30,7,10,(c,W,H,k)=>{ txt(c,'24V O.K.     ADJUST 22.8...28V',W/2,H/2,2.3*k,'#1c1e21','center',600); },{at:[X(302.6),Y(181.5),zR+117.05]}));
+    // SIRIUS contactor
+    at('contactor', decal(39,32,9,(c,W,H,k)=>{ siemens(c,2*k,4*k,3.2*k,'#3d4247'); txt(c,'SIRIUS',W-2*k,4*k,3.6*k,'#3d4247','right',600); txt(c,'3RT20',2*k,28*k,3*k,'#3d4247','left',600); },{at:[X(236),Y(48.4),zR+73.45]}));
+    at('contactor', decal(44,4,12,(c,W,H,k)=>{ txt(c,'1/L1   3/L2   5/L3   13NO   A1+',W/2,H/2,2.2*k,'#2a2e33','center',600); },{at:[X(236),Y(13.4+12.6),zR+48.6]}));
+    at('contactor', decal(44,4,12,(c,W,H,k)=>{ txt(c,'2/T1   4/T2   6/T3   14NO   A2-',W/2,H/2,2.2*k,'#2a2e33','center',600); },{at:[X(236),Y(13.4+67),zR+48.6]}));
+    // SCALANCE XB005
+    at('switch', decal(100,45,8,(c,W,H,k)=>{ c.fillStyle='rgba(0,0,0,0)';
+      c.save(); c.translate(6*k,H/2); c.rotate(-Math.PI/2); siemens(c,-9*k,0,3.4*k); c.restore();
+      txt(c,'SCALANCE',12*k,8*k,3.2*k,'#e9ecef','left',600); txt(c,'XB005',12*k,12.5*k,3.2*k,'#e9ecef','left',600);
+      txt(c,'P3',36*k,6*k,2.6*k,'#cfd4d9','left',600); txt(c,'P4',55*k,6*k,2.6*k,'#cfd4d9','left',600); txt(c,'P5',74*k,6*k,2.6*k,'#cfd4d9','left',600);
+      txt(c,'P1',55*k,42*k,2.6*k,'#cfd4d9','left',600); txt(c,'P2',74*k,42*k,2.6*k,'#cfd4d9','left',600);
+      c.save(); c.translate(87*k,H/2+2*k); c.rotate(-Math.PI/2); txt(c,'LAN ONLY',0,0,2.6*k,'#cfd4d9','center',600); c.restore(); },{at:[X(89),Y(38.1),zR+87.05]}));
+    // breaker
+    at('breaker', decal(16,40,10,(c,W,H,k)=>{ siemens(c,1*k,4*k,2.6*k,'#2a2e33'); txt(c,'5SJ4',1*k,9*k,2.6*k,'#2a2e33','left',600); txt(c,'C4',W-1*k,36*k,4*k,'#2a2e33','right',700); },{at:[X(238.3+8.75),Y(128.5+45),zR3+70.05]}));
+    // UL legends on the backpanel (A-G)
+    at('backpanel', decal(232,7,9,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); txt(c,'F  DRY CONTACTS     E  USE COPPER CONDUCTORS ONLY     B  24VDC     D  USE 60 DEG C OR LARGER',3*k,H/2,3.4*k,'#1c1e21','left',600); },{at:[X(124),Y(367.5),zP+0.05]}));
+    at('backpanel', decal(40,10,9,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); txt(c,'A  120/230VAC',2*k,3*k,3.2*k,'#1c1e21','left',600); txt(c,'G  60/50Hz',2*k,7.4*k,3.2*k,'#1c1e21','left',600); },{at:[X(286),Y(366),zP+0.05]}));
+    at('backpanel', decal(40,9,9,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); txt(c,'C  GROUND LUG',2*k,2.8*k,3*k,'#1c1e21','left',600); txt(c,'TORQUE: 35 IN.LB.',2*k,6.5*k,3*k,'#1c1e21','left',600); },{at:[X(292),Y(16),zP+0.05]}));
+    at('backpanel', decal(11.4,11.4,12,(c,W,H,k)=>{ c.fillStyle='#2f8a3c'; c.fillRect(0,0,W,H); c.strokeStyle='#fff'; c.lineWidth=0.7*k; c.beginPath(); c.arc(W/2,H/2,4.6*k,0,7); c.stroke();
+      c.beginPath(); c.moveTo(W/2,2.4*k); c.lineTo(W/2,5.8*k); c.moveTo(3.2*k,5.8*k); c.lineTo(W-3.2*k,5.8*k); c.moveTo(4.2*k,7.3*k); c.lineTo(W-4.2*k,7.3*k); c.moveTo(5.2*k,8.8*k); c.lineTo(W-5.2*k,8.8*k); c.stroke(); },{at:[X(300),Y(35),zP+0.05]}));
+    // terminal markers (20807854 layout), one tiny decal per terminal
+    const mk=M.tb1_marker;
+    for(const t of M.tb1){ at(t.part, decal(4.6,12,26,(c,W,H,k)=>{ c.save(); c.translate(W/2,H/2); c.rotate(-Math.PI/2); txt(c,t.top,0,-1.15*k,1.65*k,'#111','center',600); txt(c,t.bot,0,1.15*k,1.65*k,'#111','center',600); c.restore(); },{at:[t.x,(mk.y0+mk.y1)/2,mk.z+0.05]})); }
+    const mk2=M.tb2_marker;
+    for(const t of M.tb2){ at(t.part, decal(4.6,9.6,26,(c,W,H,k)=>{ c.save(); c.translate(W/2,H/2); c.rotate(-Math.PI/2); txt(c,t.lab,0,0,2.4*k,'#111','center',600); c.restore(); },{at:[t.x,(mk2.y0+mk2.y1)/2,mk2.z+0.05]})); }
+    // valve labels (items 26-28) and junction box label
+    [['valve_fv01','BUMP'],['valve_fv02','REGEN'],['valve_fv03','EFFLUENT']].forEach(([n,s],i)=>{
+      const x=-368.9/2+94.5+(i+0.5)*19.18;
+      at(n, decal(17,12,14,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); c.save(); c.translate(W/2,H/2); txt(c,s,0,0,(s.length>5?2.6:3.4)*k,'#111','center',700,'Arial'); c.restore(); },{at:[x,-209.45-37.3-13,131.05]}));
+    });
+    at('vac_jbox', decal(70,30,6,(c,W,H,k)=>{ c.fillStyle='#fbfbf8'; c.fillRect(0,0,W,H); txt(c,'VACUUM',W/2,9*k,7*k,'#111','center',700,'Arial'); txt(c,'TRANSFER JUNCTION BOX',W/2,20*k,4*k,'#111','center',600,'Arial'); },{at:[-184.45-150,-330,50.85]}));
+  }
+
+  // ---- load geometry ------------------------------------------------------------
+  function getModel(){
+    if(window.RMF12_MODEL_B64){ const s=atob(window.RMF12_MODEL_B64); const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return Promise.resolve(b.buffer); }
+    return fetch(MODEL_URL,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); });
+  }
+  const selOf={};
+  getModel().then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    meta=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl;
+    for(const e of meta.parts){
+      const geo=new THREE.BufferGeometry();
+      const q=new Int16Array(buf, base+e.V, e.nv*3); const pos=new Float32Array(q.length); for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+      const nq=new Int8Array(buf, base+e.N, e.nv*3); const nor=new Float32Array(nq.length); for(let i=0;i<nq.length;i++) nor[i]=nq[i]/127;
+      const col=new Uint8Array(buf, base+e.C, e.nv*3);
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('normal', new THREE.BufferAttribute(nor,3));
+      geo.setAttribute('color', new THREE.BufferAttribute(new Uint8Array(col),3,true));
+      const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F, e.nf*3) : new Uint32Array(buf, base+e.F, e.nf*3);
+      geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+      const mat=new THREE.MeshPhongMaterial({vertexColors:true, shininess:26, specular:0x262626, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
+      const mesh=new THREE.Mesh(geo,mat);
+      const holder=new THREE.Group(); holder.add(mesh);
+      if(e.nl){
+        const lq=new Int16Array(buf, base+e.L, e.nl*6); const lp=new Float32Array(lq.length); for(let i=0;i<lq.length;i++) lp[i]=lq[i]*0.1;
+        const lg=new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp,3));
+        holder.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color:0x15171a, transparent:true, opacity:0.32})));
+      }
+      const rig=new THREE.Group(); rig.add(holder);
+      parts[e.name]={rig, holder, mesh, bb:e.bbox, cfg:MOVE[e.name]||{}, k:0};
+    }
+    // hinge rig for the door; door-attached parts live in the door holder
+    const hx=meta.hinge[0], hz=meta.hinge[1];
+    const door=parts.door;
+    if(door){ door.rig.position.set(hx,0,hz); door.holder.position.set(-hx,0,-hz); }
+    for(const [n,p] of Object.entries(parts)){
+      if(p.cfg.attach && parts[p.cfg.attach]) parts[p.cfg.attach].holder.add(p.rig); else scene.add(p.rig);
+    }
+    // selection groups
+    for(const [k,s] of Object.entries(SEL)){
+      if(s.prefix) s.parts=Object.keys(parts).filter(n=>n.startsWith(s.prefix));
+      s.parts=s.parts.filter(n=>parts[n]);
+      s.parts.forEach(n=>selOf[n]=k);
+      const bb=[1e9,1e9,1e9,-1e9,-1e9,-1e9];
+      const anchorParts=s.parts.filter(n=>!(MOVE[n]&&MOVE[n].fade)); if(!anchorParts.length) anchorParts.push(...s.parts);
+      for(const n of anchorParts){ const b=parts[n].bb; for(let i=0;i<3;i++){ bb[i]=Math.min(bb[i],b[i]); bb[i+3]=Math.max(bb[i+3],b[i+3]); } }
+      s.bb=bb; s.rep=s.prefix? s.parts[Math.floor(s.parts.length/2)] : s.parts[0];
+    }
+    addDecals();
+    document.getElementById('loading').remove();
+    // framing points from the closed and the exploded states
+    for(const P of [0,1]){ setProgress(P); scene.updateMatrixWorld(true);
+      for(const p of Object.values(parts)){ const b=p.bb; for(let c=0;c<8;c++){ extentPts.push(new THREE.Vector3(b[c&1?3:0],b[c&2?4:1],b[c&4?5:2]).applyMatrix4(p.mesh.matrixWorld)); } } }
+    buildLabels(); resize(); setProgress(0); needRender=true;
+  }).catch(err=>{ const l=document.getElementById('loading'); if(l) l.textContent='Could not load the model: '+err.message; console.error(err); });
+
+  // ---- picking / highlight / detail panel ----------------------------------------
+  const ray=new THREE.Raycaster(); const ndc=new THREE.Vector2();
+  let selected=null;
+  function pick(e){
+    const r=view.getBoundingClientRect();
+    ndc.set(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ndc,camera);
+    const meshes=[]; for(const [n,p] of Object.entries(parts)){ if(p.mesh.visible){ p.mesh.userData.part=n; meshes.push(p.mesh);} }
+    const hits=ray.intersectObjects(meshes,false);
+    if(!hits.length){ select(null); return; }
+    select(selOf[hits[0].object.userData.part]||null);
+  }
+  function setTint(k,on){ const s=SEL[k]; if(!s) return; for(const n of s.parts){ const m=parts[n].mesh.material; m.emissive=new THREE.Color(on?0xd1202b:0x000000); m.emissiveIntensity=on?0.35:0; } }
+  function select(k){
+    if(selected) setTint(selected,false);
+    selected=k;
+    if(k && SEL[k]){ setTint(k,true); showPart(k); }
+    else closePanel();
+    needRender=true;
+  }
+  const panel=document.getElementById('panel'), partsBtn=document.getElementById('partsbtn');
+  const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function openPanel(){ panel.classList.add('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','true'); }
+  function closePanel(){ panel.classList.remove('open'); measuredAt=0; needRender=true; partsBtn.setAttribute('aria-pressed','false'); if(selected){ setTint(selected,false); selected=null; } }
+  function showIndex(){
+    const info=window.RMF12_PARTS||{};
+    const order=Object.keys(SEL).filter(k=>info[k]);
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">Defender RMF 12 · MCE</div><h2>Parts index</h2></div><button class="x" aria-label="Close">×</button></div>
+      <p>Click a callout or a part in the view, or pick from the list. Part numbers are the Evoqua numbers on the drawings, with the maker's catalog number where the drawing gives one.</p>
+      <ul class="index">${order.map(k=>`<li><button data-sel="${k}"><b>${esc(info[k].tag)}</b>${esc(info[k].title)}</button></li>`).join('')}</ul>`;
+    openPanel();
+  }
+  function showPart(k){
+    const d=(window.RMF12_PARTS||{})[k]; if(!d){ showIndex(); return; }
+    panel.innerHTML=`<div class="ph"><div><div class="kicker">${esc(d.tag)}</div><h2>${esc(d.title)}</h2></div><button class="x" aria-label="Close">×</button></div>
+      <p>${esc(d.desc)}</p>
+      ${d.parts.length?`<section><h3>Part numbers</h3><table>${d.parts.map(r=>`<tr><td class="pn">${esc(r[0])}</td><td>${esc(r[1])}${r[2]?`<span class="note">${esc(r[2])}</span>`:''}</td></tr>`).join('')}</table></section>`:''}
+      ${d.notes.length?`<section><h3>From the drawings</h3>${d.notes.map(q=>`<details><summary>${esc(q[0])}</summary><p>${esc(q[1])}</p></details>`).join('')}</section>`:''}
+      <div class="src">Source: ${esc(d.src)}</div>
+      <button data-index="1">All parts</button>`;
+    openPanel(); panel.scrollTop=0;
+  }
+  panel.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.classList.contains('x')) { closePanel(); return; }
+    if(b.dataset.index){ if(selected){ setTint(selected,false); selected=null; needRender=true; } showIndex(); return; }
+    if(b.dataset.sel) select(b.dataset.sel);
+  });
+  partsBtn.addEventListener('click',()=> panel.classList.contains('open') ? closePanel() : showIndex());
+  addEventListener('keydown',e=>{ if(e.key==='Escape') closePanel(); });
+
+  // ---- explode -------------------------------------------------------------------
+  const ease=t=>t<0?0:t>1?1:(t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2);
+  let P=0, labelsOn=true;
+  function setProgress(v){
+    P=v; prog.value=Math.round(v*1000);
+    for(const [n,p] of Object.entries(parts)){
+      const c=p.cfg;
+      if(c.rot){ const k=ease((P-c.s)/(c.e-c.s)); p.rig.rotation.y=-DOOR_OPEN*k; p.k=k; continue; }
+      if(c.fade){ const k=1-Math.min(1,Math.max(0,(P-c.fade[0])/(c.fade[1]-c.fade[0]))); const m=p.mesh.material;
+        m.transparent=k<1; m.opacity=k; p.mesh.visible=k>0.01; p.holder.children.forEach(ch=>{ if(ch!==p.mesh) ch.visible=k>0.5; }); p.k=k; continue; }
+      if(c.off){ const k=ease((P-c.s)/(c.e-c.s)); p.rig.position.set(c.off[0]*k, c.off[1]*k, c.off[2]*k); p.k=k; }
+      else p.k=1;
+    }
+    needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setProgress(prog.value/1000); });
+
+  // ---- callouts in two margin columns ----------------------------------------------
+  const labelEls={}; let measuredAt=0;
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{measuredAt=0; needRender=true;});
+  function buildLabels(){
+    const ns='http://www.w3.org/2000/svg';
+    for(const [k,s] of Object.entries(SEL)){
+      if(s.nolabel || !s.parts.length) continue;
+      const grp=document.createElementNS(ns,'g'); grp.setAttribute('class','lbl'); grp.style.opacity=0; grp.dataset.sel=k;
+      const ln=document.createElementNS(ns,'polyline'); const dot=document.createElementNS(ns,'circle'); dot.setAttribute('r','2.2');
+      const halo=document.createElementNS(ns,'text'); halo.setAttribute('class','halo'); const tx=document.createElementNS(ns,'text'); tx.setAttribute('class','tx');
+      halo.textContent=s.label; tx.textContent=s.label;
+      grp.append(ln,dot,halo,tx); overlay.appendChild(grp);
+      labelEls[k]={grp,ln,dot,halo,tx};
+    }
+  }
+  const v3=new THREE.Vector3();
+  // Callout layout. Each label sits in a margin column; its leader is a short stub
+  // plus one straight run to a point on the part. Layout steps, every frame:
+  //  1. candidate anchor points per part (bbox corners pulled toward the centre, plus the centre)
+  //  2. label slots stacked around the anchors with a fixed line height (clusters merge, centred)
+  //  3. labels swap slots until no two leaders in a column cross
+  //  4. each label picks the candidate anchor that avoids crossings and near misses with
+  //     other callouts, then step 3 runs again
+  const segX=(ax,ay,bx,by,cx,cy,dx,dy)=>{
+    const o=(px,py,qx,qy,rx,ry)=>Math.sign((qx-px)*(ry-py)-(qy-py)*(rx-px));
+    return o(ax,ay,bx,by,cx,cy)*o(ax,ay,bx,by,dx,dy)<0 && o(cx,cy,dx,dy,ax,ay)*o(cx,cy,dx,dy,bx,by)<0;
+  };
+  const segDist=(px,py,ax,ay,bx,by)=>{ const dx=bx-ax, dy=by-ay, L=dx*dx+dy*dy||1; let t=((px-ax)*dx+(py-ay)*dy)/L; t=t<0?0:t>1?1:t; const x=ax+t*dx-px, y=ay+t*dy-py; return Math.sqrt(x*x+y*y); };
+  function stack(targets, lh, top, bottom){
+    // place n labels (targets sorted ascending) at least lh apart, as close to targets as possible
+    const blocks=[];
+    targets.forEach((t,i)=>{
+      blocks.push({first:i, n:1, sum:t});
+      while(blocks.length>1){
+        const b=blocks[blocks.length-1], a=blocks[blocks.length-2];
+        const pa=a.sum/a.n - (a.n-1)*lh/2, pb=b.sum/b.n - (b.n-1)*lh/2;
+        if(pa+a.n*lh<=pb) break;
+        // merge b into a: mean of (target - offset) gives the block top
+        a.sum+=b.sum; a.n+=b.n; blocks.pop();                 // block stays centred on its targets
+      }
+    });
+    const ys=[];
+    for(const b of blocks){ const top0=b.sum/b.n-(b.n-1)*lh/2; for(let k=0;k<b.n;k++) ys.push(top0+k*lh); }
+    // clamp into the view, keeping spacing
+    if(ys.length){
+      if(ys[0]<top){ const d=top-ys[0]; for(let i=0;i<ys.length;i++) ys[i]+=d; for(let i=1;i<ys.length;i++) ys[i]=Math.max(ys[i],ys[i-1]+lh); }
+      const n=ys.length;
+      if(ys[n-1]>bottom){ ys[n-1]=bottom; for(let i=n-2;i>=0;i--) ys[i]=Math.min(ys[i], ys[i+1]-lh); }
+    }
+    return ys;
+  }
+  function drawLabels(){
+    const w=view.clientWidth, h=view.clientHeight;
+    overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const items=[]; const show=labelsOn && P>0.9;
+    for(const [k,el] of Object.entries(labelEls)){
+      const s=SEL[k], rep=parts[s.rep];
+      const vis=show && rep.mesh.visible && !(s.minor && narrow(w) && selected!==k);   // phones: main devices only
+      el.grp.style.opacity=vis? Math.min(1,(P-0.9)/0.08) : 0;
+      el.grp.classList.toggle('sel', selected===k);
+      if(!vis) continue;
+      const right=s.col==='R', bb=s.bb, mw=rep.mesh.matrixWorld;
+      const pts=[]; let cx=0, cy=0;
+      for(let c=0;c<8;c++){
+        v3.set(bb[c&1?3:0], bb[c&2?4:1], bb[c&4?5:2]).applyMatrix4(mw).project(camera);
+        const px=(v3.x+1)/2*w, py=(1-v3.y)/2*h; pts.push([px,py]); cx+=px/8; cy+=py/8;
+      }
+      const cand=[[cx,cy]];
+      for(const [px,py] of pts){ const q=[px+(cx-px)*0.38, py+(cy-py)*0.38]; if(q[0]>4&&q[0]<w-4&&q[1]>4&&q[1]<h-4) cand.push(q); }
+      let first=cand[0]; for(const q of cand) if(right ? q[0]>first[0] : q[0]<first[0]) first=q;
+      items.push({el, cand, x:first[0], y:first[1], right});
+    }
+    if(!items.length) return;
+    if(measuredAt!==w){ measuredAt=w;
+      for(const [k,el] of Object.entries(labelEls)){ const t=narrow(w)? (SEL[k].short||SEL[k].label) : SEL[k].label; el.tx.textContent=t; el.halo.textContent=t; el.tw=0; }
+      for(const it of items){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){ it.el.tw=90; } } updateCamera(); }
+    for(const it of items) if(!it.el.tw){ try{ it.el.tw=it.el.tx.getComputedTextLength(); }catch(e){ it.el.tw=90; } }
+    const fs=parseFloat(getComputedStyle(overlay.querySelector('text')||overlay).fontSize)||12;
+    const lh=Math.max(15, fs+4.5), pad=12, top=lh*0.7, bottom=h-26;   // keep clear of the scale bar
+    const panelW=(panel.classList.contains('open') && w>640) ? panel.offsetWidth : 0;
+    const cols=[];
+    for(const right of [false,true]){
+      const col=items.filter(i=>i.right===right);
+      if(!col.length) continue;
+      const maxW=Math.min(Math.max(...col.map(i=>i.el.tw)), labelCap(w));
+      const edge = right ? (w-pad-panelW-maxW) : (pad+maxW), dir=right?-1:1;
+      const clh=Math.max(lh, Math.min(fs*1.9, (bottom-top)/Math.max(1,col.length-1)));   // spread the stack when there is room
+      cols.push({col, edge, dir, sx:edge+dir*8, kx:edge+dir*24, right, lh:clh});
+    }
+    const leaders=()=>{ const L=[]; for(const c of cols) for(const it of c.col) L.push([c.kx,it.ly,it.x,it.y,it]); return L; };
+    function assign(c){
+      const col=c.col.slice().sort((a,b)=>a.y-b.y);
+      const ys=stack(col.map(i=>i.y), c.lh, top, bottom);
+      const A=col.map((_,i)=>i);
+      for(let pass=0, sw=true; sw && pass<60; pass++){
+        sw=false;
+        for(let i=0;i<A.length;i++) for(let j=i+1;j<A.length;j++){
+          const p=col[A[i]], q=col[A[j]];
+          if(segX(c.kx,ys[i],p.x,p.y, c.kx,ys[j],q.x,q.y)){ const t=A[i]; A[i]=A[j]; A[j]=t; sw=true; }
+        }
+      }
+      for(let i=0;i<A.length;i++) col[A[i]].ly=ys[i];
+    }
+    function cost(it, x, y, kx, L){
+      let cst=Math.hypot(x-kx, y-it.ly)*0.15;
+      for(const [ax,ay,bx,by,o] of L){
+        if(o===it) continue;
+        if(segX(kx,it.ly,x,y, ax,ay,bx,by)) cst+=1000;
+        if(segDist(bx,by, kx,it.ly,x,y)<9) cst+=300;           // runs over another callout's dot
+        if(segDist(x,y, ax,ay,bx,by)<9) cst+=300;              // its dot sits on another leader
+        if(Math.hypot(x-bx,y-by)<14) cst+=400;                 // dots too close together
+      }
+      return cst;
+    }
+    for(const c of cols) assign(c);
+    for(let round=0; round<3; round++){
+      let moved=false;
+      for(const c of cols) for(const it of c.col){
+        const L=leaders(); let best=null, bc=1e18;
+        for(const [x,y] of it.cand){ const v=cost(it,x,y,c.kx,L); if(v<bc-0.5){ bc=v; best=[x,y]; } }
+        if(best && (best[0]!==it.x || best[1]!==it.y)){ it.x=best[0]; it.y=best[1]; moved=true; }
+      }
+      for(const c of cols) assign(c);
+      if(!moved) break;
+    }
+    for(const c of cols) for(const it of c.col){
+      const ly=Math.round(it.ly);
+      it.el.ln.setAttribute('points', `${c.sx},${ly} ${c.kx},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+      it.el.dot.setAttribute('cx', it.x); it.el.dot.setAttribute('cy', it.y);
+      for(const t of [it.el.halo, it.el.tx]){ t.setAttribute('x', c.edge); t.setAttribute('y', ly+fs*0.34); t.setAttribute('text-anchor', c.right?'start':'end'); }
+    }
+  }
+
+  // ---- playback ----------------------------------------------------------------------
+  let playing=false, dirn=1, loop=false, last=0; const DUR=7000, HOLD=1500; let holdUntil=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function startPlay(){ playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); if(P>=1&&!loop){dirn=-1;} }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); measuredAt=0; updateCamera(); needRender=true; });
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(playing){
+      if(now>=holdUntil){
+        const dt=reduced? DUR : (now-last); last=now;
+        let np=P+dirn*dt/DUR;
+        if(np>=1){ np=1; if(loop){ dirn=-1; holdUntil=now+HOLD; } else stopPlay(); }
+        if(np<=0){ np=0; if(loop){ dirn=1; holdUntil=now+HOLD; } else { stopPlay(); dirn=1; } }
+        setProgress(np);
+      } else last=now;
+    }
+    if(needRender){ needRender=false; renderer.render(scene,camera); drawLabels(); }
+  }
+  requestAnimationFrame(frame);
+  window.RMF12 = { parts, setProgress, select, get P(){return P;},     // hook for the animation sequences
+    focus(t,p,z,x,y,zz){ theta=t; phi=p; zoom=z||1; pan.set(0,0,0); updateCamera(); pan.set(x-target.x,y-target.y,zz-target.z); updateCamera(); needRender=true; },
+    setView(t,p,z,px,py){ theta=t; phi=p; zoom=z||1; pan.set(0,0,0); if(px||py){ updateCamera(); const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0), u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1); pan.addScaledVector(r,px||0).addScaledVector(u,py||0); } updateCamera(); needRender=true; } };
+  resize();
+})();
+</script>
+
+</body>
+</html>
