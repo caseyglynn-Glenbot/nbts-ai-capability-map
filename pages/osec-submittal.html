@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBTS AI Platform — OSEC Submittal Generator (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0085AD;--blue:#1E4B8C;--blue-mid:#3060A8;--blue-light:#5A8FD0;--blue-shadow:#16386B;
+    --stripe:#E8EEF2;--rule:#D0D0D0;--ink:#333333;--ink2:#5A5A5A;--bg:#FFFFFF;
+    --green:#1E7A46;
+    --font:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font);line-height:1.5;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none}
+  .backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+  .back{font-size:13px;font-weight:600;color:var(--ink2)}
+  .back:hover{color:var(--teal)}
+  .page{max-width:1320px;margin:0 auto;background:var(--bg);padding:30px 56px 40px;}
+  .hdr{position:relative;height:132px;border-bottom:1px solid var(--rule);margin-bottom:30px}
+  .hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+  .hdr .brand{position:absolute;left:0;top:6px}
+  .hdr .brand .nb{font-weight:800;font-size:24px;color:var(--blue);letter-spacing:.01em}
+  .hdr .brand .sub{font-size:13px;color:var(--ink2);margin-top:2px}
+  .hdr .brand .sub .xy{color:var(--teal);font-weight:700}
+  .hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+  .hdr .title .t1{font-weight:800;font-size:32px;color:var(--blue);line-height:1.05}
+  .hdr .title .t2{font-weight:600;font-size:16px;color:var(--ink);margin-top:4px}
+  .hdr .title .t3{font-size:12px;color:var(--ink2);margin-top:3px}
+  .intro{max-width:860px;font-size:15px;color:var(--ink);margin:0 0 26px;line-height:1.6}
+  .lbl{font-weight:800;font-size:16px;color:var(--blue);letter-spacing:.06em}
+  .rule{height:3px;background:var(--teal);margin:7px 0 18px}
+  section{margin-bottom:34px}
+  .sec-sub{font-size:13.5px;color:var(--ink2);margin:-8px 0 16px}
+  .steps{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:center;font-size:13.5px;color:var(--ink2)}
+  .step{background:var(--stripe);border-top:2px solid var(--teal);padding:7px 13px;color:var(--ink);font-weight:600}
+  .steparrow{color:var(--teal);font-weight:700}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tile{background:var(--stripe);border-top:3px solid var(--teal);padding:15px 16px 13px;display:flex;flex-direction:column;gap:4px;
+    position:relative;transition:border-top-color .12s,background .12s}
+  a.tile:hover{border-top-color:var(--blue);background:#DEE8EE}
+  a.tile:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .tile .brand2{font-weight:700;font-size:15.5px;color:var(--blue)}
+  .tile .lines{font-size:12.5px;color:var(--ink2)}
+  .tile .badge{position:absolute;top:12px;right:13px;font-size:10px;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;padding:2px 8px;border:1px solid var(--green);color:var(--green)}
+  .tile .cue{margin-top:5px;font-size:12.5px;font-weight:700;color:var(--teal)}
+  a.tile:hover .cue{color:var(--blue)}
+  .tile.pending{border-top-color:#C9D6DE;background:#F3F6F8;cursor:not-allowed}
+  .tile.pending .brand2{color:#7C8B98}
+  .tile.pending .lines{color:#9AA7B2}
+  .tile.pending .badge{border-color:#B7C4CE;color:#8A99A6}
+  .notestrip{margin-top:18px;background:var(--stripe);padding:12px 16px;border-left:4px solid var(--teal);
+    font-size:12.5px;color:var(--ink);line-height:1.5}
+  .notestrip b{color:var(--blue)}
+  .howbox{background:var(--stripe);border-top:3px solid var(--teal);padding:16px 20px}
+  .howbox ol{margin:0;padding-left:20px}
+  .howbox li{font-size:13.5px;color:var(--ink2);margin:6px 0}
+  .howbox li b{color:var(--blue)}
+  .ftr{display:flex;align-items:flex-end;justify-content:space-between;margin-top:10px;border-top:1px solid var(--rule);padding-top:12px}
+  .ftr .disc{font-size:10px;color:var(--ink2);max-width:1000px;line-height:1.4}
+  .ftr .xy{font-weight:800;font-size:30px;color:var(--teal);letter-spacing:.01em}
+  .ftr .xy sup{font-size:20px}
+
+  @media (max-width:1100px){
+    .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+    .hdr{height:auto;padding-bottom:16px}
+    .hdr .title{position:static;text-align:left;margin-top:14px}
+    .hdr .brand{position:static}
+    .hdr svg.swoosh{display:none}
+    .grid3{grid-template-columns:1fr 1fr}
+  }
+  @media (max-width:620px){.grid3{grid-template-columns:1fr}}
+</style>
+
+<style id="xd-style">
+  /* Executive process content - additive block, scoped to .xd- classes */
+  .xd{--xd-blue:#1E4B8C;--xd-mid:#3060A8;--xd-light:#5A8FD0;--xd-shadow:#16386B;}
+  table.xd-steps{width:100%;border-collapse:collapse;margin-top:2px}
+  table.xd-steps th{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink);text-align:left;padding:0 12px 8px;border-bottom:1px solid var(--rule)}
+  table.xd-steps tr{border-bottom:1px solid var(--rule)}
+  table.xd-steps tbody tr:nth-child(odd){background:var(--stripe)}
+  table.xd-steps td{padding:12px;vertical-align:top;font-size:13.5px;color:var(--ink)}
+  table.xd-steps td.n{width:42px;font-weight:800;color:var(--blue);font-size:15px}
+  table.xd-steps td.stage{width:200px;font-weight:700;color:var(--blue)}
+  table.xd-steps .sub{display:block;margin-top:5px;font-size:12.5px;color:var(--ink2)}
+  table.xd-steps .sub b{color:var(--teal)}
+
+  .xd-figure{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start;margin-bottom:16px}
+  .xd-cap{margin:0 0 11px;font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink2)}
+  .xd-note{margin:11px 0 0;font-size:12.5px;color:var(--ink2)}
+
+  .xd-sheet{border:1px solid var(--rule);padding:15px;max-width:320px;background:#fff}
+  .xd-sheet .t{height:8px;width:58%;background:var(--blue);margin-bottom:5px}
+  .xd-sheet .s{height:4px;width:32%;background:var(--teal);margin-bottom:14px}
+  .xd-row{display:flex;gap:5px;padding:2px;margin-bottom:4px}
+  .xd-row i{display:block;height:7px;flex:1;background:var(--stripe)}
+  .xd-row i.w{flex:2}
+  .xd-row.marked{outline:1.5px solid #B03A2E;outline-offset:1px}
+  .xd-tag{display:inline-block;margin-top:14px;background:#F2C744;border:1px solid #C9A51F;
+    padding:4px 8px;font-family:Consolas,"Courier New",monospace;font-size:10.5px;
+    font-weight:700;color:#3A2F00;letter-spacing:.03em}
+  ul.xd-legend{margin:0;padding:0;list-style:none}
+  ul.xd-legend li{display:flex;gap:11px;align-items:flex-start;margin-bottom:13px;font-size:13.5px;color:var(--ink)}
+  ul.xd-legend .sw{flex:none;width:16px;height:16px;margin-top:2px}
+  ul.xd-legend .sw.red{border:1.5px solid #B03A2E}
+  ul.xd-legend .sw.yel{background:#F2C744;border:1px solid #C9A51F}
+  ul.xd-legend b{color:var(--blue)}
+
+  .xd-matrix{display:grid;grid-template-columns:86px 1fr 1fr}
+  .xd-matrix .h{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink2);padding:0 0 8px;text-align:center}
+  .xd-matrix .s{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink2);display:flex;align-items:center;justify-content:flex-end;padding-right:12px}
+  .xd-matrix .c{border:1px solid var(--rule);padding:14px 8px;text-align:center;margin:-0.5px 0 0 -0.5px}
+  .xd-matrix .c b{display:block;font-size:21px;font-weight:800;color:var(--blue);line-height:1.1}
+  .xd-matrix .c span{display:block;font-size:12px;color:var(--ink2);margin-top:4px}
+  .xd-matrix .c.on{background:var(--blue);border-color:var(--blue)}
+  .xd-matrix .c.on b,.xd-matrix .c.on span{color:#fff}
+
+  .xd-mark{position:relative;height:22px}
+  .xd-mark span{position:absolute;bottom:0;left:43%;transform:translateX(-50%);
+    font-size:12px;font-weight:700;color:var(--blue);white-space:nowrap;text-align:center}
+  .xd-mark span:after{content:"";display:block;width:1.5px;height:6px;background:var(--blue);margin:3px auto 0}
+  .xd-scale{display:flex;gap:3px}
+  .xd-scale i{display:block;flex:1;height:15px}
+  .xd-scale i:nth-child(1){background:#5A8FD0}
+  .xd-scale i:nth-child(2){background:#3060A8}
+  .xd-scale i:nth-child(3){background:#1E4B8C}
+  .xd-scale i:nth-child(4){background:#16386B}
+  .xd-ticks{display:flex;justify-content:space-between;margin-top:7px;font-size:12px;color:var(--ink2)}
+
+  table.xd-data{width:100%;border-collapse:collapse}
+  table.xd-data th{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--ink);text-align:left;padding:0 12px 8px;border-bottom:1px solid var(--rule)}
+  table.xd-data tr{border-bottom:1px solid var(--rule)}
+  table.xd-data tbody tr:nth-child(odd){background:var(--stripe)}
+  table.xd-data td{padding:12px;font-size:13.5px;vertical-align:top;color:var(--ink)}
+  table.xd-data td.k{font-weight:700;color:var(--blue);width:170px}
+  table.xd-data td.v{text-align:right;font-weight:800;color:var(--blue);white-space:nowrap;width:110px}
+  table.xd-data code{font-family:Consolas,"Courier New",monospace;font-weight:700;color:var(--blue);font-size:13px}
+
+  .xd-ask{border-left:3px solid var(--teal);padding:3px 0 3px 14px;margin:0 0 18px;font-size:14px;color:var(--ink)}
+  .xd-ask em{font-style:normal;display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink2);margin-bottom:3px}
+  ul.xd-value{margin:0;padding-left:19px}
+  ul.xd-value li{font-size:13.5px;color:var(--ink);margin:0 0 9px}
+  ul.xd-value li b{color:var(--blue)}
+  ul.xd-value li::marker{color:var(--teal)}
+
+  @media (max-width:1100px){
+    .xd-figure{grid-template-columns:1fr;gap:26px}
+    .xd-sheet{max-width:none}
+  }
+  @media (max-width:620px){
+    table.xd-steps thead{display:none}
+    table.xd-steps tbody tr{display:block;padding:11px 10px}
+    table.xd-steps td{display:block;width:auto;padding:3px 0}
+    table.xd-steps td.n{font-size:10.5px;letter-spacing:.12em;color:var(--ink2);font-weight:700}
+    table.xd-steps td.stage{font-size:15px;padding-bottom:4px}
+    .xd-matrix{grid-template-columns:64px 1fr 1fr}
+    table.xd-data td.k{width:auto}
+  }
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/home" style="color:var(--teal);">&larr; Home</a> &nbsp;&middot;&nbsp; <a class="back" href="/submittal-generator" style="color:var(--teal);">Submittal Generator</a></div>
+<div class="page">
+  <div class="hdr">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
+      <path d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Wallace &amp; Tiernan<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A &middot; a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">OSEC Submittal Generator <span style="font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--green);border:1px solid var(--green);padding:2px 8px;vertical-align:middle">DEMO</span></div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </div>
+
+  <p class="intro">Upload the HKOM AS SOLD workbook and get the OSEC L submittal back: Word body, finished PDF with lettered tabs and highlighted data sheets, and a review note that says what to check before release. One upload, no retyping.</p>
+
+  <section>
+    <div class="lbl">HOW TO USE IT</div><div class="rule"></div>
+    <p class="sec-sub">One file. The workbook already holds everything the body needs.</p>
+    <div class="howbox">
+      <ol>
+        <li><b>Open the form</b> from the tile below. It opens in a new tab.</li>
+        <li><b>Enter your email.</b> The package and review note are sent there.</li>
+        <li><b>Upload the HKOM workbook.</b> The <code>&lt;proposal&gt;_AS SOLD.xlsm</code> file in the job's <code>09 PM/HKOM</code> folder. HKOM Sheet, Firm Scope, Product BOMs and Spec Review are all read from it.</li>
+        <li><b>Optional fields.</b> Submittal date (defaults to today), Project Manager name when HKOM carries an employee number, customer name for the cover.</li>
+        <li><b>Submit.</b> In about a minute the package is emailed to you and filed to NBTS Jira with the review note.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="lbl">START A RUN</div><div class="rule"></div>
+    <p class="sec-sub">OSEC L is wired. B-Pak needs its own Tab A set and is not generated yet.</p>
+    <div class="grid3">
+      <a class="tile" href="https://glenbot.app.n8n.cloud/form/osec-submittal" target="_blank" rel="noopener">
+        <span class="badge">Demo</span>
+        <span class="brand2">OSEC L</span>
+        <span class="lines">OSEC L 5 / 10 / 15 / 20, brine tank, softener, product tank, level transmitter, fan kit, airflow monitor, cartridge, H2 detector</span>
+        <span class="cue">Upload HKOM workbook &rsaquo;</span>
+      </a>
+      <span class="tile pending" title="Engineered product, templates not loaded yet" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <span class="brand2">OSEC B-Pak</span>
+        <span class="lines">Engineered systems, custom tanks, Kinetic Pro rectifiers</span>
+      </span>
+      <span class="tile pending" title="Next: wafer and SW series from the same workbook" aria-disabled="true">
+        <span class="badge">In progress</span>
+        <span class="brand2">ETS UV</span>
+        <span class="lines">Same AS SOLD workbook, Word-body path</span>
+      </span>
+    </div>
+    <div class="notestrip"><b>Review before release.</b> The cover carries an AI-assistance notice and every run returns a review note. The ship-to block is left as fillable PDF fields because the address is rarely known at submittal time.</div>
+  </section>
+
+  <section class="xd">
+    <div class="lbl">WHAT COMES BACK</div><div class="rule"></div>
+    <p class="sec-sub">Verified against two released OSEC L jobs: Healdsburg (44 pages, Tab A only) and Death Valley (112 pages, Tabs A to I, two sites).</p>
+    <table class="xd-steps">
+      <thead><tr><th>Part</th><th>Source</th><th>What the generator does</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td class="stage">Cover and approval form</td><td>Project name, SO number, PO, location, PM, equipment type.<span class="sub"><b>From:</b> HKOM Sheet and Firm Scope header. Written into the Word document properties, so the file behaves like a hand-made one.</span></td></tr>
+        <tr><td class="n">2</td><td class="stage">Table of contents</td><td>Sections 1 to 8 plus one lettered line per Section 8 tab, in BOM order.<span class="sub"><b>From:</b> the part numbers in Product 1 to 3 BOM.</span></td></tr>
+        <tr><td class="n">3</td><td class="stage">Section 3 scope of supply</td><td>Item headers (multi-site jobs), quantities, descriptions and sub-lines, spare parts.<span class="sub"><b>From:</b> the Firm Scope tab, verbatim.</span></td></tr>
+        <tr><td class="n">4</td><td class="stage">Section 4 clarifications</td><td>The NOTICE row plus any exception rows the AE recorded.<span class="sub"><b>From:</b> Firm Scope Clarifications &amp; Exceptions. Extra rows raise a flag in the review note.</span></td></tr>
+        <tr><td class="n">5</td><td class="stage">Section 5 schedule</td><td>Submittal date, approval requested 14 days later, lead time.<span class="sub"><b>From:</b> run date and the Firm Scope shipment line. Fixed text, not live Word date fields.</span></td></tr>
+        <tr><td class="n">6</td><td class="stage">Tab A</td><td>Cut sheet, technical data sheet, drawings, product guideline and Modbus map for the OSEC L, 21 pages.<span class="sub"><b>Marked:</b> red boxes on the selected model's row and column, same as the engineer's Acrobat markups.</span></td></tr>
+        <tr><td class="n">7</td><td class="stage">Accessory tabs</td><td>Brine tank manual, softener manual, product tank drawing, transmitter, fan kit, airflow monitor, cartridge, hydrogen detector.<span class="sub"><b>Keyed on:</b> the W2T / W3T part number. Kits and analysis spares ride with their parent and get no tab.</span></td></tr>
+        <tr><td class="n">8</td><td class="stage">Review note</td><td>What to check before release: fields the workbook could not supply, parts with no template, exceptions beyond the standard notice, Spec Review flags.<span class="sub"><b>Control point:</b> nothing goes to a customer without an engineer's sign off.</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="xd">
+    <div class="lbl">WHAT THE WORKBOOK MUST CARRY</div><div class="rule"></div>
+    <p class="sec-sub">Checked on every run. Missing items become flags, not silent blanks.</p>
+    <table class="xd-data">
+      <thead><tr><th>Field</th><th>Workbook location</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="k">SO number, project name, PO</td><td>HKOM Sheet rows 4, 5, 12</td><td>Required</td></tr>
+        <tr><td class="k">Project Manager</td><td>HKOM Sheet row 19</td><td>A name; an employee number raises a flag and can be typed on the form</td></tr>
+        <tr><td class="k">Customer name</td><td>HKOM ship-to line 1, else Firm Scope rep</td><td>Always flagged for confirmation until the rule is settled</td></tr>
+        <tr><td class="k">Model and accessories</td><td>Product 1 to 3 BOM, SELECT PRODUCT TYPE = OSEC</td><td>W3T402401 drives Tab A; other W2T / W3T numbers route accessory tabs</td></tr>
+        <tr><td class="k">Scope and clarifications</td><td>Firm Scope tab</td><td>Copied verbatim into Sections 3 and 4</td></tr>
+        <tr><td class="k">Ship-to</td><td>HKOM Sheet row 8</td><td>Pre-fills the PDF form fields when present; TBD leaves them blank</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="ftr">
+    <div class="disc">Internal platform reference. NBTS AI Support Platform, Xylem Disinfection &amp; Aquatics, Neptune Benson Technical Support. Internal use only. Do not share outside Xylem.</div>
+    <div class="xy">xylem<sup>&deg;</sup></div>
+  </div>
+</div>
+</body>
+</html>
