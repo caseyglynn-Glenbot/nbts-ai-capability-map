@@ -290,6 +290,8 @@
     // the carriage rides the lead screw inside the front assembly
     O.front.attach(O.carriage); O.carriage.userData.base=O.carriage.position.clone();
     O.body.traverse(o=>{ if(o.isMesh||o.isLineSegments){ const n=o.parent&&o.parent.name||''; if(/CastBody/.test(n)) bodyMats.push(o.material); } });
+    // wiper motor and cover in black (cover V112074844, lid V112074845, motor housing parts)
+    for(const k of ['motor','wlid','wfix']) O[k].traverse(o=>{ if(o.isMesh && /^(V112074844|V112074845|V112074314|V112074846)/.test(o.parent&&o.parent.name||'')) o.material=mat(0x1c1c1c,{shininess:45,specular:0x444444}); });
     // quartz sleeves get the fouling material
     for(const k of ['quartz_1','quartz_2','quartz_p']) O[k].traverse(o=>{ if(o.isMesh) o.material=quartzMat(); });
     // lamps glow
