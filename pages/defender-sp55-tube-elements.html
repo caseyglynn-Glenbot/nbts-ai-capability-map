@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Defender SP-55: How the Tube Elements Work</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.9);
+    --ok:#1e7a46; --warn:#b26a00; --used:#8c8a82;
+    --water-1:#f4fcfd; --water-2:#c9ecf5;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --used:#7d7b74; --water-1:#24414b; --water-2:#16282f; color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --sheet:#1b1d21; --ink:#e8e9eb; --ink-2:#a1a6ad; --rule:#3a3e45; --panel:#23262b; --leader:#ff5560; --track:#3a3e45; --glass:rgba(35,38,43,.92); --ok:#5cc28a; --warn:#f0a640; --used:#7d7b74; --water-1:#24414b; --water-2:#16282f; color-scheme:dark; }
+  html,body{height:100%}
+  body{margin:0;background:var(--sheet);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100%}
+  #stage{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--rule)}
+  #view{flex:1;position:relative;min-height:0;touch-action:none;cursor:grab;overflow:hidden}
+  #view:active{cursor:grabbing}
+  #view canvas.gl{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:visible;width:100%;height:100%}
+  #overlay polyline,#overlay line{stroke:var(--leader);stroke-width:1.2;fill:none}
+  #overlay circle.dot{fill:var(--leader)}
+  #overlay circle.mark{fill:none;stroke:var(--leader);stroke-width:1.5}
+  #overlay text{font:500 12px/1 "Barlow Semi Condensed","Barlow",system-ui,sans-serif;fill:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+  #overlay text.tag{font-weight:600;font-size:12px;letter-spacing:.14em}
+  #overlay text.sub{font-size:11px;fill:var(--ink-2);letter-spacing:.04em;text-transform:none;font-family:"Barlow",system-ui,sans-serif;font-weight:400}
+  #overlay text.letter{font-weight:700;font-size:13px;fill:var(--leader)}
+  #overlay .halo{stroke:var(--sheet);stroke-width:4px;fill:var(--sheet);opacity:.85}
+  #overlay .halo.w{stroke:var(--water-2);fill:var(--water-2)}
+  #loading{position:absolute;inset:0;display:grid;place-items:center;font:500 13px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #hint{position:absolute;left:16px;bottom:10px;font:400 11px "Barlow",system-ui,sans-serif;color:var(--ink-2);letter-spacing:.03em;pointer-events:none}
+
+  #detail{position:absolute;left:0;top:0;width:10px;height:10px;border-radius:50%;overflow:hidden;border:1.5px solid var(--ink);box-sizing:border-box;background:radial-gradient(circle at 40% 36%,var(--water-1),var(--water-2));box-shadow:0 10px 28px rgba(0,0,0,.08);touch-action:none;cursor:grab}
+  #detail:active{cursor:grabbing}
+  #detail canvas{display:block;width:100%;height:100%}
+  #dkey{position:absolute;left:0;top:0;margin:0;padding:0;list-style:none;display:grid;grid-template-columns:auto auto;gap:4px 16px;font:400 11.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);pointer-events:none}
+  #dkey li{display:flex;align-items:center;gap:6px;white-space:nowrap}
+  #dkey .sw{width:11px;height:11px;flex:none;border:1px solid rgba(0,0,0,.25);box-sizing:border-box}
+  #dkey .sw.w{border-radius:50%;background:#5cc6e3}
+  #dkey .sw.p{background:#e9e9e7;clip-path:polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%);border:0;box-shadow:inset 0 0 0 1px #b6b5b0}
+  #dkey .sw.d{border-radius:50%;background:#5e636a}
+  #dkey .sw.f{border-radius:50%;background:#1597c9}
+
+  #steps{position:absolute;left:16px;top:14px;width:min(300px,calc(100% - 32px));background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:10px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px)}
+  #steps .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--leader);margin-bottom:6px}
+  #steps ol{list-style:none;margin:0;padding:0}
+  #steps li{border-top:1px solid var(--rule)}
+  #steps li:first-child{border-top:0}
+  #steps li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px 1fr;gap:0 8px;width:100%;padding:6px 0;cursor:pointer;color:var(--ink-2)}
+  #steps li button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  #steps li button::before{content:attr(data-n);grid-row:1 / span 2;width:20px;height:20px;border:1.5px solid currentColor;border-radius:50%;display:grid;place-items:center;font:600 11px "Barlow Semi Condensed",system-ui,sans-serif}
+  #steps .h{font:600 13px/1.25 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+  #steps .d{display:none;font-size:12.5px;line-height:1.4;color:var(--ink);margin-top:3px}
+  #steps li.on button{color:var(--ink)}
+  #steps li.on button::before{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  #steps li.on .d{display:block}
+  #steps li.done button::before{content:'\2713';color:var(--accent);border-color:var(--accent)}
+
+  #readout{position:absolute;right:16px;top:14px;width:220px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:8px 12px 8px;box-sizing:border-box;backdrop-filter:blur(4px);pointer-events:none}
+  #readout .kicker{font:600 10px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+  #readout dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 10px}
+  #readout dt,#readout dd{margin:0;padding:5px 0;border-top:1px solid var(--rule);font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase}
+  #readout dt{color:var(--ink-2)}
+  #readout dd{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  #readout dd.go{color:var(--ok)} #readout dd.stop{color:var(--leader)} #readout dd.mid{color:var(--warn)}
+  #readout .meter{border-top:1px solid var(--rule);padding:6px 0 2px}
+  #readout .meter .top{display:flex;justify-content:space-between;font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+  #readout .meter .top b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  #readout .lbar{height:6px;background:var(--track);margin-top:5px;overflow:hidden}
+  #readout .lbar i{display:block;height:100%;width:0;background:var(--accent)}
+  #readout .lbar.hot i{background:var(--leader)}
+  #readout .faces{display:flex;gap:4px;margin-top:5px}
+  #readout .faces b{flex:1;height:6px;background:var(--track)}
+  #readout .faces b.used{background:var(--used)}
+  #readout .faces b.live{background:var(--accent)}
+
+  #bar{border-top:1.5px solid var(--ink);background:var(--panel);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:auto 1fr auto;gap:12px 20px;align-items:center}
+  #bar h1{margin:0;font:600 15px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+  #bar h1 small{display:block;font:400 11px/1.4 "Barlow",system-ui,sans-serif;letter-spacing:.04em;color:var(--ink-2);text-transform:none;margin-top:3px}
+  .ctrl{display:flex;align-items:center;gap:10px;min-width:0}
+  .ctrl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+  .ctrl .tick{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .btns button{font:500 12px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:6px 10px;cursor:pointer}
+  .btns button:hover{background:var(--track)}
+  .btns button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 "Barlow Semi Condensed",system-ui,sans-serif;color:#1E4B8C;letter-spacing:.01em}
+  #pbar .brand span{color:#0085AD}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px "Barlow",system-ui,sans-serif;color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:#0085AD;text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  #stepnav{display:none;align-items:center;gap:8px;margin-top:6px;padding-top:7px;border-top:1.5px solid var(--ink)}
+  #stepnav.on{display:flex}
+  #stepnav button{font:600 11.5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:5px 10px;cursor:pointer}
+  #stepnav button:disabled{opacity:.35;cursor:default}
+  #stepnav #snext{margin-left:auto;background:var(--ink);color:var(--panel)}
+  #stepnav #snext.ready{animation:nudge 1.4s ease-in-out infinite}
+  @keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(42,99,184,0)}50%{box-shadow:0 0 0 4px rgba(42,99,184,.35)}}
+  #stepnav .count{font:500 11px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  @media (prefers-reduced-motion: reduce){ #stepnav #snext.ready{animation:none} }
+  @media (max-width:760px){
+    #pbar{padding:8px 16px} #pbar .crumbs{margin-left:0;width:100%}
+    #bar{grid-template-columns:1fr;gap:8px}
+    .btns{justify-content:flex-start}
+    #steps{top:auto;bottom:8px;left:8px;width:calc(100% - 16px);padding:6px 10px 4px}
+    #steps li:not(.on){display:none}
+    #steps .kicker{margin-bottom:2px}
+    #readout{right:8px;top:8px;width:150px;padding:5px 8px 4px}
+    #readout dl{display:none}
+    #steps .d{font-size:12px}
+    #readout .meter .top{font-size:10px}
+    #dkey{display:none}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-animations">Product Animations</a><span class="sep">&middot;</span><span>Defender SP-55 Tube Elements</span></nav>
+</div>
+<div id="stage">
+  <div id="view">
+    <div id="detail" aria-hidden="true"><canvas id="micro"></canvas></div>
+    <svg id="overlay" aria-hidden="true"></svg>
+    <div id="loading">Loading SP-55 geometry…</div>
+    <div id="steps" aria-live="polite">
+      <div class="kicker">How the tube elements work</div>
+      <ol id="steplist"></ol>
+      <div id="stepnav" aria-label="Walkthrough"><button id="sback">&lsaquo; Back</button><span class="count" id="scount">Step 1</span><button id="snext">Next &rsaquo;</button></div>
+    </div>
+    <div id="readout" aria-hidden="true">
+      <div class="kicker">Tube element status</div>
+      <dl>
+        <dt>Pump</dt><dd id="r-pump">Running</dd>
+        <dt>Tube sheet</dt><dd id="r-sheet">Up</dd>
+        <dt>Cake</dt><dd id="r-media">On tubes</dd>
+      </dl>
+      <div class="meter"><div class="top"><span>Cake loading</span><b id="r-load">0%</b></div><div class="lbar" id="r-bar"><i id="r-fill"></i></div></div>
+      <div class="meter"><div class="top"><span>Perlite face</span><b id="r-face">1 of 6</b></div><div class="faces" id="r-faces"><b></b><b></b><b></b><b></b><b></b><b></b></div></div>
+    </div>
+    <ul id="dkey" aria-hidden="true">
+      <li><i class="sw w"></i>Unfiltered water</li>
+      <li><i class="sw p"></i>Perlite, six usable faces</li>
+      <li><i class="sw d"></i>Debris on the outward face</li>
+      <li><i class="sw f"></i>Filtered water</li>
+    </ul>
+    <div id="hint">Drag to look around · scroll to zoom · drag the detail to turn the tube · Walkthrough: click or &rarr; for the next step</div>
+  </div>
+  <div id="bar">
+    <h1>Defender SP-55 · Tube Elements<small>Built from the SP-55 Auto STEP model. Detail A magnifies one tube wall: perlite cake, tube fabric and support coil.</small></h1>
+    <div class="ctrl">
+      <span class="tick" id="tnow">0:00</span>
+      <input id="prog" type="range" min="0" max="1000" value="0" aria-label="Animation timeline">
+      <span class="tick" id="tend">1:01</span>
+    </div>
+    <div class="btns">
+      <button id="play" aria-pressed="false">Play</button>
+      <button id="loop" aria-pressed="false">Loop</button>
+      <button id="walk" aria-pressed="false" title="Pause at the end of each step; click the model or press the right arrow for the next one">Walkthrough</button>
+      <button id="cut" aria-pressed="true" title="Show the filter cut in half">Cutaway</button>
+      <button id="labels" aria-pressed="true">Labels</button>
+      <button id="resetview">Reset view</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/sp55-exploded/three.min.js"></script>
+<script>
+(function(){
+  const view=document.getElementById('view'), overlay=document.getElementById('overlay');
+  const detail=document.getElementById('detail'), microCanvas=document.getElementById('micro'), dkey=document.getElementById('dkey');
+  const stepsBox=document.getElementById('steps'), readoutBox=document.getElementById('readout');
+  const prog=document.getElementById('prog'), playBtn=document.getElementById('play'), loopBtn=document.getElementById('loop');
+  const cutBtn=document.getElementById('cut'), labelsBtn=document.getElementById('labels');
+  const tnow=document.getElementById('tnow');
+
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const ease=t=>{t=clamp(t,0,1); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+  const smooth=t=>{t=clamp(t,0,1); return t*t*(3-2*t);};
+  const easeOut=t=>{t=clamp(t,0,1); return 1-Math.pow(1-t,3);};
+  const backOut=t=>{t=clamp(t,0,1); const c1=1.35,c3=c1+1; return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);};
+  const h1=i=>{ const s=Math.sin(i*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+
+  // ---- timeline (seconds), same phases as the perlite media animation -----------------------------
+  const T_END=61, FACES=6, FLY=1.1;
+  const STEPS=[
+    {t:0,    h:'Filtering', d:'Water comes in from outside the tubes. Debris lodges against the perlite faces that meet the flow, while the water passes through the cake and the tube fabric, rises inside the tube and leaves through the tube sheet.'},
+    {t:10,   h:'Bump due', d:'The working faces are packed and differential pressure is climbing. The controller stops the pump so the cake can be bumped.'},
+    {t:14,   h:'Bump', d:'The bump tire vents and the tube sheet drops. The cake releases, each particle turns, and an unused face now meets the flow with the loaded face buried in the cake. The pump restarts and the cake settles back on the tubes.'},
+    {t:19.5, h:'Auto bump, faces 2 to 6', d:'Filter, load, bump, repeat. Every bump turns another clean face to the flow, so one charge of perlite works through all six faces.'},
+    {t:44.2, h:'Media spent', d:'Every face has taken its share of debris. A bump no longer brings a clean face forward, so the cake stays loaded and the pump stays off.'},
+    {t:50,   h:'Load fresh perlite', d:'Drain the spent cake and charge the vessel with fresh perlite. Precoat lays it on the tubes with a clean face toward the flow, and filtering starts over.'}
+  ];
+  // debris arrival windows per perlite face, and the bump that follows each
+  const FACEWIN=[[0.4,10]];
+  const BUMPS=[{t:14.0, s:1, turn:true, rs0:17.0, rs1:17.9}];
+  const PUMPK=[[0,1],[12.8,1],[13.6,0],[16.8,0],[17.5,.45],[17.9,.45],[18.6,1]];
+  { let c=18.8;
+    for(let f=1;f<FACES-1;f++){
+      FACEWIN[f]=[c,c+3.0];
+      BUMPS.push({t:c+3.5, s:0.72, turn:true, rs0:c+4.65, rs1:c+5.2});
+      PUMPK.push([c+3.0,1],[c+3.4,0],[c+4.6,0],[c+5.0,.45],[c+5.2,.45],[c+5.6,1]);
+      c+=5.6;
+    }
+    FACEWIN[FACES-1]=[c,c+3.0];                 // 41.2 to 44.2
+  }
+  const SPENT_T=46.0;
+  BUMPS.push({t:SPENT_T, s:1, turn:false});
+  const DRAIN0=50.4, PRE0=54.0, PRE_ON=54.6, PRE1=58.8;
+  PUMPK.push([45.2,1],[45.7,0],[PRE0,0],[PRE_ON,.45],[PRE1,.45],[59.6,1],[T_END,1]);
+  const DROP=52;                                    // tube sheet drop, mm (exaggerated so it reads)
+  const TIRE_Y0=1079, TIRE_H=172;
+
+  function pumpSpeed(t){
+    for(let i=0;i<PUMPK.length-1;i++){ const [ta,va]=PUMPK[i], [tb,vb]=PUMPK[i+1]; if(t<=tb) return va+(vb-va)*smooth((t-ta)/Math.max(1e-6,tb-ta)); }
+    return PUMPK[PUMPK.length-1][1];
+  }
+  function sheetOffset(t){
+    let off=0;
+    for(const b of BUMPS){
+      const a=(t-b.t)/b.s; if(a<0) break;
+      if(a<0.18){ off=-DROP*smooth(a/0.18)*smooth(a/0.18); }
+      else if(a<1.15){ const c=a-0.18; off=-DROP+9*Math.exp(-c*7)*Math.sin(c*38); }
+      else if(a<2.1){ off=-DROP*(1-ease((a-1.15)/0.95)); }
+      else off=0;
+    }
+    return off;
+  }
+  const turnDone=b=>b.t+0.75*b.s;
+  function faceAt(t){ if(t>=PRE0) return 0; let f=0; for(const b of BUMPS) if(b.turn && t>=turnDone(b)) f++; return f; }
+  function loadAt(t){
+    if(t>=DRAIN0+0.6) return 0;
+    const w=FACEWIN[faceAt(t)];
+    return clamp((t-(w[0]+FLY))/(w[1]-w[0]-FLY),0,1);
+  }
+  const spentAt=t=>t>=SPENT_T+0.3 && t<PRE0;
+  function bumpsDone(t){ let n=0; for(const b of BUMPS) if(t>=b.t) n++; return n; }
+
+  // ---- macro scene: the SP-55 STEP model ----------------------------------------------------------
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.localClippingEnabled=true;
+  renderer.domElement.className='gl';
+  view.insertBefore(renderer.domElement, view.firstChild);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(34,1,10,40000);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.85));
+  const sun=new THREE.DirectionalLight(0xffffff,0.75); sun.position.set(-0.5,1,-0.9); scene.add(sun);
+  const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(1,0.3,-0.6); scene.add(fill);
+
+  const CUT_OPEN=0, CUT_SHUT=1200;
+  const clip=new THREE.Plane(new THREE.Vector3(0,0,1), CUT_OPEN);
+  let cutOn=true;
+
+  const BLUE=0x2b6cc4, DARKBLUE=0x1d3f9a, GREY=0x8b9199, LIGHT=0xb7bcc3, BLACK=0x1f2124, YELLOW=0xd9c92e, FELT=0xcfc9b6, TUBE=0x5b626b, HOLE=0x2c3138, ACR=0xe6ecf2;
+  const COLORS={body:BLUE, upper_head:BLUE, davit:BLUE, davit_arm:BLUE, head_gasket:GREY, bump_gasket:BLACK, bump_bushing:DARKBLUE, bushing_oring:BLACK, snap_ring:BLACK, bump_tire:BLACK, lift_shaft_nut:GREY,
+    tube_sheet:LIGHT, tube_sheet_holes:HOLE, tube_elements:TUBE, tube_elements_edges:TUBE, felt_gasket:FELT, hold_down_plate:LIGHT, hold_down_holes:HOLE, tube_sheet_hardware:GREY,
+    lift_shaft:YELLOW, lift_shaft_hardware:GREY, lift_shaft_oring:BLACK, window_gasket:BLACK, acrylic:ACR, window_cover:BLUE, window_hardware:GREY};
+  const ALPHA={acrylic:0.45};
+  const MOVING=new Set(['tube_sheet','tube_sheet_holes','tube_elements','tube_elements_edges','felt_gasket','hold_down_plate','hold_down_holes','tube_sheet_hardware','lift_shaft','lift_shaft_hardware','lift_shaft_nut']);
+  const sheet=new THREE.Group(); scene.add(sheet);
+  const parts={};
+
+  // perlite cake drawn on the tube elements: coverage and how loaded the outward faces look
+  const Y0=-380, Y1=940;
+  let NT=0, tubeC=null, TUBE_A=0;
+  const YA=320;                                       // where Detail A sits on its tube
+  const cakeU={uLevel:{value:1}, uDirt:{value:0}, uClean:{value:new THREE.Color(0xeee8d6)}, uDirty:{value:new THREE.Color(0x8c8575)}};
+  function tubeMaterial(){
+    const m=new THREE.MeshPhongMaterial({color:TUBE, shininess:22, specular:0x333333, side:THREE.DoubleSide, clippingPlanes:[clip], polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
+    m.onBeforeCompile=sh=>{
+      Object.assign(sh.uniforms,cakeU);
+      sh.vertexShader=sh.vertexShader
+        .replace('#include <common>','#include <common>\nattribute float tubeId;\nattribute vec2 tubeOff;\nvarying vec3 vTube;\nvarying vec2 vOff;')
+        .replace('#include <begin_vertex>',`#include <begin_vertex>\nvOff=tubeOff;\nvTube=vec3(tubeId, clamp((position.y-(${Y0.toFixed(1)}))/${(Y1-Y0).toFixed(1)},0.0,1.0), 0.0);`);
+      sh.fragmentShader=sh.fragmentShader
+        .replace('#include <common>','#include <common>\nuniform float uLevel; uniform float uDirt; uniform vec3 uClean; uniform vec3 uDirty;\nvarying vec3 vTube;\nvarying vec2 vOff;\nfloat h31(vec3 p){p=fract(p*0.3183099+0.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}\nfloat vnoise(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.0-2.0*f);return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x),mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x),mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y),f.z);}\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}')
+        .replace('#include <color_fragment>',`#include <color_fragment>
+          vec3 np=vec3(vOff*0.9+vec2(vTube.x*3.17, vTube.x*1.71), vTube.y*22.0);
+          float n=vnoise(np)*0.65+vnoise(np*2.3+11.0)*0.35;
+          float th=n*0.8+h21(vec2(vTube.x,7.0))*0.2;
+          float cov=smoothstep(th-0.09, th+0.09, uLevel*1.2);
+          float dirt=clamp(uDirt*(0.75+0.5*vnoise(np*3.1+5.0)),0.0,1.0);
+          vec3 cake=mix(uClean, uDirty, dirt)*(0.93+0.07*n);
+          diffuseColor.rgb=mix(diffuseColor.rgb, cake, cov);`);
+    };
+    return m;
+  }
+
+  let ready=false;
+  fetch('/assets/sp55-exploded/sp55-model.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('model '+r.status); return r.arrayBuffer(); }).then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl;
+    for(const e of hdr){
+      const col=COLORS[e.name]; if(col===undefined) continue;
+      const g=new THREE.Group();
+      if(e.nv){
+        const q=new Int16Array(buf, base+e.V[0], e.nv*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+        const geo=new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+        geo.computeVertexNormals();
+        let mat;
+        if(e.name==='tube_elements'){
+          // each element is a 22-vertex prism: tube i owns vertices 22i..22i+21
+          NT=Math.round(e.nv/22); tubeC=new Float32Array(NT*2);
+          const tid=new Float32Array(e.nv), off=new Float32Array(e.nv*2);
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); tid[v]=i; tubeC[2*i]+=pos[3*v]/22; tubeC[2*i+1]+=pos[3*v+2]/22; }
+          for(let v=0;v<e.nv;v++){ const i=Math.floor(v/22); off[2*v]=(pos[3*v]-tubeC[2*i])/12; off[2*v+1]=(pos[3*v+2]-tubeC[2*i+1])/12; }
+          geo.setAttribute('tubeId', new THREE.BufferAttribute(tid,1));
+          geo.setAttribute('tubeOff', new THREE.BufferAttribute(off,2));
+          mat=tubeMaterial();
+          // Detail A: the front-row tube on the section face nearest x = -286
+          let best=1e9; for(let i=0;i<NT;i++){ const d=Math.hypot(tubeC[2*i]+286, tubeC[2*i+1]-38); if(d<best){best=d; TUBE_A=i;} }
+        } else {
+          const a=ALPHA[e.name];
+          mat=new THREE.MeshPhongMaterial({color:col, shininess:18, specular:0x222222, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
+            transparent:!!a, opacity:a||1, depthWrite:!a, side:THREE.DoubleSide, clippingPlanes:[clip]});
+          if(e.name==='body'||e.name==='upper_head'){
+            mat.onBeforeCompile=sh=>{ sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nif(!gl_FrontFacing) diffuseColor.rgb=vec3('+[0.62,0.71,0.84].join(',')+');'); };
+          }
+        }
+        g.add(new THREE.Mesh(geo,mat));
+      }
+      if(e.nl){
+        const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
+        for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+        const lg=new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        const dark=(col===BLACK||col===HOLE||col===DARKBLUE);
+        g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({color: dark?0x6a6f76:0x101214, transparent:true, opacity: dark?0.6:0.7, clippingPlanes:[clip]})));
+      }
+      (MOVING.has(e.name)?sheet:scene).add(g);
+      parts[e.name]={obj:g};
+    }
+    // a red collar on the Detail A tube, riding with the tube sheet
+    ringA.position.set(tubeC[2*TUBE_A], YA, tubeC[2*TUBE_A+1]); sheet.add(ringA);
+    buildMedia(); buildFlow();
+    document.getElementById('loading').remove();
+    ready=true; layout(); setTime(T);
+    if(walk) goStep(0); else if(!reduced) startPlay();
+  }).catch(err=>{ document.getElementById('loading').textContent='Could not load the model: '+err.message; });
+  const ringA=new THREE.Mesh(new THREE.TorusGeometry(19,2.6,8,40), new THREE.MeshBasicMaterial({color:0xd1202b}));
+  ringA.rotation.x=Math.PI/2;
+
+  // ---- macro particles: loose media and water flow, pure functions of time so scrubbing works ----
+  function canvasTex(draw,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; draw(c.getContext('2d'),w,h); return new THREE.CanvasTexture(c); }
+  const dotTex=canvasTex((g,w)=>{ const gr=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,w,w); },32,32);
+  function cloud(sc,n,size,color,opacity,planes){
+    const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3).fill(1e5),3));
+    const m=new THREE.PointsMaterial({size, color, map:dotTex, transparent:true, opacity, depthWrite:false, clippingPlanes:planes||[]});
+    const p=new THREE.Points(geo,m); p.frustumCulled=false; sc.add(p); return p;
+  }
+  const MEDIA_N=1100, FLOW_N=420;
+  let media, flow, M=null;
+  function buildMedia(){
+    media=cloud(scene,MEDIA_N,60,0xd9c89c,1,[clip]);
+    M=[];
+    for(let i=0;i<MEDIA_N;i++){
+      let tb=0; for(let n=0;n<12;n++){ tb=(h1(i*3.1+n*17.3)*NT)|0; if(tubeC[2*tb+1]>-60) break; }
+      const a=h1(i*1.7)*6.283;
+      M.push({ g:i%BUMPS.length, t0:h1(i*4.1)*0.4,
+        x:tubeC[2*tb]+Math.cos(a)*14, z:tubeC[2*tb+1]+Math.sin(a)*14, y:Y0+30+h1(i*6.7)*(Y1-Y0-120),
+        fall:60+h1(i*8.3)*260, tau:0.9+h1(i*9.1)*1.2, sw:h1(i*1.3)*6.283, sr:20+h1(i*2.1)*60,
+        rt:h1(i*5.9), dr:h1(i*7.7), pre:PRE_ON+h1(i*3.3)*(PRE1-PRE_ON-1.4) });
+    }
+  }
+  function placeMedia(t){
+    const a=media.geometry.attributes.position.array, sy=sheetOffset(t);
+    for(let i=0;i<MEDIA_N;i++){
+      const m=M[i]; let x,y,z,show=false;
+      if(t>=PRE0){                                   // precoat: fresh media carried up onto the tubes
+        if(t>=m.pre && t<m.pre+1.4){ const k=easeOut((t-m.pre)/1.4); x=m.x*(0.6+0.4*k); z=m.z*(0.6+0.4*k)+(1-k)*-120; y=-600+(m.y+sy+600)*k; show=true; }
+      } else {
+        const b=BUMPS[m.g], ts=b.t+0.1+m.t0;
+        const end=b.turn? b.rs1+0.2 : DRAIN0+3.2;
+        if(t>=ts && t<end){
+          const u=t-ts, d=m.fall*(1-Math.exp(-u/m.tau)), sw=m.sw+u*0.35, drift=Math.min(1,u/2.5)*m.sr;
+          x=m.x+Math.cos(sw)*drift*0.6; y=m.y+sy-d; z=m.z+Math.sin(sw)*drift*0.6; show=true;
+          if(b.turn && t>b.rs0-0.3){ const k=ease((t-(b.rs0-0.3)+m.rt*0.3)/(b.rs1-b.rs0+0.4)); x+=(m.x-x)*k; y+=(m.y+sy-y)*k; z+=(m.z-z)*k; }
+          if(!b.turn && t>DRAIN0+m.dr*0.6){ const u2=t-(DRAIN0+m.dr*0.6); y-=520*u2*u2; if(y<-660) show=false; }
+        }
+      }
+      if(!show){ a[3*i+1]=1e5; continue; }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+    }
+    media.geometry.attributes.position.needsUpdate=true;
+  }
+  const INF={x:0, y:-615, z:-701, r:150}, EFF={x:0, y:1022, z:-466, r:150};
+  let F=null, flowPhase=0;
+  function buildFlow(){
+    flow=cloud(scene,FLOW_N,55,0x1597c9,0.9);
+    flow.material.depthTest=false; flow.renderOrder=5;
+    F=[];
+    for(let i=0;i<FLOW_N;i++){
+      let tb=0; for(let n=0;n<12;n++){ tb=(h1(i*11.3+n*5.1)*NT)|0; if(tubeC[2*tb+1]>0) break; }
+      const ja=h1(i*2.3)*6.283, jr=Math.sqrt(h1(i*3.7))*INF.r*0.8, ea=h1(i*6.6)*6.283, er=Math.sqrt(h1(i*8.9))*EFF.r*0.75;
+      F.push({ph:h1(i*13.7), tb, jx:Math.cos(ja)*jr, jy:Math.sin(ja)*jr, y0:-340+h1(i*4.4)*1000, ex:Math.cos(ea)*er, ez:Math.sin(ea)*er});
+    }
+  }
+  const infRing=new THREE.Mesh(new THREE.TorusGeometry(INF.r,9,10,48), new THREE.MeshBasicMaterial({color:0x2b6cc4, transparent:true, opacity:0.55, depthWrite:false}));
+  infRing.position.set(INF.x,INF.y,INF.z); scene.add(infRing);
+  const effRing=infRing.clone(); effRing.rotation.x=Math.PI/2; effRing.position.set(EFF.x,EFF.y+6,EFF.z); scene.add(effRing);
+  function placeFlow(t){
+    const a=flow.geometry.attributes.position.array, sy=sheetOffset(t), on=pumpSpeed(t);
+    flow.material.opacity=0.8*smooth(on*4); flow.visible=on>0.01;
+    for(let i=0;i<FLOW_N;i++){
+      const f=F[i], p=(f.ph+flowPhase)%1, tx=tubeC[2*f.tb], tz=tubeC[2*f.tb+1], ix=INF.x+f.jx, iy=INF.y+f.jy;
+      let x,y,z;
+      if(p<0.14){ const k=p/0.14; x=ix; y=iy; z=INF.z-520+550*k; }
+      else if(p<0.45){ const k=smooth((p-0.14)/0.31), u=1-k, cx=ix*0.4+tx*0.2, cy=iy*0.3+f.y0*0.7-120, cz=-420;
+        x=u*u*ix+2*u*k*cx+k*k*tx; y=u*u*iy+2*u*k*cy+k*k*(f.y0+sy); z=u*u*(INF.z+30)+2*u*k*cz+k*k*tz; }
+      else if(p<0.76){ const k=(p-0.45)/0.31; x=tx; z=tz; y=f.y0+sy+(990-f.y0)*k; }
+      else if(p<0.87){ const k=smooth((p-0.76)/0.11); x=tx+(EFF.x+f.ex-tx)*k; z=tz+(EFF.z+f.ez-tz)*k; y=990+sy*(1-k)+12*k; }
+      else { const k=(p-0.87)/0.13; x=EFF.x+f.ex; z=EFF.z+f.ez; y=1002+k*520; }
+      a[3*i]=x; a[3*i+1]=y; a[3*i+2]=z;
+    }
+    flow.geometry.attributes.position.needsUpdate=true;
+  }
+
+  // ---- micro scene: Detail A, one tube wall magnified ---------------------------------------------
+  const mRenderer=new THREE.WebGLRenderer({canvas:microCanvas, antialias:true, alpha:true});
+  mRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  mRenderer.localClippingEnabled=true;
+  const mScene=new THREE.Scene();
+  const mCam=new THREE.PerspectiveCamera(30,1,0.5,200);
+  mScene.add(new THREE.HemisphereLight(0xffffff,0x7f8c96,0.78));
+  const mSun=new THREE.DirectionalLight(0xffffff,0.62); mScene.add(mSun);
+  const mFill=new THREE.DirectionalLight(0xffffff,0.22); mScene.add(mFill);
+  const seg=new THREE.Group(); mScene.add(seg);       // drops with the tube sheet
+
+  const HR=0.5, AP=HR*Math.cos(Math.PI/6), PL=0.52;    // perlite: hex circumradius, apothem, length along the wall
+  const RF=3.0, FT=0.16, RC=RF-FT-0.2;                // tube fabric outer radius and thickness, support coil radius
+  const RCAKE=RF+AP+0.01, PITCH=2*AP+0.06, NR=17, PER_RING=23, PER_FACE=3;
+  const SEG_H=NR*PITCH+1.2;
+  const D2R=Math.PI/180, CAM_AZ=-90*D2R;              // the camera looks from azimuth -90 (x = cos a, z = sin a)
+  const W_LO=CAM_AZ-120*D2R, W_HI=CAM_AZ-10*D2R;      // quarter cut away on the viewer's right
+  const radial=a=>new THREE.Vector3(Math.cos(a),0,Math.sin(a));
+  const inWedge=a=>{ let d=a-W_LO; d=((d%(2*Math.PI))+2*Math.PI)%(2*Math.PI); return d<W_HI-W_LO; };
+  // clipping that removes only the wedge: both planes face out of it
+  const mClip=[new THREE.Plane(new THREE.Vector3(Math.sin(W_LO),0,-Math.cos(W_LO)),0), new THREE.Plane(new THREE.Vector3(-Math.sin(W_HI),0,Math.cos(W_HI)),0)];
+
+  // tube fabric, with the same weave as the 2D detail
+  const weave=canvasTex((g,w)=>{ g.fillStyle='#F3E4DD'; g.fillRect(0,0,w,w); g.lineWidth=5; g.strokeStyle='#E1CBC1'; g.beginPath(); g.moveTo(0,w); g.lineTo(w,0); g.stroke(); g.strokeStyle='#EBD9D1'; g.beginPath(); g.moveTo(0,0); g.lineTo(w,w); g.stroke(); },32,32);
+  weave.wrapS=weave.wrapT=THREE.RepeatWrapping; weave.repeat.set(26,22);
+  const fabMat=new THREE.MeshLambertMaterial({map:weave, side:THREE.DoubleSide, clippingPlanes:mClip, clipIntersection:true});
+  seg.add(new THREE.Mesh(new THREE.CylinderGeometry(RF,RF,SEG_H,96,1,true), fabMat));
+  seg.add(new THREE.Mesh(new THREE.CylinderGeometry(RF-FT,RF-FT,SEG_H,96,1,true), fabMat));
+  const capMat=new THREE.MeshLambertMaterial({color:0xd9bfb4, side:THREE.DoubleSide});
+  for(const a of [W_LO,W_HI]){ const cap=new THREE.Mesh(new THREE.PlaneGeometry(FT,SEG_H), capMat); cap.position.copy(radial(a).multiplyScalar(RF-FT/2)); cap.rotation.y=-a; seg.add(cap); }
+  // support coil inside the fabric
+  const COIL_P=1.05, COIL_TURNS=SEG_H/COIL_P;
+  class Helix extends THREE.Curve{ getPoint(u,tg=new THREE.Vector3()){ const a=u*COIL_TURNS*2*Math.PI; return tg.set(RC*Math.cos(a), -SEG_H/2+u*SEG_H, RC*Math.sin(a)); } }
+  seg.add(new THREE.Mesh(new THREE.TubeGeometry(new Helix(), Math.round(COIL_TURNS*28), 0.12, 7, false),
+    new THREE.MeshPhongMaterial({color:0x9a9893, shininess:60, specular:0x666666, clippingPlanes:mClip, clipIntersection:true})));
+
+  // perlite particles: short hexagonal prisms lying along the wall, six flat faces, one facing the flow
+  const hexShape=new THREE.Shape();
+  for(let i=0;i<6;i++){ const a=(30+60*i)*D2R; i? hexShape.lineTo(HR*Math.cos(a),HR*Math.sin(a)) : hexShape.moveTo(HR*Math.cos(a),HR*Math.sin(a)); }
+  hexShape.closePath();
+  const hexGeo=new THREE.ExtrudeGeometry(hexShape,{depth:PL-0.06, bevelEnabled:true, bevelThickness:0.03, bevelSize:0.03, bevelSegments:1});
+  hexGeo.translate(0,0,-(PL-0.06)/2);
+  const pellets=[];
+  const EDGE=Math.asin(PL/2/RCAKE), A0=W_HI+EDGE, A1=W_LO+2*Math.PI-EDGE;   // first and last particle end on the cut faces
+  for(let k=0;k<NR;k++){
+    const y=(k-(NR-1)/2)*PITCH;
+    for(let j=0;j<PER_RING;j++){
+      const a=A0+(A1-A0)*j/(PER_RING-1);
+      const x=radial(a), up=new THREE.Vector3(0,1,0), z=new THREE.Vector3().crossVectors(x,up);
+      const q0=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,up,z));
+      const id=pellets.length;
+      pellets.push({a, y, k, q0, sec:j===PER_RING-1, h:h1(id*1.37+3), d:h1(id*2.71+9), dr:h1(id*4.13+1), pr:h1(id*5.77+2), sp:h1(id*6.91+4)});
+    }
+  }
+  const NP=pellets.length;
+  const pelletMesh=new THREE.InstancedMesh(hexGeo,[
+    new THREE.MeshPhongMaterial({color:0xd8d7d2, flatShading:true, shininess:6}),   // hex ends
+    new THREE.MeshPhongMaterial({color:0xededeb, flatShading:true, shininess:10})    // the six faces
+  ], NP);
+  pelletMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); pelletMesh.frustumCulled=false; seg.add(pelletMesh);
+  // outline the particles on the section face so they read as hexagons, like the 2D cross section
+  const edgeGeo=new THREE.EdgesGeometry(hexGeo,25), edgeMat=new THREE.LineBasicMaterial({color:0x8f8e89});
+  const secLines=[];
+  pellets.forEach((P,i)=>{ if(!P.sec) return; const l=new THREE.LineSegments(edgeGeo,edgeMat); l.matrixAutoUpdate=false; seg.add(l); secLines.push({i,l}); });
+
+  // debris: three per face per particle, landing on whichever face meets the flow
+  const ND=NP*FACES*PER_FACE;
+  const debrisMesh=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0), new THREE.MeshPhongMaterial({color:0x5e636a, flatShading:true, shininess:12}), ND);
+  debrisMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); debrisMesh.frustumCulled=false; seg.add(debrisMesh);
+  const DB=[];
+  { const zq=new THREE.Quaternion(), ax=new THREE.Vector3(0,0,1);
+    for(let f=0;f<FACES;f++){
+      const w=FACEWIN[f], n=NP*PER_FACE, order=[...Array(n).keys()].sort((p,q)=>h1(p*3.3+f*91)-h1(q*3.3+f*91));
+      for(let r=0;r<n;r++){
+        const i=order[r], p=Math.floor(i/PER_FACE), P=pellets[p], s=f*1000+i;
+        const fa=60*f*D2R, nrm=new THREE.Vector3(Math.cos(fa),Math.sin(fa),0), tan=new THREE.Vector3(-Math.sin(fa),Math.cos(fa),0);
+        const sc=0.075+h1(s*1.9)*0.045;
+        const lp=nrm.clone().multiplyScalar(AP+0.02+sc*0.35).addScaledVector(tan,(h1(s*2.3)-0.5)*0.34).add(new THREE.Vector3(0,0,(h1(s*3.7)-0.5)*0.42));
+        zq.setFromAxisAngle(ax,-fa);
+        const end=lp.clone().applyQuaternion(zq).applyQuaternion(P.q0).add(radial(P.a).multiplyScalar(RCAKE)).add(new THREE.Vector3(0,P.y,0));
+        const start=end.clone().add(radial(P.a+(h1(s*4.4)-0.5)*0.25).multiplyScalar(4.5)).add(new THREE.Vector3(0,(h1(s*5.1)-0.5)*1.2,0));
+        DB.push({p, lp, sc, ta:w[0]+FLY+(r+0.5)/n*(w[1]-w[0]-FLY), start, end, rot:h1(s*6.3)*6.28});
+      }
+    }
+  }
+
+  // water in the detail: unfiltered water running in to the cake, filtered water rising inside the tube
+  const WIN_N=380, WUP_N=150;
+  const wIn=cloud(mScene,WIN_N,0.5,0x4fc0df,0.85), wUp=cloud(mScene,WUP_N,0.46,0x1597c9,0.9);
+  const WI=[], WU=[];
+  for(let i=0;i<WIN_N;i++){ let a; for(let n=0;n<20;n++){ a=CAM_AZ+(h1(i*7.1+n*3.3)*2-1)*Math.PI; if(!inWedge(a)) break; } WI.push({a, y:(h1(i*2.9)-0.5)*SEG_H, ph:h1(i*5.3), r0:8+h1(i*3.1)*3}); }
+  for(let i=0;i<WUP_N;i++){ const a=h1(i*8.3)*6.283, r=Math.sqrt(h1(i*4.7))*(RC-0.45); WU.push({x:Math.cos(a)*r, z:Math.sin(a)*r, ph:h1(i*6.1)}); }
+  function placeWater(on){
+    wIn.visible=wUp.visible=on>0.01; wIn.material.opacity=0.85*smooth(on*3); wUp.material.opacity=0.9*smooth(on*3);
+    if(!wIn.visible) return;
+    const a=wIn.geometry.attributes.position.array, b=wUp.geometry.attributes.position.array, rEnd=RCAKE+AP+0.05, sy=seg.position.y;
+    for(let i=0;i<WIN_N;i++){ const w=WI[i], p=(w.ph+flowPhase*2.2)%1, r=w.r0-(w.r0-rEnd)*p; a[3*i]=Math.cos(w.a)*r; a[3*i+1]=w.y+sy; a[3*i+2]=Math.sin(w.a)*r; }
+    for(let i=0;i<WUP_N;i++){ const w=WU[i], p=(w.ph+flowPhase*1.6)%1; b[3*i]=w.x; b[3*i+1]=-SEG_H/2+p*SEG_H+sy; b[3*i+2]=w.z; }
+    wIn.geometry.attributes.position.needsUpdate=true; wUp.geometry.attributes.position.needsUpdate=true;
+  }
+
+  // pose of one particle at time t: lift off the fabric, rattle, the 60 degree turn, drain and precoat
+  const _m=new THREE.Matrix4(), _q=new THREE.Quaternion(), _qz=new THREE.Quaternion(), _p=new THREE.Vector3(), _s=new THREE.Vector3(), _v=new THREE.Vector3(), ZAX=new THREE.Vector3(0,0,1), ZERO=new THREE.Vector3(0,0,0);
+  function pelletPose(P,t,outP,outQ){
+    let r=RCAKE, y=P.y, rot=0, vis=true, tumble=0;
+    if(t>=PRE0){
+      const land=PRE_ON+P.pr*(PRE1-PRE_ON-FLY);
+      if(t<land) vis=false;
+      else { const k=easeOut((t-land)/FLY); r=RCAKE+5.5*(1-k); rot=(1-k)*(P.sp-0.5)*5; y=P.y+(1-k)*(P.h-0.5)*1.5; }
+    } else {
+      for(const b of BUMPS){
+        if(!b.turn) continue;
+        const u=(t-(b.t+(0.15+P.d*0.22)*b.s))/(0.55*b.s); if(u<=0) break;
+        rot-=60*D2R*backOut(u);
+      }
+      let lift=0;
+      for(const b of BUMPS){
+        if(t<b.t) break;
+        const a=t-b.t, up=0.28+0.14*P.h, rise=smooth(a/(0.28*b.s))*up;
+        lift= b.turn ? (t<b.rs0? rise : rise*(1-smooth((t-b.rs0-P.h*0.2)/(b.rs1-b.rs0)))) : rise;
+        lift+= 0.035*Math.sin(t*3.1+P.h*6.3)*smooth(a/0.5)*(lift/up);
+        y+= 0.07*Math.exp(-a*6)*Math.sin(a*52+P.h*9);
+      }
+      r+=lift;
+      if(t>DRAIN0+P.dr*1.3){ const u=t-(DRAIN0+P.dr*1.3); y-=4.2*u*u; r+=0.5*u; tumble=u*(P.sp-0.5)*7; if(y<-9.5) vis=false; }
+    }
+    outP.copy(radial(P.a)).multiplyScalar(r); outP.y=y;
+    _qz.setFromAxisAngle(ZAX,rot+tumble); outQ.copy(P.q0).multiply(_qz);
+    return vis;
+  }
+  const poseP=new Array(NP), poseQ=new Array(NP), poseV=new Uint8Array(NP);
+  for(let i=0;i<NP;i++){ poseP[i]=new THREE.Vector3(); poseQ[i]=new THREE.Quaternion(); }
+  function placeMicro(t){
+    seg.position.y=sheetOffset(t)/DROP*0.6;
+    for(let i=0;i<NP;i++){
+      poseV[i]=pelletPose(pellets[i],t,poseP[i],poseQ[i])?1:0;
+      _m.compose(poseP[i],poseQ[i],_s.set(poseV[i],poseV[i],poseV[i])); pelletMesh.setMatrixAt(i,_m);
+    }
+    pelletMesh.instanceMatrix.needsUpdate=true;
+    for(const s of secLines){ s.l.visible=!!poseV[s.i]; s.l.matrix.compose(poseP[s.i],poseQ[s.i],_s.set(1.004,1.004,1.004)); }
+    for(let i=0;i<ND;i++){
+      const d=DB[i]; let show=false;
+      if(t>=d.ta-FLY && t<PRE0 && poseV[d.p]){
+        show=true;
+        if(t<d.ta){ const k=(t-(d.ta-FLY))/FLY; _p.lerpVectors(d.start,d.end,k); _q.setFromAxisAngle(ZAX,d.rot+k*3); }
+        else { _p.copy(d.lp).applyQuaternion(poseQ[d.p]).add(poseP[d.p]); _q.copy(poseQ[d.p]); }
+      }
+      _m.compose(show?_p:ZERO,_q,_s.setScalar(show?d.sc:0)); debrisMesh.setMatrixAt(i,_m);
+    }
+    debrisMesh.instanceMatrix.needsUpdate=true;
+  }
+
+  // ---- cameras ---------------------------------------------------------------------------------------
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const K0={p:V(-2600,1450,-3900), t:V(-120,250,0), f:36};
+  const K1={p:V(-2050,980,-3150), t:V(-190,300,0), f:36};
+  const PATH=[[0,K0],[8,K1],[T_END,K1]];
+  function camAt(t,out){
+    let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
+    const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
+    out.p.lerpVectors(a.p,b.p,k); out.t.lerpVectors(a.t,b.t,k); out.f=a.f+(b.f-a.f)*k;
+    return out;
+  }
+  let yawOff=0, pitchOff=0, zoomOff=1, mYaw=0, mPitch=0;
+  const cam={p:V(0,0,0),t:V(0,0,0),f:34};
+  let L={w:1,h:1,dx:0,dy:0,D:200,cx:0.5,cy:0.5,narrow:false};
+  function updateCamera(){
+    camAt(T,cam);
+    const d=cam.p.clone().sub(cam.t);
+    d.applyAxisAngle(V(0,1,0),yawOff);
+    const right=V(0,1,0).cross(d).normalize();
+    const pd=d.clone().applyAxisAngle(right,pitchOff); if(Math.abs(pd.clone().normalize().y)<0.97) d.copy(pd);
+    d.multiplyScalar(zoomOff*(L.narrow?1.45:1));
+    const asp=camera.aspect, f=asp<1? Math.min(80, 2*Math.atan(Math.tan(cam.f*Math.PI/360)/asp*0.8)*180/Math.PI) : cam.f;
+    camera.position.copy(cam.t).add(d); camera.fov=f; camera.lookAt(cam.t);
+    // frame the filter in the space the panels and Detail A leave free
+    camera.setViewOffset(L.w,L.h, L.w*(0.5-L.cx), L.h*(0.5-L.cy), L.w,L.h);
+    camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+  }
+  function updateMicroCam(){
+    const az=CAM_AZ-18*D2R+mYaw, el=0.24+mPitch, dist=26.5;
+    mCam.position.set(Math.cos(az)*Math.cos(el)*dist, Math.sin(el)*dist-0.3, Math.sin(az)*Math.cos(el)*dist);
+    mCam.lookAt(0,-0.3,0);
+    mSun.position.set(Math.cos(az+0.9)*20, 16, Math.sin(az+0.9)*20);
+    mFill.position.set(Math.cos(az-1.6)*20, -4, Math.sin(az-1.6)*20);
+    mCam.updateMatrixWorld();
+  }
+
+  // ---- layout: the detail circle sits right of the model, under the readout ---------------------------
+  function layout(){
+    const w=view.clientWidth||1, h=view.clientHeight||1, narrow=w<=760;
+    let D, dx, dy;
+    if(!narrow){
+      const rb=readoutBox.offsetTop+readoutBox.offsetHeight, keyH=50;
+      D=Math.round(clamp(Math.min(h-rb-14-keyH-12, w*0.4, 600),160,600));
+      dx=w-16-D; dy=rb+14+Math.max(0,(h-rb-14-keyH-12-D)/2);
+      dkey.style.left=Math.round(Math.min(dx+D/2-dkey.offsetWidth/2, w-12-dkey.offsetWidth))+'px'; dkey.style.top=Math.round(dy+D+10)+'px';
+      L.cx=clamp((316+dx-10)/2/w,0.3,0.5); L.cy=0.5;
+    } else {
+      const sb=stepsBox.offsetHeight+8, top=readoutBox.offsetTop+readoutBox.offsetHeight+10;
+      D=Math.round(clamp(Math.min(w*0.6, h-sb-top-12), 110, 380));
+      dx=Math.round(w-10-D); dy=Math.round(top);
+      L.cx=0.3; L.cy=clamp((h-sb)/2/h,0.25,0.5);
+    }
+    Object.assign(L,{w,h,dx,dy,D,narrow});
+    Object.assign(detail.style,{left:dx+'px',top:dy+'px',width:D+'px',height:D+'px'});
+    renderer.setSize(w,h,false); camera.aspect=w/h;
+    mRenderer.setSize(D,D,false); mCam.aspect=1; mCam.updateProjectionMatrix();
+    updateCamera(); updateMicroCam(); needRender=true;
+    if(ready) renderNow();
+  }
+  addEventListener('resize', layout);
+  new ResizeObserver(()=>layout()).observe(stepsBox);
+
+  // ---- input -----------------------------------------------------------------------------------------
+  let drag=null;
+  view.addEventListener('pointerdown', e=>{
+    if(e.target.closest('#steps')) return;
+    const micro=!!e.target.closest('#detail');
+    drag={x:e.clientX,y:e.clientY,micro,yo:micro?mYaw:yawOff,po:micro?mPitch:pitchOff}; view.setPointerCapture(e.pointerId);
+  });
+  view.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    if(drag.micro){ mYaw=clamp(drag.yo-(e.clientX-drag.x)*0.006,-0.6,0.6); mPitch=clamp(drag.po+(e.clientY-drag.y)*0.004,-0.3,0.45); updateMicroCam(); }
+    else { yawOff=drag.yo-(e.clientX-drag.x)*0.006; pitchOff=clamp(drag.po-(e.clientY-drag.y)*0.006,-1.2,1.2); }
+    needRender=true;
+  });
+  const endDrag=()=>{drag=null}; view.addEventListener('pointerup',endDrag); view.addEventListener('pointercancel',endDrag);
+  view.addEventListener('wheel',e=>{ if(e.target.closest('#detail')) return; e.preventDefault(); zoomOff=clamp(zoomOff*Math.exp(e.deltaY*0.0012),0.35,3); needRender=true; },{passive:false});
+  document.getElementById('resetview').addEventListener('click',()=>{ yawOff=pitchOff=mYaw=mPitch=0; zoomOff=1; updateMicroCam(); needRender=true; });
+  cutBtn.addEventListener('click',()=>{ cutOn=!cutOn; cutBtn.setAttribute('aria-pressed',String(cutOn)); setTime(T); });
+
+  // ---- callouts -------------------------------------------------------------------------------------------
+  const NS='http://www.w3.org/2000/svg';
+  function mk(tag,attrs,parent){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); (parent||overlay).appendChild(n); return n; }
+  function makeLabel(txt,halo){ const g=mk('g',{}), ln=mk('polyline',{},g), dot=mk('circle',{class:'dot',r:'2.4'},g), h=mk('text',{class:'halo'+(halo?' '+halo:'')},g), tx=mk('text',{},g); h.textContent=tx.textContent=txt; return {g,ln,dot,halo:h,tx}; }
+  // model callouts, in a column under the steps panel
+  const LABELS=[
+    {txt:'Bump tire', p:V(-150,1160,4), move:false, show:t=>true},
+    {txt:'Tube sheet', p:V(-560,985,4), move:true, show:t=>true},
+    {txt:'Tube elements', p:V(-460,-120,30), move:true, show:t=>true},
+    {txt:'Influent', p:V(0,-615,-701), move:false, show:t=>pumpSpeed(t)>0.05},
+    {txt:'Effluent', p:V(0,1030,-616), move:false, show:t=>pumpSpeed(t)>0.05}
+  ];
+  for(const l of LABELS) l.el=makeLabel(l.txt);
+  // detail callouts, leaders from the rim of the circle
+  const angDiff=(a,b)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)));
+  const cakePel=(()=>{ let best=0,bd=1e9; for(let i=0;i<NP;i++){ const P=pellets[i]; const d=angDiff(P.a,W_LO-6*D2R)*10+Math.abs(P.y-2.2); if(d<bd){bd=d;best=i;} } return best; })();
+  const frontPel=(()=>{ let best=0,bd=1e9; for(let i=0;i<NP;i++){ const P=pellets[i]; const d=angDiff(P.a,CAM_AZ+28*D2R)*10+Math.abs(P.y-0.4); if(d<bd){bd=d;best=i;} } return best; })();
+  const coilPt=(()=>{ const a=W_LO-20*D2R, turns=a/(2*Math.PI); let u=(turns-Math.floor(turns)); let y=-SEG_H/2+u*COIL_P; while(y< -1.6) y+=COIL_P; return V(RC*Math.cos(a), y, RC*Math.sin(a)); })();
+  const MLABELS=[
+    {txt:'Perlite particle', sub:'37 µm nominal', minD:240, rim:14, pt:t=>poseV[cakePel]? _v.copy(poseP[cakePel]).add(radial(pellets[cakePel].a).multiplyScalar(0.15)) : null, show:t=>t<DRAIN0+0.5||t>PRE1},
+    {txt:'Debris', sub:'1 µm and larger', minD:240, rim:150, pt:t=>_v.copy(radial(pellets[frontPel].a)).multiplyScalar(RCAKE+AP+0.08).setY(pellets[frontPel].y), show:t=>t<PRE0 && (loadAt(t)>0.25||faceAt(t)>0) && t<DRAIN0},
+    {txt:'Tube fabric', minD:320, rim:-24, pt:t=>_v.copy(radial(W_LO)).multiplyScalar(RF-FT/2).setY(-3.1), show:t=>true},
+    {txt:'Support coil', minD:360, rim:-58, pt:t=>_v.copy(coilPt), show:t=>true},
+    {txt:'Filtered water', sub:'rises inside the tube', minD:360, rim:42, pt:t=>_v.set(-1.6,3.4,-0.2), show:t=>pumpSpeed(t)>0.3}
+  ];
+  for(const l of MLABELS){ l.el=makeLabel(l.txt,'w'); if(l.sub){ l.sh=mk('text',{class:'halo w sub'},l.el.g); l.st=mk('text',{class:'sub'},l.el.g); l.sh.textContent=l.st.textContent=l.sub; } }
+  // marker on the model and the leader out to Detail A
+  const mark=mk('g',{}), markLn=mk('line',{},mark), markC=mk('circle',{class:'mark',r:'13'},mark), markH=mk('text',{class:'halo'},mark), markT=mk('text',{class:'letter'},mark);
+  markH.textContent=markT.textContent='A';
+  const tagG=mk('g',{}), tagH=mk('text',{class:'halo tag','text-anchor':'middle'},tagG), tagT=mk('text',{class:'tag','text-anchor':'middle'},tagG), tagSH=mk('text',{class:'halo sub','text-anchor':'middle'},tagG), tagS=mk('text',{class:'sub','text-anchor':'middle'},tagG);
+  tagH.textContent=tagT.textContent='Detail A'; tagSH.textContent=tagS.textContent='One tube wall, roughly 400×';
+  let labelsOn=true;
+  labelsBtn.addEventListener('click',()=>{ labelsOn=!labelsOn; labelsBtn.setAttribute('aria-pressed',String(labelsOn)); needRender=true; });
+  const pv=V(0,0,0);
+  function setXY(n,x,y){ n.setAttribute('x',Math.round(x)); n.setAttribute('y',Math.round(y)); }
+  function drawLabels(){
+    const {w,h,dx,dy,D,narrow}=L, R=D/2, cx=dx+R, cy=dy+R;
+    overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const sy=sheetOffset(T);
+    // model callouts
+    const vis=labelsOn && cutOn && !narrow, items=[];
+    for(const l of LABELS){
+      const on=vis && l.show(T); l.el.g.style.opacity=on?1:0; if(!on) continue;
+      pv.copy(l.p); if(l.move) pv.y+=sy; pv.project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      if(x<0||x>dx-8||y<0||y>h||pv.z>1){ l.el.g.style.opacity=0; continue; }
+      items.push({l,x,y});
+    }
+    items.sort((a,b)=>a.y-b.y);
+    const top=stepsBox.offsetTop+stepsBox.offsetHeight+22, lh=20, besideX=stepsBox.offsetLeft+stepsBox.offsetWidth+14;
+    let prevA=-1e9, prevB=top-lh;
+    for(const it of items){
+      const e=it.l.el, tw=e.tx.getComputedTextLength?e.tx.getComputedTextLength():80;
+      let colX, ly;
+      if(it.y<top-10 && besideX+tw+30<it.x){ colX=besideX; ly=Math.max(it.y,prevA+lh); prevA=ly; }
+      else if(it.y>=top-10) { colX=16; ly=Math.max(it.y,prevB+lh,top); prevB=ly; }
+      else { e.g.style.opacity=0; continue; }
+      e.ln.setAttribute('points',`${colX+tw+6},${ly} ${colX+tw+20},${ly} ${Math.round(it.x)},${Math.round(it.y)}`);
+      e.dot.setAttribute('cx',it.x); e.dot.setAttribute('cy',it.y);
+      for(const t of [e.halo,e.tx]){ setXY(t,colX,ly+4); t.setAttribute('text-anchor','start'); }
+    }
+    // Detail A marker and leader
+    let showMark=ready && cutOn;
+    if(showMark){
+      pv.set(tubeC[2*TUBE_A], YA+sy, tubeC[2*TUBE_A+1]).project(camera);
+      const x=(pv.x+1)/2*w, y=(1-pv.y)/2*h;
+      showMark = x>0 && x<dx && y>0 && y<h && pv.z<1;
+      if(showMark){
+        markC.setAttribute('cx',x); markC.setAttribute('cy',y);
+        setXY(markH,x-26,y-10); setXY(markT,x-26,y-10);
+        const vx=cx-x, vy=cy-y, vl=Math.hypot(vx,vy)||1;
+        markLn.setAttribute('x1',x+vx/vl*13); markLn.setAttribute('y1',y+vy/vl*13);
+        markLn.setAttribute('x2',cx-vx/vl*R); markLn.setAttribute('y2',cy-vy/vl*R);
+      }
+    }
+    mark.style.opacity=showMark?1:0; ringA.visible=cutOn;
+    // detail title and callouts
+    { const ta=(narrow?90:128)*D2R, tx=cx+Math.cos(ta)*(R+(narrow?-26:10)), ty=cy-Math.sin(ta)*(R+(narrow?-26:10)), an=narrow?'middle':'end';
+      for(const n of [tagH,tagT,tagSH]) n.setAttribute('class', n.getAttribute('class').replace(/ ?\bw\b/,'')+(narrow&&n!==tagT?' w':''));
+      for(const n of [tagH,tagT]){ setXY(n,tx,ty-8); n.setAttribute('text-anchor',an); }
+      for(const n of [tagSH,tagS]){ setXY(n,tx,ty+6); n.setAttribute('text-anchor',an); } }
+    tagG.style.opacity= ready?1:0;
+    for(const l of MLABELS){
+      const p= labelsOn && ready && l.show(T) && D>=l.minD ? l.pt(T) : null;
+      l.el.g.style.opacity=p?1:0; if(!p) continue;
+      pv.copy(p); pv.y+=seg.position.y; pv.project(mCam);
+      const px=dx+(pv.x+1)/2*D, py=dy+(1-pv.y)/2*D, ra=l.rim*D2R, right=Math.cos(ra)>0;
+      const rr=R-12, tx=cx+Math.cos(ra)*rr, ty=cy-Math.sin(ra)*rr;
+      const e=l.el, anchor=right?'end':'start';
+      for(const t of [e.halo,e.tx]){ setXY(t,tx,ty); t.setAttribute('text-anchor',anchor); }
+      if(l.st){ l.sh.style.display=l.st.style.display= D>=360?'':'none'; for(const t of [l.sh,l.st]){ setXY(t,tx,ty+13); t.setAttribute('text-anchor',anchor); } }
+      const tw=e.tx.getComputedTextLength?e.tx.getComputedTextLength():80, lx=right? tx-tw-6 : tx+tw+6;
+      e.ln.setAttribute('points',`${Math.round(lx)},${Math.round(ty-4)} ${Math.round(lx+(right?-10:10))},${Math.round(ty-4)} ${Math.round(px)},${Math.round(py)}`);
+      e.dot.setAttribute('cx',px); e.dot.setAttribute('cy',py);
+    }
+  }
+
+  // ---- steps and readout --------------------------------------------------------------------------------
+  const stepList=document.getElementById('steplist');
+  stepList.innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" data-n="${i+1}"><span class="h">${s.h}</span><span class="d">${s.d}</span></button></li>`).join('');
+  const stepLis=[...stepList.children];
+  stepList.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(walk){ goStep(+b.dataset.i); return; } setTime(STEPS[+b.dataset.i].t+0.01); if(!playing) startPlay(); });
+  let curStep=-1;
+  function updateSteps(t){
+    let s=0; for(let i=0;i<STEPS.length;i++) if(t>=STEPS[i].t) s=i;
+    if(s===curStep) return; curStep=s;
+    stepLis.forEach((li,i)=>{ li.classList.toggle('on',i===s); li.classList.toggle('done',i<s || t>=T_END-0.01); });
+    updateNav();
+  }
+  const R={pump:document.getElementById('r-pump'), sheet:document.getElementById('r-sheet'), media:document.getElementById('r-media'), load:document.getElementById('r-load'), bar:document.getElementById('r-bar'), fill:document.getElementById('r-fill'), face:document.getElementById('r-face')};
+  const faceEls=[...document.getElementById('r-faces').children];
+  function set(el,txt,cls){ if(el.textContent!==txt) el.textContent=txt; el.className=cls||''; }
+  function updateReadout(t){
+    const ps=pumpSpeed(t);
+    const pre=(t>=PRE0&&t<59.8)||BUMPS.some(b=>b.turn&&t>b.rs0-0.5&&t<b.rs1+0.8);
+    if(ps<=0.02) set(R.pump,'Off','stop'); else if(ps<0.97) set(R.pump,pre?'Precoat speed':'Stopping','mid'); else set(R.pump,'Running','go');
+    const off=sheetOffset(t);
+    set(R.sheet, off<-2? (off<-DROP*0.8?'Dropped':'Moving') : 'Up', off<-2?'stop':'');
+    let media='Filtering', mc='go', bi=BUMPS.findIndex(b=>t>=b.t && (b.turn? t<b.rs1 : t<DRAIN0));
+    if(t>=PRE0) { media= t<PRE1+0.4? 'Precoating' : 'Fresh coat'; mc= t<PRE1+0.4?'mid':'go'; }
+    else if(t>=DRAIN0) { media='Draining'; mc='stop'; }
+    else if(bi>=0) { const b=BUMPS[bi]; media= !b.turn? 'Released' : t<turnDone(b)? 'Turning' : t<b.rs0? 'Released' : 'Settling'; mc='mid'; }
+    else if(loadAt(t)>=1) { media='Loaded'; mc='stop'; }
+    set(R.media,media,mc);
+    const ld=loadAt(t), pct=Math.round(ld*100);
+    R.load.textContent=pct+'%'; R.fill.style.width=pct+'%'; R.bar.classList.toggle('hot',pct>=100);
+    const f=faceAt(t), spent=spentAt(t), gone=t>=DRAIN0+0.6&&t<PRE0;
+    R.face.textContent= spent&&!gone? 'All 6 used' : gone? 'No cake' : (f+1)+' of 6';
+    faceEls.forEach((el,i)=>{ el.className= gone? '' : spent? 'used' : i<f? 'used' : i===f? 'live' : ''; });
+    // what the cake on the model tubes looks like
+    let lvl=1;
+    if(t>=PRE0) lvl=smooth((t-PRE_ON-0.4)/(PRE1-PRE_ON));
+    else if(t>=DRAIN0) lvl=1-smooth((t-DRAIN0)/1.2)*1;
+    for(const b of BUMPS){ if(t<b.t||t>=PRE0) continue; const a=t-b.t, dip=smooth(a/(0.4*b.s))*0.5;
+      if(b.turn){ if(t<b.rs1+0.3) lvl=Math.min(lvl, 1-dip*(1-smooth((t-b.rs0)/(b.rs1-b.rs0+0.3)))); }
+      else if(t<DRAIN0) lvl=Math.min(lvl,1-dip); }
+    cakeU.uLevel.value=lvl;
+    cakeU.uDirt.value= t>=PRE0? 0 : spent? 0.92 : clamp(0.06*f+0.62*ld,0,1);
+  }
+
+  // ---- apply a point in time --------------------------------------------------------------------------
+  let T=0, needRender=true;
+  function fmt(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+  document.getElementById('tend').textContent=fmt(T_END);
+  function setTime(t){
+    T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
+    updateSteps(T);
+    if(!ready){ needRender=true; return; }
+    const off=sheetOffset(T);
+    sheet.position.y=off;
+    const tire=parts.bump_tire; if(tire){ const s=(TIRE_H+off)/TIRE_H, bulge=1+(1-s)*0.35; tire.obj.scale.set(bulge,s,bulge); tire.obj.position.y=TIRE_Y0*(1-s); }
+    clip.constant=cutOn? CUT_OPEN : CUT_SHUT;
+    infRing.visible=effRing.visible=cutOn;
+    placeMedia(T); placeMicro(T);
+    updateReadout(T);
+    updateCamera(); needRender=true;
+  }
+  prog.addEventListener('input',()=>{ stopPlay(); setTime(prog.value/1000*T_END); });
+
+  // ---- playback -----------------------------------------------------------------------------------------
+  let playing=false, loop=false, last=0;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) T=9.2;
+  function startPlay(){ if(T>=T_END) T=0; playing=true; playBtn.textContent='Pause'; playBtn.setAttribute('aria-pressed','true'); last=performance.now(); }
+  function stopPlay(){ playing=false; playBtn.textContent='Play'; playBtn.setAttribute('aria-pressed','false'); }
+  playBtn.addEventListener('click',()=> playing?stopPlay():startPlay());
+  loopBtn.addEventListener('click',()=>{ loop=!loop; loopBtn.setAttribute('aria-pressed',String(loop)); if(loop&&!playing) startPlay(); });
+  document.getElementById('bar').addEventListener('keydown',e=>{ if(e.key===' '&&e.target.tagName!=='BUTTON'){e.preventDefault(); playing?stopPlay():startPlay();} });
+
+  // ---- walkthrough: play one step, hold at its end, click or press the right arrow for the next ----------
+  const walkBtn=document.getElementById('walk'), nav=document.getElementById('stepnav'), sBack=document.getElementById('sback'), sNext=document.getElementById('snext'), sCount=document.getElementById('scount');
+  let walk=new URLSearchParams(location.search).has('walk'), stopAt=null;
+  function stepEnd(i){ return i<STEPS.length-1? STEPS[i+1].t-0.02 : T_END; }
+  function goStep(i){ i=clamp(i,0,STEPS.length-1); loop=false; loopBtn.setAttribute('aria-pressed','false'); setTime(STEPS[i].t+0.01); stopAt=stepEnd(i); startPlay(); updateNav(); }
+  function nextStep(){ const i=Math.max(curStep,0); goStep(i>=STEPS.length-1? 0 : i+1); }
+  function prevStep(){ const i=Math.max(curStep,0); goStep(T>STEPS[i].t+1.5? i : i-1); }
+  function setWalk(on){ walk=on; walkBtn.setAttribute('aria-pressed',String(on)); nav.classList.toggle('on',on); if(on){ if(ready) goStep(Math.max(curStep,0)); } else stopAt=null; updateNav(); }
+  function updateNav(){
+    if(!sCount) return;
+    const i=Math.max(curStep,0), held=walk && !playing && stopAt!==null && T>=stopAt-0.05;
+    sCount.textContent='Step '+(i+1)+' / '+STEPS.length;
+    sBack.disabled=i===0 && T<STEPS[0].t+1.5;
+    sNext.textContent=i>=STEPS.length-1 && held? 'Restart ↺' : 'Next ›';
+    sNext.classList.toggle('ready',held);
+  }
+  walkBtn.addEventListener('click',()=>setWalk(!walk));
+  sNext.addEventListener('click',nextStep); sBack.addEventListener('click',prevStep);
+  let tap=null;
+  view.addEventListener('pointerdown',e=>{ tap=e.target.closest('#steps')? null : {x:e.clientX,y:e.clientY,t:e.timeStamp}; });
+  view.addEventListener('pointerup',e=>{ if(!tap||!walk) return; const moved=Math.hypot(e.clientX-tap.x,e.clientY-tap.y); if(moved<6 && e.timeStamp-tap.t<450) nextStep(); tap=null; });
+  addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.altKey||e.ctrlKey||e.metaKey) return;
+    if(e.key==='ArrowRight'||e.key==='PageDown'){ e.preventDefault(); if(!walk) setWalk(true); else nextStep(); }
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); if(!walk) setWalk(true); prevStep(); }
+  });
+  playBtn.addEventListener('click',()=>{ if(walk && playing){ if(stopAt!==null && T>=stopAt-0.05) nextStep(); else stopAt=stepEnd(Math.max(curStep,0)); } updateNav(); });
+  prog.addEventListener('input',()=>{ stopAt=walk? stepEnd(Math.max(curStep,0)) : null; updateNav(); });
+  if(walk){ walkBtn.setAttribute('aria-pressed','true'); nav.classList.add('on'); }
+
+  function frame(now){
+    requestAnimationFrame(frame);
+    if(!ready) return;
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(playing){
+      let t=T+dt; if(walk && stopAt!==null && t>=stopAt){ t=stopAt; stopPlay(); requestAnimationFrame(updateNav); }
+      if(t>=T_END){ if(loop) t=0; else { t=T_END; stopPlay(); } }
+      setTime(t);
+    }
+    const ps=pumpSpeed(T);
+    if(ps>0.01 && !reduced){ flowPhase=(flowPhase+dt*0.22*(0.35+ps))%1; needRender=true; }
+    if(needRender) renderNow();
+  }
+  function renderNow(){
+    needRender=false;
+    placeFlow(T); placeWater(pumpSpeed(T)); updateCamera();
+    renderer.render(scene,camera); mRenderer.render(mScene,mCam); drawLabels();
+  }
+  requestAnimationFrame(frame);
+  layout();
+})();
+</script>
+
+</body>
+</html>
