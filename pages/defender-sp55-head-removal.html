@@ -220,8 +220,8 @@
     const cm=box(278,64,90,jm); cm.position.set(0,PLATE+H+32,0); jig.add(cm);
     const rd=cyl(7,720,steel); rd.position.y=360; rod.add(rd);                // rod bottoms out in the lift shaft top at y 1310
     const n2=hex(14,12,dark); n2.position.y=NUT_UP+20; rod.add(n2);           // jam nut, just above the lift shaft nut
-    const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64-1310+6; rod.add(bearing);   // thrust bearing on the cross member
-    const n4=hex(16,16,dark); n4.position.y=PLATE+H+64-1310+20; rod.add(n4); }                 // working nut
+    const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64+6; jig.add(bearing);          // thrust bearing on the cross member: stays with the jig, the rod runs down through it
+    const n4=hex(16,16,dark); n4.position.y=PLATE+H+64+20; jig.add(n4); }                       // working nut, likewise
   // socket wrench working its way around the 24 flange bolts (the bolts themselves are in the STEP model)
   const NBOLT=24, BOLT_T=0.27, BOLT_R=790;
   const wrench=new THREE.Group(); scene.add(wrench);
