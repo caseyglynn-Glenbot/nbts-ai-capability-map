@@ -200,7 +200,8 @@
 
   // ---- added service geometry (not in the STEP model) --------------------------
   // water inside the tank, seen while the body is see-through in step 1
-  const water=new THREE.Mesh(new THREE.CylinderGeometry(740,740,1,48),waterMat); scene.add(water);
+  const water=new THREE.Mesh(new THREE.CylinderGeometry(690,690,1,48),waterMat); scene.add(water);   // shell is r 700, dish starts at y -1050
+  const dish=new THREE.Mesh(new THREE.LatheGeometry([new THREE.Vector2(0,-1190),new THREE.Vector2(320,-1178),new THREE.Vector2(560,-1125),new THREE.Vector2(690,-1050),new THREE.Vector2(690,-1049)],48),own(waterMat)); scene.add(dish);
   // pneumatic tube to the bump tire
   const tubeG=new THREE.Group(); headG.add(tubeG);
   { const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(172,1165,0),new THREE.Vector3(420,1240,60),new THREE.Vector3(760,1200,260),new THREE.Vector3(980,900,520),new THREE.Vector3(1060,420,760)]);
@@ -371,7 +372,7 @@
     if(!ready){ needRender=true; return; }
     // 1. bump, drain and rinse: peek through the shell while the water goes down
     drainPeek=smooth((T-0.4)/1.2)*(1-smooth((T-5.2)/1.2));
-    const lvl=900-2020*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1200); water.position.y=(lvl-1200)/2; water.visible=T<5.6;   // tank bottom dish sits at about y -1200 setFade(water,0.6*drainPeek+(ghost?0.3:0));
+    const lvl=900-1940*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1050); water.position.y=(lvl-1050)/2; water.visible=dish.visible=T<5.6; setFade(dish,0.6*drainPeek+(ghost?0.3:0));   // column above the dish, dish stays full until the water disappears setFade(water,0.6*drainPeek+(ghost?0.3:0));
     applyGhost();
     // 2. vent: the bump tire goes flat
     const tire=parts.bump_tire; if(tire){ const sy=1-0.5*seg(T,7,10.5); tire.obj.scale.set(1,sy,1); tire.obj.position.y=1165*(1-sy); }
