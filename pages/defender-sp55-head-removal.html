@@ -223,7 +223,7 @@
     const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64+6; jig.add(bearing);          // thrust bearing on the cross member: stays with the jig, the rod runs down through it
     const n4=hex(16,16,dark); n4.position.y=PLATE+H+64+20; jig.add(n4); }                       // working nut, likewise
   // socket wrench working its way around the 24 flange bolts (the bolts themselves are in the STEP model)
-  const NBOLT=24, BOLT_T=0.27, BOLT_R=790;
+  const NBOLT=24, BOLT_T=0.27, BOLT_R=757, BOLT_Y=1047;   // nut tops on the head flange lugs: r 757, y 1047, every 15 deg from +x
   const wrench=new THREE.Group(); scene.add(wrench);
   { const sock=cyl(26,60,dark); sock.position.y=30; wrench.add(sock); const ratchet=cyl(30,22,steel); ratchet.position.y=70; wrench.add(ratchet);
     const arm=cyl(10,420,steel,'x'); arm.position.set(210,70,0); wrench.add(arm); const grip=cyl(14,110,red,'x'); grip.position.set(380,70,0); wrench.add(grip); }
@@ -409,7 +409,7 @@
     for(const a of anchors){ setFade(a, ka*(0.55+0.45*Math.sin(T*6))); a.scale.setScalar(1+0.15*Math.sin(T*6)); }
     // 8. head hardware out: the wrench hops bolt to bolt around the flange
     const bi=clamp(Math.floor((T-48.5)/BOLT_T),0,NBOLT-1), ba=bi/NBOLT*Math.PI*2, bk=clamp(((T-48.5)-bi*BOLT_T)/BOLT_T,0,1);
-    wrench.position.set(Math.cos(ba)*BOLT_R, 1000+60*Math.sin(Math.PI*bk), Math.sin(ba)*BOLT_R); wrench.rotation.y=-ba; wrench.rotation.x=0.35*Math.sin(bk*Math.PI*4);
+    wrench.position.set(Math.cos(ba)*BOLT_R, BOLT_Y+80*Math.sin(Math.PI*bk), Math.sin(ba)*BOLT_R); wrench.rotation.y=-ba; wrench.rotation.x=0.35*Math.sin(bk*Math.PI*4);
     setFade(wrench, smooth((T-48)/0.6)*(1-smooth((T-55.2)/0.6)));
     // 9/10. oil the davit, jack the head up, swing it clear
     const ko=smooth((T-56.2)/0.6)*(1-smooth((T-58.5)/0.6)); oil.rotation.z=-0.5*ko; setFade(oil,ko);
