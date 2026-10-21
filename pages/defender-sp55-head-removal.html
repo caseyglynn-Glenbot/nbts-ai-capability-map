@@ -222,11 +222,30 @@
     const n2=hex(14,12,dark); n2.position.y=NUT_UP+20; rod.add(n2);           // jam nut, just above the lift shaft nut
     const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64+6; jig.add(bearing);          // thrust bearing on the cross member: stays with the jig, the rod runs down through it
     const n4=hex(16,16,dark); n4.position.y=PLATE+H+64+20; jig.add(n4); }                       // working nut, likewise
-  // socket wrench working its way around the 24 flange bolts (the bolts themselves are in the STEP model)
-  const NBOLT=24, BOLT_T=0.27, BOLT_R=757, BOLT_Y=1047;   // nut tops on the head flange lugs: r 757, y 1047, every 15 deg from +x
-  const wrench=new THREE.Group(); scene.add(wrench);
-  { const sock=cyl(26,60,dark); sock.position.y=30; wrench.add(sock); const ratchet=cyl(30,22,steel); ratchet.position.y=70; wrench.add(ratchet);
-    const arm=cyl(10,420,steel,'x'); arm.position.set(210,70,0); wrench.add(arm); const grip=cyl(14,110,red,'x'); grip.position.set(380,70,0); wrench.add(grip); }
+  // the 24 head bolts are solids inside the upper_head mesh; they get split out at load so each can lift away in step 8
+  const NBOLT=24, BOLT_T=0.27, bolts=[];   // bolts[i] = group for the bolt at i*15 deg from +x (filled by splitBolts)
+  function splitBolts(geo,m,into){
+    const P=geo.attributes.position.array, I=geo.index.array, nv=P.length/3, nt=I.length/3;
+    const weld=new Int32Array(nv), map=new Map();
+    for(let v=0;v<nv;v++){ const k=Math.round(P[v*3]*10)+','+Math.round(P[v*3+1]*10)+','+Math.round(P[v*3+2]*10); let w=map.get(k); if(w===undefined){ w=map.size; map.set(k,w); } weld[v]=w; }
+    const par=new Int32Array(map.size).map((_,i)=>i), f=x=>{ while(par[x]!==x){ par[x]=par[par[x]]; x=par[x]; } return x; };
+    for(let t=0;t<nt;t++){ const a=f(weld[I[t*3]]), b=f(weld[I[t*3+1]]), c=f(weld[I[t*3+2]]); par[b]=a; par[f(c)]=a; }
+    const comp=new Map();
+    for(let t=0;t<nt;t++){ const r=f(weld[I[t*3]]); let c=comp.get(r); if(!c){ c={tris:[],lo:[1e9,1e9,1e9],hi:[-1e9,-1e9,-1e9]}; comp.set(r,c); }
+      c.tris.push(t); for(let k=0;k<3;k++){ const v=I[t*3+k]; for(let d=0;d<3;d++){ const x=P[v*3+d]; if(x<c.lo[d]) c.lo[d]=x; if(x>c.hi[d]) c.hi[d]=x; } } }
+    const rest=[], byBolt=new Map();
+    for(const c of comp.values()){
+      const w=c.hi[0]-c.lo[0], d=c.hi[2]-c.lo[2], cx=(c.lo[0]+c.hi[0])/2, cz=(c.lo[2]+c.hi[2])/2, r=Math.hypot(cx,cz);
+      const isBolt= w<90 && d<90 && r>700 && r<820 && c.hi[1]>940 && c.hi[1]<1100;
+      if(!isBolt){ rest.push(...c.tris); continue; }
+      const k=((Math.round(Math.atan2(cz,cx)/(Math.PI/12))%NBOLT)+NBOLT)%NBOLT;
+      (byBolt.get(k)||byBolt.set(k,[]).get(k)).push(...c.tris);
+    }
+    const build=tris=>{ const idx=new Uint32Array(tris.length*3); tris.forEach((t,j)=>{ idx[j*3]=I[t*3]; idx[j*3+1]=I[t*3+1]; idx[j*3+2]=I[t*3+2]; });
+      const ng=new THREE.BufferGeometry(); ng.setAttribute('position',geo.attributes.position); ng.setAttribute('normal',geo.attributes.normal); ng.setIndex(new THREE.BufferAttribute(idx,1)); return ng; };
+    into.add(new THREE.Mesh(build(rest),m));
+    for(let k=0;k<NBOLT;k++){ const g=new THREE.Group(); const tris=byBolt.get(k); if(tris){ const bm=m.clone(); bm.userData.base=1; bm.color.setHex(GREY); g.add(new THREE.Mesh(build(tris),bm)); } scene.add(g); bolts[k]=g; }
+  }
   // anchor markers at the legs
   const anchors=[]; for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+Math.PI/4, r=new THREE.Mesh(new THREE.TorusGeometry(90,7,10,40),own(red)); r.rotation.x=Math.PI/2; r.position.set(Math.cos(a)*650,-1522,Math.sin(a)*650); scene.add(r); anchors.push(r); }
   // davit lift shaft: the fixed section the post rides up on, hidden inside the post until the head is jacked up
@@ -259,7 +278,7 @@
         const m=new THREE.MeshPhongMaterial({color:col, shininess:18, specular:0x222222, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
           transparent:true, opacity:a||1, depthWrite:!a, side: a?THREE.DoubleSide:THREE.FrontSide});
         m.userData.base=a||1;
-        g.add(new THREE.Mesh(geo,m));
+        if(e.name==='upper_head') splitBolts(geo,m,g); else g.add(new THREE.Mesh(geo,m));
       }
       if(e.nl){
         const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
@@ -407,10 +426,8 @@
     // 7. anchors
     const ka=smooth((T-43.5)/1)*(1-smooth((T-47.5)/0.8));
     for(const a of anchors){ setFade(a, ka*(0.55+0.45*Math.sin(T*6))); a.scale.setScalar(1+0.15*Math.sin(T*6)); }
-    // 8. head hardware out: the wrench hops bolt to bolt around the flange
-    const bi=clamp(Math.floor((T-48.5)/BOLT_T),0,NBOLT-1), ba=bi/NBOLT*Math.PI*2, bk=clamp(((T-48.5)-bi*BOLT_T)/BOLT_T,0,1);
-    wrench.position.set(Math.cos(ba)*BOLT_R, BOLT_Y+80*Math.sin(Math.PI*bk), Math.sin(ba)*BOLT_R); wrench.rotation.y=-ba; wrench.rotation.x=0.35*Math.sin(bk*Math.PI*4);
-    setFade(wrench, smooth((T-48)/0.6)*(1-smooth((T-55.2)/0.6)));
+    // 8. head hardware out: each bolt lifts out of its lug and fades, one after another around the flange
+    bolts.forEach((b,i)=>{ const kb=seg(T,48.5+i*BOLT_T,49.7+i*BOLT_T); b.position.y=300*kb; setFade(b,1-smooth((kb-0.5)/0.5)); });
     // 9/10. oil the davit, jack the head up, swing it clear
     const ko=smooth((T-56.2)/0.6)*(1-smooth((T-58.5)/0.6)); oil.rotation.z=-0.5*ko; setFade(oil,ko);
     const kl=seg(T,58.5,64), ks=seg(T,65.5,71.5), th=SWING*ks, L=LIFT*kl;
