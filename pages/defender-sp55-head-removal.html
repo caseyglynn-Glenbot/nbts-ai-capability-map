@@ -206,26 +206,11 @@
   { const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(172,1165,0),new THREE.Vector3(420,1240,60),new THREE.Vector3(760,1200,260),new THREE.Vector3(980,900,520),new THREE.Vector3(1060,420,760)]);
     tubeG.add(new THREE.Mesh(new THREE.TubeGeometry(curve,40,9,10,false),tubeMat));
     const fit=cyl(18,40,brass,'x'); fit.position.set(180,1165,0); tubeG.add(fit); }
-  // effluent and vacuum piping bolted to the head: lower stub stays with the head, upper spool unbolts
-  function pipe(x,z,r,y0,yf,y1){ const stub=new THREE.Group(), spool=new THREE.Group();
-    const s=cyl(r,yf-y0,steel); s.position.set(x,(y0+yf)/2,z); stub.add(s);
-    const f1=cyl(r*1.6,16,steel); f1.position.set(x,yf-8,z); stub.add(f1);
-    const f2=cyl(r*1.6,16,steel); f2.position.set(x,yf+8,z); spool.add(f2);
-    const u=cyl(r,y1-yf,steel); u.position.set(x,(yf+y1)/2,z); spool.add(u);
-    const el=cyl(r,r*4,steel,'x'); el.position.set(x+r*2,y1,z); spool.add(el);
-    for(let i=0;i<8;i++){ const a=i/8*Math.PI*2, b=hex(r*0.16,40,dark); b.position.set(x+Math.cos(a)*r*1.3,yf,z+Math.sin(a)*r*1.3); spool.add(b); }
-    return {stub,spool}; }
-  const eff=pipe(160,-440,95,1000,1210,1420), vac=pipe(-120,-470,22,1020,1160,1300);
-  headG.add(eff.stub,vac.stub,eff.spool,vac.spool);
-  // gauge panel on the tank side with its bracket
-  const gauge=new THREE.Group(), gaugeBr=new THREE.Group(); scene.add(gauge,gaugeBr);
-  { const n=new THREE.Vector3(1,0,-1).normalize(), p=n.clone().multiplyScalar(790);
-    const pl=box(240,300,24,mat(0xd8dadd)); pl.position.copy(p).add(n.clone().multiplyScalar(58)).setY(360); pl.lookAt(pl.position.clone().add(n)); gauge.add(pl);
-    for(const [dx,dy] of [[-55,70],[55,70],[0,-60]]){ const d=cyl(34,10,mat(0xf2f2ee),'z'); d.position.copy(pl.position).add(new THREE.Vector3(dx*0.707,dy,dx*0.707)).add(n.clone().multiplyScalar(14)); d.lookAt(d.position.clone().add(n)); gauge.add(d);
-      const rim=cyl(36,6,dark,'z'); rim.position.copy(d.position).sub(n.clone().multiplyScalar(4)); rim.lookAt(rim.position.clone().add(n)); gauge.add(rim); }
-    const br=box(200,30,56,steel); br.position.copy(p).add(n.clone().multiplyScalar(26)).setY(190); br.lookAt(br.position.clone().add(n)); gaugeBr.add(br);
-    for(const dx of [-70,70]){ const nut=hex(10,16,dark); nut.position.copy(p).add(n.clone().multiplyScalar(56)).add(new THREE.Vector3(dx*0.707,190,dx*0.707)); nut.rotation.x=Math.PI/4; nut.rotation.z=Math.PI/4; gaugeBr.add(nut); } }
-  const GN=new THREE.Vector3(1,0,-1).normalize();
+  // effluent and vacuum piping and the gauge panel come from the SP-41 installation schematic (tools/build-sp55-dress.py)
+  const DRESS={eff_stub:headG, eff_spool:headG, vac_stub:headG, vac_spool:headG, vac_run:scene, hose:scene, gauge:scene, gauge_face:scene};
+  const dress={}; for(const k in DRESS){ dress[k]=new THREE.Group(); DRESS[k].add(dress[k]); }
+  const gauge=new THREE.Group(); scene.add(gauge); gauge.add(dress.gauge, dress.gauge_face);
+  let GN=new THREE.Vector3(-1,0,-0.6).normalize();   // outward direction at the gauge panel, refined once it loads
   // bump removal jig: two legs, cross member, threaded rod and nuts
   const jig=new THREE.Group(), rod=new THREE.Group(); scene.add(jig,rod);
   { for(const x of [-250,250]){ const l=box(30,740,30,mat(0xe0922f)); l.position.set(x,1500,0); jig.add(l); const ft=box(90,12,90,mat(0xe0922f)); ft.position.set(x,1136,0); jig.add(ft); }
@@ -283,6 +268,24 @@
       (HEADSET.has(e.name)?headG : BUNDLE.has(e.name)?bundle : scene).add(g);
       parts[e.name]={obj:g, name:e.name};
     }
+    return fetch('/assets/sp55-exploded/sp55-dress.bin',{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error('dress '+r.status); return r.arrayBuffer(); });
+  }).then(buf=>{
+    const dv=new DataView(buf); const hl=dv.getUint32(0,true);
+    const hdr=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl)));
+    const base=4+hl, gbox=new THREE.Box3();
+    for(const e of hdr){
+      const q=new Int16Array(buf, base+e.V[0], e.nv*3); const pos=new Float32Array(q.length);
+      for(let i=0;i<q.length;i++) pos[i]=q[i]*0.1;
+      const idx= e.itype==='u16' ? new Uint16Array(buf, base+e.F[0], e.nf*3) : new Uint32Array(buf, base+e.F[0], e.nf*3);
+      const geo=new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setIndex(new THREE.BufferAttribute(idx.slice(),1));
+      geo.computeVertexNormals(); geo.computeBoundingBox();
+      const m=mat((e.col[0]<<16)|(e.col[1]<<8)|e.col[2], {shininess:e.name==='hose'?8:30, side:THREE.DoubleSide, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1});
+      const mesh=new THREE.Mesh(geo,m); dress[e.name].add(mesh);
+      if(e.name.startsWith('gauge')) gbox.union(geo.boundingBox);
+    }
+    const gc=gbox.getCenter(new THREE.Vector3()); GN=new THREE.Vector3(gc.x,0,gc.z).normalize();
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
     if(walk) goStep(0); else if(!reduced) startPlay();
@@ -292,7 +295,7 @@
   const V=(x,y,z)=>new THREE.Vector3(x,y,z);
   const KA={p:V(-3500,2850,-3900), t:V(0,250,0), f:34};   // drawing-style three-quarter view
   const KH={p:V(-2300,2500,-2500), t:V(0,1000,0), f:34};  // on the head
-  const KG={p:V(3100,900,-2900), t:V(560,300,-560), f:34};// gauge panel side
+  const KG={p:V(-3300,1000,-2500), t:V(-620,420,-380), f:34};// gauge panel side
   const KJ={p:V(-1500,2700,-1900), t:V(-60,1250,0), f:36};// over the bump assembly for the jig
   const KL={p:V(-3600,-400,-3000), t:V(0,-1200,0), f:36}; // down at the legs
   const KS={p:V(-4200,3000,-2200), t:V(-400,700,200), f:38};// wide, watching the swing
@@ -368,7 +371,7 @@
     if(!ready){ needRender=true; return; }
     // 1. bump, drain and rinse: peek through the shell while the water goes down
     drainPeek=smooth((T-0.4)/1.2)*(1-smooth((T-5.2)/1.2));
-    const lvl=900-2380*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1500); water.position.y=(lvl-1500)/2; water.visible=T<5.6; setFade(water,0.6*drainPeek+(ghost?0.3:0));
+    const lvl=900-2020*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1200); water.position.y=(lvl-1200)/2; water.visible=T<5.6;   // tank bottom dish sits at about y -1200 setFade(water,0.6*drainPeek+(ghost?0.3:0));
     applyGhost();
     // 2. vent: the bump tire goes flat
     const tire=parts.bump_tire; if(tire){ const sy=1-0.5*seg(T,7,10.5); tire.obj.scale.set(1,sy,1); tire.obj.position.y=1165*(1-sy); }
@@ -376,12 +379,11 @@
     const k3=seg(T,12,15.5); tubeG.position.set(520*k3,180*k3,260*k3); setFade(tubeG,1-smooth((k3-0.5)/0.5));
     // 4. effluent and vacuum spools unbolted
     const k4=seg(T,17,21.5), k4b=seg(T,18.5,22.5);
-    eff.spool.position.y=380*k4; setFade(eff.spool,1-smooth((k4-0.55)/0.45));
-    vac.spool.position.y=260*k4b; setFade(vac.spool,1-smooth((k4b-0.55)/0.45));
+    dress.eff_spool.position.y=380*k4; setFade(dress.eff_spool,1-smooth((k4-0.55)/0.45));
+    dress.vac_spool.position.y=260*k4b; setFade(dress.vac_spool,1-smooth((k4b-0.55)/0.45));
     // 5. gauge panel and bracket off
-    const k5=seg(T,24.5,28), k5b=seg(T,26.5,29.5);
+    const k5=seg(T,24.5,28);
     gauge.position.copy(GN).multiplyScalar(420*k5).setY(120*k5); setFade(gauge,1-smooth((k5-0.55)/0.45));
-    gaugeBr.position.copy(GN).multiplyScalar(300*k5b); setFade(gaugeBr,1-smooth((k5b-0.55)/0.45));
     // 6. jig on, rod in, nut off, bundle down, jig off
     setFade(jig, smooth((T-30)/1.5)*(1-smooth((T-41)/1.5)));
     const rodIn=seg(T,31.5,33.5), drop=seg(T,36.5,40.5);
