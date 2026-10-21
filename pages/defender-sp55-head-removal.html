@@ -212,14 +212,15 @@
   const dress={}; for(const k in DRESS){ dress[k]=new THREE.Group(); DRESS[k].add(dress[k]); }
   const gauge=new THREE.Group(); scene.add(gauge); gauge.add(dress.gauge, dress.gauge_face);
   let GN=new THREE.Vector3(-1,0,-0.6).normalize();   // outward direction at the gauge panel, refined once it loads
-  // bump removal jig: two legs, cross member, threaded rod and nuts
+  // bump removal jig: an inverted-U bracket of flat bar standing on the bump mounting plate, with the threaded rod through its cross member
   const jig=new THREE.Group(), rod=new THREE.Group(); scene.add(jig,rod);
-  { for(const x of [-250,250]){ const l=box(30,740,30,mat(0xe0922f)); l.position.set(x,1500,0); jig.add(l); const ft=box(90,12,90,mat(0xe0922f)); ft.position.set(x,1136,0); jig.add(ft); }
-    const cm=box(560,30,30,mat(0xe0922f)); cm.position.set(0,1870,0); jig.add(cm);
+  { const jm=mat(0x2456a0,{shininess:14}), PLATE=1256, H=330;              // mounting plate top (the lift shaft nut sits on it), bracket height
+    for(const x of [-128,128]){ const l=box(22,H,90,jm); l.position.set(x,PLATE+H/2,0); jig.add(l); }
+    const cm=box(278,64,90,jm); cm.position.set(0,PLATE+H+32,0); jig.add(cm);
     const rd=cyl(7,720,steel); rd.position.y=360; rod.add(rd);                // rod bottoms out in the lift shaft top at y 1310
     const n2=hex(14,12,dark); n2.position.y=12; rod.add(n2);                  // jam nut against the lift shaft
-    const bearing=cyl(26,10,brass); bearing.position.y=580; rod.add(bearing); // thrust bearing on the cross member
-    const n4=hex(16,14,dark); n4.position.y=596; rod.add(n4); }               // working nut
+    const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64-1310+6; rod.add(bearing);   // thrust bearing on the cross member
+    const n4=hex(16,16,dark); n4.position.y=PLATE+H+64-1310+20; rod.add(n4); }                 // working nut
   // socket wrench working its way around the 24 flange bolts (the bolts themselves are in the STEP model)
   const NBOLT=24, BOLT_T=0.27, BOLT_R=790;
   const wrench=new THREE.Group(); scene.add(wrench);
@@ -377,7 +378,7 @@
     const lvl=900-1940*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1050); water.position.y=(lvl-1050)/2; setFade(dish,T<5.6? 0.6*drainK+(ghost?0.3:0) : 0); setFade(water,T<5.6? 0.6*drainK+(ghost?0.3:0) : 0);   // column above the dish, dish stays full until the water disappears
     applyGhost();
     // 2. vent: the bump tire goes flat
-    const tire=parts.bump_tire; if(tire){ const sy=1-0.5*seg(T,7,10.5); tire.obj.scale.set(1,sy,1); tire.obj.position.y=1165*(1-sy); }
+    const tire=parts.bump_tire; if(tire){ const sy=1-0.5*seg(T,7,10.5)*(1-seg(T,11,13)); tire.obj.scale.set(1,sy,1); tire.obj.position.y=1165*(1-sy); }   // flattens while venting, then back to its moulded shape for the rest of the steps
     // 3. pneumatic tubing off
     const k3=seg(T,12,15.5); tubeG.position.set(520*k3,180*k3,260*k3); setFade(tubeG,1-smooth((k3-0.5)/0.5));
     // 4. effluent and vacuum spools unbolted
