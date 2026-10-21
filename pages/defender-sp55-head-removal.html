@@ -298,9 +298,10 @@
   const KH={p:V(-2300,2500,-2500), t:V(0,1000,0), f:34};  // on the head
   const KG={p:V(-3300,1000,-2500), t:V(-620,420,-380), f:34};// gauge panel side
   const KJ={p:V(-1500,2700,-1900), t:V(-60,1250,0), f:36};// over the bump assembly for the jig
+  const KM={p:V(-3100,1500,-3300), t:V(0,300,0), f:34};   // side view through the shell as the tube sheet lowers
   const KL={p:V(-3600,-400,-3000), t:V(0,-1200,0), f:36}; // down at the legs
   const KS={p:V(-4200,3000,-2200), t:V(-400,700,200), f:38};// wide, watching the swing
-  const PATH=[[0,KA],[8,KA],[10,KH],[15.5,KH],[17,KH],[22,KH],[24,KG],[28,KG],[30,KJ],[42,KJ],[43.5,KL],[47,KL],[49,KH],[55,KH],[57,KS],[74,KS]];
+  const PATH=[[0,KA],[8,KA],[10,KH],[15.5,KH],[17,KH],[22,KH],[24,KG],[28,KG],[30,KJ],[34.5,KJ],[36.5,KM],[41.5,KM],[43.5,KL],[47,KL],[49,KH],[55,KH],[57,KS],[74,KS]];
   function camAt(t,out){
     let i=0; while(i<PATH.length-2 && t>PATH[i+1][0]) i++;
     const [ta,a]=PATH[i], [tb,b]=PATH[i+1], k=ease((t-ta)/Math.max(1e-6,tb-ta));
@@ -371,8 +372,9 @@
     T=clamp(t,0,T_END); prog.value=Math.round(T/T_END*1000); tnow.textContent=fmt(T);
     if(!ready){ needRender=true; return; }
     // 1. bump, drain and rinse: peek through the shell while the water goes down
-    drainPeek=smooth((T-0.4)/1.2)*(1-smooth((T-5.2)/1.2));
-    const lvl=900-1940*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1050); water.position.y=(lvl-1050)/2; water.visible=dish.visible=T<5.6; setFade(dish,0.6*drainPeek+(ghost?0.3:0));   // column above the dish, dish stays full until the water disappears setFade(water,0.6*drainPeek+(ghost?0.3:0));
+    const drainK=smooth((T-0.4)/1.2)*(1-smooth((T-5.2)/1.2));
+    drainPeek=Math.max(drainK, smooth((T-35.2)/1.2)*(1-smooth((T-41.2)/1.2)));   // see through the shell while it drains and while the tube sheet lowers
+    const lvl=900-1940*seg(T,1.2,5.2); water.scale.y=Math.max(1,lvl+1050); water.position.y=(lvl-1050)/2; setFade(dish,T<5.6? 0.6*drainK+(ghost?0.3:0) : 0); setFade(water,T<5.6? 0.6*drainK+(ghost?0.3:0) : 0);   // column above the dish, dish stays full until the water disappears
     applyGhost();
     // 2. vent: the bump tire goes flat
     const tire=parts.bump_tire; if(tire){ const sy=1-0.5*seg(T,7,10.5); tire.obj.scale.set(1,sy,1); tire.obj.position.y=1165*(1-sy); }
