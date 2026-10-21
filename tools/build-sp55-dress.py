@@ -8,18 +8,18 @@ import numpy as np
 
 SRC='assets/defender-schematic/defender-sp41-schematic.bin'
 OUT='assets/sp55-exploded/sp55-dress.bin'
-S=1.25; DY=-112.0                       # SP-41 -> SP-55: radial scale, and the head landing at y 978 drops onto the SP-55 dome
-PVC=[0x4b,0x51,0x57]; LIGHT=[0xb7,0xbc,0xc3]; BLACK=[0x1f,0x21,0x24]; PANEL=[0xd8,0xda,0xdd]; RED=[0xd1,0x20,0x2b]
-GROUPS={  # group name -> (node ids, colour, extra radial push in mm)
-  'eff_stub':  ([555,559], LIGHT, 0),
-  'eff_spool': ([560,557,558,556], PVC, 0),
-  'vac_stub':  ([654], LIGHT, 0),
-  'vac_spool': ([655,656], PVC, 0),
-  'vac_run':   ([657,658,659,671,678,679,681], PVC, 0),
-  'hose':      ([689], BLACK, 0),
-  'gauge':     ([551], PANEL, 230),
+S=1.25; DY=-112.0                       # SP-41 -> SP-55: radial scale, and a vertical shift for the tank-side parts
+DY_HEAD=-200.0                          # head-mounted piping: SP-41 flanges land at y 978, the SP-55 head plate is at y 1022 (978*1.25-200)
+PVC=[0x4b,0x51,0x57]; LIGHT=[0xb7,0xbc,0xc3]; BLACK=[0x1f,0x21,0x24]; PANEL=[0x71,0x00,0x00]; RED=[0x71,0x00,0x00]   # CAD colour (0.445,0,0) kept by the installation animation
+GROUPS={  # group name -> (node ids, colour, extra radial push in mm, vertical shift)
+  'eff_stub':  ([555,559], PVC, 0, DY_HEAD),
+  'eff_spool': ([560,557,558,556], PVC, 0, DY_HEAD),
+  'vac_stub':  ([654], PVC, 0, DY_HEAD),
+  'vac_spool': ([655,656], PVC, 0, DY_HEAD),
+  'vac_run':   ([657,658,659,671,678,679,681], PVC, 0, DY_HEAD),
+  'hose':      ([689], BLACK, 0, DY_HEAD),
+  'gauge':     ([551], PANEL, 230, DY),
 }
-FLANGE={555,556,559,654,681}
 
 b=open(SRC,'rb').read(); hl=struct.unpack('<I',b[:4])[0]; H=json.loads(b[4:4+hl]); base=4+hl
 N,M=H['nodes'],H['meshes']
@@ -58,10 +58,10 @@ def emit(name,col,v,f):
     entries.append({'name':name,'col':col,'nv':len(v),'nf':len(f),'itype':it,'V':[off],'F':[off+len(vb)]})
     blobs.append(vb); blobs.append(fb); off+=len(vb)+len(fb)
 
-for g,(ids,col,push) in GROUPS.items():
+for g,(ids,col,push,dy) in GROUPS.items():
     for j in ids:
         v,f=mesh(j)
-        v=v*S; v[:,1]+=DY
+        v=v*S; v[:,1]+=dy
         if push:
             c=v.mean(0); d=np.array([c[0],0,c[2]]); d/=np.linalg.norm(d); v=v+d*push
         if g=='gauge':
@@ -72,7 +72,7 @@ for g,(ids,col,push) in GROUPS.items():
                 ext=vv.max(0)-vv.min(0); small=max(ext)<110
                 emit('gauge_face' if small else 'gauge', RED if small else PANEL, vv, ff)
         else:
-            emit(g, LIGHT if j in FLANGE else col, v, f)
+            emit(g, col, v, f)
 
 hdr=json.dumps(entries).encode(); hdr+=b' '*(-(len(hdr)+4)%4)
 with open(OUT,'wb') as fo:
