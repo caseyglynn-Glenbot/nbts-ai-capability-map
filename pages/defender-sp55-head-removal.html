@@ -113,7 +113,7 @@
         <dt>Air</dt><dd id="rAir">Supplied</dd>
         <dt>Bump tire</dt><dd id="rTire">Inflated</dd>
         <dt>Tube sheet</dt><dd id="rSheet">Operating</dd>
-        <dt>Head bolts</dt><dd id="rBolts">24 / 24</dd>
+        <dt>Head bolts</dt><dd id="rBolts">18 / 18</dd>
         <dt>Head</dt><dd id="rHead">Seated</dd>
       </dl>
     </div>
@@ -155,7 +155,7 @@
     {t:23, h:'Remove the gauge panel',         d:'Disconnect the tubing from the gauge panel, then remove the panel bracket nuts and lift the panel off.'},
     {t:29, h:'Lower the tube sheet to maintenance position', d:'Fit the bump removal jig, take the weight on the threaded rod, remove the lift shaft nut and lower the tube sheet about 14 in. until it rests on the tabs inside the tank.'},
     {t:43, h:'Check the anchors',              d:'Inspect the support legs and confirm the filter is anchored to the concrete. CAUTION: an unanchored filter can tip when the head swings out and poses a crush risk.'},
-    {t:48, h:'Remove the head hardware',       d:'Remove every bolt, nut and washer fastening the head to the tank flange. Each bolt carries two flat washers, a lock washer and a nut.'},
+    {t:48, h:'Remove the head hardware',       d:'Remove all eighteen bolts, nuts and washers fastening the head to the tank flange. Each bolt carries two flat washers, a lock washer and a nut.'},
     {t:56, h:'Jack the head up',               d:'Oil the davit, insert the jack handle in the tank-mounted bottle jack and raise the head until it will swing clear of the tank.'},
     {t:65, h:'Swing the head clear',           d:'Swing the head on the davit arm clear of the tank. Reassembly: new head gasket, bolts torqued in two stages per the O&M sequence (75 then 150 ft-lbs; SP-29 20 then 45).'}
   ];
@@ -223,7 +223,32 @@
     const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64+6; jig.add(bearing);          // thrust bearing on the cross member: stays with the jig, the rod runs down through it
     const n4=hex(16,16,dark); n4.position.y=PLATE+H+64+20; jig.add(n4); }                       // working nut, likewise
   // the 24 head bolts are solids inside the upper_head mesh; they get split out at load so each can lift away in step 8
-  const NBOLT=24, BOLT_T=0.27, bolts=[];   // bolts[i] = group for the bolt at i*15 deg from +x (filled by splitBolts)
+  const NBOLT=18, BOLT_T=0.36, bolts=[];   // bolts[i] = group for the bolt at i*20 deg from +x (filled by splitBolts)
+  // edge lines of the same hardware go with their bolt so no outline is left behind once it fades
+  const BOLT_R=757;
+  function boltIndexAt(x,y,z){ const r=Math.hypot(x,z); if(r<700||r>820||y<800||y>1100) return -1; const a=Math.atan2(z,x), k=((Math.round(a/(Math.PI/9))%NBOLT)+NBOLT)%NBOLT, ca=k*Math.PI/9; return Math.hypot(x-Math.cos(ca)*BOLT_R, z-Math.sin(ca)*BOLT_R)<48? k : -1; }
+  function splitBoltLines(pos,lm,into,isBody){
+    const idx=isBody? bodyNutIndexAt : boltIndexAt, groups=isBody? bodyNuts : bolts;
+    const rest=[], per=Array.from({length:isBody?NB2:NBOLT},()=>[]);
+    for(let i=0;i<pos.length;i+=6){ const k=idx(pos[i],pos[i+1],pos[i+2]), k2=idx(pos[i+3],pos[i+4],pos[i+5]); (k>=0&&k===k2? per[k] : rest).push(pos[i],pos[i+1],pos[i+2],pos[i+3],pos[i+4],pos[i+5]); }
+    const mk=arr=>{ const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(arr,3)); return new THREE.LineSegments(lg,lm.clone()); };
+    const r=mk(rest); r.material.userData.base=lm.opacity; into.add(r);
+    per.forEach((arr,k)=>{ if(!arr.length||!groups[k]) return; const l=mk(arr); l.material.userData.base=lm.opacity; groups[k].add(l); });
+  }
+  // tank-side nuts and washers under the flange lugs (y 800-930 in the body mesh) are picked out by triangle, since they share vertices with the shell
+  // the tank flange carries its own 18 bolt sets, every 20 deg at r 775 (y 800-940)
+  const NB2=18, bodyNuts=[];
+  function bodyNutIndexAt(x,y,z){ const r=Math.hypot(x,z); if(r<720||r>840||y<800||y>940) return -1; const a=Math.atan2(z,x), k=((Math.round(a/(Math.PI/9))%NB2)+NB2)%NB2, ca=k*Math.PI/9; return Math.hypot(x-Math.cos(ca)*775, z-Math.sin(ca)*775)<42? k : -1; }
+  function splitBodyNuts(geo,m,into){
+    const P=geo.attributes.position.array, I=geo.index.array, nt=I.length/3, rest=[], per=Array.from({length:NB2},()=>[]);
+    for(let t=0;t<nt;t++){ let k=-2;
+      for(let j=0;j<3;j++){ const v=I[t*3+j]; const kk=bodyNutIndexAt(P[v*3],P[v*3+1],P[v*3+2]); if(k===-2) k=kk; else if(kk!==k) k=-1; }
+      (k>=0? per[k] : rest).push(t); }
+    const build=tris=>{ const idx=new Uint32Array(tris.length*3); tris.forEach((t,j)=>{ idx[j*3]=I[t*3]; idx[j*3+1]=I[t*3+1]; idx[j*3+2]=I[t*3+2]; });
+      const ng=new THREE.BufferGeometry(); ng.setAttribute('position',geo.attributes.position); ng.setAttribute('normal',geo.attributes.normal); ng.setIndex(new THREE.BufferAttribute(idx,1)); return ng; };
+    into.add(new THREE.Mesh(build(rest),m));
+    per.forEach((tris,k)=>{ if(!tris.length) return; const g=new THREE.Group(); g.userData.ti=k; scene.add(g); bodyNuts[k]=g; const bm=m.clone(); bm.userData.base=1; bm.color.setHex(GREY); g.add(new THREE.Mesh(build(tris),bm)); });
+  }
   function splitBolts(geo,m,into){
     const P=geo.attributes.position.array, I=geo.index.array, nv=P.length/3, nt=I.length/3;
     const weld=new Int32Array(nv), map=new Map();
@@ -236,15 +261,15 @@
     const rest=[], byBolt=new Map();
     for(const c of comp.values()){
       const w=c.hi[0]-c.lo[0], d=c.hi[2]-c.lo[2], cx=(c.lo[0]+c.hi[0])/2, cz=(c.lo[2]+c.hi[2])/2, r=Math.hypot(cx,cz);
-      const isBolt= w<90 && d<90 && r>700 && r<820 && c.hi[1]>940 && c.hi[1]<1100;
+      const isBolt= w<90 && d<90 && r>700 && r<820 && c.hi[1]>800 && c.hi[1]<1100;   // bolt, washers, nuts: head side and the tank-lug side
       if(!isBolt){ rest.push(...c.tris); continue; }
-      const k=((Math.round(Math.atan2(cz,cx)/(Math.PI/12))%NBOLT)+NBOLT)%NBOLT;
+      const k=((Math.round(Math.atan2(cz,cx)/(Math.PI/9))%NBOLT)+NBOLT)%NBOLT;
       (byBolt.get(k)||byBolt.set(k,[]).get(k)).push(...c.tris);
     }
     const build=tris=>{ const idx=new Uint32Array(tris.length*3); tris.forEach((t,j)=>{ idx[j*3]=I[t*3]; idx[j*3+1]=I[t*3+1]; idx[j*3+2]=I[t*3+2]; });
       const ng=new THREE.BufferGeometry(); ng.setAttribute('position',geo.attributes.position); ng.setAttribute('normal',geo.attributes.normal); ng.setIndex(new THREE.BufferAttribute(idx,1)); return ng; };
     into.add(new THREE.Mesh(build(rest),m));
-    for(let k=0;k<NBOLT;k++){ const g=new THREE.Group(); const tris=byBolt.get(k); if(tris){ const bm=m.clone(); bm.userData.base=1; bm.color.setHex(GREY); g.add(new THREE.Mesh(build(tris),bm)); } scene.add(g); bolts[k]=g; }
+    for(let k=0;k<NBOLT;k++){ if(!bolts[k]){ bolts[k]=new THREE.Group(); scene.add(bolts[k]); } const tris=byBolt.get(k); if(tris){ const bm=m.clone(); bm.userData.base=1; bm.color.setHex(GREY); bolts[k].add(new THREE.Mesh(build(tris),bm)); } }
   }
   // anchor markers at the legs
   const anchors=[]; for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+Math.PI/4, r=new THREE.Mesh(new THREE.TorusGeometry(90,7,10,40),own(red)); r.rotation.x=Math.PI/2; r.position.set(Math.cos(a)*650,-1522,Math.sin(a)*650); scene.add(r); anchors.push(r); }
@@ -278,7 +303,7 @@
         const m=new THREE.MeshPhongMaterial({color:col, shininess:18, specular:0x222222, polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1,
           transparent:true, opacity:a||1, depthWrite:!a, side: a?THREE.DoubleSide:THREE.FrontSide});
         m.userData.base=a||1;
-        if(e.name==='upper_head') splitBolts(geo,m,g); else g.add(new THREE.Mesh(geo,m));
+        if(e.name==='upper_head') splitBolts(geo,m,g); else if(e.name==='body') splitBodyNuts(geo,m,g); else g.add(new THREE.Mesh(geo,m));
       }
       if(e.nl){
         const q=new Int16Array(buf, base+e.L[0], e.nl*3); const pos=new Float32Array(q.length);
@@ -287,7 +312,7 @@
         const dk=(col===BLACK||col===HOLE||col===DARKBLUE);
         const lm=new THREE.LineBasicMaterial({color: dk?0x6a6f76:0x101214, transparent:true, opacity: dk?0.6:0.7});
         lm.userData.base=lm.opacity;
-        g.add(new THREE.LineSegments(lg, lm));
+        if(e.name==='upper_head'||e.name==='body') splitBoltLines(pos,lm,g,e.name==='body'); else g.add(new THREE.LineSegments(lg, lm));
       }
       (HEADSET.has(e.name)?headG : BUNDLE.has(e.name)?bundle : scene).add(g);
       parts[e.name]={obj:g, name:e.name};
@@ -384,7 +409,7 @@
     const air= t<6.5? 'Supplied' : t<9.5? 'Venting' : 'Isolated'; R.air.textContent=air; R.air.className= air==='Isolated'?'ok':'';
     const tire= t<7? 'Inflated' : t<10.5? 'Deflating' : 'Deflated'; R.tire.textContent=tire; R.tire.className= tire==='Deflated'?'ok':'';
     const sh= t<36.5? 'Operating' : t<40.5? 'Lowering' : 'On tabs (-14 in.)'; R.sheet.textContent=sh; R.sheet.className= t>=40.5?'ok':'';
-    const nb= NBOLT-Math.min(NBOLT, Math.floor(Math.max(0,(t-48.5))/0.27)); R.bolts.textContent=(t<48.5?NBOLT:nb)+' / '+NBOLT; R.bolts.className= nb===0?'hot':'';
+    const nb= NBOLT-Math.min(NBOLT, Math.floor(Math.max(0,(t-48.5))/BOLT_T)); R.bolts.textContent=(t<48.5?NBOLT:nb)+' / '+NBOLT; R.bolts.className= nb===0?'hot':'';
     const hd= t<56.5? 'Seated' : t<64? 'Lifting' : t<71? 'Swinging' : 'Clear'; R.head.textContent=hd; R.head.className= hd==='Clear'?'hot':'';
   }
 
@@ -428,6 +453,7 @@
     for(const a of anchors){ setFade(a, ka*(0.55+0.45*Math.sin(T*6))); a.scale.setScalar(1+0.15*Math.sin(T*6)); }
     // 8. head hardware out: each bolt lifts out of its lug and fades, one after another around the flange
     bolts.forEach((b,i)=>{ const kb=seg(T,48.5+i*BOLT_T,49.7+i*BOLT_T); b.position.y=300*kb; setFade(b,1-smooth((kb-0.5)/0.5)); });
+    bodyNuts.forEach(b=>{ const kb=seg(T,48.5+b.userData.ti*BOLT_T,49.7+b.userData.ti*BOLT_T); b.position.y=-200*kb; setFade(b,1-smooth((kb-0.5)/0.5)); });
     // 9/10. oil the davit, jack the head up, swing it clear
     const ko=smooth((T-56.2)/0.6)*(1-smooth((T-58.5)/0.6)); oil.rotation.z=-0.5*ko; setFade(oil,ko);
     const kl=seg(T,58.5,64), ks=seg(T,65.5,71.5), th=SWING*ks, L=LIFT*kl;
