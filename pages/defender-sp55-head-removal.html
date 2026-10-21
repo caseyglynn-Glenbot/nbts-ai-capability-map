@@ -187,7 +187,8 @@
   const headG=new THREE.Group(); scene.add(headG);
   const bundle=new THREE.Group(); scene.add(bundle);
   const parts={};
-  const NUT_UP=85;                                 // the lift shaft nut is shown on top of the shaft, not down on the plate
+  const SHAFT_TOP=1251, SHAFT_BOT=1006;            // lift shaft trimmed so its top is flush with the top of the bump tire (model had it at 1310)
+  const NUT_UP=SHAFT_TOP-1237;                     // the lift shaft nut sits on the shaft top (nut mesh starts at y 1237)
   const LIFT=420, SWING=2.72, POST={x:-519,z:620}; // head jacks up LIFT mm on the davit, then swings SWING rad about the post
   const DROP=356;                                  // tube sheet lowered ~14 in. onto the tabs inside the tank
 
@@ -279,7 +280,7 @@
   { const jm=mat(0x2456a0,{shininess:14}), PLATE=1256, H=330;              // mounting plate top (the lift shaft nut sits on it), bracket height
     for(const x of [-128,128]){ const l=box(22,H,90,jm); l.position.set(x,PLATE+H/2,0); jig.add(l); }
     const cm=box(278,64,90,jm); cm.position.set(0,PLATE+H+32,0); jig.add(cm);
-    const rd=cyl(7,720,steel); rd.position.y=360; rod.add(rd);                // rod bottoms out in the lift shaft top at y 1310
+    const rd=cyl(7,720,steel); rd.position.y=360; rod.add(rd);                // rod bottoms out in the lift shaft top (SHAFT_TOP)
     const n2=hex(14,12,dark); n2.position.y=NUT_UP+20; rod.add(n2);           // jam nut, just above the lift shaft nut
     const bearing=cyl(22,12,steel); bearing.position.y=PLATE+H+64+6; jig.add(bearing);          // thrust bearing on the cross member: stays with the jig, the rod runs down through it
     const n4=hex(16,16,dark); n4.position.y=PLATE+H+64+20; jig.add(n4); }                       // working nut, likewise
@@ -397,6 +398,7 @@
     }
     const gc=gbox.getCenter(new THREE.Vector3()); GN=new THREE.Vector3(gc.x,0,gc.z).normalize();
     buildGaugePanel(gc);
+    const ls=parts.lift_shaft; if(ls){ const k=(SHAFT_TOP-SHAFT_BOT)/(1310-SHAFT_BOT); ls.obj.scale.y=k; ls.obj.position.y=SHAFT_BOT*(1-k); }
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
     if(walk) goStep(0); else if(!reduced) startPlay();
@@ -507,7 +509,7 @@
     setFade(jig, smooth((T-30)/1.5)*(1-smooth((T-41)/1.5)));
     const rodIn=seg(T,31.5,33.5), drop=seg(T,36.5,40.5);
     setFade(rod, smooth((T-31)/1)*(1-smooth((T-40.8)/1.2)));
-    rod.position.y=1310+320*(1-rodIn)-DROP*drop;
+    rod.position.y=SHAFT_TOP+320*(1-rodIn)-DROP*drop;
     bundle.position.y=-DROP*drop;
     const nut=parts.lift_shaft_nut; if(nut){ const kn=seg(T,34,36); nut.obj.position.y=NUT_UP+220*kn; nut.obj.position.x=-180*kn; setFade(nut.obj,1-smooth((kn-0.6)/0.4)); }
     // 7. anchors
