@@ -229,6 +229,8 @@
     const arm=cyl(10,420,steel,'x'); arm.position.set(210,70,0); wrench.add(arm); const grip=cyl(14,110,red,'x'); grip.position.set(380,70,0); wrench.add(grip); }
   // anchor markers at the legs
   const anchors=[]; for(let i=0;i<4;i++){ const a=i/4*Math.PI*2+Math.PI/4, r=new THREE.Mesh(new THREE.TorusGeometry(90,7,10,40),own(red)); r.rotation.x=Math.PI/2; r.position.set(Math.cos(a)*650,-1522,Math.sin(a)*650); scene.add(r); anchors.push(r); }
+  // davit lift shaft: the fixed section the post rides up on, hidden inside the post until the head is jacked up
+  { const sh=cyl(54,520,mat(0x2b6cc4,{shininess:18})); sh.position.set(POST.x,190+260,POST.z); scene.add(sh); }
   // jack handle on the davit post
   const handle=new THREE.Group(); handle.position.set(-519,760,619); scene.add(handle);
   { const h=cyl(11,620,dark,'x'); h.position.x=-310; handle.add(h); const grip=cyl(16,120,red,'x'); grip.position.x=-560; handle.add(grip); }
