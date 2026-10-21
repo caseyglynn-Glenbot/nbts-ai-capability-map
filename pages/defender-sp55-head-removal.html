@@ -379,13 +379,13 @@
     // 3. pneumatic tubing off
     const k3=seg(T,12,15.5); tubeG.position.set(520*k3,180*k3,260*k3); setFade(tubeG,1-smooth((k3-0.5)/0.5));
     // 4. effluent and vacuum spools unbolted
-    const k4=seg(T,17,21.5), k4b=seg(T,18.5,22.5);
+    const k4=seg(T,17,20.5), k4b=seg(T,18,21.5);
     // everything external comes off: effluent run and flange, vacuum riser, the rest of the 1.5 in. run and its hose
     dress.eff_spool.position.y=380*k4; setFade(dress.eff_spool,1-smooth((k4-0.55)/0.45));
     dress.eff_stub.position.y=200*k4;  setFade(dress.eff_stub,1-smooth((k4-0.55)/0.45));
     dress.vac_spool.position.y=260*k4b; setFade(dress.vac_spool,1-smooth((k4b-0.55)/0.45));
     dress.vac_stub.position.y=150*k4b;  setFade(dress.vac_stub,1-smooth((k4b-0.55)/0.45));
-    const k4c=seg(T,19.5,22.8);
+    const k4c=seg(T,19,22.2);
     dress.vac_run.position.set(-260*k4c,0,260*k4c); setFade(dress.vac_run,1-smooth((k4c-0.5)/0.5));
     dress.hose.position.copy(dress.vac_run.position); setFade(dress.hose,1-smooth((k4c-0.5)/0.5));
     // 5. gauge panel and bracket off
