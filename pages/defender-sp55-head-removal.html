@@ -232,7 +232,7 @@
   // davit lift shaft: the fixed section the post rides up on, hidden inside the post until the head is jacked up
   { const sh=cyl(54,520,mat(0x2b6cc4,{shininess:18})); sh.position.set(POST.x,190+260,POST.z); scene.add(sh); }
   // jack handle on the davit post
-  const handle=new THREE.Group(); handle.position.set(-519,760,619); scene.add(handle);
+  const handle=new THREE.Group(); handle.position.set(-519,250,619); scene.add(handle);   // bottle jack sits in the lower bracket at the base of the post
   { const h=cyl(11,620,dark,'x'); h.position.x=-310; handle.add(h); const grip=cyl(16,120,red,'x'); grip.position.x=-560; handle.add(grip); }
   // oil can hint on the davit
   const oil=new THREE.Group(); oil.position.set(-519,1180,619); scene.add(oil);
