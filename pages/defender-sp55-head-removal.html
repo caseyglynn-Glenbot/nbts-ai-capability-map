@@ -180,8 +180,8 @@
     tube_sheet:LIGHT, tube_sheet_holes:HOLE, tube_elements:TUBE, tube_elements_edges:TUBE, felt_gasket:FELT, hold_down_plate:LIGHT, hold_down_holes:HOLE, tube_sheet_hardware:GREY,
     lift_shaft:YELLOW, lift_shaft_hardware:GREY, lift_shaft_oring:BLACK, window_gasket:BLACK, acrylic:ACR, window_cover:BLUE, window_hardware:GREY};
   const ALPHA={acrylic:0.45};
-  // the head and everything bolted to it rides the davit; the tube sheet bundle hangs on the lift shaft
-  const HEADSET=new Set(['upper_head','davit_arm','bump_gasket','bump_bushing','bushing_oring','snap_ring','bump_tire','lift_shaft_nut']);
+  // the head, the davit arm and the davit post all rise and swing together (the jack drives the post up out of its tank bracket); the tube sheet bundle hangs on the lift shaft
+  const HEADSET=new Set(['upper_head','davit_arm','davit','bump_gasket','bump_bushing','bushing_oring','snap_ring','bump_tire','lift_shaft_nut']);
   const BUNDLE=new Set(['tube_sheet','tube_sheet_holes','tube_elements','tube_elements_edges','felt_gasket','hold_down_plate','hold_down_holes','tube_sheet_hardware','lift_shaft','lift_shaft_hardware','lift_shaft_oring']);
   const GHOSTABLE=new Set(['body','upper_head','window_cover','acrylic','window_gasket','window_hardware']);
   const headG=new THREE.Group(); scene.add(headG);
