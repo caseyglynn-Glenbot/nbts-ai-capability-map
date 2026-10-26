@@ -76,6 +76,53 @@
     .grid3{grid-template-columns:1fr 1fr}
   }
   @media (max-width:620px){.grid3{grid-template-columns:1fr}}
+
+  /* How it works flow (kf-) */
+  .kf-lane{display:grid;grid-template-columns:130px 1fr;gap:0 22px}
+  .kf-lane+.kf-lane{margin-top:4px}
+  .kf-ll{padding-top:12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);border-top:2px solid var(--teal)}
+  .kf-steps{display:flex;flex-direction:column;min-width:0}
+  .kf-step{position:relative;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0 20px}
+  .kf-step::before{content:"";position:absolute;left:16px;top:46px;bottom:0;width:2px;background:var(--rule)}
+  .kf-lane:last-child .kf-step:last-child::before{display:none}
+  .kf-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;font-weight:700;font-size:14px;position:relative;z-index:1}
+  .kf-step.kf-res .kf-num{background:var(--green)}
+  .kf-body{min-width:0;max-width:980px}
+  .kf-t{font-weight:700;color:var(--blue);font-size:16px;margin:5px 0 2px}
+  .kf-d{margin:0;font-size:13.5px;color:var(--ink);max-width:760px}
+  .kf-fan,.kf-dec,.kf-uses{display:grid;gap:8px;margin-top:10px}
+  .kf-fan{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .kf-dec{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-uses{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-ft{border-top:3px solid var(--teal);background:var(--stripe);padding:8px 10px 9px}
+  .kf-ft b,.kf-use b{display:block;font-size:13px;color:var(--blue)}
+  .kf-ft span{font-size:12.5px;color:var(--ink2)}
+  .kf-out{padding:8px 10px;border-left:3px solid var(--green);background:var(--stripe);font-size:13px}
+  .kf-out b{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+  .kf-out.kf-skip{border-left-color:#7A5600;background:#FFF4D6}
+  .kf-out.kf-skip b{color:#7A5600}
+  .kf-sample{margin-top:10px;border:1px solid var(--rule);max-width:760px;overflow-x:auto}
+  .kf-sample .kf-hd{font-size:11.5px;color:var(--teal);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--rule);background:var(--stripe)}
+  .kf-sample p{margin:0;padding:8px 10px 10px;font-size:13px}
+  .kf-use{padding:8px 10px;background:var(--stripe);border-top:3px solid var(--green);font-size:13px;color:var(--ink)}
+  .kf-use.kf-wwt{border-top-color:var(--teal)}
+  .kf-gl{margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+  .kf-gl+.kf-uses{margin-top:6px}
+  .kf-note{margin:8px 0 0;font-size:12.5px;color:var(--ink2)}
+  @media (max-width:1100px){.kf-fan{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:720px){.kf-lane{grid-template-columns:1fr}.kf-ll{padding:8px 0 0}.kf-fan,.kf-dec,.kf-uses{grid-template-columns:1fr}}
+  .kf-fan.kf-c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kf-fan.kf-c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-dec.kf-c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kf-dec.kf-c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kf-out.kf-flag{border-left-color:#B03A2E;background:#FBECEA}
+  .kf-out.kf-flag b{color:#B03A2E}
+  .kf-ft.kf-red{border-top-color:#B03A2E}
+  .kf-ft.kf-yel{border-top-color:#C9A51F}
+  .kf-ft .kf-tag{display:inline-block;margin-top:5px;background:#F2C744;border:1px solid #C9A51F;padding:2px 7px;font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:700;color:#3A2F00}
+  .kf-ft .kf-box{display:block;margin-top:6px;height:12px;outline:1.5px solid #B03A2E;outline-offset:1px;background:#fff;max-width:160px}
+  @media (max-width:1100px){.kf-dec.kf-c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:720px){.kf-fan.kf-c2,.kf-fan.kf-c3,.kf-dec.kf-c2,.kf-dec.kf-c4{grid-template-columns:1fr}}
 </style>
 
 <style id="xd-style">
@@ -258,20 +305,82 @@
     </video>
   </section>
 
-  <section class="xd">
+  <section>
     <div class="lbl">HOW IT WORKS</div><div class="rule"></div>
-    <p class="sec-sub">The process end to end, in plain terms.</p>
-    <table class="xd-steps">
-      <thead><tr><th>Step</th><th>Stage</th><th>What happens</th></tr></thead>
-      <tbody>
-        <tr><td class="n">1</td><td class="stage">Quote comes in</td><td>A sales engineer submits the quote through the form and names the project.<span class="sub"><b>Needs:</b> the quote PDF. Nothing else to fill out.</span></td></tr>
-        <tr><td class="n">2</td><td class="stage">The order is read</td><td>Every line item is pulled off the quote: part number, description, size and quantity, including multi system projects.<span class="sub"><b>Produces:</b> a clean list of what was actually sold.</span></td></tr>
-        <tr><td class="n">3</td><td class="stage">Documents are matched</td><td>Each part is looked up against the product library and paired with its correct cut sheet, data sheet or drawing.<span class="sub"><b>Produces:</b> the exact set of pages this project needs, in order.</span></td></tr>
-        <tr><td class="n">4</td><td class="stage">Selections are marked</td><td>Every sheet is annotated to show what the customer bought, so the engineer reviewing it never has to guess which row applies.<span class="sub"><b>Produces:</b> red boxes on the ordered rows, yellow callouts on quantities and options.</span></td></tr>
-        <tr><td class="n">5</td><td class="stage">Package is assembled</td><td>Cover sheet, table of contents, tab dividers and all annotated pages merge into one submittal ready to send.<span class="sub"><b>Produces:</b> a single finished PDF, typically 25 to 40 pages.</span></td></tr>
-        <tr><td class="n">6</td><td class="stage">A person approves it</td><td>The package is reviewed and released by our team. The generator prepares the work, it does not send anything to a customer on its own.<span class="sub"><b>Control point:</b> nothing reaches the customer without sign off.</span></td></tr>
-      </tbody>
-    </table>
+    <div class="sec-sub">What happens after you upload a quote, from the form to a finished submittal in your inbox.</div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">You do</div>
+      <div class="kf-steps">
+        <div class="kf-step"><div class="kf-num">1</div><div class="kf-body">
+          <div class="kf-t">Pick the product line</div>
+          <p class="kf-d">On this page, choose <b>Neptune Benson</b> and the submittal form opens in a new tab. OSEC has its own form that takes the HKOM AS SOLD workbook.</p>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">2</div><div class="kf-body">
+          <div class="kf-t">Upload the quote and fill in the cover</div>
+          <p class="kf-d">Your email, the quote PDF and the job number are required. Engineer initials go on the cover. Add a project name only to override the one printed on the quote.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">Automatic</div>
+      <div class="kf-steps">
+        <div class="kf-step"><div class="kf-num">3</div><div class="kf-body">
+          <div class="kf-t">The quote is read</div>
+          <p class="kf-d">Every line item is pulled off the quote, including scanned, image-only quotes.</p>
+          <div class="kf-fan kf-c3">
+            <div class="kf-ft"><b>Line items</b><span>Part number, description, size and quantity</span></div>
+            <div class="kf-ft"><b>Systems</b><span>Multi-pool quotes split per Defender, for example competition pool, leisure pool and hot tub</span></div>
+            <div class="kf-ft"><b>Cover details</b><span>Project name, customer and quote number</span></div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">4</div><div class="kf-body">
+          <div class="kf-t">Each item is matched to its documents</div>
+          <p class="kf-d">Part numbers are looked up in the product library to find the right cut sheet, data sheet or drawing. If there is no part number, the description is used.</p>
+          <div class="kf-dec">
+            <div class="kf-out"><b>Matched</b>The page joins the package</div>
+            <div class="kf-out"><b>Valves quoted loose</b>Each Defender gets influent, effluent, precoat and system fill roles</div>
+            <div class="kf-out kf-skip"><b>No document</b>Listed in the run notes so nothing quietly drops off</div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">5</div><div class="kf-body">
+          <div class="kf-t">Selections are marked</div>
+          <p class="kf-d">The factory literature stays unchanged. Only the markings are added, so a reviewer never has to guess which row applies.</p>
+          <div class="kf-fan kf-c2">
+            <div class="kf-ft kf-red"><b>Red box</b><span>Outlines the size or model row that was ordered</span><i class="kf-box"></i></div>
+            <div class="kf-ft kf-yel"><b>Yellow callout</b><span>Quantity and options in plain words</span><br><span class="kf-tag">(2) 30 IN. UNITS REQ'D</span></div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">6</div><div class="kf-body">
+          <div class="kf-t">The package is assembled</div>
+          <p class="kf-d">Cover sheet with the job number, initials and project name, then table of contents, tab dividers and every marked page, merged in standard order into one PDF, typically 25 to 40 pages.</p>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">7</div><div class="kf-body">
+          <div class="kf-t">Sent back to you</div>
+          <p class="kf-d">In a few minutes the run finishes one of two ways.</p>
+          <div class="kf-dec kf-c2">
+            <div class="kf-out"><b>Done</b>Submittal and the original quote emailed to you and filed to NBTS Jira</div>
+            <div class="kf-out kf-flag"><b>Failed</b>You get a failure email with the error. Reply to it so we can look</div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">Result</div>
+      <div class="kf-steps">
+        <div class="kf-step kf-res"><div class="kf-num">8</div><div class="kf-body">
+          <div class="kf-t">You review and release it</div>
+          <p class="kf-d">The generator prepares the package. It never sends anything to a customer on its own.</p>
+          <div class="kf-uses">
+            <div class="kf-use"><b>Your inbox</b>Submittal PDF plus the original quote</div>
+            <div class="kf-use"><b>NBTS Jira</b>A ticket with both files attached</div>
+            <div class="kf-use"><b>Customer</b>Only after you have checked it</div>
+          </div>
+        </div></div>
+      </div>
+    </div>
   </section>
   <section class="xd">
     <div class="lbl">WHAT THE CUSTOMER RECEIVES</div><div class="rule"></div>
