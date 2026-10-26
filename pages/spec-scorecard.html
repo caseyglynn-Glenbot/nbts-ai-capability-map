@@ -76,6 +76,53 @@
     .grid3{grid-template-columns:1fr 1fr}
   }
   @media (max-width:620px){.grid3{grid-template-columns:1fr}}
+
+  /* How it works flow (kf-) */
+  .kf-lane{display:grid;grid-template-columns:130px 1fr;gap:0 22px}
+  .kf-lane+.kf-lane{margin-top:4px}
+  .kf-ll{padding-top:12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);border-top:2px solid var(--teal)}
+  .kf-steps{display:flex;flex-direction:column;min-width:0}
+  .kf-step{position:relative;display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0 20px}
+  .kf-step::before{content:"";position:absolute;left:16px;top:46px;bottom:0;width:2px;background:var(--rule)}
+  .kf-lane:last-child .kf-step:last-child::before{display:none}
+  .kf-num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:#fff;font-weight:700;font-size:14px;position:relative;z-index:1}
+  .kf-step.kf-res .kf-num{background:var(--green)}
+  .kf-body{min-width:0;max-width:980px}
+  .kf-t{font-weight:700;color:var(--blue);font-size:16px;margin:5px 0 2px}
+  .kf-d{margin:0;font-size:13.5px;color:var(--ink);max-width:760px}
+  .kf-fan,.kf-dec,.kf-uses{display:grid;gap:8px;margin-top:10px}
+  .kf-fan{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .kf-dec{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-uses{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-ft{border-top:3px solid var(--teal);background:var(--stripe);padding:8px 10px 9px}
+  .kf-ft b,.kf-use b{display:block;font-size:13px;color:var(--blue)}
+  .kf-ft span{font-size:12.5px;color:var(--ink2)}
+  .kf-out{padding:8px 10px;border-left:3px solid var(--green);background:var(--stripe);font-size:13px}
+  .kf-out b{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+  .kf-out.kf-skip{border-left-color:#7A5600;background:#FFF4D6}
+  .kf-out.kf-skip b{color:#7A5600}
+  .kf-sample{margin-top:10px;border:1px solid var(--rule);max-width:760px;overflow-x:auto}
+  .kf-sample .kf-hd{font-size:11.5px;color:var(--teal);font-weight:700;padding:7px 10px;border-bottom:1px solid var(--rule);background:var(--stripe)}
+  .kf-sample p{margin:0;padding:8px 10px 10px;font-size:13px}
+  .kf-use{padding:8px 10px;background:var(--stripe);border-top:3px solid var(--green);font-size:13px;color:var(--ink)}
+  .kf-use.kf-wwt{border-top-color:var(--teal)}
+  .kf-gl{margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+  .kf-gl+.kf-uses{margin-top:6px}
+  .kf-note{margin:8px 0 0;font-size:12.5px;color:var(--ink2)}
+  @media (max-width:1100px){.kf-fan{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:720px){.kf-lane{grid-template-columns:1fr}.kf-ll{padding:8px 0 0}.kf-fan,.kf-dec,.kf-uses{grid-template-columns:1fr}}
+  .kf-fan.kf-c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kf-fan.kf-c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .kf-dec.kf-c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kf-dec.kf-c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kf-out.kf-flag{border-left-color:#B03A2E;background:#FBECEA}
+  .kf-out.kf-flag b{color:#B03A2E}
+  .kf-ft.kf-red{border-top-color:#B03A2E}
+  .kf-ft.kf-yel{border-top-color:#C9A51F}
+  .kf-ft .kf-tag{display:inline-block;margin-top:5px;background:#F2C744;border:1px solid #C9A51F;padding:2px 7px;font-family:Consolas,"Courier New",monospace;font-size:11px;font-weight:700;color:#3A2F00}
+  .kf-ft .kf-box{display:block;margin-top:6px;height:12px;outline:1.5px solid #B03A2E;outline-offset:1px;background:#fff;max-width:160px}
+  @media (max-width:1100px){.kf-dec.kf-c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:720px){.kf-fan.kf-c2,.kf-fan.kf-c3,.kf-dec.kf-c2,.kf-dec.kf-c4{grid-template-columns:1fr}}
 </style>
 
 <style id="xd-style">
@@ -254,20 +301,91 @@
     <div class="notestrip"><b>Clarifiers are live.</b> The clarifier model scores against 28 engineering categories plus a commercial A/B/C/D position; results are filed to NBTS Jira and copied to you by email. The remaining brand models are in progress and their tiles open as each one is tuned.</div>
   </section>
 
-  <section class="xd">
+  <section>
     <div class="lbl">HOW IT WORKS</div><div class="rule"></div>
-    <p class="sec-sub">The process end to end, in plain terms.</p>
-    <table class="xd-steps">
-      <thead><tr><th>Step</th><th>Stage</th><th>What happens</th></tr></thead>
-      <tbody>
-        <tr><td class="n">1</td><td class="stage">Bid documents come in</td><td>A sales engineer uploads the project specs, drawings and addenda and names the project.<span class="sub"><b>Needs:</b> the PDFs and a project name. Multiple files at once.</span></td></tr>
-        <tr><td class="n">2</td><td class="stage">Every page is read</td><td>All pages are transcribed, including drawing sheets, title blocks, schedules and keynotes, not just the written specification. Callouts that only appear on a drawing still count.<span class="sub"><b>Produces:</b> the full text of the bid package in one place.</span></td></tr>
-        <tr><td class="n">3</td><td class="stage">Technical complexity is scored</td><td>The package is checked against 28 engineering categories covering the mechanism, structure, coatings, corrosion control, civil scope and the specifying consultant.<span class="sub"><b>Produces:</b> 28 ratings, each with the specification language that triggered it.</span></td></tr>
-        <tr><td class="n">4</td><td class="stage">Commercial position is assessed</td><td>Separately, the bid terms are read for margin pressure and execution risk. Open competition and or equal language pull margin down. Guarantees, phasing and custom fabrication pull risk up.<span class="sub"><b>Produces:</b> an A, B, C or D position with the reasoning stated.</span></td></tr>
-        <tr><td class="n">5</td><td class="stage">Scorecard is assembled</td><td>Technical and commercial results combine into one composite result, with the category detail attached underneath.<span class="sub"><b>Produces:</b> a single scorecard, filed to Jira and emailed to the submitter.</span></td></tr>
-        <tr><td class="n">6</td><td class="stage">The team decides</td><td>Sales and engineering use the scorecard to decide whether to pursue the bid and how to price it. The system informs the call, it does not make it.<span class="sub"><b>Control point:</b> every bid decision stays with the team.</span></td></tr>
-      </tbody>
-    </table>
+    <div class="sec-sub">What happens after you upload a bid package, from the form to a scorecard in Jira.</div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">You do</div>
+      <div class="kf-steps">
+        <div class="kf-step"><div class="kf-num">1</div><div class="kf-body">
+          <div class="kf-t">Pick the product line</div>
+          <p class="kf-d">On this page, choose <b>Clarifiers</b> and the intake form opens in a new tab.</p>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">2</div><div class="kf-body">
+          <div class="kf-t">Name the project and upload the PDFs</div>
+          <p class="kf-d">Enter the project name and your email. Then drop every PDF into one upload field: spec book, drawing sets and addenda, all at once.</p>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">Automatic</div>
+      <div class="kf-steps">
+        <div class="kf-step"><div class="kf-num">3</div><div class="kf-body">
+          <div class="kf-t">Every page is read</div>
+          <p class="kf-d">AI vision reads each file in turn, so callouts that only appear on a drawing still count.</p>
+          <div class="kf-fan kf-c3">
+            <div class="kf-ft"><b>Spec book</b><span>Written specification sections</span></div>
+            <div class="kf-ft"><b>Drawings</b><span>Each sheet transcribed: title blocks, schedules, keynotes</span></div>
+            <div class="kf-ft"><b>Addenda</b><span>Read the same way as the originals</span></div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">4</div><div class="kf-body">
+          <div class="kf-t">Combined into one text</div>
+          <p class="kf-d">All files are joined into the full text of the bid package. Drawing sheets carry the same weight as the written spec.</p>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">5</div><div class="kf-body">
+          <div class="kf-t">28 engineering categories scored</div>
+          <p class="kf-d">Each category is checked against its own list of low, medium and high cost triggers, with the matching spec wording quoted as evidence.</p>
+          <div class="kf-fan">
+            <div class="kf-ft"><b>Mechanism</b><span>Type, size, drive, influent well, EDI</span></div>
+            <div class="kf-ft"><b>Structure</b><span>Seismic, deflection, slenderness, design, pier, cage, truss, manifold, bridge</span></div>
+            <div class="kf-ft"><b>Access</b><span>Platform, decking, railing, skimmer, scum trough</span></div>
+            <div class="kf-ft"><b>Coatings</b><span>Coating and three corrosion control checks</span></div>
+            <div class="kf-ft"><b>Scope</b><span>Ancillaries, consultant, two civil checks</span></div>
+          </div>
+          <div class="kf-dec">
+            <div class="kf-out kf-flag"><b>High &middot; 3</b>Any high trigger found</div>
+            <div class="kf-out kf-skip"><b>Medium &middot; 2</b>Several medium triggers, or one that defines the system</div>
+            <div class="kf-out"><b>Low &middot; 1</b>Everything else, including nothing found</div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">6</div><div class="kf-body">
+          <div class="kf-t">Commercial position set</div>
+          <p class="kf-d">A separate read of the full text. Margin pressure is judged first: competitive bid, public bid or "or equal" language means low margin. Then risk: guarantees, phasing and custom fabrication push it up.</p>
+          <div class="kf-dec kf-c4">
+            <div class="kf-out"><b>A</b>High margin, low risk</div>
+            <div class="kf-out kf-skip"><b>B</b>High margin, high risk</div>
+            <div class="kf-out"><b>C</b>Low margin, low risk. The most common</div>
+            <div class="kf-out kf-flag"><b>D</b>Low margin, high risk</div>
+          </div>
+        </div></div>
+        <div class="kf-step"><div class="kf-num">7</div><div class="kf-body">
+          <div class="kf-t">Scorecard assembled</div>
+          <p class="kf-d">The 28 scores are averaged into one complexity number from 1.0 to 3.0 and paired with the letter. Each category's evidence is listed underneath.</p>
+          <div class="kf-sample">
+            <div class="kf-hd">Project: your project name | Result: C + 1.86 | Moderate complexity | Categories evaluated: 28 of 28</div>
+            <p>Then for each category: score and level, triggers found, up to three quotes from the spec as evidence, and a short reason.</p>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="kf-lane">
+      <div class="kf-ll">Result</div>
+      <div class="kf-steps">
+        <div class="kf-step kf-res"><div class="kf-num">8</div><div class="kf-body">
+          <div class="kf-t">Filed to Jira, copied to you</div>
+          <p class="kf-d">The scorecard informs the bid decision. It does not make it.</p>
+          <div class="kf-uses">
+            <div class="kf-use"><b>NBTS Jira</b>A new ticket with the full scorecard</div>
+            <div class="kf-use"><b>Your inbox</b>A copy of the same email</div>
+            <div class="kf-use"><b>The team</b>Decides whether to pursue the bid and how to price it</div>
+          </div>
+        </div></div>
+      </div>
+    </div>
   </section>
   <section class="xd">
     <div class="lbl">READING THE RESULT</div><div class="rule"></div>
