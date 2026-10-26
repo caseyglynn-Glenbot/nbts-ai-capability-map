@@ -147,18 +147,12 @@
       </div>
       <div class="type">
         <span class="fileicon">
-          <svg viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#C9D6DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#DDE6EC"/><rect x="2" y="30" width="36" height="13" rx="2" fill="#3B6FB6"/><text x="20" y="39.5" font-size="7" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">GDOC</text></svg>
-        </span>
-        <div><div class="t">Google Docs</div><div class="d">Paste a Google Doc link, pulled in and processed directly.</div></div>
-      </div>
-      <div class="type">
-        <span class="fileicon">
           <svg viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg"><path d="M4 2h22l10 10v34a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#C9D6DE" stroke-width="1.5"/><path d="M26 2l10 10H28a2 2 0 0 1-2-2V2z" fill="#DDE6EC"/><rect x="2" y="30" width="36" height="13" rx="2" fill="#5A6B78"/><text x="20" y="39.5" font-size="6.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial">MD&#183;HTML&#183;TXT</text></svg>
         </span>
         <div><div class="t">Markdown, HTML &amp; text</div><div class="d">.md, .html and .txt: notes, exported pages and plain text.</div></div>
       </div>
     </div>
-    <div class="notestrip"><b>What happens when you upload:</b> the document is read (with OCR for scans and AI vision for drawings), split into chunks, embedded, and stored in the Supabase vector store. Re-uploading the same document replaces the old version, it won't create duplicates. Once processed, the Technical Support AI can cite it when answering customer and field questions.</div>
+    <div class="notestrip"><b>What happens when you upload:</b> the document is read (with OCR for scans and AI vision for drawings), split into short, section-sized chunks, embedded, and stored in the Supabase vector store. Re-uploading the same document replaces the old version, it won't create duplicates. Once processed, the Technical Support AI can cite it when answering customer and field questions.</div>
   </section>
 
   <section>
