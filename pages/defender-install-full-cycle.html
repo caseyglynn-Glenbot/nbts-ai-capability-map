@@ -189,12 +189,13 @@
     {ph:0, t:12, h:'Bump the tube sheet', marks:['D1'], d:'Air vents from the bump tire, the lift shaft and tube sheet drop onto their stop and the tubes flex. The cake breaks loose. The tire refills, lifts the sheet, and the bump repeats, ten times in all.'},
     {ph:0, t:36, h:'Media in suspension', marks:[], d:'Loose perlite and the dirt it caught are mixed through the water around the tubes.'},
     {ph:0, t:P0, h:'Set up for precoat', marks:['D7','D8'], d:'With the perlite in suspension and the pump still stopped, the controller closes the D7 effluent valve so nothing goes to the pool, then opens the D8 precoat valve. Then the pump restarts and the precoat begins.'},
-    {ph:1, t:P0+10, h:'Pump to the filter', marks:['F33','F32'], d:'The F33 pump sends the water, still carrying the loose perlite, up the discharge riser and into the filter through the influent nozzle.'},
-    {ph:1, t:P0+16, h:'Media coats the tubes', marks:['D4'], d:'Water passes from outside the tubes in. The perlite it carries is caught on the tube faces and builds an even cake, and the water rises up the tubes and out through the head.'},
-    {ph:1, t:P0+29, h:'Effluent to the precoat line', marks:[], d:'With D7 closed the effluent header is dead-ended at the precoat tee, so the water turns down the precoat line.'},
-    {ph:1, t:P0+34, h:'Sight glass and precoat valve', marks:['D11','D8','D9'], d:'The water passes the D11 in-line sight glass, where it can be watched from the control panel, then the open D8 precoat valve and the D9 system fill valve.'},
-    {ph:1, t:P0+40, h:'Back into the pump', marks:['F31','F33'], d:'The precoat line joins the pump suction at the F31 precoat tee and F33 sends the water round again. The pool suction line is idle while the loop is closed.'},
-    {ph:1, t:P0+46, h:'Clear in the sight glass', marks:['D11'], d:'As the media builds up on the tubes the water in the sight glass runs clear. The precoat is done.'},
+    {ph:1, t:P0+10, h:'Out through the effluent', marks:[], d:'The F33 pump starts. The tubes are bare after the bump, so the water around them carries loose perlite in through the tube faces, up through the tube sheet and out of the effluent connection on the head.'},
+    {ph:1, t:P0+15, h:'Effluent to the precoat line', marks:[], d:'With D7 closed the effluent header is dead-ended at the precoat tee, so the water and the perlite it carries turn down the precoat line.'},
+    {ph:1, t:P0+19, h:'Sight glass and precoat valve', marks:['D11','D8','D9'], d:'The water passes the D11 in-line sight glass, cloudy with perlite at first, where it can be watched from the control panel, then the open D8 precoat valve and the D9 system fill valve.'},
+    {ph:1, t:P0+25, h:'Back into the pump', marks:['F31','F33'], d:'The precoat line joins the pump suction at the F31 precoat tee and F33 sends the water round again. The pool suction line is idle while the loop is closed.'},
+    {ph:1, t:P0+30, h:'Pump to the filter', marks:['F33','F32'], d:'The F33 pump sends the water, still carrying perlite, up the discharge riser and back into the filter through the influent nozzle.'},
+    {ph:1, t:P0+35, h:'Media coats the tubes', marks:['D4'], d:'Water passes from outside the tubes in. The perlite it carries is caught on the tube faces and builds an even cake, and the water rises up the tubes and out through the head.'},
+    {ph:1, t:P0+46, h:'Clear in the sight glass', marks:['D11'], d:'As the media builds up on the tubes less perlite gets through and the water in the sight glass runs clear. The precoat is done.'},
     {ph:1, t:P0+52.2, h:'Back to filter mode', marks:['D7','D8'], d:'The controller opens the D7 effluent valve first, so filtered water starts back to the pool, then closes the D8 precoat valve. Closing D8 second keeps a path open for the pump the whole time, which prevents water hammer.'},
     {ph:2, t:F0,    h:'Intake from the pool', marks:['F28','F30'], d:'The pump draws pool water up the suction line through the F28 check valve, which sits below water level and keeps the line primed, then through the F30 isolation valve.'},
     {ph:2, t:F0+9,  h:'Hair and lint strainer', marks:['F29','D6'], d:'Water passes through the basket of the F29 Guardian strainer, which catches hair and lint ahead of the pump, then the D6 check valve.'},
@@ -235,7 +236,7 @@
     d8:      {th:150, ph:30, pad:1.6, nodes:[598,597]}            // looking down the pipe
   };
   const PATH=[[0,'all'],[2.5,'all'],[4.6,'tank'],[7.4,'tank'],[8.6,'pump'],[10.6,'pump'],[12.4,'head'],[34.6,'head'],[36.2,'tank'],[38.6,'tank'],
-    ...[[2.6,'d7'],[4.9,'d7'],[6.1,'d8'],[8.2,'d8'],[9.6,'pump'],[15,'pump'],[16.8,'filter'],[28,'filter'],[29.8,'header'],[33.2,'header'],[34.8,'glass'],[39,'glass'],[40.6,'suction'],[45.6,'suction'],[47.4,'glass'],[51.6,'glass'],[53.2,'d7'],[56,'d7'],[57.1,'d8'],[59.8,'d8']].map(([t,k])=>[t+P0,k]),
+    ...[[2.6,'d7'],[4.9,'d7'],[6.1,'d8'],[8.2,'d8'],[9.6,'filter'],[14,'filter'],[15.6,'header'],[18.6,'header'],[20.2,'glass'],[24.4,'glass'],[26,'suction'],[29.2,'suction'],[30.8,'pump'],[34,'pump'],[35.6,'filter'],[45,'filter'],[46.8,'glass'],[51.6,'glass'],[53.2,'d7'],[56,'d7'],[57.1,'d8'],[59.8,'d8']].map(([t,k])=>[t+P0,k]),
     ...[[2,'all'],[4,'intake'],[8.5,'intake'],[9.8,'strainer'],[14,'strainer'],[15.3,'pump'],[21,'pump'],[22.6,'filter'],[34,'filter'],[35.6,'effluent'],[43,'effluent'],[45,'all'],[50,'all']].map(([t,k])=>[t+F0,k])];
   const _r=V(0,0,0), _u=V(0,0,0), _v=V(0,0,0);
   function basis(th,ph){ const dir=V(Math.sin(ph)*Math.cos(th), Math.cos(ph), Math.sin(ph)*Math.sin(th)); const r=V(0,1,0).cross(dir).normalize(), u=dir.clone().cross(r).normalize(); return {dir,r,u}; }
@@ -394,8 +395,8 @@
   // filter mode, the pool suction refilling from the intake (PRE_F distance)
   let FRONT=null, FRONTF=null;
   function buildFront(){
-    const G_ALL=PRE.L+G_TANK+SUF.L, tOf=key=>PRE.L+G_TANK+sOf(SUF,key);
-    FRONT=[[P0+10,0],[P0+15.5,PRE.L],[P0+27.5,PRE.L+G_TANK],[P0+33.2,tOf('tee')],[P0+39,tOf('f31')],[P0+42.5,G_ALL],[P0+42.51,1e9]];
+    const G_ALL=PRE.L+G_TANK+SUF.L, tOf=key=>G_TANK+sOf(SUF,key);   // precoat: the water in the tank moves first, out the effluent connection and round
+    FRONT=[[P0+10,G_TANK],[P0+15,tOf('tee')],[P0+25,tOf('f31')],[P0+28,G_TANK+SUF.L],[P0+33.5,G_ALL],[P0+33.51,1e9]];
     FRONTF=[[F0+2,0],[F0+8.5,sOf(PRE_F,'f30')+700],[F0+14.5,sOf(PRE_F,'pump')],[F0+14.51,1e9]];
   }
   function lerpFront(F,t){ if(!F) return 1e9; if(t<=F[0][0]) return -1; for(let i=1;i<F.length;i++) if(t<=F[i][0]){ const [ta,ga]=F[i-1], [tb,gb]=F[i]; return ga+(gb-ga)*(t-ta)/(tb-ta); } return 1e9; }
@@ -405,12 +406,12 @@
   const _q=V(0,0,0);
   // perlite still in suspension (load) and the share that slips through the young cake (pass), both falling as
   // the cake builds; the sight glass sees load x pass
-  const loadAt=t=>0.85-0.8*smooth((t-P0-19)/32), passAt=t=>0.8*(1-smooth((t-P0-23)/26));
+  const loadAt=t=>0.85-0.8*smooth((t-P0-14)/32), passAt=t=>0.8*(1-smooth((t-P0-14)/30));
   function placeFlow(t){
     const out=1-smooth((t-T_D8)/1.2), front=frontAt(t);
     flow.visible=t>=P0+10 && out>0.01; flow.material.opacity=0.92*out;
     const load=loadAt(t), pass=passAt(t);
-    const glass=load*pass, gTxt=(t<P0+10||front<PRE.L+G_TANK+SUF[5].s)? '—' : glass>0.12? 'Cloudy' : glass>0.008? 'Clearing' : 'Clear', gCls=gTxt==='Clear'?'go':gTxt==='—'?'':'mid';
+    const glass=load*pass, gTxt=(t<P0+10||front<G_TANK+SUF[5].s)? '—' : glass>0.12? 'Cloudy' : glass>0.008? 'Clearing' : 'Clear', gCls=gTxt==='Clear'?'go':gTxt==='—'?'':'mid';
     if(glassEl.textContent!==gTxt){ glassEl.textContent=gTxt; glassEl.className=gCls; }
     if(!flow.visible) return;
     const arr=flow.geometry.attributes.position.array, col=flow.geometry.attributes.color.array;
@@ -418,16 +419,17 @@
     for(let i=0;i<FLOW_N;i++){
       const f=W[i], s=(f.ph*f.L+flowClock*SPEED)%f.L;
       let g, past=false;
-      if(s<PRE.L){ onPath(PRE,s,f.a,f.b,_q); g=s; }
-      else if(s<PRE.L+f.br.L){ const u=s-PRE.L; onPath(f.br,u,0,0,_q); g=PRE.L+u/f.br.L*G_TANK; past=u>f.cake; }
-      else { const u=s-PRE.L-f.br.L; onPath(SUF,u,f.a,f.b,_q); g=PRE.L+G_TANK+u; past=true; }
+      // everything outside the tank has already been through the tubes, so only what slips through the bare tubes is white
+      if(s<PRE.L){ onPath(PRE,s,f.a,f.b,_q); g=G_TANK+SUF.L+s; past=true; }
+      else if(s<PRE.L+f.br.L){ const u=s-PRE.L; onPath(f.br,u,0,0,_q); g=u/f.br.L*G_TANK; past=u>f.cake; }
+      else { const u=s-PRE.L-f.br.L; onPath(SUF,u,f.a,f.b,_q); g=G_TANK+u; past=true; }
       const c=(f.m<load && (!past || f.bl<pass))? TAN : BLUE; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b;
       if(g>front){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
       if(g>leadG) leadG=g;
       arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
     }
     flow.geometry.attributes.position.needsUpdate=true; flow.geometry.attributes.color.needsUpdate=true;
-    precoatWhere=front>=1e9? 'Full loop' : leadG<0? '—' : leadG<PRE.L? whereOn(PRE,leadG) : leadG<PRE.L+G_TANK? 'Filter' : whereOn(SUF,leadG-PRE.L-G_TANK);
+    precoatWhere=front>=1e9? 'Full loop' : leadG<0? '—' : leadG<G_TANK? 'Filter' : leadG<G_TANK+SUF.L? whereOn(SUF,leadG-G_TANK) : whereOn(PRE,leadG-G_TANK-SUF.L);
   }
   // filter route: running before the bump and slowing as the pump stops; after the switch back, the return leg
   // first (D7 open), then the rest once D8 closes, with the pool suction refilling from the intake
@@ -545,7 +547,7 @@
     set('ret', t<T_D7? 1e9 : (t-T_D7)*SPEED, t<T_D7? 1-smooth((t-P0-3.1)/1.4) : 1);
     // precoat line: standing water until the precoat turns down it, still again once D8 closes
     const fp=frontAt(t);
-    set('pl', fp>=1e9? 1e9 : fp-(PRE.L+G_TANK+sOf(SUF,'tee'))+PL_TEE, 1-smooth((t-P0-57.6)/1.4));
+    set('pl', fp>=1e9? 1e9 : fp-(G_TANK+sOf(SUF,'tee'))+PL_TEE, 1-smooth((t-P0-57.6)/1.4));
     const k=ghostAt(t), uT=tankFill.material.uniforms; uT.uK.value=k; uT.uTime.value=fillClock; uT.uRun.value=run; tankFill.visible=k>0.01;
   }
 
@@ -562,7 +564,7 @@
     tubeMesh.visible=false; scene.add(tubeMesh);
   }
   const win=(t,a,b)=>smooth((t-a)/1.5)*(1-smooth((t-b)/1.5));
-  const ghostAt=t=>Math.max(win(t,3,39), win(t,P0+15.5,P0+28.5), win(t,F0+21.5,F0+33.5));
+  const ghostAt=t=>Math.max(win(t,3,39), win(t,P0+9.2,P0+14.2), win(t,P0+34.4,P0+45), win(t,F0+21.5,F0+33.5));
 
   // ---- bump: tire vents, lift shaft and tube sheet drop, cake breaks loose ---------------------------------------
   function sheetOffset(t){   // 0 = up (tire full), -DROP = on the stop, with a small bounce on landing
@@ -583,7 +585,7 @@
     return L;
   }
   // cake on the tubes: full while filtering, knocked off by the bumps, rebuilt by the precoat
-  const cakeAt=t=>t<P0+16? bumpLevel(t) : smooth((t-P0-16)/30);
+  const cakeAt=t=>t<P0+12? bumpLevel(t) : smooth((t-P0-12)/34);
   // parts that ride on the lift shaft (tube sheet 1000-4208, bump top plate 1000-4623, lift shaft nut 1000-4475)
   // and the bump tire 1000-4723, squashed about its base
   let MOVE=[], TIRE=[];
@@ -733,12 +735,13 @@
     {txt:'Tube elements, perlite cake', p:V(0,300,-300), steps:[0]},
     {txt:'Tube sheet', p:V(-330,940,330), steps:[2]},
     {txt:'Perlite in suspension', p:V(-260,-200,260), steps:[3]},
-    {txt:'Influent nozzle', p:V(0,INF_Y,-610), steps:[6,15]},
-    {txt:'Tube elements, cake building', p:V(0,300,-300), steps:[6]},
-    {txt:'Effluent connection', p:V(0,1060,RISER_Z), steps:[6,15]},
-    {txt:'Precoat tee', p:V(0,EFF_Y,PRE_Z), steps:[7]},
-    {txt:'D7 closed, no flow to the pool', p:V(0,EFF_Y,-2324), steps:[7]},
-    {txt:'Tube elements, perlite cake', p:V(0,300,-300), steps:[15]}
+    {txt:'Influent nozzle', p:V(0,INF_Y,-610), steps:[9,16]},
+    {txt:'Tube elements, bare after the bump', p:V(0,300,-300), steps:[5]},
+    {txt:'Tube elements, cake building', p:V(0,300,-300), steps:[10]},
+    {txt:'Effluent connection', p:V(0,1060,RISER_Z), steps:[5,16]},
+    {txt:'Precoat tee', p:V(0,EFF_Y,PRE_Z), steps:[6]},
+    {txt:'D7 closed, no flow to the pool', p:V(0,EFF_Y,-2324), steps:[6]},
+    {txt:'Tube elements, perlite cake', p:V(0,300,-300), steps:[16]}
   ];
   function mkLabel(kind,code,name){
     const g=document.createElementNS(NS,'g'); g.setAttribute('class','lbl '+kind);
