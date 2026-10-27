@@ -251,7 +251,7 @@
     {p:V(0,SUCT_Y-150,-3190), r:95, at:'Strainer'},
     {p:V(0,SUCT_Y-150,-3100), r:95, at:'Strainer'},
     {p:V(0,SUCT_Y,-2960), r:62, at:'Suction'},
-    {p:V(0,SUCT_Y,-1974), r:62, at:'Pump', key:'pump'},
+    {p:V(0,SUCT_Y,-1974), r:62, at:'Pump', key:'pump', w:95},
     {p:V(0,SUCT_Y,PUMP_Z), r:40, at:'Pump'},
     {p:V(0,-1326,PUMP_Z), r:50, at:'Discharge'},
     {p:V(0,INF_Y-80,PUMP_Z), r:52, at:'Discharge'},
@@ -317,6 +317,92 @@
   }
   function frontAt(t){ if(!FRONT) return 1e9; if(t<=FRONT[0][0]) return -1; for(let i=1;i<FRONT.length;i++) if(t<=FRONT[i][0]){ const [ta,ga]=FRONT[i-1], [tb,gb]=FRONT[i]; return ga+(gb-ga)*(t-ta)/(tb-ta); } return 1e9; }
 
+  // ---- water fill: the pipe fills solid behind the leading water, and the tank level rises while the body is ghosted --
+  // Fill radius is the pipe bore measured from Schematic.stp: 8in SCH 80 suction ~95 mm, 6in discharge and effluent ~73 mm.
+  const BORE={Suction:95, Strainer:108, Pump:82, Discharge:73, Influent:73, Effluent:73, Return:73, 'To pool':73};
+  const WATER_VS=`attribute float aS; varying float vS; varying float vA; varying float vY; varying vec3 vN;
+    void main(){ vS=aS; vA=uv.y; vN=normalize(normalMatrix*normal); vec4 w=modelMatrix*vec4(position,1.0); vY=w.y; gl_Position=projectionMatrix*viewMatrix*w; }`;
+  const WATER_FS=`uniform float uFront, uTime, uLevel, uK, uBase, uEdge, uRip; uniform vec3 uDeep, uLight;
+    varying float vS; varying float vA; varying float vY; varying vec3 vN;
+    void main(){
+      float d=uFront-vS; if(d<0.0||vY>uLevel) discard;
+      float f=1.0-abs(vN.z);
+      vec3 col=mix(uLight,uDeep,smoothstep(0.0,1.0,f));
+      float n=sin(vS*0.018-uTime*20.7+sin(vA*12.566)*uRip);              // streaks carried along at the flow speed
+      float streak=smoothstep(0.72,1.0,n)*(1.0-f);
+      float spec=pow(max(dot(vN,normalize(vec3(-0.35,0.65,0.68))),0.0),18.0);
+      float men=1.0-smoothstep(0.0,160.0,d);                              // bright leading edge as the water advances
+      col+=vec3(0.55)*(streak*0.35+spec*0.55+men*0.5);
+      float a=(mix(uBase,uEdge,f*f)+streak*0.1+men*0.25)*smoothstep(0.0,22.0,d)*uK;
+      gl_FragColor=vec4(col,clamp(a,0.0,1.0));
+    }`;
+  function waterMat(o){
+    return new THREE.ShaderMaterial({vertexShader:WATER_VS, fragmentShader:WATER_FS, transparent:true, depthTest:false, depthWrite:false, side:o.side||THREE.FrontSide,
+      uniforms:{uFront:{value:-1}, uTime:{value:0}, uLevel:{value:1e9}, uK:{value:1}, uBase:{value:o.base}, uEdge:{value:o.edge}, uRip:{value:o.rip===undefined?1.4:o.rip},
+        uDeep:{value:new THREE.Color(0x0a6c9e)}, uLight:{value:new THREE.Color(0x5fd0f5)}}});
+  }
+  function boreAt(pts,s){ let i=1; while(i<pts.length-1 && s>pts[i].s) i++; const a=pts[i-1], b=pts[i], k=clamp((s-a.s)/Math.max(1e-6,b.s-a.s),0,1); return a.w+(b.w-a.w)*k; }
+  // sweep a bore-sized tube along a path, corners rounded, with the path distance carried per vertex for the fill front
+  function sweepPath(pts,radial){
+    pts.forEach(q=>{ if(q.w===undefined) q.w=BORE[q.at]||73; });
+    const n=pts.length, F=pts.map((q,i)=>{ if(!i||i===n-1) return 0; return Math.min(140,0.4*q.p.distanceTo(pts[i-1].p),0.4*q.p.distanceTo(pts[i+1].p)); });
+    const C=[], Sx=[]; const push=(p,s)=>{ if(C.length && p.distanceToSquared(C[C.length-1])<1) return; C.push(p); Sx.push(s); };
+    for(let i=1;i<n;i++){
+      const a=pts[i-1], b=pts[i], L=b.s-a.s, dir=V(0,0,0).subVectors(b.p,a.p).normalize(), s0=F[i-1], s1=L-F[i], m=Math.max(1,Math.ceil((s1-s0)/60));
+      for(let k=0;k<=m;k++){ const u=s0+(s1-s0)*k/m; push(a.p.clone().addScaledVector(dir,u), a.s+u); }
+      if(i<n-1 && F[i]>0){
+        const d2=V(0,0,0).subVectors(pts[i+1].p,b.p).normalize(), P0=b.p.clone().addScaledVector(dir,-F[i]), P2=b.p.clone().addScaledVector(d2,F[i]);
+        for(let k=1;k<10;k++){ const u=k/10, w=1-u; push(V(w*w*P0.x+2*w*u*b.p.x+u*u*P2.x, w*w*P0.y+2*w*u*b.p.y+u*u*P2.y, w*w*P0.z+2*w*u*b.p.z+u*u*P2.z), b.s-F[i]+2*F[i]*u); }
+      }
+    }
+    const N=C.length, R1=radial+1, pos=new Float32Array(N*R1*3), nor=new Float32Array(N*R1*3), uv=new Float32Array(N*R1*2), aS=new Float32Array(N*R1), idx=[];
+    const t=V(0,0,0), bn=V(0,0,0), q=V(0,0,0); let nm=null;
+    for(let i=0;i<N;i++){
+      t.subVectors(C[Math.min(N-1,i+1)],C[Math.max(0,i-1)]).normalize();
+      if(!nm) nm=(Math.abs(t.y)<0.9?V(0,1,0):V(1,0,0)).cross(t).normalize(); else nm.addScaledVector(t,-nm.dot(t)).normalize();   // parallel transport
+      bn.crossVectors(t,nm); const w=boreAt(pts,Sx[i]);
+      for(let j=0;j<=radial;j++){
+        const a=j/radial*Math.PI*2, v=i*R1+j; q.copy(nm).multiplyScalar(Math.cos(a)).addScaledVector(bn,Math.sin(a));
+        nor[v*3]=q.x; nor[v*3+1]=q.y; nor[v*3+2]=q.z; pos[v*3]=C[i].x+q.x*w; pos[v*3+1]=C[i].y+q.y*w; pos[v*3+2]=C[i].z+q.z*w;
+        uv[v*2]=Sx[i]/pts.L; uv[v*2+1]=j/radial; aS[v]=Sx[i];
+      }
+      if(i) for(let j=0;j<radial;j++){ const a=(i-1)*R1+j, b=a+R1; idx.push(a,a+1,b, b,a+1,b+1); }
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+    g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); g.setAttribute('aS',new THREE.BufferAttribute(aS,1)); g.setIndex(idx);
+    return g;
+  }
+  // tank inside the shell (1001-7314: barrel r ~600 mm, dished bottom to y -1063, tube sheet at y 932-948)
+  const VESSEL=[[0,-1050],[250,-1038],[410,-996],[510,-928],[556,-850],[566,-780],[566,972],[0,972]];
+  const LEVEL_SHEET=935, LEVEL_TOP=972;
+  function vesselR(y){ for(let i=1;i<VESSEL.length-1;i++) if(y<=VESSEL[i][1]){ const [ra,ya]=VESSEL[i-1], [rb,yb]=VESSEL[i]; return ra+(rb-ra)*clamp((y-ya)/(yb-ya),0,1); } return VESSEL[VESSEL.length-2][0]; }
+  let fillPre=null, fillSuf=null, tankFill=null, tankSurf=null;
+  function buildFill(){
+    fillPre=new THREE.Mesh(sweepPath(PRE,20),waterMat({base:0.34,edge:0.82}));
+    fillSuf=new THREE.Mesh(sweepPath(SUF,20),waterMat({base:0.34,edge:0.82}));
+    const lg=new THREE.LatheGeometry(VESSEL.map(([r,y])=>new THREE.Vector2(Math.max(r,0.5),y)),56);
+    lg.setAttribute('aS',new THREE.BufferAttribute(new Float32Array(lg.attributes.position.count),1));
+    tankFill=new THREE.Mesh(lg,waterMat({base:0.1,edge:0.42,side:THREE.DoubleSide}));
+    tankFill.material.uniforms.uFront.value=1e9;
+    const cg=new THREE.CircleGeometry(1,56); cg.rotateX(-Math.PI/2);
+    const ca=new Float32Array(cg.attributes.position.count); for(let i=0;i<ca.length;i++) ca[i]=Math.hypot(cg.attributes.position.getX(i),cg.attributes.position.getZ(i))*900;
+    cg.setAttribute('aS',new THREE.BufferAttribute(ca,1));
+    tankSurf=new THREE.Mesh(cg,waterMat({base:0.3,edge:0.3,rip:0})); tankSurf.material.uniforms.uFront.value=1e9;
+    [[fillPre,9],[fillSuf,9],[tankFill,7],[tankSurf,8]].forEach(([m,o])=>{ m.renderOrder=o; m.frustumCulled=false; m.visible=false; scene.add(m); });
+  }
+  function updateFill(front,t){
+    const uP=fillPre.material.uniforms, uS=fillSuf.material.uniforms, eff=front>=1e9? 1e9 : front-PRE.L-G_TANK;
+    uP.uFront.value=front; uP.uTime.value=flowClock; fillPre.visible=front>0;
+    uS.uFront.value=eff; uS.uTime.value=flowClock; fillSuf.visible=eff>0;
+    // the level climbs the shell to the tube sheet, then fills the head plenum as the water rises up the tubes
+    const p=front>=1e9? 1 : clamp((front-PRE.L)/G_TANK,0,1), k=ghostAt(t);
+    const lvl=p<0.8? -1050+(LEVEL_SHEET+1050)*smooth(p/0.8) : LEVEL_SHEET+(LEVEL_TOP-LEVEL_SHEET)*((p-0.8)/0.2);
+    const uT=tankFill.material.uniforms; uT.uLevel.value=lvl; uT.uK.value=k; uT.uTime.value=flowClock; tankFill.visible=k>0.01 && p>0;
+    const uW=tankSurf.material.uniforms; uW.uK.value=k; uW.uTime.value=flowClock*0.35; tankSurf.visible=k>0.01 && p>0 && p<1;
+    if(tankSurf.visible){ const r=vesselR(lvl)-3; tankSurf.position.set(0,lvl,0); tankSurf.scale.set(r,1,r); }
+  }
+
   let flowClock=0;
   const _q=V(0,0,0);
   function placeFlow(t){
@@ -333,6 +419,7 @@
       arr[3*i]=_q.x; arr[3*i+1]=_q.y; arr[3*i+2]=_q.z;
     }
     flow.geometry.attributes.position.needsUpdate=true;
+    updateFill(front,t);
     // readout: where the leading water is while the path fills, then the whole loop
     const txt=front>=1e9? 'Full loop' : leadG<0? '—' : leadG<PRE.L? whereOn(PRE,leadG) : leadG<PRE.L+G_TANK? 'Filter' : whereOn(SUF,leadG-PRE.L-G_TANK);
     if(whereEl.textContent!==txt) whereEl.textContent=txt;
@@ -467,7 +554,7 @@
     A=loadAssembly(buf); scene.add(A.root); A.root.updateMatrixWorld(true);
     const dressed=DefenderDress(A); A.root.updateMatrixWorld(true);
     Object.values(KEYS).forEach(fitKey);
-    buildFlow(); buildFront(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
+    buildFlow(); buildFront(); buildFill(); buildGhost(); buildAirFade(); buildLabels(); buildTags(dressed.drainPos);
     document.getElementById('loading').remove();
     ready=true; resize(); setTime(T);
     if(walk) goStep(0); else if(!reduced) startPlay();
