@@ -84,7 +84,31 @@
     .hdr .brand{position:static}
     .hdr svg.swoosh{display:none}
   }
-  @media (max-width:720px){.maingrid,.askgrid{grid-template-columns:1fr}}
+  .jump{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px}
+  .jump a{font-size:12.5px;font-weight:700;color:var(--blue);border:1px solid var(--rule);padding:6px 14px;background:#fff}
+  .jump a:hover{border-color:var(--teal);color:var(--teal)}
+  .wihead{font-size:14px;color:var(--ink);max-width:900px;margin:0 0 18px;line-height:1.6}
+  .wihead b{color:var(--blue)}
+  .bigcard.static{cursor:default}
+  .stats{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px}
+  .stat{background:var(--stripe);border-top:3px solid var(--teal);padding:10px 16px;min-width:150px}
+  .stat .n{font-weight:800;font-size:22px;color:var(--blue);line-height:1.1}
+  .stat .l{font-size:11.5px;color:var(--ink2);margin-top:3px}
+  .famgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .fam{background:var(--stripe);border-left:3px solid var(--teal);padding:11px 14px}
+  .fam .fn{font-weight:800;font-size:14px;color:var(--blue)}
+  .fam .fn span{font-weight:600;font-size:11.5px;color:var(--teal);margin-left:6px}
+  .fam .fd{font-size:12.5px;color:var(--ink2);margin-top:4px;line-height:1.45}
+  .fam.thin{border-left-color:#B7C4CE}
+  .route{width:100%;border-collapse:collapse;font-size:13px}
+  .route th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);
+    border-bottom:2px solid var(--teal);padding:7px 10px}
+  .route td{border-bottom:1px solid var(--rule);padding:8px 10px;vertical-align:top}
+  .route td:first-child{font-weight:700;color:var(--blue);white-space:nowrap}
+  .route tr:nth-child(even) td{background:#F6F9FB}
+  .tablewrap{overflow-x:auto}
+  @media (max-width:1100px){.famgrid{grid-template-columns:1fr 1fr}}
+  @media (max-width:720px){.maingrid,.askgrid,.famgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -108,7 +132,13 @@
   <p class="intro">Reach Neptune Benson Technical Support however works best: call, text, email, or the ticket portal. Every request becomes a tracked Jira ticket, and the AI answers common questions instantly, day or night.</p>
   <span class="livetag">● Live · 24/7 intake</span>
 
-  <section>
+  <div class="jump">
+    <a href="#nbts">Neptune Benson · D&amp;A support</a>
+    <a href="#wi-projects">WI Projects · Water &amp; Wastewater support</a>
+    <a href="#engineers">For NBTS engineers</a>
+  </div>
+
+  <section id="nbts">
     <div class="lbl">CHOOSE HOW TO REACH US</div><div class="rule"></div>
     <div class="maingrid">
 
@@ -194,7 +224,98 @@
     <div class="notestrip"><b>Not sure which product you have?</b> Just describe it. The AI identifies the brand and model from what you write, and if it's still unclear (say, which Defender controller you're on), it asks one quick question rather than guessing. Reply <b>Start ticket</b> any time to reach a live engineer.</div>
   </section>
 
+  <section id="wi-projects">
+    <div class="lbl">WI PROJECTS · WATER &amp; WASTEWATER</div><div class="rule"></div>
+    <p class="wihead">Xylem water and wastewater products (Wedeco UV and ozone, Leopold, Envirex, Sanitaire ICEAS and aeration, JWI filter presses) have their own AI phone line. The voice assistant narrows to the caller's brand and model, answers from the WI Projects knowledge base, and warm-transfers to the product group when needed. Every call opens a ticket in the <b>Xylem Technical Support (XTS)</b> Jira space.</p>
+
+    <div class="maingrid">
+      <a class="bigcard" href="tel:+18555167056">
+        <span class="cue">&rsaquo;</span>
+        <div class="role">Phone · voice AI · pilot</div>
+        <div class="bt">(855) 516-7056</div>
+        <div class="bd">Name the equipment and ask the question, or ask for a person. The agent answers, transfers to the product group's contacts, or books a callback. Tap to call.</div>
+      </a>
+
+      <span class="bigcard static">
+        <span class="badge">XTS</span>
+        <div class="role">Jira · Xylem Technical Support</div>
+        <div class="bt">Every call is a ticket</div>
+        <div class="bd">Calls land in the <b>XTS</b> space, separate from NBTS. At the end of each call the agent asks one feedback question; the answer posts to the ticket with the <b>phone-feedback</b> label.</div>
+      </span>
+    </div>
+
+    <div class="notestrip"><b>ETS UV or Pacific Ozone caller on the WI line?</b> The agent doesn't search or transfer. It takes a message for the D&amp;A team, so those customers are best pointed to the NBTS line above, <b>(866) 722-1776</b>.</div>
+
+    <p class="qcat" style="margin-top:26px">Knowledge base · as of Oct 28, 2026</p>
+    <div class="stats">
+      <div class="stat"><div class="n">1,015</div><div class="l">documents (up from 551)</div></div>
+      <div class="stat"><div class="n">22,151</div><div class="l">searchable passages</div></div>
+      <div class="stat"><div class="n">275</div><div class="l">Wedeco field service articles, 2016 to 2022</div></div>
+    </div>
+
+    <div class="famgrid">
+      <div class="fam"><div class="fn">Wedeco UV<span>696 docs</span></div><div class="fd">Duron, TAK55 / TAK Smart, Spektron, K143, BX/LBX, B series, CHI. O&amp;M manuals, schematics, alarms, field history.</div></div>
+      <div class="fam"><div class="fn">Third-party components<span>155 docs</span></div><div class="fd">YSI, AUMA, Rotork, Bray, DeZurik, Allen-Bradley, Hydroranger, Prosonic, Chromalox, Honeywell.</div></div>
+      <div class="fam"><div class="fn">Leopold<span>93 docs</span></div><div class="fd">Valve-PAC, FilterWorx, underdrains (Type S, XA/IMS 200), Clari-Vac, Clari-Trac, filter service procedures.</div></div>
+      <div class="fam"><div class="fn">Wedeco ozone<span>46 docs</span></div><div class="fd">Generators, cooling water, ozone destruct, monitors, DICON upgrade, Total Care scope.</div></div>
+      <div class="fam"><div class="fn">Envirex chain &amp; scraper<span>12 docs</span></div><div class="fd">NCS720S, HS730, 715SS collector O&amp;M, Chain &amp; Scraper 101/201, chain and sprocket data sheets, ZipTool.</div></div>
+      <div class="fam"><div class="fn">Envirex circular clarifiers<span>2 docs · new</span></div><div class="fd">Clarifier 101/201: sizing, Tow-Bro, EDI and FEDWA inlets, skimmers, H-type drive torque, install tolerances.</div></div>
+      <div class="fam thin"><div class="fn">Sanitaire ICEAS &amp; aeration<span>7 docs</span></div><div class="fd">ICEAS O&amp;M manual and process decks, fine bubble aeration training, diffuser testing.</div></div>
+      <div class="fam thin"><div class="fn">OMNIFLO, Orbal, Taron<span>training only</span></div><div class="fd">One deck each, plus Biological Wastewater 101. Expect product and process answers, not troubleshooting.</div></div>
+      <div class="fam thin"><div class="fn">JWI filter press<span>routing</span></div><div class="fd">Callers go to the AFS/CDI support line, <b>855-516-7500</b>, then the filter press team.</div></div>
+    </div>
+  </section>
+
   <section>
+    <div class="lbl">WHAT TO ASK THE WI PROJECTS LINE</div><div class="rule"></div>
+    <div class="askgrid">
+      <div class="askcol">
+        <h4 class="askhead">Questions the agent can answer</h4>
+        <p class="qcat">Wedeco UV &amp; ozone</p>
+        <div class="bubble">Our Duron wiper is stuck and won't go home. How do I reset it?</div>
+        <div class="bubble">What sensor reading should a BX100 show at startup at 90 percent UVT?</div>
+        <div class="bubble">We have an old PCI ozone generator with a 2100-2 trigger board. What replaces it?</div>
+        <p class="qcat">Leopold</p>
+        <div class="bubble">Our Valve-PAC III is hunting on rate of flow. What settings should I start with?</div>
+        <div class="bubble">How do I take a filter media core sample?</div>
+        <p class="qcat">Envirex &amp; clarifiers</p>
+        <div class="bubble">The sludge collector shear pin breaks frequently.</div>
+        <div class="bubble">What torque rating and shut-off does an H60A-HT clarifier drive have?</div>
+        <p class="qcat">Process &amp; aeration</p>
+        <div class="bubble">What total nitrogen can an Orbal with three reactors in series reach?</div>
+        <div class="bubble">How much air does an aerobic digester need for mixing?</div>
+      </div>
+
+      <div class="askcol">
+        <h4 class="askhead">How the agent handles a call</h4>
+        <div class="cmdlist">
+          <div class="cmd"><span class="kw">Name the equipment</span><span class="cd">A model (Duron, HS730, ICEAS) narrows the search to that model; a brand word searches the whole brand. Two brands in one call and the agent asks which to start with.</span></div>
+          <div class="cmd"><span class="kw">Ask for a person</span><span class="cd">Offers help once, then warm-transfers to the product group in order. After 3 failed attempts it promises a callback from the first contact.</span></div>
+          <div class="cmd"><span class="kw">Set up a callback</span><span class="cd">Confirms the time and names who will call.</span></div>
+          <div class="cmd"><span class="kw">Won't do</span><span class="cd">Give warranty terms, direct confined-space entry (points to the plant permit process and lockout), or read contact numbers to callers.</span></div>
+        </div>
+        <p class="askfoot">Answers come only from the WI Projects knowledge base. It won't make up numbers; if it doesn't have the answer, it transfers or opens a ticket for the team.</p>
+      </div>
+    </div>
+
+    <p class="qcat" style="margin-top:26px">Transfer order by product group</p>
+    <div class="tablewrap">
+      <table class="route">
+        <thead><tr><th>Product group</th><th>First</th><th>Second</th><th>Third</th><th>Fourth (by name only)</th></tr></thead>
+        <tbody>
+          <tr><td>Sanitaire (incl. ICEAS)</td><td>Dolan Hovde</td><td>Stephen Grant</td><td>Beth Nelson</td><td></td></tr>
+          <tr><td>Wastewater*</td><td>Beth Nelson</td><td>Stephen Grant</td><td></td><td></td></tr>
+          <tr><td>Leopold</td><td>Mike Maciejewski</td><td>Jeremiah Lewis</td><td>Jeremy Brown</td><td>John Turner</td></tr>
+          <tr><td>Wedeco Ozone</td><td>Robert Voitle</td><td>James Pettis</td><td>Mckenzie Krauss</td><td>John Turner</td></tr>
+          <tr><td>Wedeco UV</td><td>Robert Voitle</td><td>Allan Gagg</td><td>Mckenzie Krauss</td><td>John Turner</td></tr>
+          <tr><td>Filter press</td><td>AFS/CDI support line</td><td>Harrison Bryant</td><td>Firas Shamoun</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="askfoot">*Wastewater = chain and scraper, clarifiers, other SBR, BNR, oxidation ditch, disc filters and field-erect plants. ETS UV and Pacific Ozone callers aren't transferred. Contact numbers live in the WI Projects test guide and the transfer tool, not on this page.</p>
+  </section>
+
+  <section id="engineers">
     <div class="lbl">FOR NBTS ENGINEERS</div><div class="rule"></div>
     <div class="maingrid">
 
