@@ -72,6 +72,23 @@
   .dcell{border-top:1px solid var(--rule);padding-top:10px}
   .dcell .dt{font-weight:700;font-size:14px;color:var(--blue)}
   .dcell .dd{font-size:12px;color:var(--ink);margin-top:4px;line-height:1.45}
+  .lblrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .livechip{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);
+    border:1px solid var(--rule);padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .livechip.on{color:#1E7A46;border-color:#1E7A46}
+  .livechip.on::before{content:"\25CF  ";}
+  .livechip.stale{color:#B26B00;border-color:#E0922F}
+  .wisec{margin:-6px 0 30px}
+  .brandgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .brand{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--teal);padding:10px 12px}
+  .brand .bl{font-size:12px;font-weight:700;color:var(--blue);line-height:1.3}
+  .brand .bn{font-weight:800;font-size:24px;color:var(--blue);line-height:1.1;margin-top:4px}
+  .brand .bs{font-size:11.5px;color:var(--ink2);margin-top:2px}
+  .brand .bar{height:4px;background:var(--stripe);margin-top:8px}
+  .brand .bar i{display:block;height:4px;background:var(--teal)}
+  .brand.zero{border-left-color:var(--rule)}
+  .brand.zero .bn{color:var(--ink2)}
+  @media (max-width:1100px){.brandgrid{grid-template-columns:1fr 1fr}}
   .kpigrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:2px}
   .kpi{background:var(--stripe);border-top:3px solid var(--teal);padding:12px 14px}
   .kpi .kl{font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
@@ -111,7 +128,7 @@
 </style>
 </head>
 <body>
-<div class="backbar"><a class="back" href="/">&larr; Home</a></div>
+<div class="backbar"><a class="back" href="https://nbts-portal.onrender.com/home">&larr; Home</a></div>
 <div class="page">
   <div class="hdr">
     <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none">
@@ -124,30 +141,41 @@
     <div class="title">
       <div class="t1">NBTS AI Support Platform</div>
       <div class="t2">Architecture Map — Process Overview</div>
-      <div class="t3">Owner: Casey Glynn · Updated 2026-08-19 · One n8n · One Supabase · One Jira</div>
+      <div class="t3">Owner: Casey Glynn · Updated <span data-k="hdr_date">2026-08-19</span> · One n8n · One Supabase · One Jira</div>
     </div>
   </div>
   <div class="strip" style="margin-top:0;margin-bottom:28px;">
-    <div class="lbl">NBTS MASTER REPORT — KEY METRICS</div><div class="rule"></div>
+    <div class="lblrow"><div class="lbl">NBTS MASTER REPORT — KEY METRICS</div><span class="livechip" id="liveChip" title="Numbers from the August master report">Report snapshot · Aug 19 2026</span></div><div class="rule"></div>
     <div class="kpigrid">
-      <div class="kpi"><div class="kl">Total support tickets</div><div class="kn">1,418</div><div class="ks">Oct 2025 – Aug 19 2026</div></div>
-      <div class="kpi"><div class="kl">Overall ticket resolution</div><div class="kn">82%</div><div class="ks">1,164 of 1,418 resolved</div></div>
-      <div class="kpi"><div class="kl">AI phone calls (EL)</div><div class="kn">370</div><div class="ks">Jan – Jul 2026, Twilio</div></div>
-      <div class="kpi"><div class="kl">AI agent success rate</div><div class="kn">98%</div><div class="ks">362 of 370 (EL success eval)</div></div>
-      <div class="kpi"><div class="kl">Median first response</div><div class="kn">4.0 hrs</div><div class="ks">Mon–Fri 8 am–5 pm only</div></div>
-      <div class="kpi"><div class="kl">Median resolution</div><div class="kn">10.5 hrs</div><div class="ks">Business hours only</div></div>
-      <div class="kpi"><div class="kl">Output per engineer vs legacy</div><div class="kn">+292%</div><div class="ks">~94 tickets/mo vs 24 legacy (3.9&times;)</div></div>
-      <div class="kpi"><div class="kl">Tickets handled end-to-end by AI</div><div class="kn">25%</div><div class="ks">356 of 1,418 — AI intake to auto-ticket</div></div>
-      <div class="kpi"><div class="kl">People using the platform</div><div class="kn">58</div><div class="ks">Distinct reporters + engineers</div></div>
+      <div class="kpi"><div class="kl">Total support tickets</div><div class="kn" data-k="tickets">1,418</div><div class="ks" data-k="tickets_s">Oct 2025 – Aug 19 2026</div></div>
+      <div class="kpi"><div class="kl">Overall ticket resolution</div><div class="kn" data-k="resolution">82%</div><div class="ks" data-k="resolution_s">1,164 of 1,418 resolved</div></div>
+      <div class="kpi"><div class="kl">AI phone calls (EL)</div><div class="kn" data-k="calls">370</div><div class="ks" data-k="calls_s">Jan – Jul 2026, Twilio</div></div>
+      <div class="kpi"><div class="kl">AI agent success rate</div><div class="kn" data-k="success">98%</div><div class="ks" data-k="success_s">362 of 370 (EL success eval)</div></div>
+      <div class="kpi"><div class="kl">Median first response</div><div class="kn" data-k="first_response">4.0 hrs</div><div class="ks" data-k="first_response_s">Mon–Fri 8 am–5 pm only</div></div>
+      <div class="kpi"><div class="kl">Median resolution</div><div class="kn" data-k="resolution_time">10.5 hrs</div><div class="ks" data-k="resolution_time_s">Business hours only</div></div>
+      <div class="kpi"><div class="kl">Output per engineer vs legacy</div><div class="kn">+292%</div><div class="ks">~94 tickets/mo vs 24 legacy (3.9&times;) · Aug report</div></div>
+      <div class="kpi"><div class="kl">Tickets handled end-to-end by AI</div><div class="kn" data-k="ai_share">25%</div><div class="ks" data-k="ai_share_s">356 of 1,418 — AI intake to auto-ticket</div></div>
+      <div class="kpi"><div class="kl">People using the platform</div><div class="kn" data-k="people">58</div><div class="ks">Distinct reporters + engineers</div></div>
     </div>
-    <div class="kpinote"><b>Monthly volume, before vs. after:</b> legacy manual system averaged 71 tickets/month (2022) — the NBTS system averages 129/month (Oct 2025 – Aug 2026), peaking at 258 in June 2026.</div>
+    <div class="kpinote"><b>Monthly volume, before vs. after:</b> <span data-k="volume_note">legacy manual system averaged 71 tickets/month (2022) — the NBTS system averages 129/month (Oct 2025 – Aug 2026), peaking at 258 in June 2026.</span></div>
   </div>
   <div class="stats">
     <div class="s"><span class="n">8</span><span class="l">portal tool pages</span></div>
     <div class="s"><span class="n">14</span><span class="l">active n8n workflows</span></div>
-    <div class="s"><span class="n">9,703</span><span class="l">install-base projects</span></div>
-    <div class="s"><span class="n">17,648</span><span class="l">filter units tracked</span></div>
-    <div class="s"><span class="n">3,832</span><span class="l">catalog products</span></div>
+    <div class="s"><span class="n" data-k="ib_projects">9,703</span><span class="l">install-base projects</span></div>
+    <div class="s"><span class="n" data-k="filter_units">17,648</span><span class="l">filter units tracked</span></div>
+    <div class="s"><span class="n" data-k="catalog">3,832</span><span class="l">catalog products</span></div>
+    <div class="s"><span class="n" data-k="kb_docs">371</span><span class="l">KB documents</span></div>
+  </div>
+  <div class="wisec" id="wiSection" hidden>
+    <div class="lblrow"><div class="lbl">WI PROJECTS · WATER &amp; WASTEWATER LINE</div><span class="livechip">(855) 516-7056 · XTS Jira</span></div><div class="rule"></div>
+    <div class="kpigrid">
+      <div class="kpi"><div class="kl">Calls logged</div><div class="kn" data-k="wi_calls">–</div><div class="ks" data-k="wi_calls_s">Phone tickets with a caller request</div></div>
+      <div class="kpi"><div class="kl">This month</div><div class="kn" data-k="wi_month">–</div><div class="ks" data-k="wi_month_s">Last 7 days: –</div></div>
+      <div class="kpi"><div class="kl">Caller feedback</div><div class="kn" data-k="wi_feedback">–</div><div class="ks" data-k="wi_feedback_s">Answers to the end-of-call question</div></div>
+    </div>
+    <div class="brandgrid" id="wiBrands"></div>
+    <div class="kpinote" data-k="wi_note">Brand comes from the ticket's product group label set by the phone agent.</div>
   </div>
   <div class="wf-head">
     <div class="lbl">NBTS WORKFLOW</div>
@@ -248,6 +276,102 @@
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
     });
   });
+</script>
+
+<script>
+(function () {
+  var REFRESH_MS = 5 * 60 * 1000;
+  var STALE_MS = 3 * 60 * 60 * 1000;
+  var updatedAt = null;
+  var chip = document.getElementById('liveChip');
+  function fmt(n) { return (n === null || n === undefined) ? null : Number(n).toLocaleString('en-US'); }
+  function pct(n) { return (n === null || n === undefined) ? null : Math.round(n) + '%'; }
+  function hrs(n) { return (n === null || n === undefined) ? null : Number(n).toFixed(1) + ' hrs'; }
+  function mon(m) { if (!m) return null; var p = String(m).slice(0, 7).split('-'); return new Date(+p[0], +p[1] - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }); }
+  function day(s) { if (!s) return null; var d = new Date(String(s).replace(' ', 'T')); return isNaN(d) ? null : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+  function set(k, v) { if (v === null || v === undefined) return; var els = document.querySelectorAll('[data-k="' + k + '"]'); for (var i = 0; i < els.length; i++) els[i].textContent = v; }
+  function ago(iso) {
+    var mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + ' min ago';
+    var h = Math.round(mins / 60);
+    return h < 48 ? h + ' hr ago' : Math.round(h / 24) + ' days ago';
+  }
+  function paintChip() {
+    if (!chip || !updatedAt) return;
+    var stale = Date.now() - new Date(updatedAt).getTime() > STALE_MS;
+    chip.className = 'livechip ' + (stale ? 'stale' : 'on');
+    chip.textContent = (stale ? 'Last update ' : 'Live · updated ') + ago(updatedAt);
+    chip.title = 'Refreshed hourly from Jira, ElevenLabs and Supabase. Updated ' + new Date(updatedAt).toLocaleString('en-US');
+  }
+  function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function applyWi(w) {
+    var sec = document.getElementById('wiSection');
+    if (!sec) return;
+    set('wi_calls', fmt(w.calls_with_request));
+    set('wi_calls_s', 'Since ' + (day(w.first_call) || 'launch') + ', caller stated a request');
+    set('wi_month', fmt(w.calls_this_month));
+    set('wi_month_s', 'Last 7 days: ' + fmt(w.calls_7d) + ' · ' + mon(w.current_month));
+    set('wi_feedback', fmt(w.feedback_given));
+    set('wi_feedback_s', fmt(w.feedback_positive) + ' positive · ' + fmt(w.feedback_mixed) + ' mixed · ' + fmt(w.feedback_negative) + ' negative');
+    set('wi_note', 'Brand comes from the product group label the phone agent sets on each XTS ticket. ' + fmt(w.no_request_calls) +
+      (w.no_request_calls === 1 ? ' call' : ' calls') + ' with no request (hang-ups, voicemail) ' + (w.no_request_calls === 1 ? 'is' : 'are') + ' not counted.' + (w.urgent ? ' ' + fmt(w.urgent) + ' flagged urgent.' : ''));
+    var list = (w.brands || []).filter(function (b) { return b.key !== 'UNKNOWN' || b.calls > 0; })
+      .sort(function (a, b) { return b.calls - a.calls; });
+    var max = list.reduce(function (m, b) { return Math.max(m, b.calls); }, 0) || 1;
+    document.getElementById('wiBrands').innerHTML = list.map(function (b) {
+      return '<div class="brand' + (b.calls ? '' : ' zero') + '"><div class="bl">' + esc(b.label) + '</div>' +
+        '<div class="bn">' + fmt(b.calls) + '</div>' +
+        '<div class="bs">' + fmt(b.calls_this_month) + ' this month · ' + fmt(b.calls_7d) + ' last 7 days</div>' +
+        '<div class="bar"><i style="width:' + Math.round((b.calls / max) * 100) + '%"></i></div></div>';
+    }).join('');
+    sec.hidden = false;
+  }
+  function apply(d) {
+    var j = d.jira, v = d.voice && d.voice.nbts, p = d.platform, kb = d.kb;
+    if (j) {
+      set('tickets', fmt(j.tickets_total));
+      set('tickets_s', 'Oct 2025 – ' + (day(j.data_through) || 'today'));
+      set('resolution', pct(j.resolution_pct));
+      set('resolution_s', fmt(j.tickets_resolved) + ' of ' + fmt(j.tickets_total) + ' resolved');
+      set('first_response', hrs(j.median_first_response_hrs));
+      set('first_response_s', 'JSM SLA clock · Mon–Fri 8 am–5 pm');
+      set('resolution_time', hrs(j.median_resolution_biz_hrs));
+      set('ai_share', pct(j.ai_intake_pct));
+      set('ai_share_s', fmt(j.ai_intake_tickets) + ' of ' + fmt(j.tickets_total) + ', AI intake to auto-ticket');
+      set('people', fmt(j.people_using));
+      if (j.avg_monthly_tickets) {
+        set('volume_note', 'legacy manual system averaged 71 tickets/month (2022). The NBTS system averages ' + fmt(j.avg_monthly_tickets) +
+          '/month over ' + j.complete_months + ' complete months, peaking at ' + fmt(j.peak_month_tickets) + ' in ' + mon(j.peak_month) + '.');
+      }
+    }
+    if (v && v.phone_calls) {
+      set('calls', fmt(v.phone_calls));
+      set('calls_s', mon(v.first_call) + ' – ' + mon(v.last_call) + ', Twilio');
+      set('success', pct(v.success_pct));
+      set('success_s', fmt(v.success) + ' of ' + fmt(v.phone_calls) + ' (EL success eval)');
+    }
+    if (p) {
+      set('ib_projects', fmt(p.install_base_projects));
+      set('filter_units', fmt(p.filter_units));
+      set('catalog', fmt(p.catalog_products));
+    }
+    if (kb) set('kb_docs', fmt(kb.kb_documents));
+    if (d.wi && d.wi.ok) applyWi(d.wi);
+    updatedAt = d.updated_at;
+    if (updatedAt) set('hdr_date', new Date(updatedAt).toISOString().slice(0, 10));
+    paintChip();
+  }
+  function load() {
+    fetch('/api/metrics', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.ok) apply(d); })
+      .catch(function () {});
+  }
+  load();
+  setInterval(load, REFRESH_MS);
+  setInterval(paintChip, 60 * 1000);
+})();
 </script>
 </body>
 </html>
