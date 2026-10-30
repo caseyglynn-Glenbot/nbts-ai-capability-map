@@ -99,6 +99,45 @@ app.use(
   })
 );
 
+// --- Live dashboard metrics -----------------------------------------------
+// The n8n workflow "NBTS - Portal Live Metrics (Hourly)" writes one row to
+// public.portal_metrics in the Supa vector base project. This route reads it
+// with the publishable (anon) key, which can read that one table and nothing
+// else. Set METRICS_SUPABASE_URL and METRICS_SUPABASE_KEY in Render.
+// Pages call /api/metrics; if it fails they keep their hard-coded numbers.
+const METRICS_URL = (process.env.METRICS_SUPABASE_URL || "").replace(/\/+$/, "");
+const METRICS_KEY = process.env.METRICS_SUPABASE_KEY || "";
+const METRICS_TTL_MS = 5 * 60 * 1000;
+let metricsCache = { at: 0, body: null };
+
+app.get("/api/metrics", async (req, res) => {
+  if (!METRICS_URL || !METRICS_KEY) {
+    return res.status(503).json({ ok: false, error: "metrics not configured" });
+  }
+  const now = Date.now();
+  if (metricsCache.body && now - metricsCache.at < METRICS_TTL_MS) {
+    return res.json({ ...metricsCache.body, cached: true });
+  }
+  try {
+    const headers = { apikey: METRICS_KEY, Accept: "application/json" };
+    if (METRICS_KEY.startsWith("eyJ")) headers.Authorization = `Bearer ${METRICS_KEY}`;
+    const r = await fetch(
+      `${METRICS_URL}/rest/v1/portal_metrics?id=eq.nbts&select=*`,
+      { headers, signal: AbortSignal.timeout(8000) }
+    );
+    if (!r.ok) throw new Error(`supabase ${r.status}`);
+    const rows = await r.json();
+    if (!rows.length) throw new Error("no metrics row yet");
+    const body = { ok: true, ...rows[0], served_at: new Date().toISOString() };
+    metricsCache = { at: now, body };
+    res.json({ ...body, cached: false });
+  } catch (err) {
+    console.error("metrics fetch failed:", err.message);
+    if (metricsCache.body) return res.json({ ...metricsCache.body, cached: true, stale: true });
+    res.status(502).json({ ok: false, error: "metrics unavailable" });
+  }
+});
+
 /** Turn "capability-map.html" into "Capability Map". */
 function prettify(file) {
   return file
