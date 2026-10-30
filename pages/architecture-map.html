@@ -43,7 +43,6 @@
   .lane.intake{width:270px}
   .lane.orch{width:300px}
   .lane.tools{flex:1}
-  .lane.out{width:250px}
   .arrow{width:48px;display:flex;align-items:center;justify-content:center;flex:none}
   .lane .note{font-size:11px;color:var(--ink2);margin-top:12px;line-height:1.45}
   .item{border-left:3px solid var(--teal);padding:8px 0 8px 12px;display:block}
@@ -51,7 +50,6 @@
   a.item:hover{background:var(--stripe)}
   .item .it{font-weight:700;font-size:14px;color:var(--blue)}
   .item .id{font-size:12px;color:var(--ink);margin-top:2px}
-  .item.out-item{border-left-color:var(--blue);font-weight:700;font-size:14px;color:var(--blue)}
   .stack{display:flex;flex-direction:column;gap:10px}
   .core{background:var(--stripe);border-top:3px solid var(--blue);padding:14px 16px}
   .core .ct{font-weight:800;font-size:17px;color:var(--blue)}
@@ -115,7 +113,7 @@
   @media (max-width:1100px){
     .page{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
     .flow{flex-wrap:wrap;gap:20px}
-    .lane.intake,.lane.orch,.lane.out,.lane.tools{width:100%;flex:none}
+    .lane.intake,.lane.orch,.lane.tools{width:100%;flex:none}
     .arrow{display:none}
     .stats{flex-wrap:wrap}.stats .s{flex:1 1 40%}
     .toolgrid,.datagrid,.kpigrid{grid-template-columns:1fr 1fr}
@@ -219,7 +217,7 @@
       <div class="rule"></div>
       <div class="toolgrid">
         <a class="tool" href="/capability-map"><span class="cue">&rsaquo;</span><div class="tt">Capability Map</div><div class="td">The "start here" overview — lanes, tiles, coverage matrix.</div></a>
-        <a class="tool" href="/architecture-map"><span class="cue">&rsaquo;</span><div class="tt">Architecture Map</div><div class="td">This flow — intake → data → outputs + loops.</div></a>
+        <a class="tool" href="/architecture-map"><span class="cue">&rsaquo;</span><div class="tt">Architecture Map</div><div class="td">This flow: intake → orchestration → tools.</div></a>
         <a class="tool" href="/technical-support"><span class="cue">&rsaquo;</span><div class="tt">Technical Support</div><div class="td">Phone / text / email tap-to-action + Jira portal.</div></a>
         <a class="tool" href="/parts-lookup"><span class="cue">&rsaquo;</span><div class="tt">Parts Lookup</div><div class="td">Plain-language search over 3,832 products.</div></a>
         <a class="tool" href="/product-configurators"><span class="cue">&rsaquo;</span><div class="tt">Product Configurators</div><div class="td">Lawson Aquatics SOFA live; others in progress.</div></a>
@@ -229,18 +227,6 @@
         <a class="tool" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener"><span class="cue">&rsaquo;</span><div class="tt">Install Base Assistant</div><div class="td">Chat over national install-base data — 53 states.</div></a>
       </div>
       <div style="margin-top:12px;text-align:right;"><span class="badge">HTTP BASIC AUTH · nbts-portal.onrender.com</span></div>
-    </div>
-    <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
-    <div class="lane out">
-      <div class="lbl">OUTPUTS</div><div class="rule"></div>
-      <div class="stack">
-        <div class="item out-item">Instant answer</div>
-        <div class="item out-item">Tracked Jira ticket</div>
-        <div class="item out-item">Annotated submittal</div>
-        <div class="item out-item">Go / no-go scorecard</div>
-        <div class="item out-item">Outbound SMS + email</div>
-      </div>
-      <div class="note">Every request becomes a tracked ticket in the system of record.</div>
     </div>
   </div>
   <div class="strip">
