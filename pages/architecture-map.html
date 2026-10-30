@@ -64,6 +64,25 @@
   .tool .cue{position:absolute;top:10px;right:12px;color:var(--teal);font-weight:800;font-size:14px}
   a.tool:hover .cue{color:var(--blue)}
   .tools-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .tool .tn{font-weight:800;font-size:20px;color:var(--blue);line-height:1.1;margin-top:8px}
+  .tool .tu{font-size:11px;color:var(--ink2);margin-top:1px}
+  .tool .tw{font-size:10.5px;color:var(--ink2);font-style:italic}
+  .tool .rank{display:inline-block;min-width:18px;font-size:10.5px;font-weight:800;color:#fff;background:var(--teal);padding:1px 5px;margin-right:6px;text-align:center;vertical-align:2px}
+  .toolsnote{font-size:11px;color:var(--ink2);margin-top:10px;line-height:1.4}
+  .tablegrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  .tproj{background:var(--stripe);border-top:3px solid var(--teal);padding:12px 14px}
+  .tph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .tpn{font-weight:800;font-size:15px;color:var(--blue)}
+  .tps{font-size:11.5px;color:var(--ink2)}
+  .tpr{font-size:11.5px;color:var(--ink2);margin:2px 0 8px}
+  .tlist{columns:2;column-gap:18px}
+  .trow{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:3px 0;border-bottom:1px solid #D9E2E8;break-inside:avoid}
+  .trow .tname{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink);overflow-wrap:anywhere}
+  .trow .tcount{font-weight:700;color:var(--blue);white-space:nowrap}
+  .trow.empty .tcount,.trow.empty .tname{color:#8A99A6}
+  body:not(.sd-on) .tablegrid{display:none}
+  @media (max-width:900px){.tablegrid{grid-template-columns:1fr}}
+  @media (max-width:520px){.tlist{columns:1}}
   .badge{font-size:11px;font-weight:700;color:var(--teal);border:1px solid var(--teal);padding:2px 9px;letter-spacing:.03em;white-space:nowrap}
   .strip{margin-top:30px}
   .datagrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:14px}
@@ -163,7 +182,7 @@
     <div class="s"><span class="n" data-k="ib_projects">9,703</span><span class="l">install-base projects</span></div>
     <div class="s"><span class="n" data-k="filter_units">17,648</span><span class="l">filter units tracked</span></div>
     <div class="s"><span class="n" data-k="catalog">3,832</span><span class="l">catalog products</span></div>
-    <div class="s"><span class="n" data-k="kb_docs">371</span><span class="l">KB documents</span></div>
+    <div class="s"><span class="n" data-k="kb_docs">1,414</span><span class="l">KB documents</span></div>
   </div>
   <div class="wisec" id="wiSection" hidden>
     <div class="lblrow"><div class="lbl">WI PROJECTS · WATER &amp; WASTEWATER LINE</div><span class="livechip">(855) 516-7056 · XTS Jira</span></div><div class="rule"></div>
@@ -212,20 +231,21 @@
     <div class="arrow"><svg width="34" height="20" viewBox="0 0 34 20"><path d="M0,10 H26" stroke="#0085AD" stroke-width="2.5" fill="none"></path><path d="M24,3 L33,10 L24,17" stroke="#0085AD" stroke-width="2.5" fill="none"></path></svg></div>
     <div class="lane tools">
       <div class="tools-head">
-        <div class="lbl">INTERNAL PORTAL &amp; TOOLS</div>
+        <div class="lbl">TOP 9 TOOLS BY USE</div>
       </div>
       <div class="rule"></div>
-      <div class="toolgrid">
-        <a class="tool" href="/capability-map"><span class="cue">&rsaquo;</span><div class="tt">Capability Map</div><div class="td">The "start here" overview — lanes, tiles, coverage matrix.</div></a>
-        <a class="tool" href="/architecture-map"><span class="cue">&rsaquo;</span><div class="tt">Architecture Map</div><div class="td">This flow: intake → orchestration → tools.</div></a>
-        <a class="tool" href="/technical-support"><span class="cue">&rsaquo;</span><div class="tt">Technical Support</div><div class="td">Phone / text / email tap-to-action + Jira portal.</div></a>
-        <a class="tool" href="/parts-lookup"><span class="cue">&rsaquo;</span><div class="tt">Parts Lookup</div><div class="td">Plain-language search over 3,832 products.</div></a>
-        <a class="tool" href="/product-configurators"><span class="cue">&rsaquo;</span><div class="tt">Product Configurators</div><div class="td">Lawson Aquatics SOFA live; others in progress.</div></a>
-        <a class="tool" href="/knowledge-base-loader"><span class="cue">&rsaquo;</span><div class="tt">Knowledge Base Loader</div><div class="td">Upload / update → OCR + vision → vectors.</div></a>
-        <a class="tool" href="/submittal-generator"><span class="cue">&rsaquo;</span><div class="tt">Submittal Generator</div><div class="td">Quote PDF → annotated submittal → Jira.</div></a>
-        <a class="tool" href="/spec-scorecard"><span class="cue">&rsaquo;</span><div class="tt">Spec Scorecard</div><div class="td">Spec + drawings → 28-category go/no-go score.</div></a>
-        <a class="tool" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener"><span class="cue">&rsaquo;</span><div class="tt">Install Base Assistant</div><div class="td">Chat over national install-base data — 53 states.</div></a>
+      <div class="toolgrid" id="toolGrid">
+        <a class="tool" href="/knowledge-base-loader"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">1</span>Knowledge Base Loader</div><div class="td">NBTS 399 · WI Projects 1,015. Portal, Claude, Jira, calls and web.</div><div class="tn">1,414</div><div class="tu">documents embedded</div></a>
+        <a class="tool" href="/technical-support"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">2</span>SMS Agent</div><div class="td">Texting line with Q&amp;A and ticket intake.</div><div class="tn">49</div><div class="tu">conversations</div></a>
+        <a class="tool" href="https://nbts-install-base.onrender.com" target="_blank" rel="noopener"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">3</span>Install Base Assistant</div><div class="td">Chat over national install-base data, 53 states.</div><div class="tn">26</div><div class="tu">chats · <span class="tw">last 30 days</span></div></a>
+        <a class="tool" href="/submittal-generator"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">4</span>Submittal Generator</div><div class="td">Quote PDF → annotated submittal → Jira.</div><div class="tn">23</div><div class="tu">submittals</div></a>
+        <a class="tool" href="/parts-lookup"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">5</span>Parts Lookup</div><div class="td">Plain-language search over 3,832 products.</div><div class="tn">22</div><div class="tu">chats · <span class="tw">last 30 days</span></div></a>
+        <a class="tool" href="/product-configurators"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">6</span>Product Configurators</div><div class="td">Lawson Aquatics SOFA quote builder.</div><div class="tn">4</div><div class="tu">quote requests</div></a>
+        <a class="tool" href="/osec-submittal"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">7</span>OSEC Submittal Generator</div><div class="td">HKOM workbook → OSEC submittal package.</div><div class="tn">4</div><div class="tu">submittals · <span class="tw">last 30 days</span></div></a>
+        <a class="tool" href="/spec-scorecard"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">8</span>Spec Scorecard</div><div class="td">Spec + drawings → 28-category go/no-go score.</div><div class="tn">3</div><div class="tu">scorecards</div></a>
+        <a class="tool" href="/procedure-guide"><span class="cue">&rsaquo;</span><div class="tt"><span class="rank">9</span>Procedure Guide Generator</div><div class="td">Ask for a procedure, get a PDF guide from the KB.</div><div class="tn">2</div><div class="tu">guides generated</div></a>
       </div>
+      <div class="toolsnote" id="toolsNote">Ranked by use. Counts are lifetime, except tools marked last 30 days.</div>
       <div style="margin-top:12px;text-align:right;"><span class="badge">HTTP BASIC AUTH · nbts-portal.onrender.com</span></div>
     </div>
   </div>
@@ -239,11 +259,12 @@
     </div>
     <div class="rule"></div>
     <div class="datagrid">
-      <div class="dcell"><div class="dt">Supabase — one project</div><div class="dd">Postgres + pgvector. install_base (9,703 projects · 17,648 units · 53 states), master_product_list (3,832), documents (vectors), scoring registry, goldmine CRM.</div></div>
+      <div class="dcell"><div class="dt">Supabase · two projects</div><div class="dd">Postgres + pgvector. <b data-k="tbl_count">40</b> tables, <b data-k="tbl_rows">110,836</b> rows. Every table is listed below with its live row count.</div></div>
       <div class="dcell"><div class="dt">Jira Service Management</div><div class="dd">System of record — one project. Every intake becomes a ticket.</div></div>
       <div class="dcell"><div class="dt">Render</div><div class="dd">Hosts the portal, FastAPI submittal service, and configurators.</div></div>
       <div class="dcell"><div class="dt">KB vectors — shared brain</div><div class="dd">RAG / chat agents read; the loader writes. text-embedding-3-small.</div></div>
     </div>
+    <div class="tablegrid" id="sdTables"><div class="tproj"><div class="tph"><span class="tpn">Supa vector base</span><span class="tps">17 tables · 59,399 rows</span></div><div class="tpr">Install base, product catalog, GoldMine CRM, scorecards</div><div class="tlist"><div class="trow"><span class="tname">goldmine.contact1</span><span class="tcount">11,478</span></div><div class="trow"><span class="tname">goldmine.contsupp</span><span class="tcount">10,669</span></div><div class="trow"><span class="tname">goldmine.opmgr</span><span class="tcount">10,022</span></div><div class="trow"><span class="tname">goldmine.contact2</span><span class="tcount">10,000</span></div><div class="trow"><span class="tname">install_base.projects</span><span class="tcount">9,703</span></div><div class="trow"><span class="tname">master_product_list</span><span class="tcount">3,832</span></div><div class="trow"><span class="tname">goldmine.cal</span><span class="tcount">1,795</span></div><div class="trow"><span class="tname">goldmine.contudef</span><span class="tcount">1,056</span></div><div class="trow"><span class="tname">product_catalog_source</span><span class="tcount">800</span></div><div class="trow"><span class="tname">scoring_categories</span><span class="tcount">28</span></div><div class="trow"><span class="tname">product_lines</span><span class="tcount">9</span></div><div class="trow"><span class="tname">n8n_chat_histories</span><span class="tcount">6</span></div><div class="trow"><span class="tname">portal_metrics</span><span class="tcount">1</span></div><div class="trow empty"><span class="tname">documents</span><span class="tcount">0</span></div><div class="trow empty"><span class="tname">product_catalog</span><span class="tcount">0</span></div><div class="trow empty"><span class="tname">scorecard_category_results</span><span class="tcount">0</span></div><div class="trow empty"><span class="tname">scorecard_runs</span><span class="tcount">0</span></div></div></div><div class="tproj"><div class="tph"><span class="tpn">File storage</span><span class="tps">23 tables · 51,437 rows</span></div><div class="tpr">KB vectors and graph, customer tiers, vault mirror, WI Projects KB</div><div class="tlist"><div class="trow"><span class="tname">wwt_documents</span><span class="tcount">22,151</span></div><div class="trow"><span class="tname">gold_customers</span><span class="tcount">11,103</span></div><div class="trow"><span class="tname">documents</span><span class="tcount">5,664</span></div><div class="trow"><span class="tname">silver_customers</span><span class="tcount">4,482</span></div><div class="trow"><span class="tname">kb_nodes</span><span class="tcount">4,456</span></div><div class="trow"><span class="tname">kb_edges</span><span class="tcount">624</span></div><div class="trow"><span class="tname">vault_links</span><span class="tcount">583</span></div><div class="trow"><span class="tname">wwt_document_metadata</span><span class="tcount">562</span></div><div class="trow"><span class="tname">ingest_staging</span><span class="tcount">444</span></div><div class="trow"><span class="tname">document_metadata</span><span class="tcount">371</span></div><div class="trow"><span class="tname">kbg_stage</span><span class="tcount">228</span></div><div class="trow"><span class="tname">kbg_stage2</span><span class="tcount">228</span></div><div class="trow"><span class="tname">kbg_spec1</span><span class="tcount">176</span></div><div class="trow"><span class="tname">vault_notes</span><span class="tcount">103</span></div><div class="trow"><span class="tname">platinum_customers</span><span class="tcount">79</span></div><div class="trow"><span class="tname">kb_agent_sandbox</span><span class="tcount">65</span></div><div class="trow"><span class="tname">kb_coverage_probe</span><span class="tcount">53</span></div><div class="trow"><span class="tname">sms_conversations</span><span class="tcount">28</span></div><div class="trow"><span class="tname">product_registry</span><span class="tcount">24</span></div><div class="trow"><span class="tname">brand_registry</span><span class="tcount">6</span></div><div class="trow"><span class="tname">variant_registry</span><span class="tcount">4</span></div><div class="trow"><span class="tname">vault_publish_log</span><span class="tcount">2</span></div><div class="trow"><span class="tname">report_build_assets</span><span class="tcount">1</span></div></div></div></div>
   </div>
   <div class="ftr">
     <div class="disc">Internal architecture reference. Deterministic logic separated from LLM calls; models tiered by task (embeddings, vision, agents, analysis). One n8n · one Supabase · one Jira. Tiles link to their live portal pages.</div>
@@ -313,6 +334,37 @@
     }).join('');
     sec.hidden = false;
   }
+  function renderTools(t) {
+    var grid = document.getElementById('toolGrid');
+    if (!grid || !t || !t.top || t.top.length < 6) return;
+    grid.innerHTML = t.top.map(function (x, i) {
+      var ext = /^https?:/.test(x.href) ? ' target="_blank" rel="noopener"' : '';
+      var win = x.window ? ' · <span class="tw" title="' + esc(x.source || '') + '">last 30 days</span>' : '';
+      return '<a class="tool" href="' + esc(x.href) + '"' + ext + ' title="' + esc(x.source || '') + '"><span class="cue">&rsaquo;</span>' +
+        '<div class="tt"><span class="rank">' + (i + 1) + '</span>' + esc(x.name) + '</div>' +
+        '<div class="td">' + esc(x.desc) + '</div>' +
+        '<div class="tn">' + fmt(x.count) + '</div><div class="tu">' + esc(x.unit) + win + '</div></a>';
+    }).join('');
+    var snap = t.top.some(function (x) { return x.window; });
+    var note = document.getElementById('toolsNote');
+    if (note) note.textContent = 'Ranked by use, refreshed hourly. Counts are lifetime' + (snap ? ', except tools marked last 30 days (no permanent usage log yet).' : '.');
+  }
+  function renderTables(t) {
+    var el = document.getElementById('sdTables');
+    if (!el || !t || !t.projects || !t.projects.length) return;
+    set('tbl_count', fmt(t.table_count));
+    set('tbl_rows', fmt(t.row_count));
+    el.innerHTML = t.projects.map(function (p) {
+      var rows = p.tables.slice().sort(function (a, b) { return b.rows - a.rows; });
+      var sub = rows.reduce(function (s, r) { return s + Number(r.rows || 0); }, 0);
+      return '<div class="tproj"><div class="tph"><span class="tpn">' + esc(p.name) + '</span><span class="tps">' + rows.length + ' tables · ' + fmt(sub) + ' rows</span></div>' +
+        '<div class="tpr">' + esc(p.role) + '</div><div class="tlist">' +
+        rows.map(function (r) {
+          var nm = (r.schema && r.schema !== 'public' ? r.schema + '.' : '') + r.table;
+          return '<div class="trow' + (Number(r.rows) ? '' : ' empty') + '"><span class="tname">' + esc(nm) + '</span><span class="tcount">' + fmt(r.rows) + '</span></div>';
+        }).join('') + '</div></div>';
+    }).join('');
+  }
   function apply(d) {
     var j = d.jira, v = d.voice && d.voice.nbts, p = d.platform, kb = d.kb;
     if (j) {
@@ -342,8 +394,10 @@
       set('filter_units', fmt(p.filter_units));
       set('catalog', fmt(p.catalog_products));
     }
-    if (kb) set('kb_docs', fmt(kb.kb_documents));
+    if (kb) set('kb_docs', fmt(kb.embedded_docs || kb.kb_documents));
     if (d.wi && d.wi.ok) applyWi(d.wi);
+    if (d.tools && d.tools.ok) renderTools(d.tools);
+    if (d.tables && d.tables.ok) renderTables(d.tables);
     updatedAt = d.updated_at;
     if (updatedAt) set('hdr_date', new Date(updatedAt).toISOString().slice(0, 10));
     paintChip();

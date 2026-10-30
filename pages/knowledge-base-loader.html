@@ -131,6 +131,23 @@
   .kf-note{margin:8px 0 0;font-size:12.5px;color:var(--ink2)}
   @media (max-width:1100px){.kf-fan{grid-template-columns:repeat(3,minmax(0,1fr))}}
   @media (max-width:720px){.kf-lane{grid-template-columns:1fr}.kf-ll{padding:8px 0 0}.kf-fan,.kf-dec,.kf-uses{grid-template-columns:1fr}}
+  .kbstats{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 16px}
+  .kbstat{background:var(--stripe);border-top:3px solid var(--teal);padding:10px 16px;min-width:160px}
+  .kbstat .n{font-weight:800;font-size:24px;color:var(--blue);line-height:1.1}
+  .kbstat .l{font-size:11.5px;color:var(--ink2);margin-top:3px}
+  .srcgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .src{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--teal);padding:10px 12px}
+  .src.wi{border-left-color:var(--blue)}
+  .src .sk{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+  .src.wi .sk{color:var(--blue)}
+  .src .st{font-weight:700;font-size:13.5px;color:var(--blue);margin-top:2px}
+  .src .sn{font-weight:800;font-size:22px;color:var(--blue);line-height:1.1;margin-top:4px}
+  .src .sd{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.4}
+  .kblive{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2);
+    border:1px solid var(--rule);padding:3px 10px;border-radius:999px;margin-left:10px;vertical-align:3px}
+  .kblive.on{color:var(--green);border-color:var(--green)}
+  @media (max-width:1100px){.srcgrid{grid-template-columns:1fr 1fr}}
+  @media (max-width:560px){.srcgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -152,6 +169,20 @@
   </div>
 
   <p class="intro">Add product documentation to the AI knowledge base yourself, no engineering needed. Anything you load here is read, chunked, embedded, and made searchable by the Technical Support AI within minutes.</p>
+
+  <section>
+    <div class="lbl">WHAT'S IN THE KNOWLEDGE BASE <span class="kblive" id="kbLive">As of Oct 30, 2026</span></div><div class="rule"></div>
+    <div class="sec-sub">Everything the AI can search today, from every source: this loader, documents loaded by Claude, Jira tickets, support calls and the web.</div>
+    <div class="kbstats">
+      <div class="kbstat"><div class="n" id="kbTotal">1,414</div><div class="l">documents embedded</div></div>
+      <div class="kbstat"><div class="n" id="kbNbts">399</div><div class="l">NBTS knowledge base</div></div>
+      <div class="kbstat"><div class="n" id="kbWi">1,015</div><div class="l">WI Projects knowledge base</div></div>
+      <div class="kbstat"><div class="n" id="kbChunks">27,815</div><div class="l">searchable sections</div></div>
+    </div>
+    <div class="srcgrid">
+      <div class="src wi" data-src="wi_sharepoint"><div class="sk">WI Projects</div><div class="st">WI Projects product folders</div><div class="sn" data-n="docs">1,015</div><div class="sd"><span data-n="chunks">22,151</span> sections · Wedeco, Leopold, Envirex, Sanitaire, JWI and third-party O&amp;M, plus Wedeco service reports. Loaded by Claude.</div></div><div class="src" data-src="jira"><div class="sk">NBTS</div><div class="st">Jira ticket answers</div><div class="sn" data-n="docs">208</div><div class="sd"><span data-n="chunks">208</span> sections · Questions and how the team answered them, from resolved NBTS tickets.</div></div><div class="src" data-src="claude"><div class="sk">NBTS</div><div class="st">Product docs loaded by Claude</div><div class="sn" data-n="docs">71</div><div class="sd"><span data-n="chunks">2,439</span> sections · Lawson cut sheets and O&amp;M, ETS UV, W&amp;T, Pacific Ozone and Defender training content.</div></div><div class="src" data-src="portal"><div class="sk">NBTS</div><div class="st">Portal and Drive uploads</div><div class="sn" data-n="docs">41</div><div class="sd"><span data-n="chunks">1,898</span> sections · Documents added through this loader and the earlier Google Drive intake.</div></div><div class="src" data-src="jira_attachments"><div class="sk">NBTS</div><div class="st">Jira ticket attachments</div><div class="sn" data-n="docs">40</div><div class="sd"><span data-n="chunks">604</span> sections · PDFs the NBTS team sent customers on tickets (commercial documents excluded).</div></div><div class="src" data-src="graph"><div class="sk">NBTS</div><div class="st">Knowledge graph extracts</div><div class="sn" data-n="docs">17</div><div class="sd"><span data-n="chunks">404</span> sections · Fault codes, procedures and specs pulled out of manuals into the product graph.</div></div><div class="src" data-src="calls"><div class="sk">NBTS</div><div class="st">Recorded support calls</div><div class="sn" data-n="docs">12</div><div class="sd"><span data-n="chunks">38</span> sections · Field support calls written up as issue and solution articles.</div></div><div class="src" data-src="public_web"><div class="sk">NBTS</div><div class="st">Public product PDFs</div><div class="sn" data-n="docs">10</div><div class="sd"><span data-n="chunks">73</span> sections · Xylem library and distributor data sheets fetched from the web.</div></div>
+    </div>
+  </section>
 
   <section>
     <div class="lbl">WHAT YOU CAN UPLOAD</div><div class="rule"></div>
@@ -301,5 +332,33 @@
     <div class="xy">xylem<sup>&deg;</sup></div>
   </div>
 </div>
+<script>
+(function () {
+  function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
+  function txt(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  fetch('/api/metrics', { credentials: 'same-origin', cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      var kb = d && d.ok && d.kb;
+      if (!kb || !kb.embedded_docs) return;
+      txt('kbTotal', fmt(kb.embedded_docs));
+      txt('kbNbts', fmt(kb.nbts_embedded_docs));
+      txt('kbWi', fmt(kb.wi_embedded_docs));
+      txt('kbChunks', fmt(kb.embedded_chunks));
+      (kb.sources || []).forEach(function (s) {
+        var card = document.querySelector('[data-src="' + s.key + '"]');
+        if (!card) return;
+        card.querySelector('[data-n="docs"]').textContent = fmt(s.docs);
+        card.querySelector('[data-n="chunks"]').textContent = fmt(s.chunks);
+      });
+      var live = document.getElementById('kbLive');
+      if (live && d.kb_at) {
+        live.className = 'kblive on';
+        live.textContent = 'Live · ' + new Date(d.kb_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      }
+    })
+    .catch(function () {});
+})();
+</script>
 </body>
 </html>
