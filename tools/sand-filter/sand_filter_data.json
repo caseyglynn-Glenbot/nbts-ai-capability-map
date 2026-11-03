@@ -1,0 +1,4447 @@
+{
+ "meta": {
+  "built": "2026-11-02",
+  "sources": [
+   "SHFFG Technical Data Sheet R 2/9/18",
+   "SRF/DRF Single Cell Sand Filters tech data R-5/4/11",
+   "CCFG Legacy Fiberglass Sand Filters tech data ML-4/29/26",
+   "Drawing 36CCFG-3MAN",
+   "Drawing 42SRFFG-4",
+   "PART NUMBERS - MODEL NUMBERS.xlsx",
+   "FILTER SYSTEM DRAWING MATRIX.xlsx",
+   "SAND CALCULATION.xlsx (velocity chart)",
+   "Vertical vessel 2026 size sheets (sizes only)",
+   "master_product_list product_line Sand"
+  ],
+  "backwash_rate_gpmsf": [
+   15,
+   20
+  ],
+  "design_pressure_psi": 50,
+  "notes": [
+   "Fiberglass tanks: 50 psi working pressure, hydrostatically tested to 1.1x working pressure, 4:1 safety factor.",
+   "Steel SRF/DRF: 50 psi operating, 75 psi hydrostatic test.",
+   "Sand .45-.55 mm, 100 lb per cu ft. Gravel 1/4 x 1/8 in where used."
+  ]
+ },
+ "shffg": {
+  "models": [
+   {
+    "model": "3448SHFFG",
+    "dia": 34,
+    "length": 48,
+    "conn": 3,
+    "area_sf": 12.6,
+    "flow_gpm": [
+     63,
+     206
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 356,
+    "oper_lb": 3239,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 64.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 15,
+    "bed_in": 16.5,
+    "sand_lb": 1500,
+    "pn": {
+     "single_R": "1000-6986",
+     "single_L": "1000-6985",
+     "stacked_R": "1000-6990",
+     "stacked_L": "1000-6989"
+    }
+   },
+   {
+    "model": "3448SHFFG",
+    "dia": 34,
+    "length": 48,
+    "conn": 4,
+    "area_sf": 12.6,
+    "flow_gpm": [
+     207,
+     252
+    ],
+    "rate_gpmsf": [
+     17,
+     20
+    ],
+    "ship_lb": 356,
+    "oper_lb": 3239,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 64.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 15,
+    "bed_in": 16.5,
+    "sand_lb": 1500,
+    "pn": {
+     "single_R": "1000-6988",
+     "single_L": "1000-6987",
+     "stacked_R": "1000-6991",
+     "stacked_L": "1001-8664"
+    }
+   },
+   {
+    "model": "3454SHFFG",
+    "dia": 34,
+    "length": 54,
+    "conn": 3,
+    "area_sf": 14.0,
+    "flow_gpm": [
+     70,
+     206
+    ],
+    "rate_gpmsf": [
+     5,
+     14
+    ],
+    "ship_lb": 383,
+    "oper_lb": 3642,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 70.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 16,
+    "bed_in": 16.5,
+    "sand_lb": 1600,
+    "pn": {
+     "single_R": "1000-6992",
+     "single_L": "1001-3974",
+     "stacked_R": "1001-3410",
+     "stacked_L": "1002-1185"
+    }
+   },
+   {
+    "model": "3454SHFFG",
+    "dia": 34,
+    "length": 54,
+    "conn": 4,
+    "area_sf": 14.0,
+    "flow_gpm": [
+     207,
+     280
+    ],
+    "rate_gpmsf": [
+     15,
+     20
+    ],
+    "ship_lb": 383,
+    "oper_lb": 3642,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 70.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 16,
+    "bed_in": 16.5,
+    "sand_lb": 1600,
+    "pn": {
+     "single_R": "1000-6994",
+     "single_L": "1000-6993",
+     "stacked_R": "1000-6995",
+     "stacked_L": "1001-8054",
+     "stacked_LZ": "1002-2038"
+    }
+   },
+   {
+    "model": "3460SHFFG",
+    "dia": 34,
+    "length": 60,
+    "conn": 4,
+    "area_sf": 15.4,
+    "flow_gpm": [
+     77,
+     308
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 410,
+    "oper_lb": 4044,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 76.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 18,
+    "bed_in": 16.5,
+    "sand_lb": 1800,
+    "pn": {
+     "single_R": "1000-6997",
+     "single_L": "1000-6996",
+     "stacked_R": "1002-0390",
+     "stacked_L": "1000-6998",
+     "stacked_LZ": "1000-6999"
+    }
+   },
+   {
+    "model": "3466SHFFG",
+    "dia": 34,
+    "length": 66,
+    "conn": 4,
+    "area_sf": 16.8,
+    "flow_gpm": [
+     84,
+     336
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 465,
+    "oper_lb": 4446,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 82.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 19,
+    "bed_in": 16.5,
+    "sand_lb": 1900,
+    "pn": {
+     "single_R": "1000-7001",
+     "single_L": "1000-7000",
+     "stacked_R": "1000-7002",
+     "stacked_L": "1002-1585"
+    }
+   },
+   {
+    "model": "3472SHFFG",
+    "dia": 34,
+    "length": 72,
+    "conn": 4,
+    "area_sf": 18.2,
+    "flow_gpm": [
+     91,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 479,
+    "oper_lb": 5043,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 88.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 21,
+    "bed_in": 16.5,
+    "sand_lb": 2100,
+    "pn": {
+     "single_R": "1000-7004",
+     "single_L": "1000-7003",
+     "stacked_R": "1001-3975",
+     "stacked_L": "1002-1586",
+     "stacked_RZ": "1000-7005"
+    }
+   },
+   {
+    "model": "3478SHFFG",
+    "dia": 34,
+    "length": 78,
+    "conn": 4,
+    "area_sf": 19.6,
+    "flow_gpm": [
+     98,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     18
+    ],
+    "ship_lb": 492,
+    "oper_lb": 5446,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 94.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 22,
+    "bed_in": 16.5,
+    "sand_lb": 2200,
+    "pn": {
+     "single_R": "1000-7008",
+     "single_L": "1000-7006",
+     "stacked_R": "1002-1587",
+     "stacked_L": "1000-7009",
+     "single_LZ": "1000-7007"
+    }
+   },
+   {
+    "model": "3478SHFFG",
+    "dia": 34,
+    "length": 78,
+    "conn": 6,
+    "area_sf": 19.6,
+    "flow_gpm": [
+     98,
+     392
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 492,
+    "oper_lb": 5446,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 94.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 22,
+    "bed_in": 16.5,
+    "sand_lb": 2200,
+    "pn": {}
+   },
+   {
+    "model": "3484SHFFG",
+    "dia": 34,
+    "length": 84,
+    "conn": 4,
+    "area_sf": 21.0,
+    "flow_gpm": [
+     105,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     17
+    ],
+    "ship_lb": 505,
+    "oper_lb": 5849,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 100.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 24,
+    "bed_in": 16.5,
+    "sand_lb": 2400,
+    "pn": {
+     "single_R": "1001-3976",
+     "single_L": "1000-7010",
+     "stacked_R": "1002-1588",
+     "stacked_L": "1002-1589"
+    }
+   },
+   {
+    "model": "3484SHFFG",
+    "dia": 34,
+    "length": 84,
+    "conn": 6,
+    "area_sf": 21.0,
+    "flow_gpm": [
+     105,
+     420
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 505,
+    "oper_lb": 5849,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 100.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 24,
+    "bed_in": 16.5,
+    "sand_lb": 2400,
+    "pn": {}
+   },
+   {
+    "model": "3490SHFFG",
+    "dia": 34,
+    "length": 90,
+    "conn": 4,
+    "area_sf": 22.4,
+    "flow_gpm": [
+     112,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     16
+    ],
+    "ship_lb": 518,
+    "oper_lb": 6252,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 106.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 25,
+    "bed_in": 16.5,
+    "sand_lb": 2500,
+    "pn": {
+     "single_R": "1003-3779",
+     "single_L": "1003-3780",
+     "stacked_R": "1003-3778",
+     "stacked_L": "1003-3394"
+    }
+   },
+   {
+    "model": "3490SHFFG",
+    "dia": 34,
+    "length": 90,
+    "conn": 6,
+    "area_sf": 22.4,
+    "flow_gpm": [
+     112,
+     448
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 518,
+    "oper_lb": 6252,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 106.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 25,
+    "bed_in": 16.5,
+    "sand_lb": 2500,
+    "pn": {}
+   },
+   {
+    "model": "3496SHFFG",
+    "dia": 34,
+    "length": 96,
+    "conn": 4,
+    "area_sf": 23.8,
+    "flow_gpm": [
+     119,
+     357
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 531,
+    "oper_lb": 6655,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 112.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 27,
+    "bed_in": 16.5,
+    "sand_lb": 2700,
+    "pn": {
+     "single_R": "1000-7012",
+     "single_L": "1000-7011",
+     "stacked_R": "1002-1600",
+     "stacked_L": "1002-1601"
+    }
+   },
+   {
+    "model": "3496SHFFG",
+    "dia": 34,
+    "length": 96,
+    "conn": 6,
+    "area_sf": 23.8,
+    "flow_gpm": [
+     119,
+     476
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 531,
+    "oper_lb": 6655,
+    "A": 33.25,
+    "A1": 34.0,
+    "B": 112.0,
+    "C": 40.0,
+    "E": 12.75,
+    "G": 82.0,
+    "sand_cf": 27,
+    "bed_in": 16.5,
+    "sand_lb": 2700,
+    "pn": {}
+   },
+   {
+    "model": "3648SHFFG",
+    "dia": 36,
+    "length": 48,
+    "conn": 3,
+    "area_sf": 14.3,
+    "flow_gpm": [
+     72,
+     215
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 375,
+    "oper_lb": 3650,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 67.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 16,
+    "bed_in": 18.0,
+    "sand_lb": 1600,
+    "pn": {
+     "single_R": "1001-3413",
+     "single_L": "1001-5345",
+     "stacked_L": "1001-5383"
+    }
+   },
+   {
+    "model": "3648SHFFG",
+    "dia": 36,
+    "length": 48,
+    "conn": 4,
+    "area_sf": 14.3,
+    "flow_gpm": [
+     216,
+     286
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 375,
+    "oper_lb": 3650,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 67.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 16,
+    "bed_in": 18.0,
+    "sand_lb": 1600,
+    "pn": {
+     "single_R": "1000-7014",
+     "single_L": "1000-7013",
+     "stacked_R": "1000-7016",
+     "stacked_L": "1000-7015",
+     "single_RZ": "1002-3391",
+     "single_LZ": "1002-3392"
+    }
+   },
+   {
+    "model": "3660SHFFG",
+    "dia": 36,
+    "length": 60,
+    "conn": 4,
+    "area_sf": 17.3,
+    "flow_gpm": [
+     87,
+     346
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 425,
+    "oper_lb": 4260,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 79.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 19,
+    "bed_in": 18.0,
+    "sand_lb": 1900,
+    "pn": {
+     "single_R": "1001-5307",
+     "single_L": "1000-7017",
+     "stacked_R": "1000-7019",
+     "stacked_L": "1000-7018"
+    }
+   },
+   {
+    "model": "3672SHFFG",
+    "dia": 36,
+    "length": 72,
+    "conn": 4,
+    "area_sf": 20.3,
+    "flow_gpm": [
+     102,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     17
+    ],
+    "ship_lb": 490,
+    "oper_lb": 5070,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 91.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 23,
+    "bed_in": 18.0,
+    "sand_lb": 2300,
+    "pn": {
+     "single_R": "1000-7021",
+     "single_L": "1000-7020",
+     "stacked_R": "1001-3980",
+     "stacked_L": "1000-7022"
+    }
+   },
+   {
+    "model": "3672SHFFG",
+    "dia": 36,
+    "length": 72,
+    "conn": 6,
+    "area_sf": 20.3,
+    "flow_gpm": [
+     358,
+     406
+    ],
+    "rate_gpmsf": [
+     18,
+     20
+    ],
+    "ship_lb": 490,
+    "oper_lb": 5070,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 91.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 23,
+    "bed_in": 18.0,
+    "sand_lb": 2300,
+    "pn": {
+     "single_R": "1002-3079",
+     "single_L": "1002-3078",
+     "stacked_R": "1003-4869",
+     "stacked_L": "1004-2881"
+    }
+   },
+   {
+    "model": "3684SHFFG",
+    "dia": 36,
+    "length": 84,
+    "conn": 4,
+    "area_sf": 23.3,
+    "flow_gpm": [
+     117,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 535,
+    "oper_lb": 5870,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 103.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 26,
+    "bed_in": 18.0,
+    "sand_lb": 2600,
+    "pn": {
+     "single_R": "1002-3091",
+     "single_L": "1002-3090",
+     "stacked_L": "1000-7023"
+    }
+   },
+   {
+    "model": "3684SHFFG",
+    "dia": 36,
+    "length": 84,
+    "conn": 6,
+    "area_sf": 23.3,
+    "flow_gpm": [
+     359,
+     466
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 535,
+    "oper_lb": 5870,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 103.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 26,
+    "bed_in": 18.0,
+    "sand_lb": 2600,
+    "pn": {
+     "single_R": "1002-3094",
+     "single_L": "1002-3093",
+     "stacked_R": "1001-8180",
+     "stacked_L": "1001-8181"
+    }
+   },
+   {
+    "model": "3696SHFFG",
+    "dia": 36,
+    "length": 96,
+    "conn": 6,
+    "area_sf": 26.3,
+    "flow_gpm": [
+     132,
+     526
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 580,
+    "oper_lb": 6680,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 115.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 30,
+    "bed_in": 18.0,
+    "sand_lb": 3000,
+    "pn": {
+     "single_R": "1002-3098",
+     "single_L": "1002-3099",
+     "stacked_R": "1001-8053",
+     "stacked_L": "1001-9354",
+     "stacked_LZ": "1000-7024"
+    }
+   },
+   {
+    "model": "36108SHFFG",
+    "dia": 36,
+    "length": 108,
+    "conn": 6,
+    "area_sf": 29.3,
+    "flow_gpm": [
+     147,
+     586
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 615,
+    "oper_lb": 7490,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 127.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 34,
+    "bed_in": 18.0,
+    "sand_lb": 3400,
+    "pn": {
+     "single_R": "1001-5754",
+     "single_L": "1000-7025",
+     "stacked_R": "1001-3981",
+     "stacked_L": "1000-7026"
+    }
+   },
+   {
+    "model": "36120SHFFG",
+    "dia": 36,
+    "length": 120,
+    "conn": 6,
+    "area_sf": 32.3,
+    "flow_gpm": [
+     162,
+     646
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 655,
+    "oper_lb": 8290,
+    "A": 36.0,
+    "A1": 38.25,
+    "B": 139.75,
+    "C": 42.0,
+    "E": 13.75,
+    "G": 86.0,
+    "sand_cf": 37,
+    "bed_in": 18.0,
+    "sand_lb": 3700,
+    "pn": {
+     "single_R": "1000-7028",
+     "single_L": "1002-3097",
+     "stacked_L": "1000-7029"
+    }
+   },
+   {
+    "model": "4248SHFFG",
+    "dia": 42,
+    "length": 48,
+    "conn": 4,
+    "area_sf": 17.1,
+    "flow_gpm": [
+     86,
+     342
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 435,
+    "oper_lb": 4870,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 69.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 22,
+    "bed_in": 21.0,
+    "sand_lb": 2200,
+    "pn": {
+     "single_R": "1000-7091",
+     "single_L": "1000-7089",
+     "stacked_R": "1001-7004",
+     "stacked_L": "1000-7092",
+     "single_LZ": "1004-2851"
+    }
+   },
+   {
+    "model": "4260SHFFG",
+    "dia": 42,
+    "length": 60,
+    "conn": 4,
+    "area_sf": 20.4,
+    "flow_gpm": [
+     102,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     17
+    ],
+    "ship_lb": 515,
+    "oper_lb": 5680,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 81.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 27,
+    "bed_in": 21.0,
+    "sand_lb": 2700,
+    "pn": {
+     "single_R": "1000-7103",
+     "single_L": "1000-7102",
+     "stacked_R": "1000-7108",
+     "stacked_L": "1000-7107"
+    }
+   },
+   {
+    "model": "4260SHFFG",
+    "dia": 42,
+    "length": 60,
+    "conn": 6,
+    "area_sf": 20.4,
+    "flow_gpm": [
+     359,
+     408
+    ],
+    "rate_gpmsf": [
+     18,
+     20
+    ],
+    "ship_lb": 515,
+    "oper_lb": 5680,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 81.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 27,
+    "bed_in": 21.0,
+    "sand_lb": 2700,
+    "pn": {
+     "single_R": "1000-7106",
+     "single_L": "1000-7105",
+     "stacked_R": "1000-7110",
+     "stacked_L": "1000-7109"
+    }
+   },
+   {
+    "model": "4272SHFFG",
+    "dia": 42,
+    "length": 72,
+    "conn": 4,
+    "area_sf": 23.9,
+    "flow_gpm": [
+     120,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 560,
+    "oper_lb": 6685,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 93.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 32,
+    "bed_in": 21.0,
+    "sand_lb": 3200,
+    "pn": {
+     "single_R": "1000-7116",
+     "single_L": "1000-7115",
+     "stacked_R": "1000-7121",
+     "stacked_L": "1000-7120"
+    }
+   },
+   {
+    "model": "4272SHFFG",
+    "dia": 42,
+    "length": 72,
+    "conn": 6,
+    "area_sf": 23.9,
+    "flow_gpm": [
+     359,
+     478
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 560,
+    "oper_lb": 6685,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 93.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 32,
+    "bed_in": 21.0,
+    "sand_lb": 3200,
+    "pn": {
+     "single_R": "1000-7119",
+     "single_L": "1000-7118",
+     "stacked_R": "1000-7124",
+     "stacked_L": "1000-7122",
+     "stacked_RZ": "1004-2263",
+     "stacked_LZ": "1004-2262"
+    }
+   },
+   {
+    "model": "4284SHFFG",
+    "dia": 42,
+    "length": 84,
+    "conn": 6,
+    "area_sf": 27.4,
+    "flow_gpm": [
+     137,
+     548
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 610,
+    "oper_lb": 7690,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 105.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 37,
+    "bed_in": 21.0,
+    "sand_lb": 3700,
+    "pn": {
+     "single_R": "1000-7128",
+     "single_L": "1000-7127",
+     "stacked_R": "1000-7130",
+     "stacked_L": "1000-7129"
+    }
+   },
+   {
+    "model": "4296SHFFG",
+    "dia": 42,
+    "length": 96,
+    "conn": 6,
+    "area_sf": 30.9,
+    "flow_gpm": [
+     155,
+     618
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 660,
+    "oper_lb": 8700,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 117.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 42,
+    "bed_in": 21.0,
+    "sand_lb": 4200,
+    "pn": {
+     "single_R": "1000-7131",
+     "single_L": "1001-3985",
+     "stacked_R": "1000-7133",
+     "stacked_L": "1000-7132"
+    }
+   },
+   {
+    "model": "42108SHFFG",
+    "dia": 42,
+    "length": 108,
+    "conn": 6,
+    "area_sf": 34.6,
+    "flow_gpm": [
+     173,
+     692
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 710,
+    "oper_lb": 9700,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 129.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 46,
+    "bed_in": 21.0,
+    "sand_lb": 4600,
+    "pn": {
+     "single_R": "1000-7135",
+     "single_L": "1000-7134",
+     "stacked_R": "1000-7138",
+     "stacked_L": "1000-7136",
+     "stacked_RZ": "1000-7139",
+     "stacked_LZ": "1000-7137"
+    }
+   },
+   {
+    "model": "42120SHFFG",
+    "dia": 42,
+    "length": 120,
+    "conn": 6,
+    "area_sf": 38.1,
+    "flow_gpm": [
+     191,
+     762
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 760,
+    "oper_lb": 10710,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 141.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 51,
+    "bed_in": 21.0,
+    "sand_lb": 5100,
+    "pn": {
+     "single_R": "1000-7141",
+     "single_L": "1000-7140",
+     "stacked_R": "1000-7143",
+     "stacked_L": "1000-7142"
+    }
+   },
+   {
+    "model": "42132SHFFG",
+    "dia": 42,
+    "length": 132,
+    "conn": 6,
+    "area_sf": 41.6,
+    "flow_gpm": [
+     208,
+     832
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 805,
+    "oper_lb": 11720,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 153.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 56,
+    "bed_in": 21.0,
+    "sand_lb": 5600,
+    "pn": {
+     "single_R": "1000-7144",
+     "single_L": "1002-1563",
+     "stacked_R": "1000-7145",
+     "stacked_L": "1002-1564"
+    }
+   },
+   {
+    "model": "42144SHFFG",
+    "dia": 42,
+    "length": 144,
+    "conn": 6,
+    "area_sf": 45.1,
+    "flow_gpm": [
+     225,
+     900
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 855,
+    "oper_lb": 12720,
+    "A": 42.0,
+    "A1": 44.25,
+    "B": 165.75,
+    "C": 48.0,
+    "E": 13.75,
+    "G": 98.0,
+    "sand_cf": 61,
+    "bed_in": 21.0,
+    "sand_lb": 6100,
+    "pn": {
+     "single_R": "1002-1602",
+     "single_L": "1002-1603",
+     "stacked_R": "1002-1604",
+     "stacked_L": "1000-7146"
+    }
+   },
+   {
+    "model": "4848SHFFG",
+    "dia": 48,
+    "length": 48,
+    "conn": 4,
+    "area_sf": 19.7,
+    "flow_gpm": [
+     99,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     18
+    ],
+    "ship_lb": 550,
+    "oper_lb": 6310,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 70.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 30,
+    "bed_in": 24.0,
+    "sand_lb": 3000,
+    "pn": {
+     "single_R": "1000-7197",
+     "single_L": "1000-7195",
+     "stacked_R": "1000-7202",
+     "stacked_L": "1000-7200",
+     "single_LZ": "1000-7196"
+    }
+   },
+   {
+    "model": "4848SHFFG",
+    "dia": 48,
+    "length": 48,
+    "conn": 6,
+    "area_sf": 19.7,
+    "flow_gpm": [
+     359,
+     394
+    ],
+    "rate_gpmsf": [
+     19,
+     20
+    ],
+    "ship_lb": 550,
+    "oper_lb": 6310,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 70.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 30,
+    "bed_in": 24.0,
+    "sand_lb": 3000,
+    "pn": {
+     "single_R": "1001-3987",
+     "single_L": "1000-7199",
+     "stacked_R": "1001-9767",
+     "stacked_L": "1000-7204"
+    }
+   },
+   {
+    "model": "4860SHFFG",
+    "dia": 48,
+    "length": 60,
+    "conn": 4,
+    "area_sf": 23.7,
+    "flow_gpm": [
+     119,
+     358
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 605,
+    "oper_lb": 7520,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 82.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 36,
+    "bed_in": 24.0,
+    "sand_lb": 3600,
+    "pn": {
+     "single_R": "1000-7208",
+     "single_L": "1000-7207",
+     "stacked_R": "1000-7215",
+     "stacked_L": "1000-7213",
+     "stacked_RZ": "1001-6362"
+    }
+   },
+   {
+    "model": "4860SHFFG",
+    "dia": 48,
+    "length": 60,
+    "conn": 6,
+    "area_sf": 23.7,
+    "flow_gpm": [
+     359,
+     474
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 605,
+    "oper_lb": 7520,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 82.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 36,
+    "bed_in": 24.0,
+    "sand_lb": 3600,
+    "pn": {
+     "single_R": "1000-7211",
+     "single_L": "1000-7209",
+     "stacked_R": "1000-7218",
+     "stacked_L": "1000-7216",
+     "single_LZ": "1000-7210"
+    }
+   },
+   {
+    "model": "4872SHFFG",
+    "dia": 48,
+    "length": 72,
+    "conn": 6,
+    "area_sf": 27.7,
+    "flow_gpm": [
+     139,
+     554
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 660,
+    "oper_lb": 8915,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 94.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 42,
+    "bed_in": 24.0,
+    "sand_lb": 4200,
+    "pn": {
+     "single_R": "1001-6485",
+     "single_L": "1000-7221",
+     "stacked_R": "1000-7229",
+     "stacked_L": "1000-7227",
+     "single_RZ": "1000-7224",
+     "stacked_RZ": "1000-7230"
+    }
+   },
+   {
+    "model": "4884SHFFG",
+    "dia": 48,
+    "length": 84,
+    "conn": 6,
+    "area_sf": 31.7,
+    "flow_gpm": [
+     159,
+     634
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 715,
+    "oper_lb": 10120,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 106.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 49,
+    "bed_in": 24.0,
+    "sand_lb": 4900,
+    "pn": {
+     "single_R": "1000-7233",
+     "single_L": "1000-7232",
+     "stacked_R": "1000-7236",
+     "stacked_L": "1000-7234",
+     "single_RZ": "1002-3703",
+     "stacked_RZ": "1000-7237"
+    }
+   },
+   {
+    "model": "4896SHFFG",
+    "dia": 48,
+    "length": 96,
+    "conn": 6,
+    "area_sf": 35.7,
+    "flow_gpm": [
+     179,
+     714
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 770,
+    "oper_lb": 11320,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 118.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 55,
+    "bed_in": 24.0,
+    "sand_lb": 5500,
+    "pn": {
+     "single_R": "1000-7243",
+     "single_L": "1000-7242",
+     "stacked_R": "1000-7245",
+     "stacked_L": "1000-7244"
+    }
+   },
+   {
+    "model": "48108SHFFG",
+    "dia": 48,
+    "length": 108,
+    "conn": 6,
+    "area_sf": 39.7,
+    "flow_gpm": [
+     199,
+     794
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 825,
+    "oper_lb": 12530,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 130.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 61,
+    "bed_in": 24.0,
+    "sand_lb": 6100,
+    "pn": {
+     "single_R": "1000-7249",
+     "single_L": "1000-7248",
+     "stacked_R": "1000-7251",
+     "stacked_L": "1000-7250",
+     "single_RZ": "1003-3976",
+     "single_LZ": "1003-3977",
+     "stacked_RZ": "1001-3990"
+    }
+   },
+   {
+    "model": "48120SHFFG",
+    "dia": 48,
+    "length": 120,
+    "conn": 6,
+    "area_sf": 43.7,
+    "flow_gpm": [
+     219,
+     874
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 880,
+    "oper_lb": 13730,
+    "A": 48.0,
+    "A1": 50.25,
+    "B": 142.75,
+    "C": 54.0,
+    "E": 13.75,
+    "G": 110.0,
+    "sand_cf": 67,
+    "bed_in": 24.0,
+    "sand_lb": 6700,
+    "pn": {
+     "single_R": "1001-3418",
+     "single_L": "1000-7252",
+     "stacked_R": "1000-7255",
+     "stacked_L": "1000-7254"
+    }
+   },
+   {
+    "model": "6048SHFFG",
+    "dia": 60,
+    "length": 48,
+    "conn": 4,
+    "area_sf": 30.8,
+    "flow_gpm": [
+     154,
+     340
+    ],
+    "rate_gpmsf": [
+     5,
+     11
+    ],
+    "ship_lb": 841,
+    "oper_lb": 12460,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 84.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 55,
+    "bed_in": 30.0,
+    "sand_lb": 5500,
+    "pn": {}
+   },
+   {
+    "model": "6048SHFFG",
+    "dia": 60,
+    "length": 48,
+    "conn": 6,
+    "area_sf": 30.8,
+    "flow_gpm": [
+     341,
+     616
+    ],
+    "rate_gpmsf": [
+     12,
+     20
+    ],
+    "ship_lb": 841,
+    "oper_lb": 12460,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 84.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 55,
+    "bed_in": 30.0,
+    "sand_lb": 5500,
+    "pn": {
+     "single_R": "1000-7377",
+     "single_L": "1000-7375",
+     "stacked_R": "1000-7380",
+     "stacked_L": "1001-3420",
+     "single_RZ": "1000-7378",
+     "stacked_RZ": "1000-7381",
+     "stacked_LZ": "1000-7379"
+    }
+   },
+   {
+    "model": "6060SHFFG",
+    "dia": 60,
+    "length": 60,
+    "conn": 6,
+    "area_sf": 35.8,
+    "flow_gpm": [
+     179,
+     716
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 918,
+    "oper_lb": 14473,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 96.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 65,
+    "bed_in": 30.0,
+    "sand_lb": 6500,
+    "pn": {
+     "single_R": "1000-7383",
+     "single_L": "1000-7382",
+     "stacked_R": "1001-8811",
+     "stacked_L": "1000-7384"
+    }
+   },
+   {
+    "model": "6072SHFFG",
+    "dia": 60,
+    "length": 72,
+    "conn": 6,
+    "area_sf": 40.8,
+    "flow_gpm": [
+     204,
+     816
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 1010,
+    "oper_lb": 16501,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 108.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 74,
+    "bed_in": 30.0,
+    "sand_lb": 7400,
+    "pn": {
+     "single_R": "1000-7390",
+     "single_L": "1000-7389",
+     "stacked_R": "1000-7393",
+     "stacked_L": "1000-7391"
+    }
+   },
+   {
+    "model": "6084SHFFG",
+    "dia": 60,
+    "length": 84,
+    "conn": 6,
+    "area_sf": 45.8,
+    "flow_gpm": [
+     229,
+     779
+    ],
+    "rate_gpmsf": [
+     5,
+     17
+    ],
+    "ship_lb": 1082,
+    "oper_lb": 18510,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 120.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 84,
+    "bed_in": 30.0,
+    "sand_lb": 8400,
+    "pn": {
+     "single_R": "1000-7398",
+     "single_L": "1000-7397",
+     "stacked_R": "1000-7400",
+     "stacked_L": "1000-7399",
+     "stacked_RZ": "1001-5414",
+     "stacked_LZ": "1001-5413"
+    }
+   },
+   {
+    "model": "6084SHFFG",
+    "dia": 60,
+    "length": 84,
+    "conn": 8,
+    "area_sf": 45.8,
+    "flow_gpm": [
+     780,
+     916
+    ],
+    "rate_gpmsf": [
+     18,
+     20
+    ],
+    "ship_lb": 1082,
+    "oper_lb": 18510,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 120.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 84,
+    "bed_in": 30.0,
+    "sand_lb": 8400,
+    "pn": {
+     "single_R": "1002-4568",
+     "single_L": "1002-4011"
+    }
+   },
+   {
+    "model": "6096SHFFG",
+    "dia": 60,
+    "length": 96,
+    "conn": 6,
+    "area_sf": 50.8,
+    "flow_gpm": [
+     254,
+     762
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 1154,
+    "oper_lb": 20518,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 132.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 94,
+    "bed_in": 30.0,
+    "sand_lb": 9400,
+    "pn": {
+     "single_R": "1000-7403",
+     "single_L": "1000-7401",
+     "stacked_R": "1000-7407",
+     "stacked_L": "1000-7406",
+     "single_RZ": "1000-7404",
+     "stacked_RZ": "1000-7408"
+    }
+   },
+   {
+    "model": "6096SHFFG",
+    "dia": 60,
+    "length": 96,
+    "conn": 8,
+    "area_sf": 50.8,
+    "flow_gpm": [
+     763,
+     1016
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 1154,
+    "oper_lb": 20518,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 132.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 94,
+    "bed_in": 30.0,
+    "sand_lb": 9400,
+    "pn": {
+     "single_L": "1000-7405",
+     "stacked_R": "1001-3993",
+     "stacked_L": "1000-7409"
+    }
+   },
+   {
+    "model": "60108SHFFG",
+    "dia": 60,
+    "length": 108,
+    "conn": 6,
+    "area_sf": 55.8,
+    "flow_gpm": [
+     279,
+     813
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "ship_lb": 1216,
+    "oper_lb": 22417,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 144.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 104,
+    "bed_in": 30.0,
+    "sand_lb": 10400,
+    "pn": {
+     "single_R": "1001-5745",
+     "single_L": "1001-5746",
+     "stacked_R": "1002-1362",
+     "stacked_L": "1002-1363"
+    }
+   },
+   {
+    "model": "60108SHFFG",
+    "dia": 60,
+    "length": 108,
+    "conn": 8,
+    "area_sf": 55.8,
+    "flow_gpm": [
+     814,
+     1116
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "ship_lb": 1216,
+    "oper_lb": 22417,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 144.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 104,
+    "bed_in": 30.0,
+    "sand_lb": 10400,
+    "pn": {
+     "single_R": "1002-1606",
+     "single_L": "1002-1607",
+     "stacked_R": "1002-1608",
+     "stacked_L": "1002-1609"
+    }
+   },
+   {
+    "model": "60120SHFFG",
+    "dia": 60,
+    "length": 120,
+    "conn": 6,
+    "area_sf": 60.8,
+    "flow_gpm": [
+     304,
+     790
+    ],
+    "rate_gpmsf": [
+     5,
+     13
+    ],
+    "ship_lb": 1282,
+    "oper_lb": 24519,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 156.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 114,
+    "bed_in": 30.0,
+    "sand_lb": 11400,
+    "pn": {
+     "single_R": "1000-7416",
+     "single_L": "1000-7415"
+    }
+   },
+   {
+    "model": "60120SHFFG",
+    "dia": 60,
+    "length": 120,
+    "conn": 8,
+    "area_sf": 60.8,
+    "flow_gpm": [
+     791,
+     1216
+    ],
+    "rate_gpmsf": [
+     14,
+     20
+    ],
+    "ship_lb": 1282,
+    "oper_lb": 24519,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 156.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 114,
+    "bed_in": 30.0,
+    "sand_lb": 11400,
+    "pn": {
+     "single_R": "1000-7418",
+     "single_L": "1000-7417",
+     "stacked_R": "1002-1610",
+     "stacked_L": "1002-1612"
+    }
+   },
+   {
+    "model": "60132SHFFG",
+    "dia": 60,
+    "length": 132,
+    "conn": 6,
+    "area_sf": 65.8,
+    "flow_gpm": [
+     329,
+     790
+    ],
+    "rate_gpmsf": [
+     5,
+     12
+    ],
+    "ship_lb": 1355,
+    "oper_lb": 26335,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 168.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 123,
+    "bed_in": 30.0,
+    "sand_lb": 12300,
+    "pn": {}
+   },
+   {
+    "model": "60132SHFFG",
+    "dia": 60,
+    "length": 132,
+    "conn": 8,
+    "area_sf": 65.8,
+    "flow_gpm": [
+     791,
+     1316
+    ],
+    "rate_gpmsf": [
+     13,
+     20
+    ],
+    "ship_lb": 1355,
+    "oper_lb": 26335,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 168.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 123,
+    "bed_in": 30.0,
+    "sand_lb": 12300,
+    "pn": {
+     "single_R": "1001-5608",
+     "single_L": "1001-3422",
+     "stacked_R": "1000-7420",
+     "stacked_L": "1000-7419"
+    }
+   },
+   {
+    "model": "60144SHFFG",
+    "dia": 60,
+    "length": 144,
+    "conn": 8,
+    "area_sf": 70.8,
+    "flow_gpm": [
+     354,
+     1416
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 1432,
+    "oper_lb": 28348,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 180.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 133,
+    "bed_in": 30.0,
+    "sand_lb": 13300,
+    "pn": {
+     "single_R": "1000-7421",
+     "stacked_R": "1001-9555"
+    }
+   },
+   {
+    "model": "60156SHFFG",
+    "dia": 60,
+    "length": 156,
+    "conn": 8,
+    "area_sf": 75.8,
+    "flow_gpm": [
+     379,
+     1516
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 1504,
+    "oper_lb": 30357,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 192.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 143,
+    "bed_in": 30.0,
+    "sand_lb": 14300,
+    "pn": {
+     "single_R": "1000-7422",
+     "stacked_L": "1001-5854"
+    }
+   },
+   {
+    "model": "60168SHFFG",
+    "dia": 60,
+    "length": 168,
+    "conn": 8,
+    "area_sf": 80.8,
+    "flow_gpm": [
+     404,
+     1616
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "ship_lb": 1571,
+    "oper_lb": 32167,
+    "A": 60.0,
+    "A1": 63.5,
+    "B": 204.75,
+    "C": 67.0,
+    "E": 15.75,
+    "G": 134.0,
+    "sand_cf": 153,
+    "bed_in": 30.0,
+    "sand_lb": 15300,
+    "pn": {
+     "single_L": "1000-7423",
+     "single_RZ": "1003-4641",
+     "single_LZ": "1003-4640"
+    }
+   }
+  ],
+  "fp_single": {
+   "3": {
+    "J": 15.25,
+    "K": 19,
+    "L": 5.1875
+   },
+   "4": {
+    "J": 17,
+    "K": 22,
+    "L": 6.125
+   },
+   "6": {
+    "J": 20,
+    "K": 28,
+    "L": 8.125
+   },
+   "8": {
+    "J": 24,
+    "K": 37,
+    "L": 10.375
+   }
+  },
+  "fp_dual": {
+   "SxS": {
+    "4x3": [
+     14,
+     9.5,
+     33
+    ],
+    "6x4": [
+     18,
+     11,
+     38
+    ],
+    "6x6": [
+     19,
+     16,
+     45
+    ],
+    "8x6": [
+     22,
+     16,
+     48
+    ],
+    "10x6": [
+     28,
+     16,
+     54
+    ],
+    "10x8": [
+     28,
+     16,
+     60
+    ]
+   },
+   "S": {
+    "4x3": [
+     24,
+     21,
+     8
+    ],
+    "6x4": [
+     31,
+     26,
+     13
+    ],
+    "6x6": [
+     41,
+     30,
+     13
+    ],
+    "8x6": [
+     41,
+     33,
+     17
+    ],
+    "10x6": [
+     41,
+     39,
+     21
+    ],
+    "10x8": [
+     54,
+     42,
+     21
+    ]
+   }
+  },
+  "orient": {
+   "1SHF": 6,
+   "2SHF": 16,
+   "2SHFS": 48,
+   "4SHFS": 36
+  }
+ },
+ "srf": {
+  "models": [
+   {
+    "model": "36SRF-3",
+    "dia": 36,
+    "conn": 3,
+    "area_sf": 7.07,
+    "flow_gpm": [
+     36,
+     141
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 36.0,
+    "A1": 36.375,
+    "B": 9.0,
+    "C": 23.125,
+    "D": 16.25,
+    "E": 51.25,
+    "F": 73.375,
+    "G": 79.25,
+    "head_t": 0.1875,
+    "shell_t": 0.1875,
+    "ship_lb": 520,
+    "oper_lb": 4173,
+    "gravel_cf": 6,
+    "sand_cf": 13,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7034"
+    }
+   },
+   {
+    "model": "42SRF-4",
+    "dia": 42,
+    "conn": 4,
+    "area_sf": 9.62,
+    "flow_gpm": [
+     48,
+     192
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 42.0,
+    "A1": 42.375,
+    "B": 10.0,
+    "C": 25.0,
+    "D": 16.125,
+    "E": 51.875,
+    "F": 74.0,
+    "G": 79.875,
+    "head_t": 0.1875,
+    "shell_t": 0.1875,
+    "ship_lb": 600,
+    "oper_lb": 5738,
+    "gravel_cf": 8,
+    "sand_cf": 18,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7159"
+    }
+   },
+   {
+    "model": "48SRF-3",
+    "dia": 48,
+    "conn": 3,
+    "area_sf": 12.6,
+    "flow_gpm": [
+     63,
+     189
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 48.0,
+    "A1": 48.375,
+    "B": 9.0,
+    "C": 23.125,
+    "D": 16.875,
+    "E": 53.375,
+    "F": 75.5,
+    "G": 82.375,
+    "head_t": 0.1875,
+    "shell_t": 0.1875,
+    "ship_lb": 700,
+    "oper_lb": 7421,
+    "gravel_cf": 12,
+    "sand_cf": 23,
+    "bed_in": 22
+   },
+   {
+    "model": "48SRF-4",
+    "dia": 48,
+    "conn": 4,
+    "area_sf": 12.6,
+    "flow_gpm": [
+     190,
+     252
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 48.0,
+    "A1": 48.375,
+    "B": 10.0,
+    "C": 25.0,
+    "D": 17.875,
+    "E": 51.5,
+    "F": 76.5,
+    "G": 83.25,
+    "head_t": 0.1875,
+    "shell_t": 0.1875,
+    "ship_lb": 730,
+    "oper_lb": 7421,
+    "gravel_cf": 16,
+    "sand_cf": 23,
+    "bed_in": 22,
+    "pn": {
+     "fiberglass": "1000-7273",
+     "fiberglass_Z": "1000-7274",
+     "steel": "1000-7272"
+    }
+   },
+   {
+    "model": "54SRF-4",
+    "dia": 54,
+    "conn": 4,
+    "area_sf": 15.9,
+    "flow_gpm": [
+     80,
+     318
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 54.0,
+    "A1": 54.375,
+    "B": 10.0,
+    "C": 25.0,
+    "D": 18.625,
+    "E": 53.5,
+    "F": 78.5,
+    "G": 85.25,
+    "head_t": 0.25,
+    "shell_t": 0.1875,
+    "ship_lb": 940,
+    "oper_lb": 9496,
+    "gravel_cf": 20,
+    "sand_cf": 29,
+    "bed_in": 22,
+    "pn": {
+     "fiberglass": "1000-7371",
+     "steel": "1000-7370"
+    }
+   },
+   {
+    "model": "60SRF-4",
+    "dia": 60,
+    "conn": 4,
+    "area_sf": 19.6,
+    "flow_gpm": [
+     98,
+     294
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 60.0,
+    "A1": 60.375,
+    "B": 10.0,
+    "C": 25.0,
+    "D": 18.625,
+    "E": 54.125,
+    "F": 79.125,
+    "G": 85.875,
+    "head_t": 0.25,
+    "shell_t": 0.1875,
+    "ship_lb": 1080,
+    "oper_lb": 11725,
+    "gravel_cf": 20,
+    "sand_cf": 36,
+    "bed_in": 22,
+    "pn": {
+     "fiberglass_Z": "1000-7451",
+     "steel": "1000-7449"
+    }
+   },
+   {
+    "model": "60SRF-6",
+    "dia": 60,
+    "conn": 6,
+    "area_sf": 19.6,
+    "flow_gpm": [
+     295,
+     392
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 60.0,
+    "A1": 60.375,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 18.625,
+    "E": 54.125,
+    "F": 79.125,
+    "G": 85.875,
+    "head_t": 0.25,
+    "shell_t": 0.1875,
+    "ship_lb": 1120,
+    "oper_lb": 11725,
+    "gravel_cf": 22,
+    "sand_cf": 36,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7450"
+    }
+   },
+   {
+    "model": "66SRF-4",
+    "dia": 66,
+    "conn": 4,
+    "area_sf": 23.8,
+    "flow_gpm": [
+     119,
+     357
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 66.0,
+    "A1": 66.5,
+    "B": 10.0,
+    "C": 25.0,
+    "D": 19.375,
+    "E": 55.625,
+    "F": 80.625,
+    "G": 87.375,
+    "head_t": 0.25,
+    "shell_t": 0.25,
+    "ship_lb": 1400,
+    "oper_lb": 14922,
+    "gravel_cf": 26,
+    "sand_cf": 44,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7543"
+    }
+   },
+   {
+    "model": "66SRF-6",
+    "dia": 66,
+    "conn": 6,
+    "area_sf": 23.8,
+    "flow_gpm": [
+     358,
+     476
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 66.0,
+    "A1": 66.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 20.375,
+    "E": 57.5,
+    "F": 85.625,
+    "G": 93.375,
+    "head_t": 0.25,
+    "shell_t": 0.25,
+    "ship_lb": 1440,
+    "oper_lb": 14922,
+    "gravel_cf": 27,
+    "sand_cf": 44,
+    "bed_in": 22
+   },
+   {
+    "model": "72SRF-6",
+    "dia": 72,
+    "conn": 6,
+    "area_sf": 28.3,
+    "flow_gpm": [
+     142,
+     566
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 72.0,
+    "A1": 72.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 21.25,
+    "E": 58.125,
+    "F": 87.25,
+    "G": 95.0,
+    "head_t": 0.25,
+    "shell_t": 0.25,
+    "ship_lb": 1620,
+    "oper_lb": 17857,
+    "gravel_cf": 34,
+    "sand_cf": 52,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7568"
+    }
+   },
+   {
+    "model": "78SRF-6",
+    "dia": 78,
+    "conn": 6,
+    "area_sf": 33.2,
+    "flow_gpm": [
+     166,
+     664
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 78.0,
+    "A1": 78.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 22.125,
+    "E": 60.875,
+    "F": 89.0,
+    "G": 96.75,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 1980,
+    "oper_lb": 21182,
+    "gravel_cf": 41,
+    "sand_cf": 61,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7575"
+    }
+   },
+   {
+    "model": "84SRF-6",
+    "dia": 84,
+    "conn": 6,
+    "area_sf": 38.5,
+    "flow_gpm": [
+     193,
+     770
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 84.0,
+    "A1": 84.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 23.0,
+    "E": 62.5,
+    "F": 90.625,
+    "G": 98.375,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 2200,
+    "oper_lb": 24705,
+    "gravel_cf": 49,
+    "sand_cf": 71,
+    "bed_in": 22
+   },
+   {
+    "model": "90SRF-6",
+    "dia": 90,
+    "conn": 6,
+    "area_sf": 44.2,
+    "flow_gpm": [
+     221,
+     663
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 90.0,
+    "A1": 90.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 23.75,
+    "E": 64.125,
+    "F": 92.25,
+    "G": 100.0,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 2430,
+    "oper_lb": 28423,
+    "gravel_cf": 57,
+    "sand_cf": 81,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-7665"
+    }
+   },
+   {
+    "model": "90SRF-8",
+    "dia": 90,
+    "conn": 8,
+    "area_sf": 44.2,
+    "flow_gpm": [
+     664,
+     884
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 90.0,
+    "A1": 90.5,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 24.75,
+    "E": 64.125,
+    "F": 96.25,
+    "G": 106.0,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 2480,
+    "oper_lb": 28423,
+    "gravel_cf": 61,
+    "sand_cf": 81,
+    "bed_in": 22
+   },
+   {
+    "model": "96SRF-6",
+    "dia": 96,
+    "conn": 6,
+    "area_sf": 50.3,
+    "flow_gpm": [
+     252,
+     755
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 96.0,
+    "A1": 96.5,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 24.625,
+    "E": 65.75,
+    "F": 93.875,
+    "G": 101.625,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 2690,
+    "oper_lb": 32435,
+    "gravel_cf": 66,
+    "sand_cf": 92,
+    "bed_in": 22
+   },
+   {
+    "model": "96SRF-8",
+    "dia": 96,
+    "conn": 8,
+    "area_sf": 50.3,
+    "flow_gpm": [
+     756,
+     1006
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 96.0,
+    "A1": 96.5,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 25.625,
+    "E": 61.875,
+    "F": 98.5,
+    "G": 108.25,
+    "head_t": 0.3125,
+    "shell_t": 0.25,
+    "ship_lb": 2740,
+    "oper_lb": 32435,
+    "gravel_cf": 70,
+    "sand_cf": 92,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1001-5311"
+    }
+   },
+   {
+    "model": "102SRF-6",
+    "dia": 102,
+    "conn": 6,
+    "area_sf": 56.8,
+    "flow_gpm": [
+     284,
+     851
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 102.0,
+    "A1": 102.625,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 25.5,
+    "E": 67.625,
+    "F": 95.75,
+    "G": 103.5,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 3520,
+    "oper_lb": 38020,
+    "gravel_cf": 77,
+    "sand_cf": 104,
+    "bed_in": 22
+   },
+   {
+    "model": "102SRF-8",
+    "dia": 102,
+    "conn": 8,
+    "area_sf": 56.8,
+    "flow_gpm": [
+     852,
+     1136
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 102.0,
+    "A1": 102.625,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 26.5,
+    "E": 63.25,
+    "F": 99.75,
+    "G": 109.5,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 3570,
+    "oper_lb": 38020,
+    "gravel_cf": 82,
+    "sand_cf": 104,
+    "bed_in": 22,
+    "pn": {
+     "steel": "1000-5409"
+    }
+   },
+   {
+    "model": "108SRF-6",
+    "dia": 108,
+    "conn": 6,
+    "area_sf": 63.6,
+    "flow_gpm": [
+     318,
+     954
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "A": 108.0,
+    "A1": 108.625,
+    "B": 15.0,
+    "C": 28.125,
+    "D": 26.25,
+    "E": 66.125,
+    "F": 97.25,
+    "G": 105.0,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 3850,
+    "oper_lb": 42949,
+    "gravel_cf": 89,
+    "sand_cf": 117,
+    "bed_in": 22
+   },
+   {
+    "model": "108SRF-8",
+    "dia": 108,
+    "conn": 8,
+    "area_sf": 63.6,
+    "flow_gpm": [
+     955,
+     1272
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "A": 108.0,
+    "A1": 108.625,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 27.25,
+    "E": 61.75,
+    "F": 101.25,
+    "G": 111.0,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 3910,
+    "oper_lb": 42949,
+    "gravel_cf": 95,
+    "sand_cf": 117,
+    "bed_in": 22
+   },
+   {
+    "model": "114SRF-8",
+    "dia": 114,
+    "conn": 8,
+    "area_sf": 70.9,
+    "flow_gpm": [
+     355,
+     1418
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 114.0,
+    "A1": 114.625,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 27.125,
+    "E": 70.75,
+    "F": 102.75,
+    "G": 112.625,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 4280,
+    "oper_lb": 48041,
+    "gravel_cf": 107,
+    "sand_cf": 130,
+    "bed_in": 22
+   },
+   {
+    "model": "120SRF-8",
+    "dia": 120,
+    "conn": 8,
+    "area_sf": 78.5,
+    "flow_gpm": [
+     393,
+     1570
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "A": 120.0,
+    "A1": 120.625,
+    "B": 19.0,
+    "C": 36.5,
+    "D": 28.875,
+    "E": 73.375,
+    "F": 105.375,
+    "G": 115.125,
+    "head_t": 0.375,
+    "shell_t": 0.3125,
+    "ship_lb": 4650,
+    "oper_lb": 53836,
+    "gravel_cf": 123,
+    "sand_cf": 144,
+    "bed_in": 22,
+    "pn": {
+     "fiberglass": "1002-5231"
+    }
+   }
+  ],
+  "media_only": [
+   {
+    "model": "114SRF-6",
+    "gravel_cf": 101,
+    "sand_cf": 130
+   },
+   {
+    "model": "120SRF-6",
+    "gravel_cf": 116,
+    "sand_cf": 144
+   }
+  ],
+  "fg_sizes": {
+   "36": [
+    3
+   ],
+   "42": [
+    3,
+    4
+   ],
+   "48": [
+    4,
+    6
+   ],
+   "54": [
+    4
+   ],
+   "60": [
+    3,
+    4,
+    6
+   ],
+   "66": [
+    4,
+    6
+   ],
+   "72": [
+    6
+   ],
+   "78": [
+    6
+   ],
+   "84": [
+    6
+   ],
+   "90": [
+    6
+   ],
+   "96": [
+    8
+   ],
+   "102": [
+    8
+   ],
+   "108": [
+    8
+   ],
+   "114": [
+    8
+   ],
+   "120": [
+    8
+   ]
+  }
+ },
+ "drf": {
+  "models": [
+   {
+    "model": "36DRF-3",
+    "dia": 36,
+    "fp": "3x3",
+    "area_sf": 14.1,
+    "flow_gpm": [
+     71,
+     212
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 88.5,
+    "L": 32.125,
+    "ship_lb": 1040,
+    "oper_lb": 8346
+   },
+   {
+    "model": "36DRF-4",
+    "dia": 36,
+    "fp": "4x3",
+    "area_sf": 14.1,
+    "flow_gpm": [
+     213,
+     282
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 90.5,
+    "L": 33.125,
+    "ship_lb": 1040,
+    "oper_lb": 8346
+   },
+   {
+    "model": "42DRF-4",
+    "dia": 42,
+    "fp": "4x3",
+    "area_sf": 19.2,
+    "flow_gpm": [
+     96,
+     288
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 102.5,
+    "L": 33.125,
+    "ship_lb": 1200,
+    "oper_lb": 11476
+   },
+   {
+    "model": "42DRF-6",
+    "dia": 42,
+    "fp": "6x3",
+    "area_sf": 19.2,
+    "flow_gpm": [
+     289,
+     384
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 112.5,
+    "L": 40.0,
+    "ship_lb": 1200,
+    "oper_lb": 11476
+   },
+   {
+    "model": "48DRF-4",
+    "dia": 48,
+    "fp": "4x3",
+    "area_sf": 25.1,
+    "flow_gpm": [
+     125,
+     377
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 114.5,
+    "L": 33.125,
+    "ship_lb": 1400,
+    "oper_lb": 14842
+   },
+   {
+    "model": "48DRF-6",
+    "dia": 48,
+    "fp": "6x4",
+    "area_sf": 25.2,
+    "flow_gpm": [
+     378,
+     502
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 124.5,
+    "L": 40.0,
+    "ship_lb": 1400,
+    "oper_lb": 14842
+   },
+   {
+    "model": "54DRF-6",
+    "dia": 54,
+    "fp": "6x4",
+    "area_sf": 31.8,
+    "flow_gpm": [
+     159,
+     636
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "K": 136.5,
+    "L": 40.0,
+    "ship_lb": 1880,
+    "oper_lb": 18992
+   },
+   {
+    "model": "60DRF-6",
+    "dia": 60,
+    "fp": "6x4",
+    "area_sf": 39.3,
+    "flow_gpm": [
+     196,
+     590
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 148.5,
+    "L": 40.0,
+    "ship_lb": 2160,
+    "oper_lb": 23450
+   },
+   {
+    "model": "60DRF-6",
+    "dia": 60,
+    "fp": "6x6",
+    "area_sf": 39.3,
+    "flow_gpm": [
+     591,
+     786
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 148.5,
+    "L": 40.0,
+    "ship_lb": 2160,
+    "oper_lb": 23450
+   },
+   {
+    "model": "66DRF-6",
+    "dia": 66,
+    "fp": "6x4",
+    "area_sf": 47.5,
+    "flow_gpm": [
+     237,
+     713
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 160.625,
+    "L": 40.0,
+    "ship_lb": 2800,
+    "oper_lb": 29844
+   },
+   {
+    "model": "66DRF-8",
+    "dia": 66,
+    "fp": "8x6",
+    "area_sf": 47.5,
+    "flow_gpm": [
+     714,
+     950
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 168.625,
+    "L": 55.5,
+    "ship_lb": 2800,
+    "oper_lb": 29844
+   },
+   {
+    "model": "72DRF-6",
+    "dia": 72,
+    "fp": "6x6",
+    "area_sf": 56.5,
+    "flow_gpm": [
+     282,
+     848
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 180.625,
+    "L": 40.0,
+    "ship_lb": 3240,
+    "oper_lb": 35714
+   },
+   {
+    "model": "72DRF-8",
+    "dia": 72,
+    "fp": "8x6",
+    "area_sf": 56.5,
+    "flow_gpm": [
+     849,
+     1130
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 180.625,
+    "L": 55.5,
+    "ship_lb": 3240,
+    "oper_lb": 35714
+   },
+   {
+    "model": "78DRF-8",
+    "dia": 78,
+    "fp": "8x6",
+    "area_sf": 66.4,
+    "flow_gpm": [
+     332,
+     1328
+    ],
+    "rate_gpmsf": [
+     5,
+     20
+    ],
+    "K": 192.625,
+    "L": 55.5,
+    "ship_lb": 3960,
+    "oper_lb": 42364
+   },
+   {
+    "model": "84DRF-8",
+    "dia": 84,
+    "fp": "8x6",
+    "area_sf": 77.0,
+    "flow_gpm": [
+     385,
+     1155
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 204.625,
+    "L": 55.5,
+    "ship_lb": 4400,
+    "oper_lb": 49410
+   },
+   {
+    "model": "84DRF-10",
+    "dia": 84,
+    "fp": "10x6",
+    "area_sf": 77.0,
+    "flow_gpm": [
+     1156,
+     1540
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 210.625,
+    "L": 39.9375,
+    "ship_lb": 4400,
+    "oper_lb": 49410
+   },
+   {
+    "model": "90DRF-8",
+    "dia": 90,
+    "fp": "8x6",
+    "area_sf": 88.4,
+    "flow_gpm": [
+     442,
+     1326
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 216.625,
+    "L": 55.5,
+    "ship_lb": 4860,
+    "oper_lb": 56846
+   },
+   {
+    "model": "90DRF-10",
+    "dia": 90,
+    "fp": "10x6",
+    "area_sf": 88.4,
+    "flow_gpm": [
+     1327,
+     1768
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 222.625,
+    "L": 39.9375,
+    "ship_lb": 4860,
+    "oper_lb": 56846
+   },
+   {
+    "model": "96DRF-8",
+    "dia": 96,
+    "fp": "8x6",
+    "area_sf": 100.5,
+    "flow_gpm": [
+     502,
+     1508
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 228.625,
+    "L": 55.5,
+    "ship_lb": 5380,
+    "oper_lb": 64870
+   },
+   {
+    "model": "96DRF-10",
+    "dia": 96,
+    "fp": "10x8",
+    "area_sf": 100.5,
+    "flow_gpm": [
+     1509,
+     2010
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 234.625,
+    "L": 39.9375,
+    "ship_lb": 5480,
+    "oper_lb": 64870
+   },
+   {
+    "model": "102DRF-8",
+    "dia": 102,
+    "fp": "8x6",
+    "area_sf": 113.6,
+    "flow_gpm": [
+     568,
+     1704
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 240.75,
+    "L": 55.5,
+    "ship_lb": 7040,
+    "oper_lb": 76040
+   },
+   {
+    "model": "102DRF-10",
+    "dia": 102,
+    "fp": "10x8",
+    "area_sf": 113.6,
+    "flow_gpm": [
+     1705,
+     2272
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 246.75,
+    "L": 39.9375,
+    "ship_lb": 7140,
+    "oper_lb": 76040
+   },
+   {
+    "model": "108DRF-10",
+    "dia": 108,
+    "fp": "10x8",
+    "area_sf": 127.2,
+    "flow_gpm": [
+     636,
+     1908
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 258.75,
+    "L": 39.9375,
+    "ship_lb": 7820,
+    "oper_lb": 85898
+   },
+   {
+    "model": "108DRF-12",
+    "dia": 108,
+    "fp": "12x8",
+    "area_sf": 127.2,
+    "flow_gpm": [
+     1909,
+     2544
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 262.75,
+    "L": 47.6875,
+    "ship_lb": 7820,
+    "oper_lb": 85898
+   },
+   {
+    "model": "114DRF-10",
+    "dia": 114,
+    "fp": "10x8",
+    "area_sf": 141.8,
+    "flow_gpm": [
+     709,
+     2128
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 270.75,
+    "L": 39.9375,
+    "ship_lb": 8560,
+    "oper_lb": 96082
+   },
+   {
+    "model": "114DRF-12",
+    "dia": 114,
+    "fp": "12x8",
+    "area_sf": 141.8,
+    "flow_gpm": [
+     2129,
+     2836
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 274.75,
+    "L": 47.6875,
+    "ship_lb": 8560,
+    "oper_lb": 96082
+   },
+   {
+    "model": "120DRF-10",
+    "dia": 120,
+    "fp": "10x8",
+    "area_sf": 157.0,
+    "flow_gpm": [
+     785,
+     2355
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "K": 282.75,
+    "L": 39.9375,
+    "ship_lb": 9300,
+    "oper_lb": 107672
+   },
+   {
+    "model": "120DRF-12",
+    "dia": 120,
+    "fp": "12x8",
+    "area_sf": 157.0,
+    "flow_gpm": [
+     2356,
+     3140
+    ],
+    "rate_gpmsf": [
+     16,
+     20
+    ],
+    "K": 286.75,
+    "L": 47.6875,
+    "ship_lb": 9300,
+    "oper_lb": 107672
+   }
+  ]
+ },
+ "ccfg": {
+  "models": [
+   {
+    "model": "36CCFG-3",
+    "dia": 36,
+    "conn": 3,
+    "area_sf": 6.5,
+    "flow_gpm": [
+     33,
+     98
+    ],
+    "rate_gpmsf": [
+     5,
+     15
+    ],
+    "max_flow": 98,
+    "A": null,
+    "B": null,
+    "C": 42.6875,
+    "D": null,
+    "E": 11.9375,
+    "F": 11.875,
+    "ship_lb": null,
+    "oper_lb": null,
+    "gravel_cf": 2,
+    "sand_cf": 6,
+    "bed_in": 11,
+    "access": "lid",
+    "bw_gpm": [
+     98,
+     130
+    ],
+    "note": "From drawing 36CCFG-3MAN (FP-1). NSF PIF lists 6.9 sq ft and a 16 in bed; tech data sheet ML-4/29/26 lists 42 and 48 only.",
+    "pn": {
+     "tank_only": "1000-8277"
+    }
+   },
+   {
+    "model": "42CCFG-3",
+    "dia": 42,
+    "conn": 3,
+    "area_sf": 9.6,
+    "flow_gpm": [
+     48,
+     115
+    ],
+    "rate_gpmsf": [
+     5,
+     12
+    ],
+    "max_flow": 115,
+    "A": 64,
+    "B": 43,
+    "C": 44,
+    "D": 38,
+    "E": 13.75,
+    "F": 13.75,
+    "ship_lb": 111,
+    "oper_lb": 2170,
+    "gravel_cf": 3,
+    "sand_cf": 13,
+    "bed_in": 16,
+    "access": "6x9 access port",
+    "pn": {
+     "complete_man": "1000-7152",
+     "complete_auto": "1002-8170",
+     "tank_internals": "1000-8278",
+     "tank_only": "1000-8279"
+    }
+   },
+   {
+    "model": "48CCFG-3",
+    "dia": 48,
+    "conn": 3,
+    "area_sf": 11.8,
+    "flow_gpm": [
+     59,
+     142
+    ],
+    "rate_gpmsf": [
+     5,
+     12
+    ],
+    "max_flow": 142,
+    "A": 70,
+    "B": 49,
+    "C": 57.75,
+    "D": 47.25,
+    "E": 14.125,
+    "F": 21.625,
+    "ship_lb": 189,
+    "oper_lb": 3410,
+    "gravel_cf": 3,
+    "sand_cf": 16,
+    "bed_in": 17,
+    "access": "14x18 manway",
+    "pn": {
+     "complete_man": "1000-7263",
+     "complete_auto": "1000-7262",
+     "tank_internals": "1000-8280",
+     "tank_only": "1000-8281"
+    }
+   }
+  ],
+  "fp_dual": {
+   "3x3": [
+    7,
+    7
+   ],
+   "4x3": [
+    8,
+    8
+   ],
+   "6x3": [
+    13,
+    13
+   ]
+  }
+ },
+ "fp_parts": [
+  {
+   "part": "1000-7039",
+   "op": "MAN",
+   "tanks": 1,
+   "arr": "CCFG",
+   "size": "3",
+   "desc": "FACE PIPING CCFG-3 W/MAN VALVE"
+  },
+  {
+   "part": "1000-7040",
+   "op": "AUTO",
+   "tanks": 1,
+   "arr": "CCFG",
+   "size": "3",
+   "desc": "FACE PIPING CCFG3 W/AUTO VALVE"
+  },
+  {
+   "part": "1000-8158",
+   "op": "3WE",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "3",
+   "desc": "FACEPIPE 3WE 1SHF 3 FP1SHF3WE03"
+  },
+  {
+   "part": "1000-8159",
+   "op": "3WE",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "4",
+   "desc": "FACEPIPE 3WE 1SHF 4 FP1SHF3WE04"
+  },
+  {
+   "part": "1000-8160",
+   "op": "3WE",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "6",
+   "desc": "FACEPIPE 3WE 1SHF 6 FP1SHF3WE06"
+  },
+  {
+   "part": "1000-8161",
+   "op": "3WG",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "6",
+   "desc": "FACEPIPE 3WG 1SHF 6 FP1SHF3WG06"
+  },
+  {
+   "part": "1000-8162",
+   "op": "3WL",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "3",
+   "desc": "FACEPIPE 3WL 1SHF 3 FP1SHF3WL03"
+  },
+  {
+   "part": "1000-8163",
+   "op": "3WL",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "4",
+   "desc": "FACEPIPE 3WL 1SHF 4 FP1SHF3WL04"
+  },
+  {
+   "part": "1000-8164",
+   "op": "3WL",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "6",
+   "desc": "FACEPIPE 3WL 1SHF 6 FP1SHF3WL06"
+  },
+  {
+   "part": "1000-8165",
+   "op": "3WL",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "8",
+   "desc": "FACEPIPE 3WL 1SHF 8 FP1SHF3WL08"
+  },
+  {
+   "part": "1000-8166",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "CCFG",
+   "size": "4X3",
+   "desc": "FACEPIPE 3WL 2CCFG 4X3 FP2CCFG3WL04X3"
+  },
+  {
+   "part": "1000-8167",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WE 2SHF 6X4 FP2SHF3WE06X4"
+  },
+  {
+   "part": "1000-8168",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X6",
+   "desc": "FACEPIPE 3WE 2SHF 6X6 FP2SHF3WE06X6"
+  },
+  {
+   "part": "1000-8169",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WE 2SHF 8X6 FP2SHF3WE08X6"
+  },
+  {
+   "part": "1000-8170",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "10X8",
+   "desc": "FACEPIPE 3WE 2SHF 10X8 FP2SHF3WE10X8"
+  },
+  {
+   "part": "1000-8172",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "4X4",
+   "desc": "FACEPIPE 3WL 2SHF 4X4 FP2SHF3WL04X4"
+  },
+  {
+   "part": "1000-8173",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WL 2SHF 6X4 FP2SHF3WL06X4"
+  },
+  {
+   "part": "1000-8174",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X6",
+   "desc": "FACEPIPE 3WL 2SHF 6X6 FP2SHF3WL06X6"
+  },
+  {
+   "part": "1000-8175",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WL 2SHF 8X6 FP2SHF3WL08X6"
+  },
+  {
+   "part": "1000-8176",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "8X8",
+   "desc": "FACEPIPE 3WL 2SHF 8X8 FP2SHF3WL08X8"
+  },
+  {
+   "part": "1000-8177",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "10X6",
+   "desc": "FACEPIPE 3WL 2SHF 10X6 FP2SHF3WL10X6"
+  },
+  {
+   "part": "1000-8178",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "10X8",
+   "desc": "FACEPIPE 3WL 2SHF 10X8 FP2SHF3WL10X8"
+  },
+  {
+   "part": "1004-2782",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "12X8",
+   "desc": "FACEPIPE 3WL 2SHF 12X8 FP2SHF3WL12X8"
+  },
+  {
+   "part": "1000-8179",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WP 2SHF 6X4 FP2SHF3WP06X4"
+  },
+  {
+   "part": "1000-8180",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WP 2SHF 8X6 FP2SHF3WP08X6"
+  },
+  {
+   "part": "1000-8181",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE STD 2SHF 6X4 FP2SHF-6X4"
+  },
+  {
+   "part": "1000-8182",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "6X6",
+   "desc": "FACEPIPE STD 2SHF 6X6 FP2SHF-6X6"
+  },
+  {
+   "part": "1000-8183",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHF",
+   "size": "8X6",
+   "desc": "FACEPIPE STD 2SHF 8X6 FP2SHF-8X6"
+  },
+  {
+   "part": "1000-8184",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "4X3",
+   "desc": "FACEPIPE 3WE 2SHFS 4X3 FP2SHFS3WE04X3"
+  },
+  {
+   "part": "1000-8186",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X6",
+   "desc": "FACEPIPE 3WE 2SHFS 6X6 FP2SHFS3WE06X6"
+  },
+  {
+   "part": "1000-8187",
+   "op": "3WE",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WE 2SHFS 8X6 FP2SHFS3WE08X6"
+  },
+  {
+   "part": "1000-8189",
+   "op": "3WG",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WG 2SHFS 8X6 FP2SHFS3WG08X6"
+  },
+  {
+   "part": "1000-8190",
+   "op": "3WG",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "10X8",
+   "desc": "FACEPIPE 3WG 2SHFS 10X8 FP2SHFS3WG10X8"
+  },
+  {
+   "part": "1001-3435",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "4X3",
+   "desc": "FACEPIPE 3WL 2SHFS  4X3"
+  },
+  {
+   "part": "1000-8191",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "4X4",
+   "desc": "FACEPIPE 3WL 2SHFS 4X4 FP2SHFS3WL04X4"
+  },
+  {
+   "part": "1000-8192",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WL 2SHFS 6X4 FP2SHFS3WL06X4"
+  },
+  {
+   "part": "1000-8193",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X6",
+   "desc": "FACEPIPE 3WL 2SHFS 6X6 FP2SHFS3WL06X6"
+  },
+  {
+   "part": "1000-8194",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WL 2SHFS 8X6 FP2SHFS3WL08X6"
+  },
+  {
+   "part": "1000-8195",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "10X6",
+   "desc": "FACEPIPE 3WL 2SHFS 10X6 FP2SHFS3WL10X6"
+  },
+  {
+   "part": "1001-4057",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "12X8",
+   "desc": "FACEPIPE 3WL2SHFS12X8 SCH80W/DOM STK"
+  },
+  {
+   "part": "1000-8196",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X6",
+   "desc": "FACEPIPE 3WP 2SHFS 6X6 FP2SHFS3WP06X6"
+  },
+  {
+   "part": "1000-8197",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "8X6",
+   "desc": "FACEPIPE 3WP 2SHFS 8X6 FP2SHFS3WP08X6"
+  },
+  {
+   "part": "1004-3223",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "10X8",
+   "desc": "FACEPIPE 3WP 2SHFS 10X8 FP2SHFS3WP10X8"
+  },
+  {
+   "part": "1004-4138",
+   "op": "3WP",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "12X8",
+   "desc": "FACEPIPE 3WP 2SHFS 12X8 FP2SHFS3WP12X8"
+  },
+  {
+   "part": "1004-3175",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "4X3",
+   "desc": "FACEPIPE STD 2SHFS 4X3 FPSHFS-4X3"
+  },
+  {
+   "part": "1000-8238",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X6",
+   "desc": "FACEPIPE STD 2SHFS 6X6 FPSHFS-6X6"
+  },
+  {
+   "part": "1001-4006",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "8X6",
+   "desc": "FACEPIPE STD 2SHFS 8X6 SCH80 W/DOM STK"
+  },
+  {
+   "part": "1000-8198",
+   "op": "DLK",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X4",
+   "desc": "FACEPIPE DLK 2SHFS 6X4 FP2SHFSDL-6X4"
+  },
+  {
+   "part": "1001-4002",
+   "op": "DLK",
+   "tanks": 2,
+   "arr": "SHFS",
+   "size": "6X6",
+   "desc": "FACEPIPE DLK 2SHFS 6X6 SCH80 W/DOM STK"
+  },
+  {
+   "part": "1000-8199",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "CCFG",
+   "size": "4X4X3",
+   "desc": "FACEPIPE 3WL 3CCFG 4X4X3 FP3CCFG3WL04X3"
+  },
+  {
+   "part": "1002-2057",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "CCFG",
+   "size": "6X3",
+   "desc": "FACEPIPE 3WL 4CCFG 6X3 FP4CCFG3WL06X3"
+  },
+  {
+   "part": "1004-2376",
+   "op": "3WE",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WE 3SHF 6X4 FP3SHF3WE06X4"
+  },
+  {
+   "part": "1000-8200",
+   "op": "3WE",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "10X10X6",
+   "desc": "FACEPIPE 3WE 3SHF 10X10X6 FP3SHF3WE10X6"
+  },
+  {
+   "part": "1000-8201",
+   "op": "3WG",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "6X6X4",
+   "desc": "FACEPIPE 3WG 3SHF 6X6X4 FP3SHF3WG06X4"
+  },
+  {
+   "part": "1000-8202",
+   "op": "3WG",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "12X10X8",
+   "desc": "FACEPIPE 3WG 3SHF 12X10X8 FP3SHF3WG12X8"
+  },
+  {
+   "part": "1000-8203",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "6X6X4",
+   "desc": "FACEPIPE 3WL 3SHF 6X6X4 FP3SHF3WL06X4"
+  },
+  {
+   "part": "1000-8204",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WL 3SHF 8X6X4 FP3SHF3WL08X4"
+  },
+  {
+   "part": "1000-8205",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "8X8X6",
+   "desc": "FACEPIPE 3WL 3SHF 8X8X6 FP3SHF3WL08X6"
+  },
+  {
+   "part": "1003-4639",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "10X10X6",
+   "desc": "FACEPIPE 3WL 3SHF 10X10X6 FP3SHF3WL10X6"
+  },
+  {
+   "part": "1001-7851",
+   "op": "3WP",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WP 3SHF 6X4 FP3SHF3WP06X4"
+  },
+  {
+   "part": "1001-7497",
+   "op": "3WP",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "8X4",
+   "desc": "FACEPIPE 3WP 3SHF 8X4 FP3SHF3WP08X4"
+  },
+  {
+   "part": "1004-3105",
+   "op": "3WP",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "10X10X6",
+   "desc": "FACEPIPE 3WP 3SHF 10X10X6 FP3SHF3WP10X6"
+  },
+  {
+   "part": "1001-4003",
+   "op": "STD",
+   "tanks": 3,
+   "arr": "SHF",
+   "size": "8X6X4",
+   "desc": "FACEPIPE STD 3SHF 8X6X4 SCH80 W/DOM"
+  },
+  {
+   "part": "1000-8206",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHFS",
+   "size": "6X6X4",
+   "desc": "FACEPIPE 3WL 3SHFS 6X6X4 FP3SHFS3WL06X4"
+  },
+  {
+   "part": "1000-8207",
+   "op": "3WL",
+   "tanks": 3,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WL 3SHFS 8X6X4 FP3SHFS3WL08X4"
+  },
+  {
+   "part": "1000-8208",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHF",
+   "size": "10X8X6",
+   "desc": "FACEPIPE 3WE 4SHF 10X8X6 FP4SHF3WE10X6A"
+  },
+  {
+   "part": "1000-8209",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHF",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WL 4SHF 8X6X4 FP4SHF3WL08X4"
+  },
+  {
+   "part": "1003-4799",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHF",
+   "size": "10X10X8X6",
+   "desc": "FACEPIPE 3WL 4SHF 10X10X8X6FP4SHF3WL10X6"
+  },
+  {
+   "part": "1000-8210",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WE 4SHFS 8X6X4 FP4SHFS3WE08X4"
+  },
+  {
+   "part": "1000-8211",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X6",
+   "desc": "FACEPIPE 3WE 4SHFS 8X6X6 FP4SHFS3WE08X6"
+  },
+  {
+   "part": "1001-7476",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X6",
+   "desc": "FACEPIPE FP4SHFS3WE10X6"
+  },
+  {
+   "part": "1004-4135",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X8X6",
+   "desc": "FACEPIPE 3WE 4SHFS 10X8X6 FP4SHFS3WE10X6"
+  },
+  {
+   "part": "1000-8212",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "12X10X6",
+   "desc": "FACEPIPE 3WE 4SHFS12X10X6 FP4SHFS3WE12X6"
+  },
+  {
+   "part": "1004-3145",
+   "op": "3WE",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "12X10X8",
+   "desc": "FACEPIPE 3WE 4SHFS 12X10X8 FP4SHFS3WE12X"
+  },
+  {
+   "part": "1000-8213",
+   "op": "3WG",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WG 4SHFS 8X6X4 FP4SHFS3WG08X4"
+  },
+  {
+   "part": "1000-8214",
+   "op": "3WG",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X8X8X6",
+   "desc": "FACEPIPE 3WG 4SHFS10X8X8X6FP4SHFS3WG1086"
+  },
+  {
+   "part": "1001-4005",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "6X6X4",
+   "desc": "FACEPIPE 3WL 4SHFS 6X6X4 FP4SHFS3WL06X4"
+  },
+  {
+   "part": "1000-8215",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WL 4SHFS 8X6X4 FP4SHFS3WL08X4"
+  },
+  {
+   "part": "1000-8216",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X6",
+   "desc": "FACEPIPE 3WL 4SHFS 8X6X6 FP4SHFS3WL08X6"
+  },
+  {
+   "part": "1000-8219",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X8X6",
+   "desc": "FACEPIPE*3WL 4SHFS 10X8X6 FP4SHFS3WL10X6"
+  },
+  {
+   "part": "1000-8217",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X8X6X6",
+   "desc": "FACEPIPE 3WL 4SHFS10X8X6X6FP4SHFS3WL106A"
+  },
+  {
+   "part": "1000-8221",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "12X10X6",
+   "desc": "FACEPIPE 3WL 4SHFS 12X10X6FP4SHFS3WL12X6"
+  },
+  {
+   "part": "1000-8220",
+   "op": "3WL",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "12X10X8X6",
+   "desc": "FACEPIPE 3WL 4SHFS12X10X8X6FP4SHFS3WL128"
+  },
+  {
+   "part": "1000-8222",
+   "op": "3WP",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WP 4SHFS 8X6X4 FP4SHFS3WP08X4"
+  },
+  {
+   "part": "1000-8223",
+   "op": "3WP",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "8X6X6",
+   "desc": "FACEPIPE 3WP 4SHFS 8X6X6 FP4SHFS3WP08X6"
+  },
+  {
+   "part": "1001-4004",
+   "op": "STD",
+   "tanks": 4,
+   "arr": "SHFS",
+   "size": "10X8X6",
+   "desc": "FACEPIPE STD4SHFS10X8X6SCH80 W/DOM STK"
+  },
+  {
+   "part": "1001-3436",
+   "op": "3WL",
+   "tanks": 5,
+   "arr": "SHF",
+   "size": "10X8X6",
+   "desc": "FACEPIPE 3WL 5SHF 10X8X6"
+  },
+  {
+   "part": "1000-8224",
+   "op": "3WL",
+   "tanks": 6,
+   "arr": "SHF",
+   "size": "12X10X8X6",
+   "desc": "FACEPIPE 3WL 6SHF12X10X8X6 FP6SHF3WL12X6"
+  },
+  {
+   "part": "1000-8225",
+   "op": "3WL",
+   "tanks": 6,
+   "arr": "SHFS",
+   "size": "8X6X4",
+   "desc": "FACEPIPE 3WL 6SHFS 8X6X4 FP6SHFS3WL08X4"
+  },
+  {
+   "part": "1000-8226",
+   "op": "3WL",
+   "tanks": 6,
+   "arr": "SHFS",
+   "size": "12X10X8X6",
+   "desc": "FACEPIPE 3WL 6SHFS12X10X8X6FP6SHFS3WL12X"
+  },
+  {
+   "part": "1000-8227",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "DRF",
+   "size": "4X4",
+   "desc": "FACEPIPE STD DRF 4X4 FPDRF-4X4"
+  },
+  {
+   "part": "1000-8228",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "DRF",
+   "size": "6X4",
+   "desc": "FACEPIPE STD DRF 6X4 FPDRF-6X4"
+  },
+  {
+   "part": "1000-8229",
+   "op": "3WG",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WG SDC 6X4 FPSDC3WG06X4"
+  },
+  {
+   "part": "1000-8230",
+   "op": "3WL",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "6X4",
+   "desc": "FACEPIPE 3WL SDC 6X4 FPSDC3WL06X4"
+  },
+  {
+   "part": "1000-8231",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "6X6",
+   "desc": "FACEPIPE STD SDC 6X6 FPSDC-6X6"
+  },
+  {
+   "part": "1000-8232",
+   "op": "STD",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "8X6",
+   "desc": "FACEPIPE STD SDC 8X6 FPSDC-8X6"
+  },
+  {
+   "part": "1000-8233",
+   "op": "DLK",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "10X8",
+   "desc": "FACEPIPE DLK SDC 10X8 FPSDCDL10X8"
+  },
+  {
+   "part": "1000-8234",
+   "op": "DLK",
+   "tanks": 2,
+   "arr": "SDC",
+   "size": "8X6",
+   "desc": "FACEPIPE DLK SDC 8X6 FPSDCDL8X6"
+  },
+  {
+   "part": "1000-8235",
+   "op": "STD",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "4",
+   "desc": "FACEPIPE STD 1SHF 4 FPSHF-4"
+  },
+  {
+   "part": "1000-8236",
+   "op": "STD",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "6",
+   "desc": "FACEPIPE STD 1SHF 6 FPSHF-6"
+  },
+  {
+   "part": "1000-8237",
+   "op": "STD",
+   "tanks": 1,
+   "arr": "SHF",
+   "size": "8",
+   "desc": "FACEPIPE STD 1SHF 8 FPSHF-8"
+  },
+  {
+   "part": "1001-3437",
+   "op": "STD",
+   "tanks": 1,
+   "arr": "SRF",
+   "size": "4",
+   "desc": "FACEPIPE STD SRF  4"
+  },
+  {
+   "part": "1000-8239",
+   "op": "STD",
+   "tanks": 1,
+   "arr": "SRF",
+   "size": "6",
+   "desc": "FACEPIPE STD SRF 6 FPSRF-6"
+  }
+ ],
+ "ops": {
+  "3WL": "3-way lever: valve pairs linked to one handle (influent with backwash waste, effluent with backwash supply)",
+  "3WE": "3-way electric: linear actuators on the linked valve pairs (115/220 V)",
+  "3WG": "3-way gear operated",
+  "3WP": "3-way pneumatic: pneumatic operators driven by an MFP4 programmer",
+  "STD": "Standard face piping with individual valves",
+  "DLK": "DLK face piping (as listed in the master product list)"
+ },
+ "pipe_cap_10fps": {
+  "1": 22,
+  "1.5": 53,
+  "2": 90,
+  "2.5": 128,
+  "3": 201,
+  "4": 351,
+  "6": 799,
+  "8": 1401,
+  "10": 2206,
+  "12": 3123,
+  "14": 3771,
+  "16": 4953,
+  "18": 6278
+ },
+ "parts": [
+  {
+   "part": "1000-8277",
+   "desc": "TNK FLTR FG CCFG 36 LEGACY 3CN TNKONLY",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-8279",
+   "desc": "TNK FLTR FG CCFG 42 LEGACY 3CN TNKONLY",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-8281",
+   "desc": "TNK FLTR FG CCFG 48 LEGACY 3CN TNKONLY",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-1438",
+   "desc": "MEDIA SAND#20 .45M- .55M 50# BAG",
+   "sub": "Media"
+  },
+  {
+   "part": "1000-5490",
+   "desc": "MEDIA, GRAVEL 0.125\"x0.25\" 50LB",
+   "sub": "Media"
+  },
+  {
+   "part": "1000-5540",
+   "desc": "FP ACTUATOR LINEAR W/12' PIGTAIL 115V",
+   "sub": "Misc"
+  },
+  {
+   "part": "1003-4912",
+   "desc": "FP ACTUATOR LINEAR W/12' PIGTAIL 220V",
+   "sub": "Misc"
+  },
+  {
+   "part": "1003-8968",
+   "desc": "FP ACTUATOR LINEAR W/PIGTAIL 120V",
+   "sub": "Misc"
+  },
+  {
+   "part": "1001-7499",
+   "desc": "PROGRAMMER MFP4 1 TNK/CELL PNEU OPERATOR",
+   "sub": "Controller"
+  },
+  {
+   "part": "1000-4875",
+   "desc": "PROGRAMMER MFP4 2 TNK/CELL PNEU OPERATOR",
+   "sub": "Controller"
+  },
+  {
+   "part": "1001-7510",
+   "desc": "PROGRAMMER MFP4 3 TNK/CELL PNEU OPERATOR",
+   "sub": "Controller"
+  },
+  {
+   "part": "1000-4876",
+   "desc": "PROGRAMMER MFP4 4 TNK/CELL PNEU OPERATOR",
+   "sub": "Controller"
+  },
+  {
+   "part": "1000-8459",
+   "desc": "PROGRAMMER MFP4 1-4TNK 3WAYSLA &DLA",
+   "sub": "Controller"
+  },
+  {
+   "part": "1000-8321",
+   "desc": "PROGRAMMER MFP4 ONLY 1-4TNK -NO COMP TEE",
+   "sub": "Controller"
+  },
+  {
+   "part": "1000-8243",
+   "desc": "GAUGE PANEL ASY MFP3/MFP4AUTOMATIC FLTR",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-5360",
+   "desc": "SADDLE STACKING SEISMIC &HDWR 34\" FILTER",
+   "sub": "Misc"
+  },
+  {
+   "part": "1002-1066",
+   "desc": "SADDLE STACKING SEISMIC &HDWR 36\" FILTER",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-5363",
+   "desc": "SADDLE STACKING SEISMIC &HDWR 42\" FILTER",
+   "sub": "Misc"
+  },
+  {
+   "part": "1001-3952",
+   "desc": "SADDLE STACKING SEISMIC &HDWR 48\" FILTER",
+   "sub": "Misc"
+  },
+  {
+   "part": "1002-1068",
+   "desc": "SADDLE STACKING SEISMIC &HDWR 60\" FILTER",
+   "sub": "Misc"
+  },
+  {
+   "part": "1000-5991",
+   "desc": "VALVE AIR RELIEF 3/4\" KIT",
+   "sub": "Kit"
+  },
+  {
+   "part": "1000-7246",
+   "desc": "GASKET MANHOLE FG TNK CLOSEDCELL",
+   "sub": "Gasket"
+  },
+  {
+   "part": "1000-6504",
+   "desc": "MANWAY CLEAR FG 50PSI DRK BL-BAR LUGS&HW",
+   "sub": "Kit"
+  },
+  {
+   "part": "1001-9251",
+   "desc": "MANWAY 48\"CCFG W/YOKES-GSKT-AIRRELIEF-HW",
+   "sub": "Kit"
+  },
+  {
+   "part": "1000-5883",
+   "desc": "COVER CCFG 6\"X9\" COMPLETE ASSY",
+   "sub": "Misc"
+  }
+ ]
+}

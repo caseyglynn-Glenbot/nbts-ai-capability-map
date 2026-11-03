@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NBTS AI Platform | Sand Filter Tank &amp; Face Piping Configurator</title>
+<!-- Self-contained: data is embedded below, three.min.js ships alongside. No external requests. -->
+<style>
+  :root{
+    --sheet:#f9f9f7; --ink:#1c1e21; --ink-2:#5c6168; --rule:#c9ccd0; --panel:#ffffff; --field:#f3f4f2;
+    --leader:#d1202b; --accent:#2a63b8; --track:#dfe2e6; --focus:#2a63b8; --glass:rgba(255,255,255,.92);
+    --ok:#1e7a46; --warn:#b26a00; --bad:#c0262f; --water:#1597c9; --nb:#1E4B8C; --teal:#0085AD;
+    --f-head:"Barlow Semi Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+    --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--sheet);color:var(--ink);font-family:var(--f-body);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+  button,select,input{font:inherit}
+  #pbar{flex:none;background:var(--panel);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1.5px solid var(--ink);padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  #pbar .brand{font:800 17px/1.1 var(--f-head);color:var(--nb);letter-spacing:.01em}
+  #pbar .brand span{color:var(--teal)}
+  #pbar .crumbs{display:flex;gap:9px;align-items:center;font:600 12.5px var(--f-body);color:var(--ink-2);margin-left:auto}
+  #pbar .crumbs a{color:var(--teal);text-decoration:none}
+  #pbar .crumbs a:hover{text-decoration:underline}
+  #pbar .crumbs .sep{color:var(--rule)}
+
+  #app{flex:1;min-height:0;display:grid;grid-template-columns:340px 1fr 330px}
+  #ctl,#out{overflow:auto;background:var(--panel);min-height:0}
+  #ctl{border-right:1px solid var(--rule);padding:12px 14px 40px}
+  #out{border-left:1px solid var(--rule);padding:12px 14px 40px}
+  .sec{margin-bottom:14px}
+  .sec>.h{display:flex;align-items:center;gap:8px;font:600 11px var(--f-head);letter-spacing:.16em;text-transform:uppercase;color:var(--ink);border-bottom:1.5px solid var(--ink);padding-bottom:4px;margin-bottom:8px}
+  .sec>.h b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--panel);font-size:10.5px;letter-spacing:0}
+  .lbl{font:600 10px var(--f-head);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:8px 0 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chips button{font:600 12.5px var(--f-head);letter-spacing:.04em;color:var(--ink);background:transparent;border:1px solid var(--ink);border-radius:2px;padding:4px 9px;cursor:pointer;min-width:38px}
+  .chips button:hover{background:var(--track)}
+  .chips button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  .chips button:disabled{opacity:.3;cursor:not-allowed}
+  .lines{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .lines button{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--rule);border-top:3px solid var(--rule);padding:7px 8px;background:var(--field)}
+  .lines button .t{display:block;font:700 13px var(--f-head);letter-spacing:.03em;color:var(--nb)}
+  .lines button .s{display:block;font-size:11px;color:var(--ink-2);margin-top:1px;line-height:1.25}
+  .lines button[aria-pressed="true"]{border-color:var(--ink);border-top-color:var(--teal);background:#e8f1f5}
+  .lines button:focus-visible,.chips button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  select,input[type=number]{width:100%;border:1px solid var(--ink-2);border-radius:2px;padding:6px 8px;background:#fff;font-size:13.5px;color:var(--ink)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .note{font-size:11.5px;line-height:1.4;color:var(--ink-2);margin:6px 0 0}
+  .note b{color:var(--ink)}
+
+  #stage{position:relative;min-height:0;overflow:hidden;background:var(--sheet)}
+  #view{position:absolute;inset:0;touch-action:none;cursor:grab}
+  #view:active{cursor:grabbing}
+  #view canvas{display:block;width:100%;height:100%}
+  #overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .tag{position:absolute;transform:translate(-50%,-50%);font:600 10.5px var(--f-head);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;background:var(--panel);border:1px solid var(--ink);border-radius:3px;padding:2px 6px;color:var(--ink)}
+  .tag.v{border-color:var(--rule);color:var(--ink-2);font-weight:500;background:var(--glass)}
+  .tag.v.open{border-color:var(--ok);color:var(--ok)}
+  .tag.v.shut{border-color:var(--bad);color:var(--bad)}
+  .tag.t{border:0;background:transparent;color:var(--nb);font-size:12px}
+  #toolbar{position:absolute;left:12px;top:10px;right:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;pointer-events:none}
+  #toolbar>*{pointer-events:auto}
+  .tb{font:600 11.5px var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--ink);border-radius:2px;padding:5px 9px;cursor:pointer}
+  .tb#bwtank,select.tb{width:auto;padding:4px 6px}
+  .tb[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+  #modelno{position:absolute;left:12px;bottom:12px;right:12px;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  #modelno .mn{font:700 clamp(15px,2.2vw,22px)/1.1 var(--f-head);letter-spacing:.03em;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:6px 10px;pointer-events:auto;user-select:all}
+  #modelno .mn small{display:block;font:500 11px var(--f-body);letter-spacing:.02em;color:var(--ink-2);margin-top:3px;user-select:none}
+  #hint{font-size:11px;color:var(--ink-2);background:var(--glass);padding:3px 6px;border-radius:2px}
+  #status{position:absolute;right:12px;top:46px;width:200px;background:var(--glass);border:1px solid var(--rule);border-top:2px solid var(--ink);padding:6px 10px;pointer-events:none}
+  #status .k{font:600 10px var(--f-head);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+  #status dl{margin:2px 0 0;display:grid;grid-template-columns:auto 1fr;gap:0 8px}
+  #status dt,#status dd{margin:0;padding:4px 0;border-top:1px solid var(--rule);font:500 11px var(--f-head);letter-spacing:.08em;text-transform:uppercase}
+  #status dt{color:var(--ink-2)} #status dd{text-align:right;font-weight:700}
+  .go{color:var(--ok)!important} .mid{color:var(--warn)!important} .stop{color:var(--bad)!important} .wet{color:var(--water)!important}
+
+  table.kv{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.kv td{padding:4px 0;border-top:1px solid var(--track);vertical-align:top}
+  table.kv td:first-child{color:var(--ink-2);padding-right:8px}
+  table.kv td:last-child{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+  .chk{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;line-height:1.35;padding:5px 0;border-top:1px solid var(--track)}
+  .chk i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:4px;background:var(--ok)}
+  .chk.w i{background:var(--warn)} .chk.b i{background:var(--bad)}
+  .pn{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .pnrow{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-top:1px solid var(--track);font-size:12.5px}
+  .pnrow span:first-child{color:var(--ink-2)}
+  .btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .btn{font:600 12px var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:var(--panel);background:var(--ink);border:1px solid var(--ink);border-radius:2px;padding:7px 11px;cursor:pointer}
+  .btn.g{background:transparent;color:var(--ink)}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;font:600 12px var(--f-head);letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;border-radius:3px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+  #toast.on{opacity:1}
+  .src{font-size:10.5px;color:var(--ink-2);line-height:1.4;margin-top:10px}
+
+  @media (max-width:1180px){ #app{grid-template-columns:310px 1fr} #out{grid-column:1 / -1;border-left:0;border-top:1px solid var(--rule);max-height:none} }
+  @media (max-width:760px){
+    body{height:auto;min-height:100%}
+    #app{display:flex;flex-direction:column}
+    #stage{order:1;height:58vh;flex:none}
+    #ctl{order:2;border-right:0;border-top:1px solid var(--rule)}
+    #out{order:3}
+    #status{display:none}
+    #pbar .crumbs{margin-left:0;width:100%}
+    #hint{display:none}
+  }
+  @media print{
+    #pbar,#ctl,#toolbar,#status,#hint,.btnrow{display:none!important}
+    #app{display:block} #stage{height:420px;border:1px solid #999} #out{border:0}
+  }
+</style>
+</head>
+<body>
+<div id="pbar">
+  <div class="brand">Neptune Benson<span>.</span> &nbsp;NBTS AI</div>
+  <nav class="crumbs"><a href="/home">Home</a><span class="sep">&middot;</span><a href="/product-configurators">Product Configurators</a><span class="sep">&middot;</span><span>Sand Filters</span></nav>
+</div>
+<div id="app">
+  <aside id="ctl" aria-label="Configuration">
+    <div class="sec"><div class="h"><b>1</b>Product line</div><div class="lines" id="c-line"></div></div>
+    <div class="sec"><div class="h"><b>2</b>Tank</div><div id="c-tank"></div></div>
+    <div class="sec"><div class="h"><b>3</b>Arrangement</div><div id="c-arr"></div></div>
+    <div class="sec"><div class="h"><b>4</b>Face piping</div><div id="c-fp"></div></div>
+    <div class="sec"><div class="h"><b>5</b>Design flow</div>
+      <div class="two"><div><div class="lbl">System flow (GPM)</div><input id="flow" type="number" min="1" step="1" inputmode="numeric"></div>
+      <div><div class="lbl">Rate (GPM/sq ft)</div><select id="rate"></select></div></div>
+      <p class="note">Type a flow, or pick a rate to set the flow from the total filter area.</p>
+    </div>
+  </aside>
+  <main id="stage">
+    <div id="view" aria-label="3D view of the configured filter. Drag to rotate, scroll or pinch to zoom."></div>
+    <div id="overlay" aria-hidden="true"></div>
+    <div id="toolbar">
+      <button class="tb" id="m-filter" aria-pressed="true">Filter</button>
+      <button class="tb" id="m-bw" aria-pressed="false">Backwash</button>
+      <select class="tb" id="bwtank" aria-label="Tank to backwash" style="display:none"></select>
+      <button class="tb" id="xray" aria-pressed="true">See inside</button>
+      <button class="tb" id="lbls" aria-pressed="true">Labels</button>
+      <button class="tb" id="reset">Reset view</button>
+      <button class="tb" id="fpview">Face piping</button>
+    </div>
+    <div id="status" aria-live="polite"><div class="k">Filter status</div><dl id="sdl"></dl></div>
+    <div id="modelno"><div class="mn" id="mn">&nbsp;<small></small></div><span id="hint">Drag to rotate &middot; scroll to zoom &middot; right-drag to pan</span></div>
+  </main>
+  <aside id="out" aria-label="Results">
+    <div class="sec"><div class="h">Checks</div><div id="o-chk"></div></div>
+    <div class="sec"><div class="h">Performance</div><table class="kv" id="o-perf"></table></div>
+    <div class="sec"><div class="h">Media &amp; weights</div><table class="kv" id="o-media"></table></div>
+    <div class="sec"><div class="h">Dimensions (in)</div><table class="kv" id="o-dim"></table></div>
+    <div class="sec"><div class="h">Part numbers</div><div id="o-pn"></div></div>
+    <div class="sec"><div class="h">Share</div>
+      <div class="btnrow"><button class="btn" id="b-copy">Copy summary</button><button class="btn g" id="b-link">Copy link</button><button class="btn g" id="b-json">Copy JSON</button><button class="btn g" onclick="print()">Print</button></div>
+      <p class="src" id="o-src"></p>
+    </div>
+  </aside>
+</div>
+<div id="toast"></div>
+
+<script src="three.min.js"></script>
+<script>
+const DATA = {"meta":{"built":"2026-11-02","sources":["SHFFG Technical Data Sheet R 2/9/18","SRF/DRF Single Cell Sand Filters tech data R-5/4/11","CCFG Legacy Fiberglass Sand Filters tech data ML-4/29/26","Drawing 36CCFG-3MAN","Drawing 42SRFFG-4","PART NUMBERS - MODEL NUMBERS.xlsx","FILTER SYSTEM DRAWING MATRIX.xlsx","SAND CALCULATION.xlsx (velocity chart)","Vertical vessel 2026 size sheets (sizes only)","master_product_list product_line Sand"],"backwash_rate_gpmsf":[15,20],"design_pressure_psi":50,"notes":["Fiberglass tanks: 50 psi working pressure, hydrostatically tested to 1.1x working pressure, 4:1 safety factor.","Steel SRF/DRF: 50 psi operating, 75 psi hydrostatic test.","Sand .45-.55 mm, 100 lb per cu ft. Gravel 1/4 x 1/8 in where used."]},"shffg":{"models":[{"model":"3448SHFFG","dia":34,"length":48,"conn":3,"area_sf":12.6,"flow_gpm":[63,206],"rate_gpmsf":[5,15],"ship_lb":356,"oper_lb":3239,"A":33.25,"A1":34.0,"B":64.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":15,"bed_in":16.5,"sand_lb":1500,"pn":{"single_R":"1000-6986","single_L":"1000-6985","stacked_R":"1000-6990","stacked_L":"1000-6989"}},{"model":"3448SHFFG","dia":34,"length":48,"conn":4,"area_sf":12.6,"flow_gpm":[207,252],"rate_gpmsf":[17,20],"ship_lb":356,"oper_lb":3239,"A":33.25,"A1":34.0,"B":64.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":15,"bed_in":16.5,"sand_lb":1500,"pn":{"single_R":"1000-6988","single_L":"1000-6987","stacked_R":"1000-6991","stacked_L":"1001-8664"}},{"model":"3454SHFFG","dia":34,"length":54,"conn":3,"area_sf":14.0,"flow_gpm":[70,206],"rate_gpmsf":[5,14],"ship_lb":383,"oper_lb":3642,"A":33.25,"A1":34.0,"B":70.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":16,"bed_in":16.5,"sand_lb":1600,"pn":{"single_R":"1000-6992","single_L":"1001-3974","stacked_R":"1001-3410","stacked_L":"1002-1185"}},{"model":"3454SHFFG","dia":34,"length":54,"conn":4,"area_sf":14.0,"flow_gpm":[207,280],"rate_gpmsf":[15,20],"ship_lb":383,"oper_lb":3642,"A":33.25,"A1":34.0,"B":70.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":16,"bed_in":16.5,"sand_lb":1600,"pn":{"single_R":"1000-6994","single_L":"1000-6993","stacked_R":"1000-6995","stacked_L":"1001-8054","stacked_LZ":"1002-2038"}},{"model":"3460SHFFG","dia":34,"length":60,"conn":4,"area_sf":15.4,"flow_gpm":[77,308],"rate_gpmsf":[5,20],"ship_lb":410,"oper_lb":4044,"A":33.25,"A1":34.0,"B":76.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":18,"bed_in":16.5,"sand_lb":1800,"pn":{"single_R":"1000-6997","single_L":"1000-6996","stacked_R":"1002-0390","stacked_L":"1000-6998","stacked_LZ":"1000-6999"}},{"model":"3466SHFFG","dia":34,"length":66,"conn":4,"area_sf":16.8,"flow_gpm":[84,336],"rate_gpmsf":[5,20],"ship_lb":465,"oper_lb":4446,"A":33.25,"A1":34.0,"B":82.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":19,"bed_in":16.5,"sand_lb":1900,"pn":{"single_R":"1000-7001","single_L":"1000-7000","stacked_R":"1000-7002","stacked_L":"1002-1585"}},{"model":"3472SHFFG","dia":34,"length":72,"conn":4,"area_sf":18.2,"flow_gpm":[91,358],"rate_gpmsf":[5,20],"ship_lb":479,"oper_lb":5043,"A":33.25,"A1":34.0,"B":88.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":21,"bed_in":16.5,"sand_lb":2100,"pn":{"single_R":"1000-7004","single_L":"1000-7003","stacked_R":"1001-3975","stacked_L":"1002-1586","stacked_RZ":"1000-7005"}},{"model":"3478SHFFG","dia":34,"length":78,"conn":4,"area_sf":19.6,"flow_gpm":[98,358],"rate_gpmsf":[5,18],"ship_lb":492,"oper_lb":5446,"A":33.25,"A1":34.0,"B":94.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":22,"bed_in":16.5,"sand_lb":2200,"pn":{"single_R":"1000-7008","single_L":"1000-7006","stacked_R":"1002-1587","stacked_L":"1000-7009","single_LZ":"1000-7007"}},{"model":"3478SHFFG","dia":34,"length":78,"conn":6,"area_sf":19.6,"flow_gpm":[98,392],"rate_gpmsf":[5,20],"ship_lb":492,"oper_lb":5446,"A":33.25,"A1":34.0,"B":94.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":22,"bed_in":16.5,"sand_lb":2200,"pn":{}},{"model":"3484SHFFG","dia":34,"length":84,"conn":4,"area_sf":21.0,"flow_gpm":[105,358],"rate_gpmsf":[5,17],"ship_lb":505,"oper_lb":5849,"A":33.25,"A1":34.0,"B":100.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":24,"bed_in":16.5,"sand_lb":2400,"pn":{"single_R":"1001-3976","single_L":"1000-7010","stacked_R":"1002-1588","stacked_L":"1002-1589"}},{"model":"3484SHFFG","dia":34,"length":84,"conn":6,"area_sf":21.0,"flow_gpm":[105,420],"rate_gpmsf":[5,20],"ship_lb":505,"oper_lb":5849,"A":33.25,"A1":34.0,"B":100.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":24,"bed_in":16.5,"sand_lb":2400,"pn":{}},{"model":"3490SHFFG","dia":34,"length":90,"conn":4,"area_sf":22.4,"flow_gpm":[112,358],"rate_gpmsf":[5,16],"ship_lb":518,"oper_lb":6252,"A":33.25,"A1":34.0,"B":106.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":25,"bed_in":16.5,"sand_lb":2500,"pn":{"single_R":"1003-3779","single_L":"1003-3780","stacked_R":"1003-3778","stacked_L":"1003-3394"}},{"model":"3490SHFFG","dia":34,"length":90,"conn":6,"area_sf":22.4,"flow_gpm":[112,448],"rate_gpmsf":[5,20],"ship_lb":518,"oper_lb":6252,"A":33.25,"A1":34.0,"B":106.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":25,"bed_in":16.5,"sand_lb":2500,"pn":{}},{"model":"3496SHFFG","dia":34,"length":96,"conn":4,"area_sf":23.8,"flow_gpm":[119,357],"rate_gpmsf":[5,15],"ship_lb":531,"oper_lb":6655,"A":33.25,"A1":34.0,"B":112.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":27,"bed_in":16.5,"sand_lb":2700,"pn":{"single_R":"1000-7012","single_L":"1000-7011","stacked_R":"1002-1600","stacked_L":"1002-1601"}},{"model":"3496SHFFG","dia":34,"length":96,"conn":6,"area_sf":23.8,"flow_gpm":[119,476],"rate_gpmsf":[5,20],"ship_lb":531,"oper_lb":6655,"A":33.25,"A1":34.0,"B":112.0,"C":40.0,"E":12.75,"G":82.0,"sand_cf":27,"bed_in":16.5,"sand_lb":2700,"pn":{}},{"model":"3648SHFFG","dia":36,"length":48,"conn":3,"area_sf":14.3,"flow_gpm":[72,215],"rate_gpmsf":[5,15],"ship_lb":375,"oper_lb":3650,"A":36.0,"A1":38.25,"B":67.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":16,"bed_in":18.0,"sand_lb":1600,"pn":{"single_R":"1001-3413","single_L":"1001-5345","stacked_L":"1001-5383"}},{"model":"3648SHFFG","dia":36,"length":48,"conn":4,"area_sf":14.3,"flow_gpm":[216,286],"rate_gpmsf":[16,20],"ship_lb":375,"oper_lb":3650,"A":36.0,"A1":38.25,"B":67.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":16,"bed_in":18.0,"sand_lb":1600,"pn":{"single_R":"1000-7014","single_L":"1000-7013","stacked_R":"1000-7016","stacked_L":"1000-7015","single_RZ":"1002-3391","single_LZ":"1002-3392"}},{"model":"3660SHFFG","dia":36,"length":60,"conn":4,"area_sf":17.3,"flow_gpm":[87,346],"rate_gpmsf":[5,20],"ship_lb":425,"oper_lb":4260,"A":36.0,"A1":38.25,"B":79.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":19,"bed_in":18.0,"sand_lb":1900,"pn":{"single_R":"1001-5307","single_L":"1000-7017","stacked_R":"1000-7019","stacked_L":"1000-7018"}},{"model":"3672SHFFG","dia":36,"length":72,"conn":4,"area_sf":20.3,"flow_gpm":[102,358],"rate_gpmsf":[5,17],"ship_lb":490,"oper_lb":5070,"A":36.0,"A1":38.25,"B":91.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":23,"bed_in":18.0,"sand_lb":2300,"pn":{"single_R":"1000-7021","single_L":"1000-7020","stacked_R":"1001-3980","stacked_L":"1000-7022"}},{"model":"3672SHFFG","dia":36,"length":72,"conn":6,"area_sf":20.3,"flow_gpm":[358,406],"rate_gpmsf":[18,20],"ship_lb":490,"oper_lb":5070,"A":36.0,"A1":38.25,"B":91.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":23,"bed_in":18.0,"sand_lb":2300,"pn":{"single_R":"1002-3079","single_L":"1002-3078","stacked_R":"1003-4869","stacked_L":"1004-2881"}},{"model":"3684SHFFG","dia":36,"length":84,"conn":4,"area_sf":23.3,"flow_gpm":[117,358],"rate_gpmsf":[5,15],"ship_lb":535,"oper_lb":5870,"A":36.0,"A1":38.25,"B":103.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":26,"bed_in":18.0,"sand_lb":2600,"pn":{"single_R":"1002-3091","single_L":"1002-3090","stacked_L":"1000-7023"}},{"model":"3684SHFFG","dia":36,"length":84,"conn":6,"area_sf":23.3,"flow_gpm":[359,466],"rate_gpmsf":[16,20],"ship_lb":535,"oper_lb":5870,"A":36.0,"A1":38.25,"B":103.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":26,"bed_in":18.0,"sand_lb":2600,"pn":{"single_R":"1002-3094","single_L":"1002-3093","stacked_R":"1001-8180","stacked_L":"1001-8181"}},{"model":"3696SHFFG","dia":36,"length":96,"conn":6,"area_sf":26.3,"flow_gpm":[132,526],"rate_gpmsf":[5,20],"ship_lb":580,"oper_lb":6680,"A":36.0,"A1":38.25,"B":115.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":30,"bed_in":18.0,"sand_lb":3000,"pn":{"single_R":"1002-3098","single_L":"1002-3099","stacked_R":"1001-8053","stacked_L":"1001-9354","stacked_LZ":"1000-7024"}},{"model":"36108SHFFG","dia":36,"length":108,"conn":6,"area_sf":29.3,"flow_gpm":[147,586],"rate_gpmsf":[5,20],"ship_lb":615,"oper_lb":7490,"A":36.0,"A1":38.25,"B":127.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":34,"bed_in":18.0,"sand_lb":3400,"pn":{"single_R":"1001-5754","single_L":"1000-7025","stacked_R":"1001-3981","stacked_L":"1000-7026"}},{"model":"36120SHFFG","dia":36,"length":120,"conn":6,"area_sf":32.3,"flow_gpm":[162,646],"rate_gpmsf":[5,20],"ship_lb":655,"oper_lb":8290,"A":36.0,"A1":38.25,"B":139.75,"C":42.0,"E":13.75,"G":86.0,"sand_cf":37,"bed_in":18.0,"sand_lb":3700,"pn":{"single_R":"1000-7028","single_L":"1002-3097","stacked_L":"1000-7029"}},{"model":"4248SHFFG","dia":42,"length":48,"conn":4,"area_sf":17.1,"flow_gpm":[86,342],"rate_gpmsf":[5,20],"ship_lb":435,"oper_lb":4870,"A":42.0,"A1":44.25,"B":69.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":22,"bed_in":21.0,"sand_lb":2200,"pn":{"single_R":"1000-7091","single_L":"1000-7089","stacked_R":"1001-7004","stacked_L":"1000-7092","single_LZ":"1004-2851"}},{"model":"4260SHFFG","dia":42,"length":60,"conn":4,"area_sf":20.4,"flow_gpm":[102,358],"rate_gpmsf":[5,17],"ship_lb":515,"oper_lb":5680,"A":42.0,"A1":44.25,"B":81.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":27,"bed_in":21.0,"sand_lb":2700,"pn":{"single_R":"1000-7103","single_L":"1000-7102","stacked_R":"1000-7108","stacked_L":"1000-7107"}},{"model":"4260SHFFG","dia":42,"length":60,"conn":6,"area_sf":20.4,"flow_gpm":[359,408],"rate_gpmsf":[18,20],"ship_lb":515,"oper_lb":5680,"A":42.0,"A1":44.25,"B":81.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":27,"bed_in":21.0,"sand_lb":2700,"pn":{"single_R":"1000-7106","single_L":"1000-7105","stacked_R":"1000-7110","stacked_L":"1000-7109"}},{"model":"4272SHFFG","dia":42,"length":72,"conn":4,"area_sf":23.9,"flow_gpm":[120,358],"rate_gpmsf":[5,15],"ship_lb":560,"oper_lb":6685,"A":42.0,"A1":44.25,"B":93.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":32,"bed_in":21.0,"sand_lb":3200,"pn":{"single_R":"1000-7116","single_L":"1000-7115","stacked_R":"1000-7121","stacked_L":"1000-7120"}},{"model":"4272SHFFG","dia":42,"length":72,"conn":6,"area_sf":23.9,"flow_gpm":[359,478],"rate_gpmsf":[16,20],"ship_lb":560,"oper_lb":6685,"A":42.0,"A1":44.25,"B":93.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":32,"bed_in":21.0,"sand_lb":3200,"pn":{"single_R":"1000-7119","single_L":"1000-7118","stacked_R":"1000-7124","stacked_L":"1000-7122","stacked_RZ":"1004-2263","stacked_LZ":"1004-2262"}},{"model":"4284SHFFG","dia":42,"length":84,"conn":6,"area_sf":27.4,"flow_gpm":[137,548],"rate_gpmsf":[5,20],"ship_lb":610,"oper_lb":7690,"A":42.0,"A1":44.25,"B":105.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":37,"bed_in":21.0,"sand_lb":3700,"pn":{"single_R":"1000-7128","single_L":"1000-7127","stacked_R":"1000-7130","stacked_L":"1000-7129"}},{"model":"4296SHFFG","dia":42,"length":96,"conn":6,"area_sf":30.9,"flow_gpm":[155,618],"rate_gpmsf":[5,20],"ship_lb":660,"oper_lb":8700,"A":42.0,"A1":44.25,"B":117.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":42,"bed_in":21.0,"sand_lb":4200,"pn":{"single_R":"1000-7131","single_L":"1001-3985","stacked_R":"1000-7133","stacked_L":"1000-7132"}},{"model":"42108SHFFG","dia":42,"length":108,"conn":6,"area_sf":34.6,"flow_gpm":[173,692],"rate_gpmsf":[5,20],"ship_lb":710,"oper_lb":9700,"A":42.0,"A1":44.25,"B":129.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":46,"bed_in":21.0,"sand_lb":4600,"pn":{"single_R":"1000-7135","single_L":"1000-7134","stacked_R":"1000-7138","stacked_L":"1000-7136","stacked_RZ":"1000-7139","stacked_LZ":"1000-7137"}},{"model":"42120SHFFG","dia":42,"length":120,"conn":6,"area_sf":38.1,"flow_gpm":[191,762],"rate_gpmsf":[5,20],"ship_lb":760,"oper_lb":10710,"A":42.0,"A1":44.25,"B":141.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":51,"bed_in":21.0,"sand_lb":5100,"pn":{"single_R":"1000-7141","single_L":"1000-7140","stacked_R":"1000-7143","stacked_L":"1000-7142"}},{"model":"42132SHFFG","dia":42,"length":132,"conn":6,"area_sf":41.6,"flow_gpm":[208,832],"rate_gpmsf":[5,20],"ship_lb":805,"oper_lb":11720,"A":42.0,"A1":44.25,"B":153.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":56,"bed_in":21.0,"sand_lb":5600,"pn":{"single_R":"1000-7144","single_L":"1002-1563","stacked_R":"1000-7145","stacked_L":"1002-1564"}},{"model":"42144SHFFG","dia":42,"length":144,"conn":6,"area_sf":45.1,"flow_gpm":[225,900],"rate_gpmsf":[5,20],"ship_lb":855,"oper_lb":12720,"A":42.0,"A1":44.25,"B":165.75,"C":48.0,"E":13.75,"G":98.0,"sand_cf":61,"bed_in":21.0,"sand_lb":6100,"pn":{"single_R":"1002-1602","single_L":"1002-1603","stacked_R":"1002-1604","stacked_L":"1000-7146"}},{"model":"4848SHFFG","dia":48,"length":48,"conn":4,"area_sf":19.7,"flow_gpm":[99,358],"rate_gpmsf":[5,18],"ship_lb":550,"oper_lb":6310,"A":48.0,"A1":50.25,"B":70.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":30,"bed_in":24.0,"sand_lb":3000,"pn":{"single_R":"1000-7197","single_L":"1000-7195","stacked_R":"1000-7202","stacked_L":"1000-7200","single_LZ":"1000-7196"}},{"model":"4848SHFFG","dia":48,"length":48,"conn":6,"area_sf":19.7,"flow_gpm":[359,394],"rate_gpmsf":[19,20],"ship_lb":550,"oper_lb":6310,"A":48.0,"A1":50.25,"B":70.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":30,"bed_in":24.0,"sand_lb":3000,"pn":{"single_R":"1001-3987","single_L":"1000-7199","stacked_R":"1001-9767","stacked_L":"1000-7204"}},{"model":"4860SHFFG","dia":48,"length":60,"conn":4,"area_sf":23.7,"flow_gpm":[119,358],"rate_gpmsf":[5,15],"ship_lb":605,"oper_lb":7520,"A":48.0,"A1":50.25,"B":82.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":36,"bed_in":24.0,"sand_lb":3600,"pn":{"single_R":"1000-7208","single_L":"1000-7207","stacked_R":"1000-7215","stacked_L":"1000-7213","stacked_RZ":"1001-6362"}},{"model":"4860SHFFG","dia":48,"length":60,"conn":6,"area_sf":23.7,"flow_gpm":[359,474],"rate_gpmsf":[16,20],"ship_lb":605,"oper_lb":7520,"A":48.0,"A1":50.25,"B":82.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":36,"bed_in":24.0,"sand_lb":3600,"pn":{"single_R":"1000-7211","single_L":"1000-7209","stacked_R":"1000-7218","stacked_L":"1000-7216","single_LZ":"1000-7210"}},{"model":"4872SHFFG","dia":48,"length":72,"conn":6,"area_sf":27.7,"flow_gpm":[139,554],"rate_gpmsf":[5,20],"ship_lb":660,"oper_lb":8915,"A":48.0,"A1":50.25,"B":94.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":42,"bed_in":24.0,"sand_lb":4200,"pn":{"single_R":"1001-6485","single_L":"1000-7221","stacked_R":"1000-7229","stacked_L":"1000-7227","single_RZ":"1000-7224","stacked_RZ":"1000-7230"}},{"model":"4884SHFFG","dia":48,"length":84,"conn":6,"area_sf":31.7,"flow_gpm":[159,634],"rate_gpmsf":[5,20],"ship_lb":715,"oper_lb":10120,"A":48.0,"A1":50.25,"B":106.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":49,"bed_in":24.0,"sand_lb":4900,"pn":{"single_R":"1000-7233","single_L":"1000-7232","stacked_R":"1000-7236","stacked_L":"1000-7234","single_RZ":"1002-3703","stacked_RZ":"1000-7237"}},{"model":"4896SHFFG","dia":48,"length":96,"conn":6,"area_sf":35.7,"flow_gpm":[179,714],"rate_gpmsf":[5,20],"ship_lb":770,"oper_lb":11320,"A":48.0,"A1":50.25,"B":118.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":55,"bed_in":24.0,"sand_lb":5500,"pn":{"single_R":"1000-7243","single_L":"1000-7242","stacked_R":"1000-7245","stacked_L":"1000-7244"}},{"model":"48108SHFFG","dia":48,"length":108,"conn":6,"area_sf":39.7,"flow_gpm":[199,794],"rate_gpmsf":[5,20],"ship_lb":825,"oper_lb":12530,"A":48.0,"A1":50.25,"B":130.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":61,"bed_in":24.0,"sand_lb":6100,"pn":{"single_R":"1000-7249","single_L":"1000-7248","stacked_R":"1000-7251","stacked_L":"1000-7250","single_RZ":"1003-3976","single_LZ":"1003-3977","stacked_RZ":"1001-3990"}},{"model":"48120SHFFG","dia":48,"length":120,"conn":6,"area_sf":43.7,"flow_gpm":[219,874],"rate_gpmsf":[5,20],"ship_lb":880,"oper_lb":13730,"A":48.0,"A1":50.25,"B":142.75,"C":54.0,"E":13.75,"G":110.0,"sand_cf":67,"bed_in":24.0,"sand_lb":6700,"pn":{"single_R":"1001-3418","single_L":"1000-7252","stacked_R":"1000-7255","stacked_L":"1000-7254"}},{"model":"6048SHFFG","dia":60,"length":48,"conn":4,"area_sf":30.8,"flow_gpm":[154,340],"rate_gpmsf":[5,11],"ship_lb":841,"oper_lb":12460,"A":60.0,"A1":63.5,"B":84.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":55,"bed_in":30.0,"sand_lb":5500,"pn":{}},{"model":"6048SHFFG","dia":60,"length":48,"conn":6,"area_sf":30.8,"flow_gpm":[341,616],"rate_gpmsf":[12,20],"ship_lb":841,"oper_lb":12460,"A":60.0,"A1":63.5,"B":84.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":55,"bed_in":30.0,"sand_lb":5500,"pn":{"single_R":"1000-7377","single_L":"1000-7375","stacked_R":"1000-7380","stacked_L":"1001-3420","single_RZ":"1000-7378","stacked_RZ":"1000-7381","stacked_LZ":"1000-7379"}},{"model":"6060SHFFG","dia":60,"length":60,"conn":6,"area_sf":35.8,"flow_gpm":[179,716],"rate_gpmsf":[5,20],"ship_lb":918,"oper_lb":14473,"A":60.0,"A1":63.5,"B":96.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":65,"bed_in":30.0,"sand_lb":6500,"pn":{"single_R":"1000-7383","single_L":"1000-7382","stacked_R":"1001-8811","stacked_L":"1000-7384"}},{"model":"6072SHFFG","dia":60,"length":72,"conn":6,"area_sf":40.8,"flow_gpm":[204,816],"rate_gpmsf":[5,20],"ship_lb":1010,"oper_lb":16501,"A":60.0,"A1":63.5,"B":108.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":74,"bed_in":30.0,"sand_lb":7400,"pn":{"single_R":"1000-7390","single_L":"1000-7389","stacked_R":"1000-7393","stacked_L":"1000-7391"}},{"model":"6084SHFFG","dia":60,"length":84,"conn":6,"area_sf":45.8,"flow_gpm":[229,779],"rate_gpmsf":[5,17],"ship_lb":1082,"oper_lb":18510,"A":60.0,"A1":63.5,"B":120.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":84,"bed_in":30.0,"sand_lb":8400,"pn":{"single_R":"1000-7398","single_L":"1000-7397","stacked_R":"1000-7400","stacked_L":"1000-7399","stacked_RZ":"1001-5414","stacked_LZ":"1001-5413"}},{"model":"6084SHFFG","dia":60,"length":84,"conn":8,"area_sf":45.8,"flow_gpm":[780,916],"rate_gpmsf":[18,20],"ship_lb":1082,"oper_lb":18510,"A":60.0,"A1":63.5,"B":120.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":84,"bed_in":30.0,"sand_lb":8400,"pn":{"single_R":"1002-4568","single_L":"1002-4011"}},{"model":"6096SHFFG","dia":60,"length":96,"conn":6,"area_sf":50.8,"flow_gpm":[254,762],"rate_gpmsf":[5,15],"ship_lb":1154,"oper_lb":20518,"A":60.0,"A1":63.5,"B":132.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":94,"bed_in":30.0,"sand_lb":9400,"pn":{"single_R":"1000-7403","single_L":"1000-7401","stacked_R":"1000-7407","stacked_L":"1000-7406","single_RZ":"1000-7404","stacked_RZ":"1000-7408"}},{"model":"6096SHFFG","dia":60,"length":96,"conn":8,"area_sf":50.8,"flow_gpm":[763,1016],"rate_gpmsf":[16,20],"ship_lb":1154,"oper_lb":20518,"A":60.0,"A1":63.5,"B":132.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":94,"bed_in":30.0,"sand_lb":9400,"pn":{"single_L":"1000-7405","stacked_R":"1001-3993","stacked_L":"1000-7409"}},{"model":"60108SHFFG","dia":60,"length":108,"conn":6,"area_sf":55.8,"flow_gpm":[279,813],"rate_gpmsf":[5,15],"ship_lb":1216,"oper_lb":22417,"A":60.0,"A1":63.5,"B":144.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":104,"bed_in":30.0,"sand_lb":10400,"pn":{"single_R":"1001-5745","single_L":"1001-5746","stacked_R":"1002-1362","stacked_L":"1002-1363"}},{"model":"60108SHFFG","dia":60,"length":108,"conn":8,"area_sf":55.8,"flow_gpm":[814,1116],"rate_gpmsf":[16,20],"ship_lb":1216,"oper_lb":22417,"A":60.0,"A1":63.5,"B":144.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":104,"bed_in":30.0,"sand_lb":10400,"pn":{"single_R":"1002-1606","single_L":"1002-1607","stacked_R":"1002-1608","stacked_L":"1002-1609"}},{"model":"60120SHFFG","dia":60,"length":120,"conn":6,"area_sf":60.8,"flow_gpm":[304,790],"rate_gpmsf":[5,13],"ship_lb":1282,"oper_lb":24519,"A":60.0,"A1":63.5,"B":156.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":114,"bed_in":30.0,"sand_lb":11400,"pn":{"single_R":"1000-7416","single_L":"1000-7415"}},{"model":"60120SHFFG","dia":60,"length":120,"conn":8,"area_sf":60.8,"flow_gpm":[791,1216],"rate_gpmsf":[14,20],"ship_lb":1282,"oper_lb":24519,"A":60.0,"A1":63.5,"B":156.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":114,"bed_in":30.0,"sand_lb":11400,"pn":{"single_R":"1000-7418","single_L":"1000-7417","stacked_R":"1002-1610","stacked_L":"1002-1612"}},{"model":"60132SHFFG","dia":60,"length":132,"conn":6,"area_sf":65.8,"flow_gpm":[329,790],"rate_gpmsf":[5,12],"ship_lb":1355,"oper_lb":26335,"A":60.0,"A1":63.5,"B":168.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":123,"bed_in":30.0,"sand_lb":12300,"pn":{}},{"model":"60132SHFFG","dia":60,"length":132,"conn":8,"area_sf":65.8,"flow_gpm":[791,1316],"rate_gpmsf":[13,20],"ship_lb":1355,"oper_lb":26335,"A":60.0,"A1":63.5,"B":168.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":123,"bed_in":30.0,"sand_lb":12300,"pn":{"single_R":"1001-5608","single_L":"1001-3422","stacked_R":"1000-7420","stacked_L":"1000-7419"}},{"model":"60144SHFFG","dia":60,"length":144,"conn":8,"area_sf":70.8,"flow_gpm":[354,1416],"rate_gpmsf":[5,20],"ship_lb":1432,"oper_lb":28348,"A":60.0,"A1":63.5,"B":180.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":133,"bed_in":30.0,"sand_lb":13300,"pn":{"single_R":"1000-7421","stacked_R":"1001-9555"}},{"model":"60156SHFFG","dia":60,"length":156,"conn":8,"area_sf":75.8,"flow_gpm":[379,1516],"rate_gpmsf":[5,20],"ship_lb":1504,"oper_lb":30357,"A":60.0,"A1":63.5,"B":192.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":143,"bed_in":30.0,"sand_lb":14300,"pn":{"single_R":"1000-7422","stacked_L":"1001-5854"}},{"model":"60168SHFFG","dia":60,"length":168,"conn":8,"area_sf":80.8,"flow_gpm":[404,1616],"rate_gpmsf":[5,20],"ship_lb":1571,"oper_lb":32167,"A":60.0,"A1":63.5,"B":204.75,"C":67.0,"E":15.75,"G":134.0,"sand_cf":153,"bed_in":30.0,"sand_lb":15300,"pn":{"single_L":"1000-7423","single_RZ":"1003-4641","single_LZ":"1003-4640"}}],"fp_single":{"3":{"J":15.25,"K":19,"L":5.1875},"4":{"J":17,"K":22,"L":6.125},"6":{"J":20,"K":28,"L":8.125},"8":{"J":24,"K":37,"L":10.375}},"fp_dual":{"SxS":{"4x3":[14,9.5,33],"6x4":[18,11,38],"6x6":[19,16,45],"8x6":[22,16,48],"10x6":[28,16,54],"10x8":[28,16,60]},"S":{"4x3":[24,21,8],"6x4":[31,26,13],"6x6":[41,30,13],"8x6":[41,33,17],"10x6":[41,39,21],"10x8":[54,42,21]}},"orient":{"1SHF":6,"2SHF":16,"2SHFS":48,"4SHFS":36}},"srf":{"models":[{"model":"36SRF-3","dia":36,"conn":3,"area_sf":7.07,"flow_gpm":[36,141],"rate_gpmsf":[5,20],"A":36.0,"A1":36.375,"B":9.0,"C":23.125,"D":16.25,"E":51.25,"F":73.375,"G":79.25,"head_t":0.1875,"shell_t":0.1875,"ship_lb":520,"oper_lb":4173,"gravel_cf":6,"sand_cf":13,"bed_in":22,"pn":{"steel":"1000-7034"}},{"model":"42SRF-4","dia":42,"conn":4,"area_sf":9.62,"flow_gpm":[48,192],"rate_gpmsf":[5,20],"A":42.0,"A1":42.375,"B":10.0,"C":25.0,"D":16.125,"E":51.875,"F":74.0,"G":79.875,"head_t":0.1875,"shell_t":0.1875,"ship_lb":600,"oper_lb":5738,"gravel_cf":8,"sand_cf":18,"bed_in":22,"pn":{"steel":"1000-7159"}},{"model":"48SRF-3","dia":48,"conn":3,"area_sf":12.6,"flow_gpm":[63,189],"rate_gpmsf":[5,15],"A":48.0,"A1":48.375,"B":9.0,"C":23.125,"D":16.875,"E":53.375,"F":75.5,"G":82.375,"head_t":0.1875,"shell_t":0.1875,"ship_lb":700,"oper_lb":7421,"gravel_cf":12,"sand_cf":23,"bed_in":22,"pn":{}},{"model":"48SRF-4","dia":48,"conn":4,"area_sf":12.6,"flow_gpm":[190,252],"rate_gpmsf":[16,20],"A":48.0,"A1":48.375,"B":10.0,"C":25.0,"D":17.875,"E":51.5,"F":76.5,"G":83.25,"head_t":0.1875,"shell_t":0.1875,"ship_lb":730,"oper_lb":7421,"gravel_cf":16,"sand_cf":23,"bed_in":22,"pn":{"fiberglass":"1000-7273","fiberglass_Z":"1000-7274","steel":"1000-7272"}},{"model":"54SRF-4","dia":54,"conn":4,"area_sf":15.9,"flow_gpm":[80,318],"rate_gpmsf":[5,20],"A":54.0,"A1":54.375,"B":10.0,"C":25.0,"D":18.625,"E":53.5,"F":78.5,"G":85.25,"head_t":0.25,"shell_t":0.1875,"ship_lb":940,"oper_lb":9496,"gravel_cf":20,"sand_cf":29,"bed_in":22,"pn":{"fiberglass":"1000-7371","steel":"1000-7370"}},{"model":"60SRF-4","dia":60,"conn":4,"area_sf":19.6,"flow_gpm":[98,294],"rate_gpmsf":[5,15],"A":60.0,"A1":60.375,"B":10.0,"C":25.0,"D":18.625,"E":54.125,"F":79.125,"G":85.875,"head_t":0.25,"shell_t":0.1875,"ship_lb":1080,"oper_lb":11725,"gravel_cf":20,"sand_cf":36,"bed_in":22,"pn":{"fiberglass_Z":"1000-7451","steel":"1000-7449"}},{"model":"60SRF-6","dia":60,"conn":6,"area_sf":19.6,"flow_gpm":[295,392],"rate_gpmsf":[16,20],"A":60.0,"A1":60.375,"B":15.0,"C":28.125,"D":18.625,"E":54.125,"F":79.125,"G":85.875,"head_t":0.25,"shell_t":0.1875,"ship_lb":1120,"oper_lb":11725,"gravel_cf":22,"sand_cf":36,"bed_in":22,"pn":{"steel":"1000-7450"}},{"model":"66SRF-4","dia":66,"conn":4,"area_sf":23.8,"flow_gpm":[119,357],"rate_gpmsf":[5,15],"A":66.0,"A1":66.5,"B":10.0,"C":25.0,"D":19.375,"E":55.625,"F":80.625,"G":87.375,"head_t":0.25,"shell_t":0.25,"ship_lb":1400,"oper_lb":14922,"gravel_cf":26,"sand_cf":44,"bed_in":22,"pn":{"steel":"1000-7543"}},{"model":"66SRF-6","dia":66,"conn":6,"area_sf":23.8,"flow_gpm":[358,476],"rate_gpmsf":[16,20],"A":66.0,"A1":66.5,"B":15.0,"C":28.125,"D":20.375,"E":57.5,"F":85.625,"G":93.375,"head_t":0.25,"shell_t":0.25,"ship_lb":1440,"oper_lb":14922,"gravel_cf":27,"sand_cf":44,"bed_in":22,"pn":{}},{"model":"72SRF-6","dia":72,"conn":6,"area_sf":28.3,"flow_gpm":[142,566],"rate_gpmsf":[5,20],"A":72.0,"A1":72.5,"B":15.0,"C":28.125,"D":21.25,"E":58.125,"F":87.25,"G":95.0,"head_t":0.25,"shell_t":0.25,"ship_lb":1620,"oper_lb":17857,"gravel_cf":34,"sand_cf":52,"bed_in":22,"pn":{"steel":"1000-7568"}},{"model":"78SRF-6","dia":78,"conn":6,"area_sf":33.2,"flow_gpm":[166,664],"rate_gpmsf":[5,20],"A":78.0,"A1":78.5,"B":15.0,"C":28.125,"D":22.125,"E":60.875,"F":89.0,"G":96.75,"head_t":0.3125,"shell_t":0.25,"ship_lb":1980,"oper_lb":21182,"gravel_cf":41,"sand_cf":61,"bed_in":22,"pn":{"steel":"1000-7575"}},{"model":"84SRF-6","dia":84,"conn":6,"area_sf":38.5,"flow_gpm":[193,770],"rate_gpmsf":[5,20],"A":84.0,"A1":84.5,"B":15.0,"C":28.125,"D":23.0,"E":62.5,"F":90.625,"G":98.375,"head_t":0.3125,"shell_t":0.25,"ship_lb":2200,"oper_lb":24705,"gravel_cf":49,"sand_cf":71,"bed_in":22,"pn":{}},{"model":"90SRF-6","dia":90,"conn":6,"area_sf":44.2,"flow_gpm":[221,663],"rate_gpmsf":[5,15],"A":90.0,"A1":90.5,"B":15.0,"C":28.125,"D":23.75,"E":64.125,"F":92.25,"G":100.0,"head_t":0.3125,"shell_t":0.25,"ship_lb":2430,"oper_lb":28423,"gravel_cf":57,"sand_cf":81,"bed_in":22,"pn":{"steel":"1000-7665"}},{"model":"90SRF-8","dia":90,"conn":8,"area_sf":44.2,"flow_gpm":[664,884],"rate_gpmsf":[16,20],"A":90.0,"A1":90.5,"B":19.0,"C":36.5,"D":24.75,"E":64.125,"F":96.25,"G":106.0,"head_t":0.3125,"shell_t":0.25,"ship_lb":2480,"oper_lb":28423,"gravel_cf":61,"sand_cf":81,"bed_in":22,"pn":{}},{"model":"96SRF-6","dia":96,"conn":6,"area_sf":50.3,"flow_gpm":[252,755],"rate_gpmsf":[5,15],"A":96.0,"A1":96.5,"B":15.0,"C":28.125,"D":24.625,"E":65.75,"F":93.875,"G":101.625,"head_t":0.3125,"shell_t":0.25,"ship_lb":2690,"oper_lb":32435,"gravel_cf":66,"sand_cf":92,"bed_in":22,"pn":{}},{"model":"96SRF-8","dia":96,"conn":8,"area_sf":50.3,"flow_gpm":[756,1006],"rate_gpmsf":[16,20],"A":96.0,"A1":96.5,"B":19.0,"C":36.5,"D":25.625,"E":61.875,"F":98.5,"G":108.25,"head_t":0.3125,"shell_t":0.25,"ship_lb":2740,"oper_lb":32435,"gravel_cf":70,"sand_cf":92,"bed_in":22,"pn":{"steel":"1001-5311"}},{"model":"102SRF-6","dia":102,"conn":6,"area_sf":56.8,"flow_gpm":[284,851],"rate_gpmsf":[5,15],"A":102.0,"A1":102.625,"B":15.0,"C":28.125,"D":25.5,"E":67.625,"F":95.75,"G":103.5,"head_t":0.375,"shell_t":0.3125,"ship_lb":3520,"oper_lb":38020,"gravel_cf":77,"sand_cf":104,"bed_in":22,"pn":{}},{"model":"102SRF-8","dia":102,"conn":8,"area_sf":56.8,"flow_gpm":[852,1136],"rate_gpmsf":[16,20],"A":102.0,"A1":102.625,"B":19.0,"C":36.5,"D":26.5,"E":63.25,"F":99.75,"G":109.5,"head_t":0.375,"shell_t":0.3125,"ship_lb":3570,"oper_lb":38020,"gravel_cf":82,"sand_cf":104,"bed_in":22,"pn":{"steel":"1000-5409"}},{"model":"108SRF-6","dia":108,"conn":6,"area_sf":63.6,"flow_gpm":[318,954],"rate_gpmsf":[5,15],"A":108.0,"A1":108.625,"B":15.0,"C":28.125,"D":26.25,"E":66.125,"F":97.25,"G":105.0,"head_t":0.375,"shell_t":0.3125,"ship_lb":3850,"oper_lb":42949,"gravel_cf":89,"sand_cf":117,"bed_in":22,"pn":{}},{"model":"108SRF-8","dia":108,"conn":8,"area_sf":63.6,"flow_gpm":[955,1272],"rate_gpmsf":[16,20],"A":108.0,"A1":108.625,"B":19.0,"C":36.5,"D":27.25,"E":61.75,"F":101.25,"G":111.0,"head_t":0.375,"shell_t":0.3125,"ship_lb":3910,"oper_lb":42949,"gravel_cf":95,"sand_cf":117,"bed_in":22,"pn":{}},{"model":"114SRF-8","dia":114,"conn":8,"area_sf":70.9,"flow_gpm":[355,1418],"rate_gpmsf":[5,20],"A":114.0,"A1":114.625,"B":19.0,"C":36.5,"D":27.125,"E":70.75,"F":102.75,"G":112.625,"head_t":0.375,"shell_t":0.3125,"ship_lb":4280,"oper_lb":48041,"gravel_cf":107,"sand_cf":130,"bed_in":22,"pn":{}},{"model":"120SRF-8","dia":120,"conn":8,"area_sf":78.5,"flow_gpm":[393,1570],"rate_gpmsf":[5,20],"A":120.0,"A1":120.625,"B":19.0,"C":36.5,"D":28.875,"E":73.375,"F":105.375,"G":115.125,"head_t":0.375,"shell_t":0.3125,"ship_lb":4650,"oper_lb":53836,"gravel_cf":123,"sand_cf":144,"bed_in":22,"pn":{"fiberglass":"1002-5231"}}],"media_only":[{"model":"114SRF-6","gravel_cf":101,"sand_cf":130},{"model":"120SRF-6","gravel_cf":116,"sand_cf":144}],"fg_sizes":{"36":[3],"42":[3,4],"48":[4,6],"54":[4],"60":[3,4,6],"66":[4,6],"72":[6],"78":[6],"84":[6],"90":[6],"96":[8],"102":[8],"108":[8],"114":[8],"120":[8]}},"drf":{"models":[{"model":"36DRF-3","dia":36,"fp":"3x3","area_sf":14.1,"flow_gpm":[71,212],"rate_gpmsf":[5,15],"K":88.5,"L":32.125,"ship_lb":1040,"oper_lb":8346},{"model":"36DRF-4","dia":36,"fp":"4x3","area_sf":14.1,"flow_gpm":[213,282],"rate_gpmsf":[16,20],"K":90.5,"L":33.125,"ship_lb":1040,"oper_lb":8346},{"model":"42DRF-4","dia":42,"fp":"4x3","area_sf":19.2,"flow_gpm":[96,288],"rate_gpmsf":[5,15],"K":102.5,"L":33.125,"ship_lb":1200,"oper_lb":11476},{"model":"42DRF-6","dia":42,"fp":"6x3","area_sf":19.2,"flow_gpm":[289,384],"rate_gpmsf":[16,20],"K":112.5,"L":40.0,"ship_lb":1200,"oper_lb":11476},{"model":"48DRF-4","dia":48,"fp":"4x3","area_sf":25.1,"flow_gpm":[125,377],"rate_gpmsf":[5,15],"K":114.5,"L":33.125,"ship_lb":1400,"oper_lb":14842},{"model":"48DRF-6","dia":48,"fp":"6x4","area_sf":25.2,"flow_gpm":[378,502],"rate_gpmsf":[16,20],"K":124.5,"L":40.0,"ship_lb":1400,"oper_lb":14842},{"model":"54DRF-6","dia":54,"fp":"6x4","area_sf":31.8,"flow_gpm":[159,636],"rate_gpmsf":[5,20],"K":136.5,"L":40.0,"ship_lb":1880,"oper_lb":18992},{"model":"60DRF-6","dia":60,"fp":"6x4","area_sf":39.3,"flow_gpm":[196,590],"rate_gpmsf":[5,15],"K":148.5,"L":40.0,"ship_lb":2160,"oper_lb":23450},{"model":"60DRF-6","dia":60,"fp":"6x6","area_sf":39.3,"flow_gpm":[591,786],"rate_gpmsf":[16,20],"K":148.5,"L":40.0,"ship_lb":2160,"oper_lb":23450},{"model":"66DRF-6","dia":66,"fp":"6x4","area_sf":47.5,"flow_gpm":[237,713],"rate_gpmsf":[5,15],"K":160.625,"L":40.0,"ship_lb":2800,"oper_lb":29844},{"model":"66DRF-8","dia":66,"fp":"8x6","area_sf":47.5,"flow_gpm":[714,950],"rate_gpmsf":[16,20],"K":168.625,"L":55.5,"ship_lb":2800,"oper_lb":29844},{"model":"72DRF-6","dia":72,"fp":"6x6","area_sf":56.5,"flow_gpm":[282,848],"rate_gpmsf":[5,15],"K":180.625,"L":40.0,"ship_lb":3240,"oper_lb":35714},{"model":"72DRF-8","dia":72,"fp":"8x6","area_sf":56.5,"flow_gpm":[849,1130],"rate_gpmsf":[16,20],"K":180.625,"L":55.5,"ship_lb":3240,"oper_lb":35714},{"model":"78DRF-8","dia":78,"fp":"8x6","area_sf":66.4,"flow_gpm":[332,1328],"rate_gpmsf":[5,20],"K":192.625,"L":55.5,"ship_lb":3960,"oper_lb":42364},{"model":"84DRF-8","dia":84,"fp":"8x6","area_sf":77.0,"flow_gpm":[385,1155],"rate_gpmsf":[5,15],"K":204.625,"L":55.5,"ship_lb":4400,"oper_lb":49410},{"model":"84DRF-10","dia":84,"fp":"10x6","area_sf":77.0,"flow_gpm":[1156,1540],"rate_gpmsf":[16,20],"K":210.625,"L":39.9375,"ship_lb":4400,"oper_lb":49410},{"model":"90DRF-8","dia":90,"fp":"8x6","area_sf":88.4,"flow_gpm":[442,1326],"rate_gpmsf":[5,15],"K":216.625,"L":55.5,"ship_lb":4860,"oper_lb":56846},{"model":"90DRF-10","dia":90,"fp":"10x6","area_sf":88.4,"flow_gpm":[1327,1768],"rate_gpmsf":[16,20],"K":222.625,"L":39.9375,"ship_lb":4860,"oper_lb":56846},{"model":"96DRF-8","dia":96,"fp":"8x6","area_sf":100.5,"flow_gpm":[502,1508],"rate_gpmsf":[5,15],"K":228.625,"L":55.5,"ship_lb":5380,"oper_lb":64870},{"model":"96DRF-10","dia":96,"fp":"10x8","area_sf":100.5,"flow_gpm":[1509,2010],"rate_gpmsf":[16,20],"K":234.625,"L":39.9375,"ship_lb":5480,"oper_lb":64870},{"model":"102DRF-8","dia":102,"fp":"8x6","area_sf":113.6,"flow_gpm":[568,1704],"rate_gpmsf":[5,15],"K":240.75,"L":55.5,"ship_lb":7040,"oper_lb":76040},{"model":"102DRF-10","dia":102,"fp":"10x8","area_sf":113.6,"flow_gpm":[1705,2272],"rate_gpmsf":[16,20],"K":246.75,"L":39.9375,"ship_lb":7140,"oper_lb":76040},{"model":"108DRF-10","dia":108,"fp":"10x8","area_sf":127.2,"flow_gpm":[636,1908],"rate_gpmsf":[5,15],"K":258.75,"L":39.9375,"ship_lb":7820,"oper_lb":85898},{"model":"108DRF-12","dia":108,"fp":"12x8","area_sf":127.2,"flow_gpm":[1909,2544],"rate_gpmsf":[16,20],"K":262.75,"L":47.6875,"ship_lb":7820,"oper_lb":85898},{"model":"114DRF-10","dia":114,"fp":"10x8","area_sf":141.8,"flow_gpm":[709,2128],"rate_gpmsf":[5,15],"K":270.75,"L":39.9375,"ship_lb":8560,"oper_lb":96082},{"model":"114DRF-12","dia":114,"fp":"12x8","area_sf":141.8,"flow_gpm":[2129,2836],"rate_gpmsf":[16,20],"K":274.75,"L":47.6875,"ship_lb":8560,"oper_lb":96082},{"model":"120DRF-10","dia":120,"fp":"10x8","area_sf":157.0,"flow_gpm":[785,2355],"rate_gpmsf":[5,15],"K":282.75,"L":39.9375,"ship_lb":9300,"oper_lb":107672},{"model":"120DRF-12","dia":120,"fp":"12x8","area_sf":157.0,"flow_gpm":[2356,3140],"rate_gpmsf":[16,20],"K":286.75,"L":47.6875,"ship_lb":9300,"oper_lb":107672}]},"ccfg":{"models":[{"model":"36CCFG-3","dia":36,"conn":3,"area_sf":6.5,"flow_gpm":[33,98],"rate_gpmsf":[5,15],"max_flow":98,"A":null,"B":null,"C":42.6875,"D":null,"E":11.9375,"F":11.875,"ship_lb":null,"oper_lb":null,"gravel_cf":2,"sand_cf":6,"bed_in":11,"access":"lid","bw_gpm":[98,130],"note":"From drawing 36CCFG-3MAN (FP-1). NSF PIF lists 6.9 sq ft and a 16 in bed; tech data sheet ML-4/29/26 lists 42 and 48 only.","pn":{"tank_only":"1000-8277"}},{"model":"42CCFG-3","dia":42,"conn":3,"area_sf":9.6,"flow_gpm":[48,115],"rate_gpmsf":[5,12],"max_flow":115,"A":64,"B":43,"C":44,"D":38,"E":13.75,"F":13.75,"ship_lb":111,"oper_lb":2170,"gravel_cf":3,"sand_cf":13,"bed_in":16,"access":"6x9 access port","pn":{"complete_man":"1000-7152","complete_auto":"1002-8170","tank_internals":"1000-8278","tank_only":"1000-8279"}},{"model":"48CCFG-3","dia":48,"conn":3,"area_sf":11.8,"flow_gpm":[59,142],"rate_gpmsf":[5,12],"max_flow":142,"A":70,"B":49,"C":57.75,"D":47.25,"E":14.125,"F":21.625,"ship_lb":189,"oper_lb":3410,"gravel_cf":3,"sand_cf":16,"bed_in":17,"access":"14x18 manway","pn":{"complete_man":"1000-7263","complete_auto":"1000-7262","tank_internals":"1000-8280","tank_only":"1000-8281"}}],"fp_dual":{"3x3":[7,7],"4x3":[8,8],"6x3":[13,13]}},"fp_parts":[{"part":"1000-7039","op":"MAN","tanks":1,"arr":"CCFG","size":"3","desc":"FACE PIPING CCFG-3 W/MAN VALVE"},{"part":"1000-7040","op":"AUTO","tanks":1,"arr":"CCFG","size":"3","desc":"FACE PIPING CCFG3 W/AUTO VALVE"},{"part":"1000-8158","op":"3WE","tanks":1,"arr":"SHF","size":"3","desc":"FACEPIPE 3WE 1SHF 3 FP1SHF3WE03"},{"part":"1000-8159","op":"3WE","tanks":1,"arr":"SHF","size":"4","desc":"FACEPIPE 3WE 1SHF 4 FP1SHF3WE04"},{"part":"1000-8160","op":"3WE","tanks":1,"arr":"SHF","size":"6","desc":"FACEPIPE 3WE 1SHF 6 FP1SHF3WE06"},{"part":"1000-8161","op":"3WG","tanks":1,"arr":"SHF","size":"6","desc":"FACEPIPE 3WG 1SHF 6 FP1SHF3WG06"},{"part":"1000-8162","op":"3WL","tanks":1,"arr":"SHF","size":"3","desc":"FACEPIPE 3WL 1SHF 3 FP1SHF3WL03"},{"part":"1000-8163","op":"3WL","tanks":1,"arr":"SHF","size":"4","desc":"FACEPIPE 3WL 1SHF 4 FP1SHF3WL04"},{"part":"1000-8164","op":"3WL","tanks":1,"arr":"SHF","size":"6","desc":"FACEPIPE 3WL 1SHF 6 FP1SHF3WL06"},{"part":"1000-8165","op":"3WL","tanks":1,"arr":"SHF","size":"8","desc":"FACEPIPE 3WL 1SHF 8 FP1SHF3WL08"},{"part":"1000-8166","op":"3WL","tanks":2,"arr":"CCFG","size":"4X3","desc":"FACEPIPE 3WL 2CCFG 4X3 FP2CCFG3WL04X3"},{"part":"1000-8167","op":"3WE","tanks":2,"arr":"SHF","size":"6X4","desc":"FACEPIPE 3WE 2SHF 6X4 FP2SHF3WE06X4"},{"part":"1000-8168","op":"3WE","tanks":2,"arr":"SHF","size":"6X6","desc":"FACEPIPE 3WE 2SHF 6X6 FP2SHF3WE06X6"},{"part":"1000-8169","op":"3WE","tanks":2,"arr":"SHF","size":"8X6","desc":"FACEPIPE 3WE 2SHF 8X6 FP2SHF3WE08X6"},{"part":"1000-8170","op":"3WE","tanks":2,"arr":"SHF","size":"10X8","desc":"FACEPIPE 3WE 2SHF 10X8 FP2SHF3WE10X8"},{"part":"1000-8172","op":"3WL","tanks":2,"arr":"SHF","size":"4X4","desc":"FACEPIPE 3WL 2SHF 4X4 FP2SHF3WL04X4"},{"part":"1000-8173","op":"3WL","tanks":2,"arr":"SHF","size":"6X4","desc":"FACEPIPE 3WL 2SHF 6X4 FP2SHF3WL06X4"},{"part":"1000-8174","op":"3WL","tanks":2,"arr":"SHF","size":"6X6","desc":"FACEPIPE 3WL 2SHF 6X6 FP2SHF3WL06X6"},{"part":"1000-8175","op":"3WL","tanks":2,"arr":"SHF","size":"8X6","desc":"FACEPIPE 3WL 2SHF 8X6 FP2SHF3WL08X6"},{"part":"1000-8176","op":"3WL","tanks":2,"arr":"SHF","size":"8X8","desc":"FACEPIPE 3WL 2SHF 8X8 FP2SHF3WL08X8"},{"part":"1000-8177","op":"3WL","tanks":2,"arr":"SHF","size":"10X6","desc":"FACEPIPE 3WL 2SHF 10X6 FP2SHF3WL10X6"},{"part":"1000-8178","op":"3WL","tanks":2,"arr":"SHF","size":"10X8","desc":"FACEPIPE 3WL 2SHF 10X8 FP2SHF3WL10X8"},{"part":"1004-2782","op":"3WL","tanks":2,"arr":"SHF","size":"12X8","desc":"FACEPIPE 3WL 2SHF 12X8 FP2SHF3WL12X8"},{"part":"1000-8179","op":"3WP","tanks":2,"arr":"SHF","size":"6X4","desc":"FACEPIPE 3WP 2SHF 6X4 FP2SHF3WP06X4"},{"part":"1000-8180","op":"3WP","tanks":2,"arr":"SHF","size":"8X6","desc":"FACEPIPE 3WP 2SHF 8X6 FP2SHF3WP08X6"},{"part":"1000-8181","op":"STD","tanks":2,"arr":"SHF","size":"6X4","desc":"FACEPIPE STD 2SHF 6X4 FP2SHF-6X4"},{"part":"1000-8182","op":"STD","tanks":2,"arr":"SHF","size":"6X6","desc":"FACEPIPE STD 2SHF 6X6 FP2SHF-6X6"},{"part":"1000-8183","op":"STD","tanks":2,"arr":"SHF","size":"8X6","desc":"FACEPIPE STD 2SHF 8X6 FP2SHF-8X6"},{"part":"1000-8184","op":"3WE","tanks":2,"arr":"SHFS","size":"4X3","desc":"FACEPIPE 3WE 2SHFS 4X3 FP2SHFS3WE04X3"},{"part":"1000-8186","op":"3WE","tanks":2,"arr":"SHFS","size":"6X6","desc":"FACEPIPE 3WE 2SHFS 6X6 FP2SHFS3WE06X6"},{"part":"1000-8187","op":"3WE","tanks":2,"arr":"SHFS","size":"8X6","desc":"FACEPIPE 3WE 2SHFS 8X6 FP2SHFS3WE08X6"},{"part":"1000-8189","op":"3WG","tanks":2,"arr":"SHFS","size":"8X6","desc":"FACEPIPE 3WG 2SHFS 8X6 FP2SHFS3WG08X6"},{"part":"1000-8190","op":"3WG","tanks":2,"arr":"SHFS","size":"10X8","desc":"FACEPIPE 3WG 2SHFS 10X8 FP2SHFS3WG10X8"},{"part":"1001-3435","op":"3WL","tanks":2,"arr":"SHFS","size":"4X3","desc":"FACEPIPE 3WL 2SHFS  4X3"},{"part":"1000-8191","op":"3WL","tanks":2,"arr":"SHFS","size":"4X4","desc":"FACEPIPE 3WL 2SHFS 4X4 FP2SHFS3WL04X4"},{"part":"1000-8192","op":"3WL","tanks":2,"arr":"SHFS","size":"6X4","desc":"FACEPIPE 3WL 2SHFS 6X4 FP2SHFS3WL06X4"},{"part":"1000-8193","op":"3WL","tanks":2,"arr":"SHFS","size":"6X6","desc":"FACEPIPE 3WL 2SHFS 6X6 FP2SHFS3WL06X6"},{"part":"1000-8194","op":"3WL","tanks":2,"arr":"SHFS","size":"8X6","desc":"FACEPIPE 3WL 2SHFS 8X6 FP2SHFS3WL08X6"},{"part":"1000-8195","op":"3WL","tanks":2,"arr":"SHFS","size":"10X6","desc":"FACEPIPE 3WL 2SHFS 10X6 FP2SHFS3WL10X6"},{"part":"1001-4057","op":"3WL","tanks":2,"arr":"SHFS","size":"12X8","desc":"FACEPIPE 3WL2SHFS12X8 SCH80W/DOM STK"},{"part":"1000-8196","op":"3WP","tanks":2,"arr":"SHFS","size":"6X6","desc":"FACEPIPE 3WP 2SHFS 6X6 FP2SHFS3WP06X6"},{"part":"1000-8197","op":"3WP","tanks":2,"arr":"SHFS","size":"8X6","desc":"FACEPIPE 3WP 2SHFS 8X6 FP2SHFS3WP08X6"},{"part":"1004-3223","op":"3WP","tanks":2,"arr":"SHFS","size":"10X8","desc":"FACEPIPE 3WP 2SHFS 10X8 FP2SHFS3WP10X8"},{"part":"1004-4138","op":"3WP","tanks":2,"arr":"SHFS","size":"12X8","desc":"FACEPIPE 3WP 2SHFS 12X8 FP2SHFS3WP12X8"},{"part":"1004-3175","op":"STD","tanks":2,"arr":"SHFS","size":"4X3","desc":"FACEPIPE STD 2SHFS 4X3 FPSHFS-4X3"},{"part":"1000-8238","op":"STD","tanks":2,"arr":"SHFS","size":"6X6","desc":"FACEPIPE STD 2SHFS 6X6 FPSHFS-6X6"},{"part":"1001-4006","op":"STD","tanks":2,"arr":"SHFS","size":"8X6","desc":"FACEPIPE STD 2SHFS 8X6 SCH80 W/DOM STK"},{"part":"1000-8198","op":"DLK","tanks":2,"arr":"SHFS","size":"6X4","desc":"FACEPIPE DLK 2SHFS 6X4 FP2SHFSDL-6X4"},{"part":"1001-4002","op":"DLK","tanks":2,"arr":"SHFS","size":"6X6","desc":"FACEPIPE DLK 2SHFS 6X6 SCH80 W/DOM STK"},{"part":"1000-8199","op":"3WL","tanks":3,"arr":"CCFG","size":"4X4X3","desc":"FACEPIPE 3WL 3CCFG 4X4X3 FP3CCFG3WL04X3"},{"part":"1002-2057","op":"3WL","tanks":4,"arr":"CCFG","size":"6X3","desc":"FACEPIPE 3WL 4CCFG 6X3 FP4CCFG3WL06X3"},{"part":"1004-2376","op":"3WE","tanks":3,"arr":"SHF","size":"6X4","desc":"FACEPIPE 3WE 3SHF 6X4 FP3SHF3WE06X4"},{"part":"1000-8200","op":"3WE","tanks":3,"arr":"SHF","size":"10X10X6","desc":"FACEPIPE 3WE 3SHF 10X10X6 FP3SHF3WE10X6"},{"part":"1000-8201","op":"3WG","tanks":3,"arr":"SHF","size":"6X6X4","desc":"FACEPIPE 3WG 3SHF 6X6X4 FP3SHF3WG06X4"},{"part":"1000-8202","op":"3WG","tanks":3,"arr":"SHF","size":"12X10X8","desc":"FACEPIPE 3WG 3SHF 12X10X8 FP3SHF3WG12X8"},{"part":"1000-8203","op":"3WL","tanks":3,"arr":"SHF","size":"6X6X4","desc":"FACEPIPE 3WL 3SHF 6X6X4 FP3SHF3WL06X4"},{"part":"1000-8204","op":"3WL","tanks":3,"arr":"SHF","size":"8X6X4","desc":"FACEPIPE 3WL 3SHF 8X6X4 FP3SHF3WL08X4"},{"part":"1000-8205","op":"3WL","tanks":3,"arr":"SHF","size":"8X8X6","desc":"FACEPIPE 3WL 3SHF 8X8X6 FP3SHF3WL08X6"},{"part":"1003-4639","op":"3WL","tanks":3,"arr":"SHF","size":"10X10X6","desc":"FACEPIPE 3WL 3SHF 10X10X6 FP3SHF3WL10X6"},{"part":"1001-7851","op":"3WP","tanks":3,"arr":"SHF","size":"6X4","desc":"FACEPIPE 3WP 3SHF 6X4 FP3SHF3WP06X4"},{"part":"1001-7497","op":"3WP","tanks":3,"arr":"SHF","size":"8X4","desc":"FACEPIPE 3WP 3SHF 8X4 FP3SHF3WP08X4"},{"part":"1004-3105","op":"3WP","tanks":3,"arr":"SHF","size":"10X10X6","desc":"FACEPIPE 3WP 3SHF 10X10X6 FP3SHF3WP10X6"},{"part":"1001-4003","op":"STD","tanks":3,"arr":"SHF","size":"8X6X4","desc":"FACEPIPE STD 3SHF 8X6X4 SCH80 W/DOM"},{"part":"1000-8206","op":"3WL","tanks":3,"arr":"SHFS","size":"6X6X4","desc":"FACEPIPE 3WL 3SHFS 6X6X4 FP3SHFS3WL06X4"},{"part":"1000-8207","op":"3WL","tanks":3,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WL 3SHFS 8X6X4 FP3SHFS3WL08X4"},{"part":"1000-8208","op":"3WE","tanks":4,"arr":"SHF","size":"10X8X6","desc":"FACEPIPE 3WE 4SHF 10X8X6 FP4SHF3WE10X6A"},{"part":"1000-8209","op":"3WL","tanks":4,"arr":"SHF","size":"8X6X4","desc":"FACEPIPE 3WL 4SHF 8X6X4 FP4SHF3WL08X4"},{"part":"1003-4799","op":"3WL","tanks":4,"arr":"SHF","size":"10X10X8X6","desc":"FACEPIPE 3WL 4SHF 10X10X8X6FP4SHF3WL10X6"},{"part":"1000-8210","op":"3WE","tanks":4,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WE 4SHFS 8X6X4 FP4SHFS3WE08X4"},{"part":"1000-8211","op":"3WE","tanks":4,"arr":"SHFS","size":"8X6X6","desc":"FACEPIPE 3WE 4SHFS 8X6X6 FP4SHFS3WE08X6"},{"part":"1001-7476","op":"3WE","tanks":4,"arr":"SHFS","size":"10X6","desc":"FACEPIPE FP4SHFS3WE10X6"},{"part":"1004-4135","op":"3WE","tanks":4,"arr":"SHFS","size":"10X8X6","desc":"FACEPIPE 3WE 4SHFS 10X8X6 FP4SHFS3WE10X6"},{"part":"1000-8212","op":"3WE","tanks":4,"arr":"SHFS","size":"12X10X6","desc":"FACEPIPE 3WE 4SHFS12X10X6 FP4SHFS3WE12X6"},{"part":"1004-3145","op":"3WE","tanks":4,"arr":"SHFS","size":"12X10X8","desc":"FACEPIPE 3WE 4SHFS 12X10X8 FP4SHFS3WE12X"},{"part":"1000-8213","op":"3WG","tanks":4,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WG 4SHFS 8X6X4 FP4SHFS3WG08X4"},{"part":"1000-8214","op":"3WG","tanks":4,"arr":"SHFS","size":"10X8X8X6","desc":"FACEPIPE 3WG 4SHFS10X8X8X6FP4SHFS3WG1086"},{"part":"1001-4005","op":"3WL","tanks":4,"arr":"SHFS","size":"6X6X4","desc":"FACEPIPE 3WL 4SHFS 6X6X4 FP4SHFS3WL06X4"},{"part":"1000-8215","op":"3WL","tanks":4,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WL 4SHFS 8X6X4 FP4SHFS3WL08X4"},{"part":"1000-8216","op":"3WL","tanks":4,"arr":"SHFS","size":"8X6X6","desc":"FACEPIPE 3WL 4SHFS 8X6X6 FP4SHFS3WL08X6"},{"part":"1000-8219","op":"3WL","tanks":4,"arr":"SHFS","size":"10X8X6","desc":"FACEPIPE*3WL 4SHFS 10X8X6 FP4SHFS3WL10X6"},{"part":"1000-8217","op":"3WL","tanks":4,"arr":"SHFS","size":"10X8X6X6","desc":"FACEPIPE 3WL 4SHFS10X8X6X6FP4SHFS3WL106A"},{"part":"1000-8221","op":"3WL","tanks":4,"arr":"SHFS","size":"12X10X6","desc":"FACEPIPE 3WL 4SHFS 12X10X6FP4SHFS3WL12X6"},{"part":"1000-8220","op":"3WL","tanks":4,"arr":"SHFS","size":"12X10X8X6","desc":"FACEPIPE 3WL 4SHFS12X10X8X6FP4SHFS3WL128"},{"part":"1000-8222","op":"3WP","tanks":4,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WP 4SHFS 8X6X4 FP4SHFS3WP08X4"},{"part":"1000-8223","op":"3WP","tanks":4,"arr":"SHFS","size":"8X6X6","desc":"FACEPIPE 3WP 4SHFS 8X6X6 FP4SHFS3WP08X6"},{"part":"1001-4004","op":"STD","tanks":4,"arr":"SHFS","size":"10X8X6","desc":"FACEPIPE STD4SHFS10X8X6SCH80 W/DOM STK"},{"part":"1001-3436","op":"3WL","tanks":5,"arr":"SHF","size":"10X8X6","desc":"FACEPIPE 3WL 5SHF 10X8X6"},{"part":"1000-8224","op":"3WL","tanks":6,"arr":"SHF","size":"12X10X8X6","desc":"FACEPIPE 3WL 6SHF12X10X8X6 FP6SHF3WL12X6"},{"part":"1000-8225","op":"3WL","tanks":6,"arr":"SHFS","size":"8X6X4","desc":"FACEPIPE 3WL 6SHFS 8X6X4 FP6SHFS3WL08X4"},{"part":"1000-8226","op":"3WL","tanks":6,"arr":"SHFS","size":"12X10X8X6","desc":"FACEPIPE 3WL 6SHFS12X10X8X6FP6SHFS3WL12X"},{"part":"1000-8227","op":"STD","tanks":2,"arr":"DRF","size":"4X4","desc":"FACEPIPE STD DRF 4X4 FPDRF-4X4"},{"part":"1000-8228","op":"STD","tanks":2,"arr":"DRF","size":"6X4","desc":"FACEPIPE STD DRF 6X4 FPDRF-6X4"},{"part":"1000-8229","op":"3WG","tanks":2,"arr":"SDC","size":"6X4","desc":"FACEPIPE 3WG SDC 6X4 FPSDC3WG06X4"},{"part":"1000-8230","op":"3WL","tanks":2,"arr":"SDC","size":"6X4","desc":"FACEPIPE 3WL SDC 6X4 FPSDC3WL06X4"},{"part":"1000-8231","op":"STD","tanks":2,"arr":"SDC","size":"6X6","desc":"FACEPIPE STD SDC 6X6 FPSDC-6X6"},{"part":"1000-8232","op":"STD","tanks":2,"arr":"SDC","size":"8X6","desc":"FACEPIPE STD SDC 8X6 FPSDC-8X6"},{"part":"1000-8233","op":"DLK","tanks":2,"arr":"SDC","size":"10X8","desc":"FACEPIPE DLK SDC 10X8 FPSDCDL10X8"},{"part":"1000-8234","op":"DLK","tanks":2,"arr":"SDC","size":"8X6","desc":"FACEPIPE DLK SDC 8X6 FPSDCDL8X6"},{"part":"1000-8235","op":"STD","tanks":1,"arr":"SHF","size":"4","desc":"FACEPIPE STD 1SHF 4 FPSHF-4"},{"part":"1000-8236","op":"STD","tanks":1,"arr":"SHF","size":"6","desc":"FACEPIPE STD 1SHF 6 FPSHF-6"},{"part":"1000-8237","op":"STD","tanks":1,"arr":"SHF","size":"8","desc":"FACEPIPE STD 1SHF 8 FPSHF-8"},{"part":"1001-3437","op":"STD","tanks":1,"arr":"SRF","size":"4","desc":"FACEPIPE STD SRF  4"},{"part":"1000-8239","op":"STD","tanks":1,"arr":"SRF","size":"6","desc":"FACEPIPE STD SRF 6 FPSRF-6"}],"ops":{"3WL":"3-way lever: valve pairs linked to one handle (influent with backwash waste, effluent with backwash supply)","3WE":"3-way electric: linear actuators on the linked valve pairs (115/220 V)","3WG":"3-way gear operated","3WP":"3-way pneumatic: pneumatic operators driven by an MFP4 programmer","STD":"Standard face piping with individual valves","DLK":"DLK face piping (as listed in the master product list)"},"pipe_cap_10fps":{"1":22,"1.5":53,"2":90,"2.5":128,"3":201,"4":351,"6":799,"8":1401,"10":2206,"12":3123,"14":3771,"16":4953,"18":6278},"parts":[{"part":"1000-8277","desc":"TNK FLTR FG CCFG 36 LEGACY 3CN TNKONLY","sub":"Misc"},{"part":"1000-8279","desc":"TNK FLTR FG CCFG 42 LEGACY 3CN TNKONLY","sub":"Misc"},{"part":"1000-8281","desc":"TNK FLTR FG CCFG 48 LEGACY 3CN TNKONLY","sub":"Misc"},{"part":"1000-1438","desc":"MEDIA SAND#20 .45M- .55M 50# BAG","sub":"Media"},{"part":"1000-5490","desc":"MEDIA, GRAVEL 0.125\"x0.25\" 50LB","sub":"Media"},{"part":"1000-5540","desc":"FP ACTUATOR LINEAR W/12' PIGTAIL 115V","sub":"Misc"},{"part":"1003-4912","desc":"FP ACTUATOR LINEAR W/12' PIGTAIL 220V","sub":"Misc"},{"part":"1003-8968","desc":"FP ACTUATOR LINEAR W/PIGTAIL 120V","sub":"Misc"},{"part":"1001-7499","desc":"PROGRAMMER MFP4 1 TNK/CELL PNEU OPERATOR","sub":"Controller"},{"part":"1000-4875","desc":"PROGRAMMER MFP4 2 TNK/CELL PNEU OPERATOR","sub":"Controller"},{"part":"1001-7510","desc":"PROGRAMMER MFP4 3 TNK/CELL PNEU OPERATOR","sub":"Controller"},{"part":"1000-4876","desc":"PROGRAMMER MFP4 4 TNK/CELL PNEU OPERATOR","sub":"Controller"},{"part":"1000-8459","desc":"PROGRAMMER MFP4 1-4TNK 3WAYSLA &DLA","sub":"Controller"},{"part":"1000-8321","desc":"PROGRAMMER MFP4 ONLY 1-4TNK -NO COMP TEE","sub":"Controller"},{"part":"1000-8243","desc":"GAUGE PANEL ASY MFP3/MFP4AUTOMATIC FLTR","sub":"Misc"},{"part":"1000-5360","desc":"SADDLE STACKING SEISMIC &HDWR 34\" FILTER","sub":"Misc"},{"part":"1002-1066","desc":"SADDLE STACKING SEISMIC &HDWR 36\" FILTER","sub":"Misc"},{"part":"1000-5363","desc":"SADDLE STACKING SEISMIC &HDWR 42\" FILTER","sub":"Misc"},{"part":"1001-3952","desc":"SADDLE STACKING SEISMIC &HDWR 48\" FILTER","sub":"Misc"},{"part":"1002-1068","desc":"SADDLE STACKING SEISMIC &HDWR 60\" FILTER","sub":"Misc"},{"part":"1000-5991","desc":"VALVE AIR RELIEF 3/4\" KIT","sub":"Kit"},{"part":"1000-7246","desc":"GASKET MANHOLE FG TNK CLOSEDCELL","sub":"Gasket"},{"part":"1000-6504","desc":"MANWAY CLEAR FG 50PSI DRK BL-BAR LUGS&HW","sub":"Kit"},{"part":"1001-9251","desc":"MANWAY 48\"CCFG W/YOKES-GSKT-AIRRELIEF-HW","sub":"Kit"},{"part":"1000-5883","desc":"COVER CCFG 6\"X9\" COMPLETE ASSY","sub":"Misc"}]};
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const fmtIn=v=>{ if(v==null||isNaN(v)) return '—'; const w=Math.floor(v+1e-6), f=Math.round((v-w)*16); if(!f) return String(w); let n=f,d=16; while(n%2===0){n/=2;d/=2;} return (w?w+' ':'')+n+'/'+d; };
+const n0=v=>v==null?'—':Math.round(v).toLocaleString('en-US');
+const n1=v=>v==null?'—':(+v).toFixed(1);
+const pad2=s=>String(s).padStart(2,'0');
+const OD={3:3.5,4:4.5,6:6.625,8:8.625,10:10.75,12:12.75,14:14,16:16};
+const CAP=DATA.pipe_cap_10fps;                       // SCH 80 GPM at 10 ft/s
+const cap=s=>CAP[String(s)]||CAP[s];
+const BW=DATA.meta.backwash_rate_gpmsf;              // 15 to 20 GPM/sq ft
+
+// ---------------------------------------------------------------- product lines -----------------------------------
+const LINES={
+  SHFFG:{t:'SHFFG horizontal',s:'Fiberglass, 34 to 60 in dia, 48 to 168 in long'},
+  SRF:{t:'SRF / SRFFG vertical',s:'Single cell, 36 to 120 in, steel or fiberglass'},
+  DRF:{t:'DRF dual cell',s:'Two vertical cells on one face piping set'},
+  CCFG:{t:'CCFG Legacy',s:'Compact fiberglass, 36 / 42 / 48 in, multiport'}
+};
+const OPS={
+  SHFFG:[['3WL','3-way lever'],['3WE','3-way electric'],['3WG','3-way gear'],['3WP','3-way pneumatic'],['STD','Standard']],
+  SRF:[['SLM','4-valve single lever'],['3WL','3-way lever'],['3WE','3-way electric']],
+  DRF:[['SLM','4-valve single lever'],['3WLO','3-way lever']],
+  CCFG:[['MAN','Manual multiport'],['AUTO','Auto multiport'],['3WL','3-way lever (multi-tank)'],['SLM','Single lever (multi-tank)']]
+};
+const OPDESC=Object.assign({SLM:'Four valve single lever linkage: one handle moves all four valves between filter and backwash.',
+  '3WLO':'3-way face piping with lever-operated linked valve pairs.',MAN:'Manual multiport valve: filter, backwash, rinse, waste, recirculate and closed positions on one handle.',
+  AUTO:'Automatic multiport valve with motor actuator and controller.'},DATA.ops);
+
+// ---------------------------------------------------------------- state --------------------------------------------
+const S={line:'SHFFG',dia:48,len:48,conn:4,mat:'FG',shell:60,arr:'single',n:1,op:'3WL',fp:null,hand:'L',inlet:'top',orient:'C1',flow:null,rate:null,mode:'filter',bw:0,xray:true,labels:true};
+function readURL(){ const q=new URLSearchParams(location.search); for(const k of Object.keys(S)){ if(!q.has(k)) continue; const v=q.get(k); S[k]=(typeof S[k]==='number'||['dia','len','conn','n','shell','flow','rate','bw'].includes(k))&&v!==''&&!isNaN(+v)?+v:(v==='true'?true:v==='false'?false:v); } }
+function writeURL(){ try{ const q=new URLSearchParams(); for(const k of ['line','dia','len','conn','mat','shell','arr','n','op','fp','hand','inlet','orient','flow']) if(S[k]!=null&&S[k]!=='') q.set(k,S[k]); history.replaceState(null,'',location.pathname+'?'+q); }catch(e){} }
+
+// ---------------------------------------------------------------- data access -------------------------------------
+const SH=DATA.shffg.models, SR=DATA.srf.models, DR=DATA.drf.models, CC=DATA.ccfg.models;
+const uniq=a=>[...new Set(a)];
+function model(){
+  if(S.line==='SHFFG') return SH.find(m=>m.dia===S.dia&&m.length===S.len&&m.conn===S.conn);
+  if(S.line==='SRF') return SR.find(m=>m.dia===S.dia&&m.conn===S.conn);
+  if(S.line==='DRF') return DR.find(m=>m.dia===S.dia&&m.fp===S.fp);
+  return CC.find(m=>m.dia===S.dia);
+}
+function fixState(){
+  const L=S.line;
+  if(L==='SHFFG'){
+    const dias=uniq(SH.map(m=>m.dia)); if(!dias.includes(S.dia)) S.dia=48;
+    const lens=uniq(SH.filter(m=>m.dia===S.dia).map(m=>m.length)); if(!lens.includes(S.len)) S.len=lens[0];
+    const cons=SH.filter(m=>m.dia===S.dia&&m.length===S.len).map(m=>m.conn); if(!cons.includes(S.conn)) S.conn=cons[0];
+    if(!['single','sxs','stacked','row','stackrow'].includes(S.arr)) S.arr='single';
+    const ns={single:[1],sxs:[2],stacked:[2],row:[3,4,5,6],stackrow:[4,6]}[S.arr]; if(!ns.includes(S.n)) S.n=ns[0];
+  } else if(L==='SRF'){
+    const dias=uniq(SR.map(m=>m.dia)); if(!dias.includes(S.dia)) S.dia=48;
+    const cons=SR.filter(m=>m.dia===S.dia).map(m=>m.conn); if(!cons.includes(S.conn)) S.conn=cons[cons.length-1];
+    if(!['FG','STL'].includes(S.mat)) S.mat='FG';
+    S.arr='row'; S.n=clamp(S.n|0||1,1,4);
+  } else if(L==='DRF'){
+    const dias=uniq(DR.map(m=>m.dia)); if(!dias.includes(S.dia)) S.dia=60;
+    const fps=DR.filter(m=>m.dia===S.dia).map(m=>m.fp); if(!fps.includes(S.fp)) S.fp=fps[0];
+    S.arr='drf'; S.n=2;
+  } else {
+    const dias=CC.map(m=>m.dia); if(!dias.includes(S.dia)) S.dia=42;
+    S.conn=3; S.arr='row'; S.n=clamp(S.n|0||1,1,4);
+  }
+  const ops=OPS[L].map(o=>o[0]);
+  if(L==='CCFG'){ if(S.n===1&&!['MAN','AUTO'].includes(S.op)) S.op='MAN'; if(S.n>1&&!['3WL','SLM'].includes(S.op)) S.op='3WL'; }
+  if(!ops.includes(S.op)) S.op=ops[0];
+  if(L==='DRF'){ const m=model(); if((!S.flow||S.flow<=0)&&m) S.flow=Math.round(area()*clamp(15,m.rate_gpmsf[0],m.rate_gpmsf[1])); }
+  else { const m=model(); if((!S.flow||S.flow<=0)&&m) S.flow=Math.floor(area()*clamp(15,m.rate_gpmsf[0],m.rate_gpmsf[1])); const fo=fpOptions(); if(!fo.includes(S.fp)) S.fp=fpDefault(fo); }
+  if(!['L','R'].includes(S.hand)) S.hand='L';
+  if(!['top','side'].includes(S.inlet)) S.inlet='top';
+  const oc=orientCodes(); if(oc.length&&!oc.includes(S.orient)) S.orient=oc[0];
+}
+function area(){ const m=model(); if(!m) return 0; return S.line==='DRF'? m.area_sf : m.area_sf*S.n; }
+function arrCode(){ // drawing-library arrangement code
+  if(S.line!=='SHFFG') return null;
+  return {single:'1SHF',sxs:'2SHF',stacked:'2SHFS',row:S.n+'SHF',stackrow:S.n+'SHFS'}[S.arr];
+}
+function orientCodes(){ const a=arrCode(); const c=a&&DATA.shffg.orient[a]; return c? Array.from({length:c},(_,i)=>'C'+(i+1)) : []; }
+function fpOptions(){
+  const L=S.line, c=S.conn;
+  if(L==='CCFG'){ if(S.n===1) return ['3']; return S.n===2? ['3x3','4x3','6x3'] : ['4x3','6x3','8x3']; }
+  if(S.n===1) return L==='SRF'? [String(c)] : ['3','4','6','8'].filter(s=>+s>=Math.min(c,3)&&+s<=Math.max(c,6)+2);
+  const dual=Object.keys(DATA.shffg.fp_dual.SxS);
+  const hdrs=[4,6,8,10,12,14].filter(h=>h>=c);
+  if(L==='SHFFG'&&S.n===2){ const extra=['4x4','8x8','12x8']; const o=uniq([...dual,...extra]).filter(s=>+s.split('x')[1]===c).sort((a,b)=>parseFloat(a)-parseFloat(b)); if(S.dia===48&&S.arr==='stacked'&&c===6) o.push('12x8'); return o.length?o:hdrs.map(h=>h+'x'+c); }
+  return [6,8,10,12,14].filter(h=>h>c).map(h=>h+'x'+c);
+}
+function fpDefault(opts){
+  const tot=S.flow||area()*15;
+  if(S.n===1) return opts.includes(String(S.conn))? String(S.conn) : opts[0];
+  for(const o of opts){ const h=+o.split('x')[0]; if(cap(h)>=tot) return o; }
+  return opts[opts.length-1];
+}
+const hdrSize=()=> S.line==='DRF'? +model().fp.split('x')[0] : S.n===1? +String(S.fp).split('x')[0] : +String(S.fp).split('x')[0];
+const brSize=()=> S.line==='DRF'? +model().fp.split('x')[1] : S.n===1? +String(S.fp).split('x')[0] : +String(S.fp).split('x')[1];
+
+// ---------------------------------------------------------------- model number ----------------------------------------
+function modelNumber(){
+  const m=model(); if(!m) return '';
+  const q=`(${S.n})`;
+  if(S.line==='SHFFG'){
+    const st=S.arr==='stacked'||S.arr==='stackrow';
+    const hand=S.n>1&&!st? 'LR' : (S.arr==='stackrow'?'LR':S.hand);
+    const fp=S.n===1? pad2(S.fp) : String(S.fp).toUpperCase();
+    return `${q}${m.model}${st?'S':''}-${S.conn}${hand}-${S.op}-${fp}-${S.orient}`;
+  }
+  if(S.line==='SRF'){ const nm=`${S.dia}${S.mat==='FG'?'SRFFG':'SRF'}`; const fp=S.n===1? pad2(S.conn) : String(S.fp).toUpperCase(); return `${q}${nm}-${S.op}-${fp}`; }
+  if(S.line==='DRF') return `(1)${S.dia}DRF-${S.op}-${m.fp.toUpperCase()}`;
+  return S.n===1? `(1)${S.dia}CCFG-3${S.op}` : `${q}${S.dia}CCFG-${S.op}-${String(S.fp).toUpperCase()}`;
+}
+
+// ---------------------------------------------------------------- controls -------------------------------------------
+function chips(id,label,opts,cur,on,fmt){
+  return `<div class="lbl">${label}</div><div class="chips" data-k="${id}">`+opts.map(o=>{ const v=Array.isArray(o)?o[0]:o, t=Array.isArray(o)?o[1]:(fmt?fmt(o):o); return `<button data-v="${v}" aria-pressed="${String(v)===String(cur)}" ${o&&o.dis?'disabled':''}>${t}</button>`; }).join('')+`</div>`;
+}
+function renderControls(){
+  $('#c-line').innerHTML=Object.entries(LINES).map(([k,v])=>`<button data-line="${k}" aria-pressed="${S.line===k}"><span class="t">${v.t}</span><span class="s">${v.s}</span></button>`).join('');
+  const m=model(); let h='';
+  if(S.line==='SHFFG'){
+    h+=chips('dia','Diameter (in)',uniq(SH.map(x=>x.dia)),S.dia);
+    h+=chips('len','Shell length (in)',uniq(SH.filter(x=>x.dia===S.dia).map(x=>x.length)),S.len);
+    h+=chips('conn','Tank connection (in)',SH.filter(x=>x.dia===S.dia&&x.length===S.len).map(x=>x.conn),S.conn);
+    h+=chips('hand','Manway hand',[['L','Left'],['R','Right']],S.hand);
+    h+=`<p class="note">${m?`<b>${m.model}-${m.conn}</b>: ${m.area_sf} sq ft, ${m.flow_gpm[0]} to ${m.flow_gpm[1]} GPM per tank at ${m.rate_gpmsf[0]} to ${m.rate_gpmsf[1]} GPM/sq ft.`:''} 34 in models are sized by OD, the rest by ID.</p>`;
+  } else if(S.line==='SRF'){
+    h+=chips('mat','Tank material',[['FG','Fiberglass (SRFFG)'],['STL','Steel (SRF)']],S.mat);
+    h+=chips('dia','Diameter (in)',uniq(SR.map(x=>x.dia)),S.dia);
+    h+=chips('conn','Tank connection (in)',SR.filter(x=>x.dia===S.dia).map(x=>x.conn),S.conn);
+    if(S.mat==='FG') h+=chips('shell','Side shell (in)',[60,72],S.shell);
+    const fg=DATA.srf.fg_sizes[S.dia]||[];
+    h+=`<p class="note">${m?`<b>${S.dia} SRF-${S.conn}</b>: ${m.area_sf} sq ft, ${m.flow_gpm[0]} to ${m.flow_gpm[1]} GPM per tank.`:''} ${S.mat==='FG'?`Fiberglass ${S.dia} in vessels are listed with ${fg.join(' / ')} in connections; dimensions shown are the steel SRF tech-sheet values.`:'Steel: 50 psi operating, 75 psi hydrostatic test.'}</p>`;
+  } else if(S.line==='DRF'){
+    h+=chips('dia','Cell diameter (in)',uniq(DR.map(x=>x.dia)),S.dia);
+    h+=chips('fp','Face piping size',DR.filter(x=>x.dia===S.dia).map(x=>[x.fp,x.fp]),S.fp);
+    h+=`<p class="note">${m?`<b>${m.model}</b> (${m.fp}): ${m.area_sf} sq ft total, ${m.flow_gpm[0]} to ${m.flow_gpm[1]} GPM.`:''}</p>`;
+  } else {
+    h+=chips('dia','Model',CC.map(x=>[x.dia,x.model]),S.dia);
+    h+=`<p class="note">${m?`<b>${m.model}</b>: ${m.area_sf} sq ft, max ${m.max_flow} GPM, ${m.access||''}. ${m.note||''}`:''}</p>`;
+  }
+  $('#c-tank').innerHTML=h;
+  // arrangement
+  h='';
+  if(S.line==='SHFFG'){
+    h+=chips('arr','Layout',[['single','Single'],['sxs','Side by side'],['stacked','Stacked'],['row','Row (3-6)'],['stackrow','Stacked pairs']],S.arr);
+    const ns={single:[1],sxs:[2],stacked:[2],row:[3,4,5,6],stackrow:[4,6]}[S.arr];
+    if(ns.length>1) h+=chips('n','Number of tanks',ns,S.n);
+    const oc=orientCodes();
+    if(oc.length) h+=`<div class="lbl">Drawing library orientation</div><select data-sel="orient">${oc.map(c=>`<option ${c===S.orient?'selected':''}>${c}</option>`).join('')}</select><p class="note">Orientation code from the filter system drawing matrix (${arrCode()}, ${oc.length} codes). It is carried into the model number; the code key itself is not in the source files.</p>`;
+    else h+=`<p class="note">${arrCode()} has no drawing-matrix sheet yet; face piping is engineered per job.</p>`;
+    const co=cadOptions(); if(co.length){ const ck=cadKey(); h+=`<div class="lbl">STEP face piping (48 in library)</div><div class="chips cad" data-k="cad">`+co.map(o=>`<button data-v="${o.k}" aria-pressed="${ck===o.k}" title="${o.t}">${o.k}</button>`).join('')+`</div><p class="note" id="cadnote">${CADNOTE||""}</p><p class="note">${co.map(o=>o.t).join(' · ')}. Other sizes use the STEP fittings kit.</p>`; }
+  } else if(S.line==='DRF'){
+    h+=`<p class="note">Two cells side by side with isolation valves on one face piping set. Overall width K = ${m?fmtIn(m.dims?m.dims.K:m.K):'—'} in.</p>`;
+  } else {
+    h+=chips('n','Number of tanks',[1,2,3,4],S.n);
+  }
+  $('#c-arr').innerHTML=h;
+  // face piping
+  h='';
+  const ops=OPS[S.line].filter(([k])=> S.line!=='CCFG' || (S.n===1? ['MAN','AUTO'].includes(k) : ['3WL','SLM'].includes(k)));
+  h+=chips('op','Valve operation',ops,S.op);
+  if(S.line!=='DRF'&&!(S.line==='CCFG'&&S.n===1)){
+    const fo=fpOptions();
+    h+=chips('fp',S.n===1?'Face piping size (in)':'Header x branch (in)',fo.map(x=>[x,x]),S.fp);
+  }
+  if(S.line==='SHFFG'||S.line==='SRF') h+=chips('inlet','Pump connection',[['top','From above'],['side','From the side']],S.inlet);
+  h+=`<p class="note">${OPDESC[S.op]||''}</p>`;
+  $('#c-fp').innerHTML=h;
+  // flow
+  $('#flow').value=S.flow||'';
+  const r=$('#rate'); r.innerHTML='<option value="">—</option>'+[5,8,10,12,15,18,20].map(v=>`<option value="${v}">${v}</option>`).join('');
+}
+document.addEventListener('click',e=>{
+  const ln=e.target.closest('#c-line button'); if(ln){ S.line=ln.dataset.line; S.fp=null; S.flow=null; S.op=null; S.n=1; S.arr='single'; update(true); return; }
+  const b=e.target.closest('.chips button'); if(!b||b.disabled) return;
+  const k=b.parentElement.dataset.k; if(!k) return;
+  if(k==='cad'){ const o=cadOptions().find(x=>x.k===b.dataset.v); if(o){ S.orient=o.orient; S.fp=o.fp; if(o.inlet) S.inlet=o.inlet; update(true); } return; }
+  let v=b.dataset.v; if(['dia','len','conn','n','shell'].includes(k)) v=+v;
+  const rr=area()? S.flow/area() : 15;
+  S[k]=v;
+  if(['dia','len','conn','n','arr','mat'].includes(k)){
+    if(S.line!=='DRF'||k==='dia') S.fp=null;
+    fixState(); S.flow=Math.round(clamp(rr,5,20)*area());
+    if(S.line!=='DRF'){ S.fp=fpDefault(fpOptions()); }
+  }
+  if(k==='fp'&&S.line==='DRF'){ fixState(); S.flow=Math.round(clamp(rr,5,20)*area()); }
+  update(true);
+});
+document.addEventListener('change',e=>{ const s=e.target.closest('select[data-sel]'); if(s){ S[s.dataset.sel]=s.value; update(false); } });
+$('#flow').addEventListener('change',()=>{ const v=+$('#flow').value; if(v>0){ S.flow=v; $('#rate').value=''; update(false,true); } });
+$('#rate').addEventListener('change',()=>{ const v=+$('#rate').value; if(v>0){ S.flow=Math.round(v*area()); update(false,true); } });
+
+// ---------------------------------------------------------------- results ---------------------------------------------
+function results(){
+  const m=model(); if(!m) return;
+  const A=area(), Q=S.flow, rate=Q/A, n=S.line==='DRF'?2:S.n, perTank=A/n;
+  const hs=hdrSize(), bs=brSize();
+  const chk=[]; const add=(lvl,t)=>chk.push([lvl,t]);
+  const rmin=m.rate_gpmsf[0], rmax=m.rate_gpmsf[1];
+  if(rate>20.0001) add('b',`Filtration rate ${n1(rate)} GPM/sq ft is above the 20 GPM/sq ft NSF-50 listing.`);
+  else if(rate<5) add('w',`Filtration rate ${n1(rate)} GPM/sq ft is below the 5 GPM/sq ft published minimum.`);
+  else add('',`Filtration rate ${n1(rate)} GPM/sq ft is inside the 5 to 20 GPM/sq ft range.`);
+  if(S.line!=='CCFG'&&S.line!=='DRF'&&(rate<rmin-0.01||rate>rmax+0.01)) add('w',`The ${S.conn} in connection on this tank is published for ${rmin} to ${rmax} GPM/sq ft. ${rate>rmax?'Consider the larger connection.':'A smaller connection is published for this rate.'}`);
+  if(S.line==='CCFG'&&Q>m.max_flow*S.n+1) add('b',`${m.model} is published for a maximum of ${m.max_flow} GPM per tank.`);
+  const perQ=Q/n;
+  if(cap(bs)&&perQ>cap(bs)) add('b',`Each tank branch (${bs} in) carries ${n0(perQ)} GPM, above ${cap(bs)} GPM at 10 ft/s in SCH 80.`);
+  if(n>1&&cap(hs)){ if(Q>cap(hs)) add('b',`The ${hs} in header carries ${n0(Q)} GPM, above ${cap(hs)} GPM at 10 ft/s in SCH 80. Choose a larger header.`); else add('',`${hs} in header: ${n0(Q)} GPM is ${Math.round(Q/cap(hs)*100)}% of the 10 ft/s SCH 80 capacity.`); }
+  if(n===1&&cap(hs)&&Q>cap(hs)) add('b',`${hs} in face piping carries ${n0(Q)} GPM, above ${cap(hs)} GPM at 10 ft/s in SCH 80.`);
+  const bw0=perTank*BW[0], bw1=perTank*BW[1];
+  if(cap(bs)&&bw1>cap(bs)) add('w',`Backwash at 20 GPM/sq ft (${n0(bw1)} GPM) exceeds the ${bs} in branch capacity at 10 ft/s; plan backwash near ${n0(Math.min(bw1,cap(bs)))} GPM or less.`);
+  if(n>1){ const sup=Q; if(sup<bw0) add('w',`Backwashing one tank with filtered water from the others needs ${n0(bw0)} GPM at 15 GPM/sq ft; system flow is ${n0(Q)} GPM.`); else add('',`System flow can backwash one tank at ${n1(Math.min(sup,bw1)/perTank)} GPM/sq ft using water filtered by the other ${n-1}.`); }
+  else if(S.line!=='CCFG'&&Q<bw0) add('w',`Backwash needs ${n0(bw0)} to ${n0(bw1)} GPM (15 to 20 GPM/sq ft). Size the pump for backwash, not only filter flow.`);
+  if(S.line==='SHFFG'&&(S.arr==='row'||S.arr==='stackrow')) add('w','3 to 6 tank nests are engineered per job: header layout here is schematic and dimensions must come from the job drawing.');
+  if(S.line==='SRF'&&S.n>1) add('w','Multiple SRF/SRFFG tanks share headers per job drawing. Tank spacing in the view is schematic.');
+  const pnTank=tankPNs(), fpm=fpMatches();
+  if(S.line==='SHFFG'&&!pnTank.length) add('w','No SAP part number on file for this tank and hand. Engineering to assign one.');
+  if(S.line==='SHFFG'&&!fpm.length) add('w',`No stock face piping assembly in the master product list for ${arrCode()} ${S.op} ${String(S.fp).toUpperCase()}.`);
+  $('#o-chk').innerHTML=chk.map(([l,t])=>`<div class="chk ${l}"><i></i><span>${t}</span></div>`).join('');
+
+  const row=(k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  let p='';
+  p+=row('Tanks',n+(S.line==='DRF'?' cells':''));
+  p+=row('Filter area',n1(A)+' sq ft'+(n>1?` (${n1(perTank)} each)`:''));
+  p+=row('Design flow',n0(Q)+' GPM');
+  p+=row('Filtration rate',n1(rate)+' GPM/sq ft');
+  p+=row('Published flow',`${n0(m.flow_gpm[0]*(S.line==='DRF'?1:n))} to ${n0((S.line==='CCFG'?m.max_flow:m.flow_gpm[1])*(S.line==='DRF'?1:n))} GPM`);
+  p+=row('Backwash, one tank',`${n0(bw0)} to ${n0(bw1)} GPM`);
+  p+=row('Face piping',S.line==='DRF'?m.fp:(S.n===1?(S.line==='CCFG'?'3 in multiport':S.fp+' in'):S.fp));
+  p+=row('Valve operation',(OPS[S.line].find(o=>o[0]===S.op)||[,S.op])[1]);
+  p+=row('Design pressure','50 psi');
+  $('#o-perf').innerHTML=p;
+  p='';
+  if(m.sand_cf!=null){ p+=row('Filter sand, .45-.55 mm',`${m.sand_cf} cu ft/tank (${n0(m.sand_cf*100)} lb)`); p+=row('Sand, all tanks',`${m.sand_cf*n} cu ft (${n0(m.sand_cf*100*n)} lb, ${Math.ceil(m.sand_cf*100*n/50)} x 50 lb bags)`); }
+  if(m.gravel_cf) p+=row('Gravel 1/8 x 1/4',`${m.gravel_cf} cu ft/tank (${m.gravel_cf*n} total)`);
+  if(m.bed_in) p+=row('Bed depth',m.bed_in+' in');
+  if(m.ship_lb) p+=row('Shipping weight',n0(m.ship_lb*(S.line==='DRF'?1:n))+' lb'+(n>1&&S.line!=='DRF'?` (${n0(m.ship_lb)} each)`:''));
+  if(m.oper_lb) p+=row('Operating weight',n0(m.oper_lb*(S.line==='DRF'?1:n))+' lb');
+  $('#o-media').innerHTML=p||row('Media','see tech data');
+  p='';
+  const dl={A:'A  inside dia',A1:'A1  max OD',B:S.line==='SHFFG'?'B  overall length':'B',C:S.line==='SHFFG'?'C  overall height':'C',D:'D',E:S.line==='SHFFG'?'E  lower conn C/L':'E',F:'F',G:S.line==='SHFFG'?'G  stacked height':'G',K:'K  overall width',L:'L',head_t:'Head thickness',shell_t:'Shell thickness'};
+  const dims=Object.assign({},m.dims||{}); for(const k of ['A','A1','B','C','D','E','F','G','K','L','head_t','shell_t']) if(m[k]!=null) dims[k]=m[k];
+  for(const [k,v] of Object.entries(dims)) if(v!=null) p+=row(dl[k]||k,fmtIn(v));
+  if(S.line==='SHFFG'){
+    if(S.n===1){ const fd=DATA.shffg.fp_single[String(+S.fp)]; if(fd) for(const k of ['J','K','L']) p+=row(`${k}  face piping (${S.fp} in)`,fmtIn(fd[k])); }
+    else if(S.n===2){ const t=DATA.shffg.fp_dual[S.arr==='stacked'?'S':'SxS'][S.fp]; if(t) ['J','K','M'].forEach((k,i)=>p+=row(`${k}  face piping (${S.fp})`,fmtIn(t[i]))); }
+  }
+  if(S.line==='CCFG'&&S.n>1){ const t=DATA.ccfg.fp_dual[S.fp]; if(t){ p+=row(`G  face piping (${S.fp})`,fmtIn(t[0])); p+=row(`H  face piping (${S.fp})`,fmtIn(t[1])); } }
+  $('#o-dim').innerHTML=p;
+  // part numbers
+  p='';
+  for(const [k,v] of pnTank) p+=`<div class="pnrow"><span>${k}</span><span class="pn">${v}</span></div>`;
+  for(const f of fpm) p+=`<div class="pnrow"><span>${f.desc.replace(/^FACE ?PIP(E|ING)\*? ?/,'Face piping ')}</span><span class="pn">${f.part}</span></div>`;
+  const media=DATA.parts.filter(x=>x.sub==='Media'&&(m.gravel_cf||!/GRAVEL/.test(x.desc)));
+  for(const x of media) p+=`<div class="pnrow"><span>${x.desc}</span><span class="pn">${x.part}</span></div>`;
+  if(S.op==='3WE') DATA.parts.filter(x=>/FP ACTUATOR/.test(x.desc)).forEach(x=>p+=`<div class="pnrow"><span>${x.desc}</span><span class="pn">${x.part}</span></div>`);
+  if(S.op==='3WP'){ const c=DATA.parts.find(x=>new RegExp('MFP4 '+Math.min(n,4)+' TNK').test(x.desc)); if(c) p+=`<div class="pnrow"><span>${c.desc}</span><span class="pn">${c.part}</span></div>`; }
+  if(S.line==='SHFFG'&&(S.arr==='stacked'||S.arr==='stackrow')){ const sd=DATA.parts.find(x=>x.desc.includes('SEISMIC')&&x.desc.includes(S.dia+'"')); if(sd) p+=`<div class="pnrow"><span>${sd.desc} (seismic option)</span><span class="pn">${sd.part}</span></div>`; }
+  $('#o-pn').innerHTML=p||'<p class="note">No part numbers on file for this combination.</p>';
+  $('#o-src').textContent='Sources: '+DATA.meta.sources.join('; ')+'. Built '+DATA.meta.built+'. Laterals, media and face piping in the 3D view are schematic; confirm against the job drawing before release.';
+  const mn=modelNumber();
+  $('#mn').innerHTML=`${mn}<small>${n} x ${S.line==='DRF'?m.model:m.model+(S.line==='SHFFG'?'-'+S.conn:'')} &middot; ${n1(A)} sq ft &middot; ${n0(Q)} GPM @ ${n1(rate)} GPM/sq ft</small>`;
+  document.title='NBTS | '+mn+' configurator';
+  RES={mn,A,Q,rate,n,perTank,bw:[bw0,bw1],chk,pnTank,fpm,hs,bs};
+}
+let RES={};
+function tankPNs(){
+  const m=model(), out=[];
+  if(S.line==='SHFFG'){
+    const st=S.arr==='stacked'||S.arr==='stackrow';
+    const hands=S.n>1&&!st? ['L','R'] : (S.arr==='stackrow'?['L','R']:[S.hand]);
+    for(const h of hands){ const k=(st?'stacked_':'single_')+h; if(m.pn[k]) out.push([`Tank w/ internals ${m.model}${st?'S':''}-${S.conn}${h}`,m.pn[k]]); if(m.pn[k+'Z']) out.push([`  Z variant ${m.model}${st?'S':''}-${S.conn}${h}Z`,m.pn[k+'Z']]); }
+  } else if(S.line==='SRF'){ const p=m.pn||{}; if(S.mat==='FG'){ if(p.fiberglass) out.push([`Filter ${S.dia}SRFFG-${S.conn}`,p.fiberglass]); if(p.fiberglass_Z) out.push([`Filter ${S.dia}SRFFG-${S.conn}Z`,p.fiberglass_Z]); } else if(p.steel) out.push([`Filter ${S.dia}SRF-${S.conn} (steel)`,p.steel]); }
+  else if(S.line==='CCFG'){ const p=m.pn; if(S.n===1&&S.op==='MAN'&&p.complete_man) out.push([`Complete ${m.model}MAN`,p.complete_man]); if(S.n===1&&S.op==='AUTO'&&p.complete_auto) out.push([`Complete ${m.model}AUTO`,p.complete_auto]); if(p.tank_internals) out.push(['Tank with internals',p.tank_internals]); if(p.tank_only) out.push(['Tank only',p.tank_only]); }
+  return out;
+}
+function fpMatches(){
+  const norm=s=>String(s).toUpperCase().replace(/^0+/,'');
+  if(S.line==='SHFFG'){ const a=arrCode(); const arr=a.replace(/^\d+/,''), tanks=+a.match(/^\d+/)[0]; const size=S.n===1? norm(S.fp) : norm(S.fp);
+    return DATA.fp_parts.filter(f=>f.arr===arr&&f.tanks===tanks&&f.op===S.op&&(norm(f.size)===size||norm(f.size).replace(/X\d+X/,'X')===size||(norm(f.size).startsWith(size.split('X')[0]+'X')&&norm(f.size).endsWith('X'+size.split('X')[1])))); }
+  if(S.line==='SRF') return S.n===1&&S.op==='SLM'? DATA.fp_parts.filter(f=>f.arr==='SRF'&&norm(f.size)===String(S.conn)) : [];
+  if(S.line==='DRF') return DATA.fp_parts.filter(f=>f.arr==='DRF'&&norm(f.size)===model().fp.toUpperCase());
+  if(S.line==='CCFG') return S.n===1? DATA.fp_parts.filter(f=>f.arr==='CCFG'&&f.op===S.op) : DATA.fp_parts.filter(f=>f.arr==='CCFG'&&f.tanks===S.n&&f.op===S.op&&norm(f.size).startsWith(String(S.fp).toUpperCase().split('X')[0]+'X'));
+  return [];
+}
+
+// =========================================================================================================================
+// 3D
+// =========================================================================================================================
+const view=$('#view'), overlay=$('#overlay');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); view.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(32,1,1,20000);
+scene.add(new THREE.HemisphereLight(0xffffff,0x9aa0a8,0.9));
+const sun=new THREE.DirectionalLight(0xffffff,0.65); sun.position.set(0.5,1,0.8); scene.add(sun);
+const fill=new THREE.DirectionalLight(0xffffff,0.3); fill.position.set(-1,0.4,-0.6); scene.add(fill);
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const mat=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,shininess:30,specular:0x222222},o||{}));
+const C={tank:0x2b5fa8,tankS:0x6b7680,saddle:0x1d3f73,pvc:0x4b5157,valve:0x3a4048,handle:0xc8202f,steel:0xaeb3b9,act:0x6d7378,white:0xe9e9e4,sand:0xd8c08a,gravel:0x8b8478,floor:0xdfe2e6,ccfg:0x3e95d1,multi:0xe8e0b8};
+let ROOT=null, TANKMATS=[], INNER=[], VALVES=[], TAGS=[], STREAMS=[], GLASS=[], BOX=new THREE.Box3();
+
+function cyl(a,b,r,m,parent,seg){ const d=V(0,0,0).subVectors(b,a), L=d.length(); if(L<1e-3) return null; const g=new THREE.CylinderGeometry(r,r,L,seg||18,1,false); const me=new THREE.Mesh(g,m); me.position.copy(a).addScaledVector(d,0.5); me.quaternion.setFromUnitVectors(V(0,1,0),d.normalize()); parent.add(me); return me; }
+function ball(p,r,m,parent){ const s=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),m); s.position.copy(p); parent.add(s); return s; }
+function run(pts,r,m,parent){ for(let i=1;i<pts.length;i++) cyl(pts[i-1],pts[i],r,m,parent); for(let i=1;i<pts.length-1;i++) ball(pts[i],r,m,parent); }
+function flange(p,dir,r,m,parent){ const a=p.clone().addScaledVector(dir,-0.6), b=p.clone().addScaledVector(dir,0.6); cyl(a,b,r*1.75,m,parent,22); }
+function label(text,p,cls,key){ const el=document.createElement('div'); el.className='tag '+(cls||''); el.textContent=text; overlay.appendChild(el); const t={el,p:p.clone(),key}; TAGS.push(t); return t; }
+
+// ---- tanks -------------------------------------------------------------------------------------------------------------
+function shellMat(c){ const m=mat(c,{transparent:true,opacity:1,side:THREE.DoubleSide}); TANKMATS.push(m); return m; }
+function hTank(x,yC,R,Ls,hd,hand,bedIn,conn,parent){
+  // horizontal: axis along z, front head toward +z
+  const g=new THREE.Group(); parent.add(g); const m=shellMat(C.tank);
+  cyl(V(x,yC,-Ls/2),V(x,yC,Ls/2),R,m,g,40);
+  for(const s of [-1,1]){ const h=new THREE.Mesh(new THREE.SphereGeometry(R,40,20,0,Math.PI*2,0,Math.PI/2),m); h.scale.set(1,hd/R,1); h.position.set(x,yC,s*Ls/2); h.rotation.x=s*Math.PI/2; g.add(h); }
+  // saddles
+  const sm=mat(C.saddle);
+  for(const s of [-1,1]){ const z=s*Ls*0.32, w=R*1.5, base=yC-R; const sg=new THREE.Mesh(new THREE.BoxGeometry(w,R*0.55,6),sm); sg.position.set(x,base+R*0.18,z); g.add(sg); const ft=new THREE.Mesh(new THREE.BoxGeometry(w*1.1,1.5,12),sm); ft.position.set(x,base-R*0.1+0.75-((base-R*0.1)-0)*0,z); ft.position.y=Math.max(0.75,base-R*0.1); g.add(ft); }
+  // manway (14 x 18) on the upper shell, hand side
+  const sx=hand==='R'?1:-1, ang=Math.PI*0.32, mw=new THREE.Mesh(new THREE.CylinderGeometry(8,8,3,24),mat(0x202a36)); mw.scale.set(1,1,1.28);
+  mw.position.set(x+sx*Math.sin(ang)*R,yC+Math.cos(ang)*R,-Ls*0.12); mw.rotation.z=-sx*ang; g.add(mw);
+  ball(V(x,yC+R,Ls*0.25),1.4,mat(C.steel),g);                         // air relief
+  // internals (shown in x-ray): sand bed, laterals
+  const IN=new THREE.Group(); g.add(IN); INNER.push(IN);
+  const bedTop=yC-R+bedIn+6, segG=segment(R-0.6,yC-R+6-yC+0.0001,bedTop-yC,Ls);
+  const bed=new THREE.Mesh(segG,mat(C.sand,{transparent:true,opacity:0.55,depthWrite:false})); bed.position.set(x,yC,0); IN.add(bed);
+  const dirt=new THREE.Mesh(segment(R-0.7,bedTop-yC-3,bedTop-yC,Ls*0.999),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false})); dirt.position.set(x,yC,0); IN.add(dirt);
+  const lm=mat(C.white), yu=yC+(R*0.62), yl=yC-R+5;
+  cyl(V(x,yu,-Ls/2+4),V(x,yu,Ls/2+hd*0.4),1.2+conn*0.25,lm,IN); cyl(V(x,yl,-Ls/2+4),V(x,yl,Ls/2+hd*0.2),1.2+conn*0.25,lm,IN);
+  for(let z=-Ls/2+8;z<=Ls/2-4;z+=12){ const wu=Math.sqrt(Math.max(0,R*R-(yu-yC)**2))-3, wl=Math.sqrt(Math.max(0,R*R-(yl-yC)**2))-2; cyl(V(x-wu,yu,z),V(x+wu,yu,z),0.75,lm,IN); cyl(V(x-wl,yl,z),V(x+wl,yl,z),0.75,lm,IN); }
+  return {g,bed,dirt,bedTop,yC,R,Ls,hd,x,kind:'h'};
+}
+function segment(R,y0,y1,L){ // circle segment between heights y0..y1 (relative to centre), extruded along z, centred
+  const a0=Math.asin(clamp(y0/R,-1,1)), a1=Math.asin(clamp(y1/R,-1,1)), s=new THREE.Shape();
+  s.moveTo(-Math.cos(a1)*R,y1); s.lineTo(Math.cos(a1)*R,y1);
+  for(let i=0;i<=20;i++){ const a=a1+(a0-a1)*i/20; s.lineTo(Math.cos(a)*R,Math.sin(a)*R); }
+  for(let i=0;i<=20;i++){ const a=a0+(a1-a0)*i/20; s.lineTo(-Math.cos(a)*R,Math.sin(a)*R); }
+  const g=new THREE.ExtrudeGeometry(s,{depth:L,bevelEnabled:false}); g.translate(0,0,-L/2); return g;
+}
+function vTank(x,R,yBot,shellH,headK,bedIn,gravelIn,color,parent,opt){
+  opt=opt||{};
+  const g=new THREE.Group(); parent.add(g); const m=shellMat(color);
+  const hd=R*headK, y0=yBot+hd, y1=y0+shellH;
+  cyl(V(x,y0,0),V(x,y1,0),R,m,g,44);
+  const top=new THREE.Mesh(new THREE.SphereGeometry(R,44,18,0,Math.PI*2,0,Math.PI/2),m); top.scale.set(1,hd/R,1); top.position.set(x,y1,0); g.add(top);
+  const bot=new THREE.Mesh(new THREE.SphereGeometry(R,44,18,0,Math.PI*2,Math.PI/2,Math.PI/2),m); bot.scale.set(1,hd/R,1); bot.position.set(x,y0,0); g.add(bot);
+  if(opt.skirt){ const sk=new THREE.Mesh(new THREE.CylinderGeometry(R*0.78,R*0.86,yBot+hd*0.4,36,1,true),mat(0x23262b,{side:THREE.DoubleSide})); sk.position.set(x,(yBot+hd*0.4)/2,0); g.add(sk); const belt=new THREE.Mesh(new THREE.TorusGeometry(R*1.005,1.1,8,48),shellMat(0x2a6fa8)); belt.rotation.x=Math.PI/2; belt.position.set(x,(y0+y1)/2,0); g.add(belt); }
+  else { const lm=mat(0x9aa0a6); for(let i=0;i<4;i++){ const a=Math.PI/4+i*Math.PI/2; cyl(V(x+Math.cos(a)*R*0.72,0,Math.sin(a)*R*0.72),V(x+Math.cos(a)*R*0.72,yBot+hd*0.6,Math.sin(a)*R*0.72),2.2,lm,g); } }
+  // manway / lid on top
+  const lid=new THREE.Mesh(new THREE.CylinderGeometry(opt.lid||8,opt.lid||8,2.5,28),mat(0x202a36)); lid.position.set(x,y1+hd*0.97,0); g.add(lid);
+  // internals
+  const IN=new THREE.Group(); g.add(IN); INNER.push(IN);
+  const gTop=yBot+hd*0.55+gravelIn, sTop=gTop+bedIn;
+  if(gravelIn>0){ const gv=new THREE.Mesh(new THREE.CylinderGeometry(R-0.6,R*0.7,gTop-(yBot+hd*0.35),36),mat(C.gravel,{transparent:true,opacity:0.6,depthWrite:false})); gv.position.set(x,(gTop+yBot+hd*0.35)/2,0); IN.add(gv); }
+  const bed=new THREE.Mesh(new THREE.CylinderGeometry(R-0.6,R-0.6,bedIn,40),mat(C.sand,{transparent:true,opacity:0.55,depthWrite:false})); bed.position.set(x,gTop+bedIn/2,0); IN.add(bed);
+  bed.userData={base:gTop,h:bedIn};
+  const dirt=new THREE.Mesh(new THREE.CylinderGeometry(R-0.7,R-0.7,3,40),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false})); dirt.position.set(x,sTop-1.5,0); IN.add(dirt);
+  const lm=mat(C.white), yu=opt.yU, yl=opt.yL;
+  cyl(V(x,yu,R),V(x,yu,-R*0.6),1.6,lm,IN); cyl(V(x,yl,R),V(x,yl,-R*0.6),1.6,lm,IN);
+  for(let z=-R*0.6+6;z<R-6;z+=10){ const w=Math.sqrt(Math.max(0,R*R-z*z))-3; cyl(V(x-w,yu,z),V(x+w,yu,z),0.7,lm,IN); cyl(V(x-w,yl,z),V(x+w,yl,z),0.7,lm,IN); }
+  return {g,bed,dirt,bedTop:sTop,R,x,y0,y1,kind:'v'};
+}
+
+
+// ---- CAD: STEP-derived models (assembly binaries converted from the D:\sand filter STEP files) ---------------------------
+function loadAssembly(buf){
+  const dv=new DataView(buf), hl=dv.getUint32(0,true);
+  const H=JSON.parse(new TextDecoder().decode(new Uint8Array(buf,4,hl))), base=4+hl;
+  const geos=H.meshes.map(m=>{
+    const q=new Int16Array(buf,base+m.V,m.nv*3), p=new Float32Array(q.length);
+    for(let i=0;i<q.length;i+=3){ p[i]=q[i]*m.s+m.c[0]; p[i+1]=q[i+1]*m.s+m.c[1]; p[i+2]=q[i+2]*m.s+m.c[2]; }
+    const idx=m.it==='u16'?new Uint16Array(buf,base+m.F,m.nf*3):new Uint32Array(buf,base+m.F,m.nf*3);
+    const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(p,3)); g.setIndex(new THREE.BufferAttribute(idx.slice(),1)); g.computeVertexNormals(); g.computeBoundingBox();
+    return g; });
+  const objs=[];
+  H.nodes.forEach((n,i)=>{ const o=new THREE.Group(); o.name=n.name; o.userData.idx=i; const m=n.m; o.matrixAutoUpdate=false;
+    o.matrix.set(m[0],m[1],m[2],m[3], m[4],m[5],m[6],m[7], m[8],m[9],m[10],m[11], 0,0,0,1); o.matrix.decompose(o.position,o.quaternion,o.scale); o.matrixAutoUpdate=true;
+    objs.push(o); if(n.parent>=0) objs[n.parent].add(o); });
+  H.nodes.forEach((n,i)=>{ if(n.mesh===undefined||n.mesh<0) return; const me=new THREE.Mesh(geos[n.mesh],mat(C.pvc,{side:THREE.DoubleSide})); me.userData.idx=i; objs[i].add(me); });
+  const root=new THREE.Group(); H.nodes.forEach((n,i)=>{ if(n.parent<0) root.add(objs[i]); });
+  return {root,objs,nodes:H.nodes,geos};
+}
+const CADDIR='cad/', BINS={}, BUF={};
+const getBin=f=>BINS[f]||(BINS[f]=fetch(CADDIR+f,{credentials:'same-origin'}).then(r=>{ if(!r.ok) throw new Error(f+' '+r.status); return r.arrayBuffer(); }).then(b=>(BUF[f]=b)));
+let PARTS=null;     // CAD fittings kit, 4 in (tee 6 in), millimetres
+getBin('pipe-parts-4in.bin').then(buf=>{ const A=loadAssembly(buf); PARTS={}; A.nodes.forEach((n,i)=>{ if(n.mesh>=0) PARTS[n.name]=A.geos[n.mesh]; }); lastKey=''; update(false); }).catch(e=>console.warn('CAD parts kit not loaded',e));
+const MM=1/25.4;
+let VKIT=null;      // 4 in butterfly valve with slip + spigot flanges and bolting, crank (Link1), lever operator, from the C4 STEP nest
+getBin('face-c4.bin').then(buf=>{ const A=loadAssembly(buf); A.root.updateMatrixWorld(true);
+  const va=A.objs.find(o=>/BF Valve Assembly/.test(o.name)), inv=va.matrixWorld.clone().invert(), rel=o=>inv.clone().multiply(o.matrixWorld);
+  const sibs=va.parent.children, near=(rx)=>sibs.filter(o=>rx.test(o.name)).sort((a,b)=>V(0,0,0).setFromMatrixPosition(rel(a)).length()-V(0,0,0).setFromMatrixPosition(rel(b)).length())[0];
+  const lever=near(/^Lever Operator/), crank=near(/^Link1/), bolt=near(/^Bolt/);
+  const paint=(root,fn)=>root.traverse(o=>{ if(o.isMesh){ const nm=(o.parent&&o.parent.name)||''; o.material=mat(fn(nm),{side:THREE.DoubleSide}); } });
+  paint(va,nm=>/Valve-Open|BF Valve/.test(nm)?C.valve:/Bolt|Nut|Washer/.test(nm)?C.steel:C.pvc);
+  paint(lever,nm=>/Lever|Handle/i.test(nm)?C.handle:C.steel); paint(crank,()=>C.steel);
+  const tpl=o=>{ const c=o.clone(true); c.position.set(0,0,0); c.quaternion.identity(); c.scale.set(1,1,1); return c; };
+  VKIT={va:tpl(va), lever:tpl(lever), crank:tpl(crank), relL:rel(lever), relC:rel(crank), pin:V(0,0,0).setFromMatrixPosition(rel(bolt))};
+  lastKey=''; update(false); }).catch(e=>console.warn('valve kit not loaded',e));
+function placeRel(obj,M,parent){ obj.matrixAutoUpdate=false; obj.matrix.copy(M); parent.add(obj); return obj; }
+function basisM(X,Y,Z,p,k,cl){ const M=new THREE.Matrix4().makeBasis(X,Y,Z); M.scale(V(k,k,k)); if(cl) M.multiply(new THREE.Matrix4().makeTranslation(-cl.x,-cl.y,-cl.z)); M.setPosition(V(0,0,0).setFromMatrixPosition(M).add(p)); return M; }
+function partMesh(name,M,color,parent){ const me=new THREE.Mesh(PARTS[name],mat(color,{side:THREE.DoubleSide})); me.matrixAutoUpdate=false; me.matrix.copy(M); parent.add(me); return me; }
+const perp=d=>Math.abs(d.y)<0.9? V(0,1,0).cross(d).normalize() : V(1,0,0).cross(d).normalize();
+// pipe network: record segments, then draw pipes and put CAD elbows / tees where runs meet
+function drawPipes(SEGS,parent,mP){
+  for(const s of SEGS) cyl(s.a,s.b,s.r,mP,parent);
+  const key=p=>`${Math.round(p.x*4)},${Math.round(p.y*4)},${Math.round(p.z*4)}`, nodes=new Map();
+  const addDir=(p,d,r)=>{ const k=key(p); let n=nodes.get(k); if(!n){ n={p:p.clone(),dirs:[],r:0}; nodes.set(k,n); } n.r=Math.max(n.r,r); if(!n.dirs.some(e=>e.dot(d)>0.99)) n.dirs.push(d); };
+  for(const s of SEGS){ const d=V(0,0,0).subVectors(s.b,s.a); if(d.length()<1e-3) continue; d.normalize(); addDir(s.a,d,s.r); addDir(s.b,d.clone().negate(),s.r); }
+  for(const n of nodes.values()) for(const s of SEGS){ const ab=V(0,0,0).subVectors(s.b,s.a), L=ab.length(); if(L<1e-3) continue; const u=ab.clone().divideScalar(L), t=V(0,0,0).subVectors(n.p,s.a).dot(u);
+    if(t>0.3&&t<L-0.3&&V(0,0,0).subVectors(n.p,s.a).addScaledVector(u,-t).length()<0.3){ if(!n.dirs.some(e=>e.dot(u)>0.99)) n.dirs.push(u.clone()); if(!n.dirs.some(e=>e.dot(u)<-0.99)) n.dirs.push(u.clone().negate()); n.r=Math.max(n.r,s.r); } }
+  for(const n of nodes.values()){
+    const D=n.dirs, size=n.r*2;
+    if(D.length===2&&Math.abs(D[0].dot(D[1]))<0.1){
+      if(PARTS){ const X=D[1], Y=D[0].clone().negate(); partMesh('elbow4',basisM(X,Y,V(0,0,0).crossVectors(X,Y),n.p,MM*size/4.5,V(0,117.6,0)),C.pvc,parent); }
+      else ball(n.p,n.r,mP,parent);
+    } else if(D.length===3){
+      let run=null,br=null; for(let i=0;i<3;i++) for(let j=i+1;j<3;j++) if(D[i].dot(D[j])<-0.99){ run=D[i]; br=D[3-i-j]; }
+      if(run&&PARTS){ partMesh('tee6',basisM(run,br,V(0,0,0).crossVectors(run,br),n.p,MM*size/6.625,V(168.4,-1.6,0)),C.pvc,parent); }
+      else ball(n.p,n.r*1.05,mP,parent);
+    } else if(D.length>3) ball(n.p,n.r*1.1,mP,parent);
+  }
+}
+function cadFlange(p,dir,r,parent){ // flange face on p, hub pointing along dir
+  if(!PARTS){ flange(p,dir,r,mat(C.pvc),parent); return; }
+  const Z=dir.clone().negate(), X=perp(Z); partMesh('flange4',basisM(X,V(0,0,0).crossVectors(Z,X),Z,p,MM*r*2/4.5),C.pvc,parent);
+}
+// 48 in SHFFG face piping assemblies from the STEP library (same set as the 4248 walkthrough page). Native units mm.
+// Single: origin on the upper connection face, lower connection at y -813; zc pipe C/L off the face; rot = assembly drawn facing the other way.
+// Stacked: origin on the lower tank's lower connection; runs above the effluent header move by dY to meet the 48 in connections.
+const CADSETS={
+  C1:{file:'face-c1.bin', fp:'3', inlet:'side', rot:false, zc:132,  vx:155, px:-355, side:-487, outX:232, pr:44,  note:'3 in, pump from the side'},
+  C2:{file:'face-c2.bin', fp:'6', inlet:'side', rot:true,  zc:-214, vx:242, px:-600, side:-813, outX:355, pr:84,  note:'6 in, pump from the side'},
+  C3:{file:'face-c3.bin', fp:'3', inlet:'top',  rot:false, zc:132,  vx:155, px:-355, top:132,   outX:232, pr:44,  note:'3 in, pump from above'},
+  C4:{file:'face-c4.bin', fp:'4', inlet:'top',  rot:true,  zc:-159, vx:185, px:-414, top:159,   outX:274, pr:57,  note:'4 in, pump from above'},
+  'S-C1':{stack:true, file:'face-s-c1.bin', fp:'6x4', dY:-203, tlShift:-127, xB:381, xPool:-254, zv:477, zh:203, zr:165, yT:1557, inTop:1771, bwY:606, wOut:540, wDir:1, BU:1016, TU:2413, poolTop:1752, rIn:84, rW:57, rP:84, R:48, note:'6x4: pump header right, effluent valve left, waste right'},
+  'S-C2':{stack:true, file:'face-s-c2.bin', fp:'12x8', dY:-489, tlShift:0, xB:737, xPool:-737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:-270, wDir:-1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90, note:'12x8, gear effluent valve: pump header right, effluent and waste left'},
+  'S-C31':{stack:true, file:'face-s-c31.bin', fp:'12x8', dY:-489, tlShift:0, xB:-737, xPool:737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:270, wDir:1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90, note:'12x8, gear effluent valve: pump header left, effluent and waste right'},
+  'S-C32':{stack:true, file:'face-s-c32.bin', fp:'12x8', dY:-489, tlShift:0, xB:-737, xPool:737, zv:811, zh:432, zr:270, yT:2253, inTop:2638, bwY:590, wOut:-1007, wDir:-1, BU:1302, TU:2699, poolTop:2045, rIn:162, rW:110, rP:162, R:90, note:'12x8, gear effluent valve: pump header left, effluent right, waste left'}
+};
+const CAD_DY=1397*MM, CAD_HALF=406.5*MM;   // 48 in stack spacing and half connection spacing, from the CAD tank
+function cadKey(){
+  if(S.line!=='SHFFG'||S.dia!==48) return null;
+  if(S.arr==='single'){ const c=CADSETS[S.orient]; return c&&!c.stack&&c.fp===String(S.fp)&&c.inlet===S.inlet? S.orient : null; }
+  if(S.arr==='stacked'){ const k='S-'+S.orient, c=CADSETS[k]; return c&&c.fp===String(S.fp)? k : null; }
+  return null;
+}
+function cadOptions(){ if(S.line!=='SHFFG'||S.dia!==48) return [];
+  if(S.arr==='single') return ['C1','C2','C3','C4'].map(k=>({k,orient:k,fp:CADSETS[k].fp,inlet:CADSETS[k].inlet,t:`${k} · ${CADSETS[k].note}`}));
+  if(S.arr==='stacked') return ['S-C1','S-C2','S-C31','S-C32'].map(k=>({k,orient:k.slice(2),fp:CADSETS[k].fp,t:`${k.slice(2)} · ${CADSETS[k].note}`}));
+  return []; }
+function cadBuild(key,buf,tk,parent){
+  const Cf=CADSETS[key], F=loadAssembly(buf), FG=new THREE.Group(); parent.add(FG); PIPEGRP=FG;
+  const top=F.objs.filter((o,i)=>F.nodes[i].parent===0);
+  if(Cf.stack) for(const a of top){ if(!/To Pool|^SA3|^SA4/.test(a.name)) a.position.y+=Cf.dY; if(/^SA4/.test(a.name)) a.position.x+=Cf.tlShift; }
+  F.root.updateMatrixWorld(true);
+  // native -> world (inches)
+  const NAT=new THREE.Matrix4();
+  if(Cf.stack) NAT.makeTranslation(tk[0].x,tk[0].yL,tk[0].zF);
+  else { NAT.makeTranslation(tk[0].x,tk[0].yU,tk[0].zF); if(Cf.rot) NAT.multiply(new THREE.Matrix4().makeRotationY(Math.PI)); }
+  NAT.multiply(new THREE.Matrix4().makeScale(MM,MM,MM));
+  const W=(x,y,z)=>V(x,y,z).applyMatrix4(NAT);
+  const meshOf=o=>o.children.find(c=>c.isMesh);
+  F.root.traverse(o=>{ if(o.isMesh&&/Lever|Handle/i.test((o.parent&&o.parent.name)||'')) o.material.color.setHex(C.handle); });
+  // valves and roles
+  const valvesIn=(node)=>{ const out=[]; node.traverse(o=>{ if(/BF Valve/.test(o.name)&&!/Assembly/.test(o.name)&&meshOf(o)) out.push(o); }); return out; };
+  const centre=o=>new THREE.Box3().setFromObject(o).getCenter(V(0,0,0));
+  const add=(o,role,tank,txt)=>{ const nat=V(0,0,0).setFromMatrixPosition(o.matrixWorld), mats=[];
+    o.traverse(c=>{ if(c.isMesh){ c.material=mat(C.valve,{side:THREE.DoubleSide}); mats.push(c.material); } });
+    const p=nat.clone().applyMatrix4(NAT), v={role,tank,p,mats,open:false}; v.tag=label(txt,p.clone().add(V(0,9,0)),'v'); v.tag.v=v; VALVES.push(v); };
+  for(const a of top){
+    if(Cf.stack){
+      if(/^SA1/.test(a.name)){ const t=Math.abs(centre(a).x)<150?0:1, teeN=a.children.find(o=>/Tee/.test(o.name)), tee=teeN?centre(teeN).y:centre(a).y;
+        for(const v of valvesIn(a)){ const y=V(0,0,0).setFromMatrixPosition(v.matrixWorld).y; const inl=y>tee; add(v,inl?'in':'waste',t,(inl?'Influent ':'Waste ')+(t+1)); } }
+      else if(/To Pool/.test(a.name)) for(const v of valvesIn(a)) add(v,'pri',-1,'Effluent valve');
+    } else {
+      if(/Backwash/.test(a.name)) for(const v of valvesIn(a)){ const x=V(0,0,0).setFromMatrixPosition(v.matrixWorld).x; add(v,x<0?'in':'waste',0,x<0?'Influent':'Backwash waste'); }
+      else if(/To Pool/.test(a.name)) for(const v of valvesIn(a)){ const x=V(0,0,0).setFromMatrixPosition(v.matrixWorld).x; add(v,x<0?'bws':'eff',0,x<0?'Backwash supply':'Effluent'); }
+    }
+  }
+  FG.matrixAutoUpdate=false; FG.matrix.copy(NAT); FG.add(F.root);
+  // short runs off the nest: pump, pool, waste (with sight glass)
+  const mP=mat(C.pvc), xdir=V(1,0,0).transformDirection(NAT);
+  if(Cf.stack){ const C_=Cf;
+    cyl(W(C_.xB,C_.inTop+C_.dY,C_.zv),W(C_.xB,C_.inTop+C_.dY+160,C_.zv),C_.rIn*MM,mP,parent); label('From pump',W(C_.xB,C_.inTop+C_.dY+330,C_.zv),'');
+    cyl(W(C_.xPool,C_.poolTop,C_.zh),W(C_.xPool,C_.poolTop+260,C_.zh),C_.rP*MM,mP,parent); label('To pool',W(C_.xPool,C_.poolTop+420,C_.zh),'');
+    sight(W(C_.wOut,C_.bwY+C_.dY,C_.zv),xdir.clone().multiplyScalar(C_.wDir),C_.rW*MM,parent); label('To waste',W(C_.wOut+C_.wDir*900,C_.bwY+C_.dY,C_.zv),'');
+  } else { const z=Cf.zc, r=Cf.pr*MM;
+    if(Cf.side!=null){ cyl(W(Cf.side,0,z),W(Cf.side-260,0,z),r,mP,parent); label('From pump',W(Cf.side-420,0,z),''); }
+    else { cyl(W(Cf.px,Cf.top,z),W(Cf.px,Cf.top+150,z),r,mP,parent); label('From pump',W(Cf.px,Cf.top+330,z),''); }
+    cyl(W(Cf.outX,-813,z),W(Cf.outX+300,-813,z),r,mP,parent); label('To pool',W(Cf.outX+480,-813,z),'');
+    sight(W(Cf.outX,0,z),xdir,r,parent); label('To waste',W(Cf.outX+900,0,z),'');
+  }
+  // particle paths, from the 4248 walkthrough page
+  return ()=>{
+    if(!Cf.stack){ const C_=Cf, z=C_.zc, N=(x,y,zz)=>W(x,y,zz), LOW=-813;
+      const pump=C_.side!=null? [N(C_.side-260,0,z),N(C_.px,0,z)] : [N(C_.px,C_.top+150,z),N(C_.px,0,z)];
+      const inTop=[...pump,N(-C_.vx,0,z),N(0,0,z),N(0,0,0)], inBot=[...pump,N(C_.px,LOW,z),N(-C_.vx,LOW,z),N(0,LOW,z),N(0,LOW,0)];
+      const toPool=[N(0,LOW,0),N(0,LOW,z),N(C_.vx,LOW,z),N(C_.outX+300,LOW,z)], toWaste=[N(0,0,0),N(0,0,z),N(C_.vx,0,z),N(C_.outX+420,0,z),N(C_.outX+620,0,z)];
+      const t=TKS[0];
+      stream(700,i=>[...inTop.slice(0,-1),...innerDown(t,i,0),...toPool.slice(1)],{mode:'filter',jit:C_.pr*MM*0.8});
+      stream(800,i=>[...inBot.slice(0,-1),...innerDown(t,i,31).reverse(),...toWaste.slice(1)],{mode:'bw0',speed:46,jit:C_.pr*MM*0.8});
+      return; }
+    const C_=Cf, Pm=(x,y,z)=>W(x,y+C_.dY,z), Pf=(x,y,z)=>W(x,y,z), TD=1397;
+    const pump=[Pm(C_.xB,C_.inTop+160,C_.zv),Pm(C_.xB,C_.yT,C_.zv)];
+    const infA=[Pm(0,C_.yT,C_.zv),Pm(0,C_.BU,C_.zv),Pm(0,C_.BU,0)], infB=[Pm(C_.xB,C_.BU,C_.zv),Pm(C_.xB,C_.BU,C_.zr),Pm(C_.xB,C_.TU,C_.zr),Pm(0,C_.TU,C_.zr),Pm(0,C_.TU,0)];
+    const out=x=>[Pm(x,C_.BU,C_.zv),Pm(x,C_.bwY,C_.zv),Pm(C_.wOut,C_.bwY,C_.zv),Pm(C_.wOut+C_.wDir*640,C_.bwY,C_.zv)];
+    const lowA=[Pf(0,0,0),Pf(0,0,C_.zh),Pf(C_.xPool,0,C_.zh),Pf(C_.xPool,TD,C_.zh)], lowB=[Pf(0,TD,0),Pf(0,TD,C_.zh),Pf(C_.xPool,TD,C_.zh)], pool=[Pf(C_.xPool,C_.poolTop+260,C_.zh)];
+    const [t0,t1]=TKS, j=C_.R*MM*0.8;
+    stream(500,i=>[...pump,...infA.slice(0,-1),...innerDown(t0,i,0),...lowA.slice(1),...pool],{mode:'filter',jit:j,speed:52});
+    stream(500,i=>[...pump,...infB.slice(0,-1),...innerDown(t1,i,20),...lowB.slice(1),...pool],{mode:'filter',jit:j,speed:52});
+    stream(700,i=>[...pump,...infB.slice(0,-1),...innerDown(t1,i,40),...lowB.slice(1,2),Pf(C_.xPool,TD,C_.zh),Pf(C_.xPool,0,C_.zh),Pf(0,0,C_.zh),...innerDown(t0,i,11).reverse(),Pm(0,C_.BU,0),...out(0)],{mode:'bw0',jit:j,speed:60});
+    stream(700,i=>[...pump,...infA.slice(0,-1),...innerDown(t0,i,50),Pf(0,0,C_.zh),Pf(C_.xPool,0,C_.zh),Pf(C_.xPool,TD,C_.zh),Pf(0,TD,C_.zh),...innerDown(t1,i,31).reverse(),Pm(0,C_.TU,0),Pm(0,C_.TU,C_.zr),Pm(C_.xB,C_.TU,C_.zr),Pm(C_.xB,C_.BU,C_.zr),...out(C_.xB)],{mode:'bw1',jit:j,speed:60});
+  };
+}
+
+// ---- valves -----------------------------------------------------------------------------------------------------------
+const VMAT={open:mat(0x1e9a4a,{emissive:0x0b3a1c}),shut:mat(0xb3262f,{emissive:0x3a0b0e}),body:mat(C.valve)};
+function valve(p,dir,r,op,parent,role,tank,txt,stemDir){
+  const d=dir.clone().normalize(), st=(stemDir||(Math.abs(d.y)>0.9? V(0,0,1) : V(0,1,0))).clone().normalize();
+  const v={role,tank,p:p.clone(),open:false,mats:[],st};
+  if(VKIT){
+    const k=MM*r*2/4.5, X=d, Z=st.clone().negate(), Y=V(0,0,0).crossVectors(Z,X);
+    const M=basisM(X,Y,Z,p,k,V(-26,0,0)), g=new THREE.Group(); placeRel(g,M,parent); v.M=M; v.g=g;
+    const body=VKIT.va.clone(true); g.add(body);
+    body.traverse(o=>{ if(o.isMesh&&/Valve-Open|BF Valve/.test((o.parent&&o.parent.name)||'')){ o.material=mat(C.valve,{side:THREE.DoubleSide}); v.mats.push(o.material); } });
+    v.hub=V(-26,0,-184).applyMatrix4(M); v.k=k;
+    if(op==='3WE'){ const a=new THREE.Mesh(new THREE.BoxGeometry(7,7,7),mat(C.act)); a.position.copy(v.hub).addScaledVector(st,3.5); parent.add(a); v.op=a; }
+    else if(op==='3WG'){ const a=new THREE.Group(); const w=new THREE.Mesh(new THREE.TorusGeometry(4.5,0.6,8,24),mat(C.handle)); w.position.copy(v.hub).addScaledVector(st,2); w.quaternion.setFromUnitVectors(V(0,0,1),st); a.add(w); const gb=new THREE.Mesh(new THREE.BoxGeometry(4,4,4),mat(C.act)); gb.position.copy(v.hub); a.add(gb); parent.add(a); v.op=a; }
+    else if(op==='3WP'){ const a=new THREE.Mesh(new THREE.CylinderGeometry(2.8,2.8,10,16),mat(0xd0d3d6)); a.position.copy(v.hub).addScaledVector(st,3); a.quaternion.setFromUnitVectors(V(0,1,0),d); parent.add(a); v.op=a; }
+    else { const L=VKIT.lever.clone(true); L.matrixAutoUpdate=false; L.matrix.copy(VKIT.relL); g.add(L); v.op=L; }
+  } else if(PARTS){
+    const k=MM*r*2/4.5, Y=V(0,0,0).crossVectors(st,d);
+    const body=partMesh('valve4',basisM(d,Y,st,p,k),C.valve,parent); v.mats.push(body.material);
+    const hub=p.clone().addScaledVector(st,184*k); v.hub=hub;
+    if(op==='3WE'){ const a=new THREE.Mesh(new THREE.BoxGeometry(7,7,7),mat(C.act)); a.position.copy(hub).addScaledVector(st,3.5); parent.add(a); }
+    else if(op==='3WG'){ const a=new THREE.Mesh(new THREE.TorusGeometry(4.5,0.6,8,24),mat(C.handle)); a.position.copy(hub).addScaledVector(st,2); a.quaternion.setFromUnitVectors(V(0,0,1),st); parent.add(a); const gb=new THREE.Mesh(new THREE.BoxGeometry(4,4,4),mat(C.act)); gb.position.copy(hub); parent.add(gb); }
+    else if(op==='3WP'){ const a=new THREE.Mesh(new THREE.CylinderGeometry(2.8,2.8,10,16),mat(0xd0d3d6)); a.position.copy(hub).addScaledVector(st,3); a.quaternion.setFromUnitVectors(V(0,1,0),d); parent.add(a); }
+    else partMesh('lever4',basisM(d,st,V(0,0,0).crossVectors(d,st),hub,k),C.handle,parent);
+  } else {
+    const g=new THREE.Group(); parent.add(g);
+    const bm=mat(C.valve); v.mats.push(bm);
+    const body=new THREE.Mesh(new THREE.CylinderGeometry(r*1.75,r*1.75,r*0.9,24),bm); g.add(body);
+    g.position.copy(p); g.quaternion.setFromUnitVectors(V(0,1,0),d);
+    v.hub=p.clone().addScaledVector(st,r*1.75+2); cyl(p,v.hub,0.8,mat(C.steel),parent);
+    const act=new THREE.Mesh(new THREE.BoxGeometry(2,2,r*3+6),mat(op==='3WE'?C.act:C.handle)); act.position.copy(v.hub); act.lookAt(v.hub.clone().add(d)); parent.add(act);
+  }
+  v.tag=label(txt,p.clone().addScaledVector(st,r*2+8).add(V(0,st.y>0.5?0:6,0)),'v'); v.tag.v=v;
+  VALVES.push(v); return v;
+}
+function linkValves(a,b,parent){
+  if(VKIT&&a.g&&b.g){
+    for(const v of [a,b]){ const c=VKIT.crank.clone(true); c.matrixAutoUpdate=false; c.matrix.copy(VKIT.relC); v.g.add(c); }
+    if(b.op){ b.op.parent&&b.op.parent.remove(b.op); b.op=null; }               // the pair is driven from one handle
+    const pa=VKIT.pin.clone().applyMatrix4(a.M), pb=VKIT.pin.clone().applyMatrix4(b.M), lk=mat(C.steel);
+    cyl(pa,pb,Math.max(0.3,0.32*a.k*25.4/4),lk,parent); ball(pa,0.55,lk,parent); ball(pb,0.55,lk,parent);
+    return; }
+  if(!a.hub||!b.hub) return; const o=a.st.clone().multiplyScalar(1.2); cyl(a.hub.clone().add(o),b.hub.clone().add(o),0.45,mat(C.steel),parent); }
+function multiport(p,R,auto,parent){ // top-mount style multiport on the side of a CCFG
+  const g=new THREE.Group(); parent.add(g); g.position.copy(p);
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(5.2,5.2,7,24),mat(C.multi)); g.add(b);
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(4.6,5.2,2.5,24),mat(0x2a2d31)); cap.position.y=4.8; g.add(cap);
+  if(auto){ const m=new THREE.Mesh(new THREE.BoxGeometry(8,7,8),mat(0x5b6168)); m.position.y=9.5; g.add(m); }
+  else { const h=new THREE.Mesh(new THREE.BoxGeometry(1.4,1.2,11),mat(0x2a2d31)); h.position.set(0,7,3.5); h.rotation.x=-0.4; g.add(h); }
+  const gauge=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,0.8,16),mat(0xffffff)); gauge.position.set(-6.5,4,0); gauge.rotation.z=Math.PI/2; g.add(gauge);
+  return g;
+}
+
+// ---- face piping nest builder ---------------------------------------------------------------------------------------------
+// tanks: [{x,yU,yL,zU,zL}] nozzle points on the face (+z). Builds valves, headers and the flow paths.
+function nest(T,o){
+  const P=new THREE.Group(); ROOT.add(P); PIPEGRP=P;
+  const mP=mat(C.pvc), rb=OD[o.br]/2, rh=OD[o.hdr]/2, op=o.op, n=T.length;
+  const zFace=Math.max(...T.map(t=>Math.max(t.zU,t.zL)));
+  const paths={fil:[],bw:[]};
+  const SEGS=[]; const prun=(pts,r)=>{ for(let i=1;i<pts.length;i++) SEGS.push({a:pts[i-1].clone(),b:pts[i].clone(),r}); };
+  const pcyl=(a_,b_,r)=>prun([a_,b_],r), pball=()=>{};
+  for(const t of T){ cadFlange(V(t.x,t.yU,t.zU),V(0,0,1),rb,P); cadFlange(V(t.x,t.yL,t.zL),V(0,0,1),rb,P); }
+  const lvl=o.op==='3WL'||o.op==='3WLO'||o.op==='SLM';
+  if(n===1){
+    const t=T[0], J=o.J||16, K=o.K||22, zA=zFace+J*0.55, xa=K*0.48, xp=-K, xo=K+10;
+    prun([V(t.x,t.yU,t.zU),V(t.x,t.yU,zA)],rb); prun([V(t.x,t.yL,t.zL),V(t.x,t.yL,zA)],rb);
+    pcyl(V(t.x+xp,t.yU,zA),V(t.x+xo,t.yU,zA),rb); pcyl(V(t.x+xp,t.yL,zA),V(t.x+xo,t.yL,zA),rb);
+     
+    pcyl(V(t.x+xp,t.yL,zA),V(t.x+xp,t.yU,zA),rb);
+    const X=V(1,0,0), Z=V(0,0,1);
+    const vIn=valve(V(t.x-xa,t.yU,zA),X,rb,op,P,'in',0,'Influent',Z);
+    const vW=valve(V(t.x+xa,t.yU,zA),X,rb,op,P,'waste',0,'Backwash waste',Z);
+    const vBs=valve(V(t.x-xa,t.yL,zA),X,rb,op,P,'bws',0,'Backwash supply',Z);
+    const vE=valve(V(t.x+xa,t.yL,zA),X,rb,op,P,'eff',0,'Effluent',Z);
+    if(lvl){ linkValves(vIn,vW,P); linkValves(vBs,vE,P); }
+    // pump
+    let pin;
+    if(o.inlet==='side'){ const ym=(t.yU+t.yL)/2;  pcyl(V(t.x+xp,ym,zA),V(t.x+xp-24,ym,zA),rb); pin=[V(t.x+xp-24,ym,zA),V(t.x+xp,ym,zA)]; label('From pump',V(t.x+xp-30,ym,zA),''); }
+    else { pcyl(V(t.x+xp,t.yU,zA),V(t.x+xp,t.yU+22,zA),rb); pin=[V(t.x+xp,t.yU+22,zA),V(t.x+xp,t.yU,zA)]; label('From pump',V(t.x+xp,t.yU+28,zA),''); }
+    sight(V(t.x+xo,t.yU,zA),V(1,0,0),rb,P); label('To waste',V(t.x+xo+30,t.yU,zA),'');
+    pcyl(V(t.x+xo,t.yL,zA),V(t.x+xo+20,t.yL,zA),rb); label('To pool',V(t.x+xo+28,t.yL,zA),'');
+    const Up=[V(t.x,t.yU,zA),V(t.x,t.yU,t.zU)], Lp=[V(t.x,t.yL,t.zL),V(t.x,t.yL,zA)];
+    const pinU = o.inlet==='side'? [...pin,V(t.x+xp,t.yU,zA)] : pin;
+    const pinL = o.inlet==='side'? [...pin,V(t.x+xp,t.yL,zA)] : [...pin,V(t.x+xp,t.yL,zA)];
+    paths.fil.push({tank:0,pre:[...pinU,...Up],post:[...Lp,V(t.x+xo+20,t.yL,zA)]});
+    paths.bw.push({tank:0,pre:[...pinL,...Lp.slice().reverse()],post:[...Up.slice().reverse(),V(t.x+xo+26,t.yU,zA)]});
+    drawPipes(SEGS,P,mP);
+    return paths;
+  }
+  // multi-tank: per column influent riser (x-a), waste riser (x+a), effluent riser (x); headers along x
+  const xs=uniq(T.map(t=>t.x)).sort((a,b)=>a-b), pitch=xs.length>1? xs[1]-xs[0] : 60;
+  const a=Math.min(pitch*0.3,Math.max(10,rb*4)), J=o.J||20;
+  const zA=zFace+Math.max(6,rb*2.2), zI=zA+Math.max(8,rh*3), zW=zI+Math.max(8,rh*3), zE=zA+Math.max(6,rb*2.2)*0+Math.max(8,rh*3)*0.5+rb*2;
+  const yTop=Math.max(...T.map(t=>t.yU))+Math.max(14,rh*3), yW=yTop+Math.max(10,rh*2.6), yE=Math.min(...T.map(t=>t.yL));
+  const x0=xs[0]-a-26, x1=xs[xs.length-1]+a+26;
+  // headers
+  prun([V(x0,yTop,zI),V(xs[xs.length-1]-a,yTop,zI)],rh);
+  prun([V(xs[0]+a,yW,zW),V(x1,yW,zW)],rh);
+  prun([V(xs[0],yE,zE),V(x1,yE,zE)],rh);
+  for(const x of xs){
+    const col=T.filter(t=>t.x===x), yLo=Math.min(...col.map(t=>t.yU)), yLl=Math.max(...col.map(t=>t.yL));
+    prun([V(x-a,yLo,zI),V(x-a,yTop,zI)],rb); 
+    prun([V(x+a,yLo,zW),V(x+a,yW,zW)],rb); 
+    if(yLl>yE) prun([V(x,yE,zE),V(x,yLl,zE)],rb);
+  }
+  const X=V(1,0,0), Z=V(0,0,1);
+  T.forEach((t,i)=>{
+    prun([V(t.x,t.yU,t.zU),V(t.x,t.yU,zA)],rb);
+    prun([V(t.x-a,t.yU,zA),V(t.x+a,t.yU,zA)],rb); 
+    prun([V(t.x-a,t.yU,zA),V(t.x-a,t.yU,zI)],rb);  
+    prun([V(t.x+a,t.yU,zA),V(t.x+a,t.yU,zW)],rb);  
+    prun([V(t.x,t.yL,t.zL),V(t.x,t.yL,zE)],rb); 
+    const nm=n>1?` ${i+1}`:'';
+    const vI=valve(V(t.x-a*0.5,t.yU,zA),X,rb,op,P,'in',i,'Influent'+nm,Z);
+    const vW=valve(V(t.x+a*0.5,t.yU,zA),X,rb,op,P,'waste',i,'Waste'+nm,Z);
+    const vE=valve(V(t.x,t.yL,(t.zL+zE)/2),Z,rb,op==='SLM'?'3WL':op,P,'eff',i,o.iso?'Isolation'+nm:'Effluent'+nm);
+    if(lvl) linkValves(vI,vW,P);
+  });
+  // pump inlet
+  let pin;
+  if(o.inlet==='side'){ pcyl(V(x0,yTop,zI),V(x0-20,yTop,zI),rh); pin=[V(x0-20,yTop,zI),V(x0,yTop,zI)]; label('From pump',V(x0-28,yTop,zI),''); }
+  else {  pcyl(V(x0,yTop,zI),V(x0,yTop+24,zI),rh); pin=[V(x0,yTop+24,zI),V(x0,yTop,zI)]; label('From pump',V(x0,yTop+31,zI),''); }
+  sight(V(x1,yW,zW),V(1,0,0),rh,P); label('To waste',V(x1+32,yW,zW),'');
+  const vP=valve(V(x1-12,yE,zE),X,rh,'3WL',P,'pri',-1,'Priority valve',Z);
+  pcyl(V(x1,yE,zE),V(x1+20,yE,zE),rh); label('To pool',V(x1+28,yE,zE),'');
+  T.forEach((t,i)=>{
+    const inl=[...pin,V(t.x-a,yTop,zI),V(t.x-a,t.yU,zI),V(t.x-a,t.yU,zA),V(t.x,t.yU,zA),V(t.x,t.yU,t.zU)];
+    const eff=[V(t.x,t.yL,t.zL),V(t.x,t.yL,zE),V(t.x,yE,zE)];
+    paths.fil.push({tank:i,pre:inl,post:[...eff,V(x1+20,yE,zE)]});
+    paths.bw.push({tank:i,inl,eff,
+      waste:[V(t.x,t.yU,t.zU),V(t.x,t.yU,zA),V(t.x+a,t.yU,zA),V(t.x+a,t.yU,zW),V(t.x+a,yW,zW),V(x1+26,yW,zW)]});
+  });
+  drawPipes(SEGS,P,mP);
+  return paths;
+}
+function sight(p,dir,r,parent){ const mP=mat(C.pvc), a=p.clone(), b=p.clone().addScaledVector(dir,8), c=p.clone().addScaledVector(dir,18), d=p.clone().addScaledVector(dir,26);
+  cyl(a,b,r,mP,parent); cyl(c,d,r,mP,parent);
+  const gl=cyl(b,c,r*1.1,mat(0xdfeaf2,{transparent:true,opacity:0.45,depthWrite:false}),parent);
+  const w=cyl(b.clone().addScaledVector(dir,0.4),c.clone().addScaledVector(dir,-0.4),r*0.85,mat(0x7a5a2c,{transparent:true,opacity:0.85,depthWrite:false}),parent);
+  GLASS.push({gl,w}); label('Sight glass',b.clone().add(V(0,r+6,0)),'v'); }
+
+// ---- particles ----------------------------------------------------------------------------------------------------------
+const dotTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=32; const g=c.getContext('2d'); const gr=g.createRadialGradient(16,16,0,16,16,16); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.55,'rgba(255,255,255,.85)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,32,32); return new THREE.CanvasTexture(c); })();
+const h1=n=>{ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); };
+function prep(pts){ const o=[]; let L=0; for(const p of pts){ if(o.length) L+=p.distanceTo(o[o.length-1].p); o.push({p,s:L}); } o.L=L; return o; }
+function at(path,s,out){ let i=1; while(i<path.length-1&&s>path[i].s) i++; const a=path[i-1], b=path[i], k=clamp((s-a.s)/Math.max(1e-6,b.s-a.s),0,1); return out.lerpVectors(a.p,b.p,k); }
+function stream(N,mk,opt){ opt=opt||{};
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*3).fill(1e6),3)); g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(N*3).fill(1),3));
+  const pts=new THREE.Points(g,new THREE.PointsMaterial({size:opt.size||5,vertexColors:true,map:dotTex,transparent:true,opacity:.95,depthWrite:false,depthTest:false,sizeAttenuation:false}));
+  pts.frustumCulled=false; pts.renderOrder=10; ROOT.add(pts);
+  const parts=[]; for(let i=0;i<N;i++){ const p=prep(mk(i)); parts.push({path:p,ph:h1(i*13.7+(opt.seed||0)),j:V(h1(i*3.3)-.5,h1(i*5.1)-.5,h1(i*7.9)-.5).multiplyScalar(opt.jit||2.2),dirty:h1(i*9.1)}); }
+  const S_={pts,parts,mode:opt.mode,speed:opt.speed||40,dirtyFrom:opt.dirtyFrom||null}; STREAMS.push(S_); return S_; }
+// inside-tank random paths
+function innerDown(tk,i,seed){ const r=k=>h1(i*k+seed);
+  if(tk.kind==='h'){ const z=(r(2.1)*2-1)*tk.Ls*0.45, x=tk.x+(r(3.7)*2-1)*tk.R*0.6; return [V(tk.x,tk.yU,tk.Ls/2),V(tk.x,tk.yU,z),V(x,tk.yU-2,z),V(x*0.98+tk.x*0.02,tk.bedTop,z+(r(5.3)-.5)*8),V(tk.x+(r(6.1)*2-1)*tk.R*0.5,tk.yL+1,z),V(tk.x,tk.yL,z),V(tk.x,tk.yL,tk.Ls/2)]; }
+  const a=r(2.1)*6.283, rr=Math.sqrt(r(3.7))*tk.R*0.8, x=tk.x+Math.cos(a)*rr, z=Math.sin(a)*rr;
+  return [V(tk.x,tk.yU,tk.R),V(tk.x,tk.yU,z),V(x,tk.yU-2,z),V(x,tk.bedTop,z),V(x*0.7+tk.x*0.3,tk.yL+1,z*0.7),V(tk.x,tk.yL,z*0.5),V(tk.x,tk.yL,tk.R)];
+}
+function buildStreams(paths,tks){
+  // filter: every tank
+  paths.fil.forEach((pp,ti)=>{ const tk=tks[pp.tank]; stream(Math.round(700/Math.sqrt(paths.fil.length)),i=>{ const inn=innerDown(tk,i,ti*7); return [...pp.pre.slice(0,-1),...inn,...pp.post.slice(1)]; },{mode:'filter',seed:ti}); });
+  // dirt settling on the bed during filter
+  // backwash
+  if(paths.bw.length===1&&paths.bw[0].pre){ const pp=paths.bw[0], tk=tks[0];
+    stream(800,i=>{ const inn=innerDown(tk,i,31).reverse(); return [...pp.pre.slice(0,-1),...inn,...pp.post.slice(1)]; },{mode:'bw0',dirtyFrom:pp.pre.length,speed:46});
+    return; }
+  paths.bw.forEach((b,bi)=>{ const tk=tks[b.tank];
+    paths.fil.forEach((f,fi)=>{ if(f.tank===b.tank) return; const ot=tks[f.tank];
+      stream(Math.round(500/Math.max(1,paths.fil.length-1)),i=>{ const down=innerDown(ot,i,fi*5+bi), up=innerDown(tk,i,bi*11+fi).reverse();
+        return [...f.pre.slice(0,-1),...down,...paths.bw[fi].eff.slice(1),...b.eff.slice().reverse().slice(0,-1),...up,...b.waste.slice(1)]; },{mode:'bw'+bi,speed:52,seed:bi*3+fi}); });
+  });
+}
+
+// ---- assemble ----------------------------------------------------------------------------------------------------------
+let TKS=[], cadStreams=null, CADNOTE='', PIPEGRP=null, FACEBOX=null;
+function build(){
+  if(ROOT){ scene.remove(ROOT); ROOT.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material&&o.material.dispose) o.material.dispose(); }); }
+  TAGS.forEach(t=>t.el.remove()); TAGS=[]; VALVES=[]; STREAMS=[]; GLASS=[]; TANKMATS=[]; INNER=[]; TKS=[];
+  ROOT=new THREE.Group(); scene.add(ROOT);
+  const m=model(); if(!m) return;
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(1,64),mat(C.floor,{transparent:true,opacity:0.55})); floor.rotation.x=-Math.PI/2; floor.position.y=-0.2; ROOT.add(floor);
+  let noz=[], paths, J, K; cadStreams=null; PIPEGRP=null;
+  if(S.line==='SHFFG'){
+    const R=m.A1/2, Ls=m.length, hd=(m.B-m.length)/2, yC=m.C-R, dy=S.dia===48? CAD_HALF : yC-m.E, st=S.dia===48? CAD_DY : m.G-m.C, pitch=m.A1+6, zF=Ls/2+hd+3;
+    const cols= S.arr==='single'||S.arr==='stacked'?1 : S.arr==='sxs'?2 : S.arr==='row'?S.n : S.n/2;
+    const tiers= S.arr==='stacked'||S.arr==='stackrow'?2:1;
+    for(let c=0;c<cols;c++) for(let t=0;t<tiers;t++){
+      const x=(c-(cols-1)/2)*pitch, y=yC+t*st, hand=cols>1? (c<cols/2?'L':'R') : S.hand;
+      const tk=hTank(x,y,R,Ls,hd,hand,m.bed_in,S.conn,ROOT); tk.yU=y+dy; tk.yL=y-dy; TKS.push(tk);
+      const zz=yy=>Ls/2+hd*Math.sqrt(Math.max(0,1-((yy)/R)**2));
+      const rn=OD[S.conn]/2, nm=mat(C.tank); cyl(V(x,y+dy,zz(dy)-2),V(x,y+dy,zF),rn,nm,ROOT); cyl(V(x,y-dy,zz(-dy)-2),V(x,y-dy,zF),rn,nm,ROOT);
+      noz.push({x,yU:y+dy,yL:y-dy,zU:zF,zL:zF,zF});
+      label(`${m.model}${tiers>1?'S':''}-${S.conn}${hand}`,V(x,y+R+12,0),'t');
+    }
+    const fd=S.n===1? DATA.shffg.fp_single[String(+S.fp)] : null; J=fd?fd.J:20; K=fd?fd.K:24;
+  } else if(S.line==='SRF'||S.line==='DRF'){
+    const sr=S.line==='SRF'? m : SR.find(x=>x.dia===m.dia)||SR[0];
+    const R=sr.A1/2, legs=8, hdK=0.22, shell=S.line==='SRF'&&S.mat==='FG'? S.shell : Math.max(48,sr.F-legs-2*R*hdK+4);
+    const yU=Math.min(sr.F, legs+R*hdK+shell-4), yL=legs+R*hdK+6, cnt=S.line==='DRF'?2:S.n;
+    const pitch=S.line==='DRF'? Math.max(m.K-sr.A1, sr.A1+12) : sr.A1+24;
+    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,legs,shell,hdK,22,Math.max(4,R*0.12),S.line==='SRF'&&S.mat==='STL'?C.tankS:C.tank,ROOT,{yU,yL,lid:9}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
+      noz.push({x,yU,yL,zU:R,zL:R}); label(S.line==='DRF'?`Cell ${i+1}`:`${S.dia}${S.mat==='FG'?'SRFFG':'SRF'}-${S.conn}`,V(x,legs+2*R*hdK+shell+14,0),'t'); }
+    J=sr.B*1.6; K=sr.C;
+  } else {
+    const R=(m.B||m.dia+1)/2, yBot=7, shell=Math.max(16,(m.C||42)-yBot-2*R*0.32), cnt=S.n, pitch=2*R+6;
+    const yL=m.E||12, yU=(m.E||12)+(m.F||12);
+    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,yBot,shell,0.32,m.bed_in||16,4,C.ccfg,ROOT,{skirt:true,yU,yL,lid:m.dia>=48?9:5}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
+      noz.push({x,yU,yL,zU:R,zL:R}); label(m.model,V(x,(m.C||44)+10,0),'t'); }
+    J=12; K=14;
+  }
+  if(S.line==='CCFG'&&S.n===1){
+    const t=noz[0], P=new THREE.Group(); ROOT.add(P); const mP=mat(C.pvc), r=OD[3]/2, z=t.zU+6;
+    run([V(t.x,t.yU,t.zU),V(t.x,t.yU,z+4)],r,mP,P); run([V(t.x,t.yL,t.zL),V(t.x,t.yL,z+4),V(t.x,t.yU-6,z+4)],r,mP,P);
+    multiport(V(t.x,t.yU+1,z+4),5,S.op==='AUTO',P);
+    cyl(V(t.x+5,t.yU+1,z+4),V(t.x+22,t.yU+1,z+4),r,mP,P); label('To pool',V(t.x+30,t.yU+1,z+4),'');
+    cyl(V(t.x-5,t.yU+1,z+4),V(t.x-22,t.yU+1,z+4),r,mP,P); label('To waste',V(t.x-31,t.yU+1,z+4),'');
+    cyl(V(t.x,t.yU+1,z+9),V(t.x,t.yU+1,z+24),r,mP,P); label('From pump',V(t.x,t.yU+1,z+30),'');
+    label(S.op==='AUTO'?'Auto multiport':'Manual multiport',V(t.x,t.yU+18,z+4),'v');
+    const pin=[V(t.x,t.yU+1,z+24),V(t.x,t.yU+1,z+4)];
+    paths={fil:[{tank:0,pre:[...pin,V(t.x,t.yU,z+4),V(t.x,t.yU,t.zU)],post:[V(t.x,t.yL,t.zL),V(t.x,t.yL,z+4),V(t.x,t.yU-6,z+4),V(t.x+22,t.yU+1,z+4)]}],
+           bw:[{tank:0,pre:[...pin,V(t.x,t.yU-6,z+4),V(t.x,t.yL,z+4),V(t.x,t.yL,t.zL)],post:[V(t.x,t.yU,t.zU),V(t.x,t.yU,z+4),V(t.x-22,t.yU+1,z+4)]}]};
+  } else {
+    const ck=cadKey(); CADNOTE='';
+    if(ck&&BUF[CADSETS[ck].file]){ cadStreams=cadBuild(ck,BUF[CADSETS[ck].file],noz,ROOT); CADNOTE=`Face piping from the STEP library (${ck}).`; }
+    else { if(ck){ CADNOTE='Loading CAD face piping…'; getBin(CADSETS[ck].file).then(()=>{ lastKey=''; update(false); }).catch(e=>{ CADNOTE='CAD face piping could not be loaded: '+e.message; }); }
+      paths=nest(noz,{op:S.op,br:brSize(),hdr:hdrSize(),inlet:S.inlet,J,K,iso:S.line==='DRF'}); }
+  }
+  // fit (before the particle streams, whose parked points sit far away)
+  floor.visible=false; BOX=new THREE.Box3().setFromObject(ROOT); floor.visible=true; ROOT.updateMatrixWorld(true); FACEBOX=PIPEGRP? new THREE.Box3().setFromObject(PIPEGRP) : null;
+  const sz=BOX.getSize(V(0,0,0)); floor.scale.setScalar(Math.max(sz.x,sz.z)*0.72+10); floor.position.set((BOX.min.x+BOX.max.x)/2,-0.2,(BOX.min.z+BOX.max.z)/2);
+  if(cadStreams) cadStreams(); else buildStreams(paths,TKS);
+  const cn=$('#cadnote'); if(cn) cn.textContent=CADNOTE;
+  // backwash selector
+  const sel=$('#bwtank'); const cnt=TKS.length;
+  sel.innerHTML=TKS.map((_,i)=>`<option value="${i}">${S.line==='DRF'?'Cell':'Tank'} ${i+1}</option>`).join(''); if(S.bw>=cnt) S.bw=0; sel.value=S.bw;
+  sel.style.display=S.mode==='bw'&&cnt>1?'':'none';
+  applyX(); applyLabels(); applyMode(); fitCam(true);
+}
+
+// ---- camera ----------------------------------------------------------------------------------------------------------------
+const cam={th:0.62,ph:1.12,dist:400,tgt:V(0,40,0)}; let needRender=true;
+function fitCam(reset){ const c=BOX.getCenter(V(0,0,0)), s=BOX.getSize(V(0,0,0)); const r=Math.max(s.x,s.y,s.z)*0.62+20;
+  if(reset){ cam.th=0.62; cam.ph=1.15; } cam.tgt.copy(c); const asp=Math.max(0.5,view.clientWidth/Math.max(1,view.clientHeight));
+  cam.dist=r/Math.sin(camera.fov*Math.PI/360)/Math.min(1,asp)*1.02; needRender=true; }
+function placeCam(){ const {th,ph,dist,tgt}=cam; camera.position.set(tgt.x+dist*Math.sin(ph)*Math.sin(th),tgt.y+dist*Math.cos(ph),tgt.z+dist*Math.sin(ph)*Math.cos(th)); camera.lookAt(tgt); camera.near=Math.max(1,dist/100); camera.far=dist*10; camera.updateProjectionMatrix(); }
+function resize(){ const w=view.clientWidth||1, h=view.clientHeight||1; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); needRender=true; }
+addEventListener('resize',resize);
+let drag=null; const ptrs=new Map();
+view.addEventListener('pointerdown',e=>{ ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); view.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY,th:cam.th,ph:cam.ph,tgt:cam.tgt.clone(),pan:e.button===2||e.shiftKey,d0:null,dist:cam.dist}; if(ptrs.size===2){ const [a,b]=[...ptrs.values()]; drag.d0=Math.hypot(a.x-b.x,a.y-b.y); } });
+view.addEventListener('pointermove',e=>{ if(!drag) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&drag.d0){ const [a,b]=[...ptrs.values()]; cam.dist=clamp(drag.dist*drag.d0/Math.max(10,Math.hypot(a.x-b.x,a.y-b.y)),40,8000); needRender=true; return; }
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  if(drag.pan){ const k=cam.dist/view.clientHeight*0.9, r=V(Math.cos(cam.th),0,-Math.sin(cam.th)); cam.tgt.copy(drag.tgt).addScaledVector(r,-dx*k).add(V(0,dy*k,0)); }
+  else { cam.th=drag.th-dx*0.007; cam.ph=clamp(drag.ph-dy*0.007,0.12,Math.PI/2+0.25); }
+  needRender=true; });
+const end=e=>{ ptrs.delete(e.pointerId); if(!ptrs.size) drag=null; }; view.addEventListener('pointerup',end); view.addEventListener('pointercancel',end);
+view.addEventListener('wheel',e=>{ e.preventDefault(); cam.dist=clamp(cam.dist*Math.exp(e.deltaY*0.0011),40,8000); needRender=true; },{passive:false});
+view.addEventListener('contextmenu',e=>e.preventDefault());
+$('#reset').onclick=()=>fitCam(true);
+$('#fpview').onclick=()=>{ if(!FACEBOX) return; const c=FACEBOX.getCenter(V(0,0,0)), s_=FACEBOX.getSize(V(0,0,0)), r=Math.max(s_.x,s_.y)*0.5+4;
+  cam.th=0.42; cam.ph=1.25; cam.tgt.copy(c); const asp=Math.max(0.5,view.clientWidth/Math.max(1,view.clientHeight)); cam.dist=r/Math.sin(camera.fov*Math.PI/360)/Math.min(1,asp)+s_.z*0.15; needRender=true; };
+
+// ---- modes, x-ray, labels ----------------------------------------------------------------------------------------------------
+function applyX(){ for(const m of TANKMATS){ m.opacity=S.xray?0.2:1; m.depthWrite=!S.xray; } for(const g of INNER) g.visible=S.xray; $('#xray').setAttribute('aria-pressed',S.xray); needRender=true; }
+function applyLabels(){ $('#lbls').setAttribute('aria-pressed',S.labels); overlay.style.display=S.labels?'':'none'; }
+let modeT=0;
+function valveState(v){
+  if(S.mode==='filter') return v.role==='in'||v.role==='eff'||v.role==='pri';
+  const b=S.bw, single=TKS.length===1;
+  if(single) return v.role==='bws'||v.role==='waste';
+  if(v.role==='pri') return false;
+  if(v.tank===b) return v.role==='waste'||v.role==='eff';
+  return v.role==='in'||v.role==='eff';
+}
+function applyMode(){
+  $('#m-filter').setAttribute('aria-pressed',S.mode==='filter'); $('#m-bw').setAttribute('aria-pressed',S.mode==='bw');
+  const sel=$('#bwtank'); sel.style.display=S.mode==='bw'&&TKS.length>1?'':'none';
+  for(const v of VALVES){ const o=valveState(v); v.open=o; for(const mm of v.mats){ mm.emissive.setHex(o?0x1e9a4a:0xb3262f); mm.emissiveIntensity=0.45; } v.tag.el.classList.toggle('open',o); v.tag.el.classList.toggle('shut',!o); v.tag.el.textContent=v.tag.el.textContent.replace(/ ·.*$/,'')+(o?' · open':' · closed'); v.tag.w=0; }
+  for(const s of STREAMS) s.pts.visible=false;
+  modeT=0; status(); needRender=true;
+}
+$('#m-filter').onclick=()=>{ S.mode='filter'; applyMode(); };
+$('#m-bw').onclick=()=>{ S.mode='bw'; applyMode(); };
+$('#bwtank').onchange=e=>{ S.bw=+e.target.value; applyMode(); };
+$('#xray').onclick=()=>{ S.xray=!S.xray; applyX(); };
+$('#lbls').onclick=()=>{ S.labels=!S.labels; applyLabels(); };
+function status(){
+  const bwOn=S.mode==='bw', R_=RES; if(!R_.A) return;
+  const rows=[['Mode',bwOn?'Backwash':'Filter',bwOn?'mid':'go'],
+    ['Rate',bwOn? `${n0(R_.bw[0])}-${n0(R_.bw[1])} GPM` : `${n1(R_.rate)} GPM/SF`, bwOn?'wet':(R_.rate>20.01?'stop':R_.rate>18?'mid':'go')],
+    [bwOn&&TKS.length>1?'Backwashing':'Tanks', bwOn&&TKS.length>1?`${S.line==='DRF'?'Cell':'Tank'} ${S.bw+1}`:String(TKS.length),''],
+    ['Bed', bwOn?'Expanded':'Settled', bwOn?'mid':'go'],
+    ['Sight glass', bwOn?'Watch until clear':'—', bwOn?'wet':'']];
+  $('#sdl').innerHTML=rows.map(([k,v,c])=>`<dt>${k}</dt><dd class="${c}">${v}</dd>`).join('');
+}
+
+// ---- frame ----------------------------------------------------------------------------------------------------------------------
+const _p=V(0,0,0), BLUE=new THREE.Color(0x1597c9), MUD=new THREE.Color(0x7a5a2c), CLEAR=new THREE.Color(0x9fd3ec);
+let clock=0, last=performance.now();
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(!ROOT) return;
+  if(!reduced||modeT<0.3){ clock+=dt; modeT+=dt; needRender=true; }
+  if(!needRender) return; needRender=false;
+  const key=S.mode==='filter'?'filter':(TKS.length===1?'bw0':'bw'+S.bw);
+  const clean=S.mode==='bw'? clamp(1-(modeT-2)/7,0.05,1) : 0;               // backwash water starts dirty, clears
+  for(const s of STREAMS){ const on=s.mode===key; s.pts.visible=on; if(!on) continue;
+    const arr=s.pts.geometry.attributes.position.array, col=s.pts.geometry.attributes.color.array;
+    for(let i=0;i<s.parts.length;i++){ const f=s.parts[i], L=f.path.L, sp=(f.ph*L+clock*s.speed*(reduced?0:1))%L, front=modeT*s.speed*3;
+      if(sp>front&&modeT<4){ arr[3*i]=arr[3*i+1]=arr[3*i+2]=1e6; continue; }
+      at(f.path,sp,_p).add(f.j); arr[3*i]=_p.x; arr[3*i+1]=_p.y; arr[3*i+2]=_p.z;
+      const dirty=S.mode==='bw'&&f.dirty<clean&&sp>L*0.45; const c=dirty?MUD:BLUE; col[3*i]=c.r; col[3*i+1]=c.g; col[3*i+2]=c.b; }
+    s.pts.geometry.attributes.position.needsUpdate=true; s.pts.geometry.attributes.color.needsUpdate=true; }
+  // bed expansion and dirt
+  TKS.forEach((tk,i)=>{ const active=S.mode==='bw'&&(TKS.length===1||i===S.bw); const k=active? Math.min(1,modeT/1.5)*0.22 : 0;
+    if(tk.kind==='v'){ const u=tk.bed.userData; tk.bed.scale.y=1+k; tk.bed.position.y=u.base+u.h*(1+k)/2; tk.dirt.position.y=u.base+u.h*(1+k)-1.5; }
+    else { tk.bed.scale.y=1+k*0.6; tk.dirt.scale.y=1+k*0.6; }
+    tk.dirt.material.opacity= S.mode==='filter'? Math.min(0.75,0.12+modeT*0.04) : (active? 0.7*clean : 0.5); });
+  for(const g of GLASS){ g.w.visible=S.mode==='bw'; g.w.material.color.copy(CLEAR).lerp(MUD,clean); }
+  placeCam(); renderer.render(scene,camera);
+  // tags
+  const w=view.clientWidth, h=view.clientHeight;
+  if(S.labels){ const vis=[];
+    const focus=S.mode==='bw'?S.bw:0, many=TKS.length>2;
+    for(const t of TAGS){ if(many&&t.v&&t.v.tank>=0&&t.v.tank!==focus){ t.el.style.display='none'; continue; } _p.copy(t.p).project(camera); const x=(_p.x+1)/2*w, y=(1-_p.y)/2*h, off=_p.z>1||x<-60||x>w+60||y<-20||y>h+20; t.el.style.display=off?'none':''; if(!off){ if(!t.w){ t.w=t.el.offsetWidth; t.h=t.el.offsetHeight; } vis.push({t,x,y}); } }
+    // push overlapping tags apart vertically
+    vis.sort((a,b)=>a.y-b.y);
+    for(let it=0;it<6;it++) for(let i=0;i<vis.length;i++) for(let j=i+1;j<vis.length;j++){ const a=vis[i], b=vis[j];
+      if(Math.abs(a.x-b.x)<(a.t.w+b.t.w)/2+4 && Math.abs(a.y-b.y)<(a.t.h+b.t.h)/2+2){ const d=((a.t.h+b.t.h)/2+2-Math.abs(a.y-b.y))/2; if(a.y<=b.y){ a.y-=d; b.y+=d; } else { a.y+=d; b.y-=d; } } }
+    for(const v of vis){ v.t.el.style.left=v.x+'px'; v.t.el.style.top=v.y+'px'; } }
+}
+requestAnimationFrame(frame);
+
+// ---- share --------------------------------------------------------------------------------------------------------------------
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),1600); }
+async function copy(t,msg){ try{ await navigator.clipboard.writeText(t); toast(msg); }catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); toast(msg); } }
+function summary(){ const m=model(), r=RES;
+  const L=[`${r.mn}`,`${LINES[S.line].t}: ${r.n} x ${m.model}${S.line==='SHFFG'?'-'+S.conn:''}`,`Filter area ${n1(r.A)} sq ft, design flow ${n0(r.Q)} GPM, rate ${n1(r.rate)} GPM/sq ft`,`Backwash one tank: ${n0(r.bw[0])} to ${n0(r.bw[1])} GPM`];
+  if(m.sand_cf!=null) L.push(`Sand: ${m.sand_cf*r.n} cu ft total${m.gravel_cf?`, gravel ${m.gravel_cf*r.n} cu ft`:''}`);
+  for(const [k,v] of r.pnTank) L.push(`${k.trim()}: ${v}`); for(const f of r.fpm) L.push(`${f.desc}: ${f.part}`);
+  for(const [l,t] of r.chk) if(l) L.push(`${l==='b'?'ISSUE':'NOTE'}: ${t}`);
+  L.push(location.href); return L.join('\n'); }
+$('#b-copy').onclick=()=>copy(summary(),'Summary copied');
+$('#b-link').onclick=()=>copy(location.href,'Link copied');
+$('#b-json').onclick=()=>{ const m=model(); copy(JSON.stringify({model_number:RES.mn,product_line:S.line,config:{...S},tank:m.model,tanks:RES.n,filter_area_sf:RES.A,flow_gpm:RES.Q,rate_gpmsf:+RES.rate.toFixed(2),backwash_gpm:RES.bw.map(Math.round),part_numbers:[...RES.pnTank.map(([k,v])=>({item:k.trim(),part:v})),...RES.fpm.map(f=>({item:f.desc,part:f.part}))],checks:RES.chk.map(([l,t])=>({level:l||'ok',text:t}))},null,1),'JSON copied'); };
+
+// ---- update ----------------------------------------------------------------------------------------------------------------
+let lastKey='';
+function update(rebuild,flowOnly){
+  fixState(); renderControls(); results(); writeURL();
+  const key=JSON.stringify([S.line,S.dia,S.len,S.conn,S.mat,S.shell,S.arr,S.n,S.op,S.fp,S.hand,S.inlet]);
+  if(key!==lastKey){ lastKey=key; build(); } else status();
+}
+readURL(); resize(); update(true);
+window.SandCfg={S,update,model,get RES(){return RES;}};
+})();
+</script>
+</body>
+</html>
