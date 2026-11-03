@@ -469,7 +469,7 @@ function label(text,p,cls,key){ const el=document.createElement('div'); el.class
 
 // ---- tanks -------------------------------------------------------------------------------------------------------------
 function shellMat(c){ const m=mat(c,{transparent:true,opacity:1,side:THREE.DoubleSide}); TANKMATS.push(m); return m; }
-function hTank(x,yC,R,Ls,hd,hand,bedIn,conn,parent){
+function hTank(x,yC,R,Ls,hd,hand,bedIn,conn,parent,yNU,yNL){
   // horizontal: axis along z, front head toward +z
   const g=new THREE.Group(); parent.add(g); const m=shellMat(C.tank);
   cyl(V(x,yC,-Ls/2),V(x,yC,Ls/2),R,m,g,40);
@@ -486,10 +486,14 @@ function hTank(x,yC,R,Ls,hd,hand,bedIn,conn,parent){
   const bedTop=yC-R+bedIn+6, segG=segment(R-0.6,yC-R+6-yC+0.0001,bedTop-yC,Ls);
   const bed=new THREE.Mesh(segG,mat(C.sand,{transparent:true,opacity:0.55,depthWrite:false})); bed.position.set(x,yC,0); IN.add(bed);
   const dirt=new THREE.Mesh(segment(R-0.7,bedTop-yC-3,bedTop-yC,Ls*0.999),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false})); dirt.position.set(x,yC,0); IN.add(dirt);
-  const lm=mat(C.white), yu=yC+(R*0.62), yl=yC-R+5;
-  cyl(V(x,yu,-Ls/2+4),V(x,yu,Ls/2+hd*0.4),1.2+conn*0.25,lm,IN); cyl(V(x,yl,-Ls/2+4),V(x,yl,Ls/2+hd*0.2),1.2+conn*0.25,lm,IN);
+  // overdrain header on the upper connection; underdrain header near the bottom, joined to the lower connection by a drop
+  const lm=mat(C.white), yu=yNU, yl=Math.min(yNL,yC-R+5), rh=OD[conn]/2*0.92;
+  const zN=yy=>Ls/2+hd*Math.sqrt(Math.max(0,1-((yy-yC)/R)**2));
+  run([V(x,yu,zN(yu)+1),V(x,yu,-Ls/2+4)],rh,lm,IN);
+  if(yl<yNL-0.5) run([V(x,yNL,zN(yNL)+1),V(x,yNL,Ls/2),V(x,yl,Ls/2-(yNL-yl)*0.6),V(x,yl,-Ls/2+4)],rh,lm,IN);
+  else run([V(x,yNL,zN(yNL)+1),V(x,yNL,-Ls/2+4)],rh,lm,IN);
   for(let z=-Ls/2+8;z<=Ls/2-4;z+=12){ const wu=Math.sqrt(Math.max(0,R*R-(yu-yC)**2))-3, wl=Math.sqrt(Math.max(0,R*R-(yl-yC)**2))-2; cyl(V(x-wu,yu,z),V(x+wu,yu,z),0.75,lm,IN); cyl(V(x-wl,yl,z),V(x+wl,yl,z),0.75,lm,IN); }
-  return {g,bed,dirt,bedTop,yC,R,Ls,hd,x,kind:'h'};
+  return {g,bed,dirt,bedTop,yC,R,Ls,hd,x,kind:'h',yUd:yl};
 }
 function segment(R,y0,y1,L){ // circle segment between heights y0..y1 (relative to centre), extruded along z, centred
   const a0=Math.asin(clamp(y0/R,-1,1)), a1=Math.asin(clamp(y1/R,-1,1)), s=new THREE.Shape();
@@ -516,8 +520,8 @@ function vTank(x,R,yBot,shellH,headK,bedIn,gravelIn,color,parent,opt){
   const bed=new THREE.Mesh(new THREE.CylinderGeometry(R-0.6,R-0.6,bedIn,40),mat(C.sand,{transparent:true,opacity:0.55,depthWrite:false})); bed.position.set(x,gTop+bedIn/2,0); IN.add(bed);
   bed.userData={base:gTop,h:bedIn};
   const dirt=new THREE.Mesh(new THREE.CylinderGeometry(R-0.7,R-0.7,3,40),mat(0x6b4f2a,{transparent:true,opacity:0,depthWrite:false})); dirt.position.set(x,sTop-1.5,0); IN.add(dirt);
-  const lm=mat(C.white), yu=opt.yU, yl=opt.yL;
-  cyl(V(x,yu,R),V(x,yu,-R*0.6),1.6,lm,IN); cyl(V(x,yl,R),V(x,yl,-R*0.6),1.6,lm,IN);
+  const lm=mat(C.white), yu=opt.yU, yl=opt.yL, rh=opt.rn||1.6;
+  cyl(V(x,yu,R+0.5),V(x,yu,-R*0.6),rh,lm,IN); cyl(V(x,yl,R+0.5),V(x,yl,-R*0.6),rh,lm,IN);
   for(let z=-R*0.6+6;z<R-6;z+=10){ const w=Math.sqrt(Math.max(0,R*R-z*z))-3; cyl(V(x-w,yu,z),V(x+w,yu,z),0.7,lm,IN); cyl(V(x-w,yl,z),V(x+w,yl,z),0.7,lm,IN); }
   return {g,bed,dirt,bedTop:sTop,R,x,y0,y1,kind:'v'};
 }
@@ -828,7 +832,7 @@ function stream(N,mk,opt){ opt=opt||{};
   const S_={pts,parts,mode:opt.mode,speed:opt.speed||40,dirtyFrom:opt.dirtyFrom||null}; STREAMS.push(S_); return S_; }
 // inside-tank random paths
 function innerDown(tk,i,seed){ const r=k=>h1(i*k+seed);
-  if(tk.kind==='h'){ const z=(r(2.1)*2-1)*tk.Ls*0.45, x=tk.x+(r(3.7)*2-1)*tk.R*0.6; return [V(tk.x,tk.yU,tk.Ls/2),V(tk.x,tk.yU,z),V(x,tk.yU-2,z),V(x*0.98+tk.x*0.02,tk.bedTop,z+(r(5.3)-.5)*8),V(tk.x+(r(6.1)*2-1)*tk.R*0.5,tk.yL+1,z),V(tk.x,tk.yL,z),V(tk.x,tk.yL,tk.Ls/2)]; }
+  if(tk.kind==='h'){ const z=(r(2.1)*2-1)*tk.Ls*0.45, x=tk.x+(r(3.7)*2-1)*tk.R*0.6; return [V(tk.x,tk.yU,tk.Ls/2+tk.hd*0.6),V(tk.x,tk.yU,z),V(x,tk.yU-2,z),V(x*0.98+tk.x*0.02,tk.bedTop,z+(r(5.3)-.5)*8),V(tk.x+(r(6.1)*2-1)*tk.R*0.5,tk.yUd+1,z),V(tk.x,tk.yUd,z),V(tk.x,tk.yUd,tk.Ls/2-(tk.yL-tk.yUd)*0.6),V(tk.x,tk.yL,tk.Ls/2),V(tk.x,tk.yL,tk.Ls/2+tk.hd*0.6)]; }
   const a=r(2.1)*6.283, rr=Math.sqrt(r(3.7))*tk.R*0.8, x=tk.x+Math.cos(a)*rr, z=Math.sin(a)*rr;
   return [V(tk.x,tk.yU,tk.R),V(tk.x,tk.yU,z),V(x,tk.yU-2,z),V(x,tk.bedTop,z),V(x*0.7+tk.x*0.3,tk.yL+1,z*0.7),V(tk.x,tk.yL,z*0.5),V(tk.x,tk.yL,tk.R)];
 }
@@ -862,7 +866,7 @@ function build(){
     const tiers= S.arr==='stacked'||S.arr==='stackrow'?2:1;
     for(let c=0;c<cols;c++) for(let t=0;t<tiers;t++){
       const x=(c-(cols-1)/2)*pitch, y=yC+t*st, hand=cols>1? (c<cols/2?'L':'R') : S.hand;
-      const tk=hTank(x,y,R,Ls,hd,hand,m.bed_in,S.conn,ROOT); tk.yU=y+dy; tk.yL=y-dy; TKS.push(tk);
+      const tk=hTank(x,y,R,Ls,hd,hand,m.bed_in,S.conn,ROOT,y+dy,y-dy); tk.yU=y+dy; tk.yL=y-dy; TKS.push(tk);
       const zz=yy=>Ls/2+hd*Math.sqrt(Math.max(0,1-((yy)/R)**2));
       const rn=OD[S.conn]/2, nm=mat(C.tank); cyl(V(x,y+dy,zz(dy)-2),V(x,y+dy,zF),rn,nm,ROOT); cyl(V(x,y-dy,zz(-dy)-2),V(x,y-dy,zF),rn,nm,ROOT);
       noz.push({x,yU:y+dy,yL:y-dy,zU:zF,zL:zF,zF});
@@ -874,13 +878,13 @@ function build(){
     const R=sr.A1/2, legs=8, hdK=0.22, shell=S.line==='SRF'&&S.mat==='FG'? S.shell : Math.max(48,sr.F-legs-2*R*hdK+4);
     const yU=Math.min(sr.F, legs+R*hdK+shell-4), yL=legs+R*hdK+6, cnt=S.line==='DRF'?2:S.n;
     const pitch=S.line==='DRF'? Math.max(m.K-sr.A1, sr.A1+12) : sr.A1+24;
-    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,legs,shell,hdK,22,Math.max(4,R*0.12),S.line==='SRF'&&S.mat==='STL'?C.tankS:C.tank,ROOT,{yU,yL,lid:9}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
+    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,legs,shell,hdK,22,Math.max(4,R*0.12),S.line==='SRF'&&S.mat==='STL'?C.tankS:C.tank,ROOT,{yU,yL,lid:9,rn:OD[S.line==='DRF'?+m.fp.split('x')[1]:S.conn]/2*0.92}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
       noz.push({x,yU,yL,zU:R,zL:R}); label(S.line==='DRF'?`Cell ${i+1}`:`${S.dia}${S.mat==='FG'?'SRFFG':'SRF'}-${S.conn}`,V(x,legs+2*R*hdK+shell+14,0),'t'); }
     J=sr.B*1.6; K=sr.C;
   } else {
     const R=(m.B||m.dia+1)/2, yBot=7, shell=Math.max(16,(m.C||42)-yBot-2*R*0.32), cnt=S.n, pitch=2*R+6;
     const yL=m.E||12, yU=(m.E||12)+(m.F||12);
-    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,yBot,shell,0.32,m.bed_in||16,4,C.ccfg,ROOT,{skirt:true,yU,yL,lid:m.dia>=48?9:5}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
+    for(let i=0;i<cnt;i++){ const x=(i-(cnt-1)/2)*pitch; const tk=vTank(x,R,yBot,shell,0.32,m.bed_in||16,4,C.ccfg,ROOT,{skirt:true,yU,yL,lid:m.dia>=48?9:5,rn:OD[3]/2*0.92}); tk.yU=yU; tk.yL=yL; TKS.push(tk);
       noz.push({x,yU,yL,zU:R,zL:R}); label(m.model,V(x,(m.C||44)+10,0),'t'); }
     J=12; K=14;
   }
@@ -1030,7 +1034,7 @@ function update(rebuild,flowOnly){
   if(key!==lastKey){ lastKey=key; build(); } else status();
 }
 readURL(); resize(); update(true);
-window.SandCfg={S,update,model,get RES(){return RES;}};
+window.SandCfg={S,update,model,cam,get RES(){return RES;},redraw(){ needRender=true; }};
 })();
 </script>
 </body>
