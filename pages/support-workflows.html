@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NBTS AI Platform | Support Workflows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Defender RMF theme */
+  --xylem-teal:#0085AD;
+  --defender-blue:#1E4B8C;
+  --defender-blue-mid:#3060A8;
+  --defender-blue-light:#5A8FD0;
+  --defender-blue-shadow:#16386B;
+  --page-bg:#FFFFFF;
+  --row-stripe:#E8EEF2;
+  --rule-grey:#D0D0D0;
+  --text-primary:#333333;
+  --text-secondary:#5A5A5A;
+  --font-sans:"Open Sans","Source Sans Pro","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --ease-standard:cubic-bezier(0.4,0.0,0.2,1);
+
+  /* Flow lanes mapped onto the cool palette */
+  --phone:#5A5A5A;          --phone-bg:#F2F4F6;
+  --agent:#1E4B8C;          --agent-bg:#F1F5F9;
+  --tool:#0085AD;           --tool-bg:#EBF6FA;
+  --n8n:#3060A8;            --n8n-bg:#F0F3FA;
+  --jira:#16386B;           --jira-bg:#EFF2F6;
+  --ok:#0085AD;             --ok-bg:#EBF6FA;
+  --off:#5A5A5A;            --off-bg:#F4F5F6;
+  /* Safety is the one exception to the cool palette */
+  --safe:#A32A1E;           --safe-bg:#FBEEEC;
+
+  /* aliases used by the markup */
+  --bg:var(--page-bg); --card:var(--page-bg); --ink:var(--text-primary); --muted:var(--text-secondary); --line:var(--rule-grey); --soft:var(--row-stripe);
+}
+*{box-sizing:border-box}
+html{background:var(--page-bg)}
+body{margin:0;background:var(--page-bg);color:var(--text-primary);font:15px/1.5 var(--font-sans)}
+code,.mono{font:500 12.5px var(--font-mono)}
+.wrap{max-width:1320px;margin:0 auto;padding:30px 56px 40px}
+
+/* ---------- Portal chrome (matches tools.html) ---------- */
+.backbar{max-width:1320px;margin:0 auto;padding:14px 56px 0}
+.back{font-size:13px;font-weight:600;color:var(--xylem-teal);text-decoration:none}
+.back:hover{color:var(--defender-blue)}
+.hdr{position:relative;height:132px;border-bottom:1px solid var(--rule-grey);margin-bottom:22px}
+.hdr svg.swoosh{position:absolute;inset:0;width:100%;height:100%}
+#swooshPath{stroke-dasharray:2200;stroke-dashoffset:2200}
+.hdr.play #swooshPath{animation:draw 480ms var(--ease-standard) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.hdr .brand{position:absolute;left:0;top:6px}
+.hdr .brand .nb{font-weight:800;font-size:24px;color:var(--defender-blue);letter-spacing:.01em}
+.hdr .brand .sub{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.hdr .brand .sub .xy{color:var(--xylem-teal);font-weight:700}
+.hdr .title{position:absolute;right:0;bottom:6px;text-align:right}
+.hdr .title .t1{font-weight:800;font-size:32px;color:var(--defender-blue);line-height:1.05}
+.hdr .title .t2{font-weight:600;font-size:16px;color:var(--text-primary);margin-top:4px}
+.hdr .title .t3{font-size:12px;color:var(--text-secondary);margin-top:3px}
+.lede{margin:0;color:var(--text-primary);max-width:860px;font-size:15px;line-height:1.6}
+@media (max-width:1100px){
+  .wrap{padding:24px 28px 34px}.backbar{padding:14px 28px 0}
+  .hdr{height:auto;padding-bottom:16px}
+  .hdr .title{position:static;text-align:left;margin-top:14px}
+  .hdr .brand{position:static}
+  .hdr svg.swoosh{display:none}
+}
+@media (max-width:620px){.wrap{padding:20px 18px 30px}.backbar{padding:14px 18px 0}}
+
+/* ---------- Tabs ---------- */
+.tabs{position:sticky;top:0;z-index:5;background:var(--page-bg);display:flex;gap:0;overflow-x:auto;margin:18px 0 0;border-bottom:1px solid var(--rule-grey);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs .grp{flex:none;align-self:center;font:700 10.5px var(--font-sans);letter-spacing:.12em;color:var(--xylem-teal);padding:0 10px 0 16px}
+.tabs .grp:first-child{padding-left:0}
+.tabs a{flex:none;text-decoration:none;color:var(--text-secondary);font-weight:600;font-size:14px;padding:12px 12px 10px;border-bottom:3px solid transparent;transition:color 300ms var(--ease-standard),border-color 300ms var(--ease-standard)}
+.tabs a:hover{color:var(--defender-blue)}
+.tabs a.on{color:var(--defender-blue);border-bottom-color:var(--xylem-teal)}
+.tabs a:focus-visible{outline:2px solid var(--xylem-teal);outline-offset:-2px}
+.tab{display:none}.tab.on{display:block}
+
+/* ---------- Legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 0 0;font-size:12.5px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;display:inline-block}
+
+/* ---------- Tab intro: bold blue title + teal rule ---------- */
+.tabintro{margin-top:30px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.tabintro h2{font-size:22px;margin:0;width:100%;color:var(--defender-blue);font-weight:700;padding-bottom:6px;position:relative}
+.tabintro h2::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--xylem-teal);transform-origin:left;transform:scaleX(0)}
+.tab.on .tabintro h2::after{transform:scaleX(1);transition:transform 420ms var(--ease-standard)}
+.tabintro p{margin:4px 0 0;color:var(--text-secondary);width:100%}
+.meta{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:12px}
+.pill{font:500 12px var(--font-mono);color:var(--text-secondary);padding:0}
+.pill::before{content:"▸ ";color:var(--xylem-teal)}
+
+/* status chips */
+.st{font:700 10.5px/1 var(--font-sans);letter-spacing:.08em;text-transform:uppercase;padding:6px 8px;border:1px solid currentColor}
+.st-live{background:var(--xylem-teal);border-color:var(--xylem-teal);color:#fff}
+.st-part{color:var(--defender-blue-mid)}
+.st-build{color:var(--text-secondary)}
+.st-block{color:var(--safe)}
+
+/* ---------- Stages ---------- */
+.stage{margin-top:30px}
+.stage-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:1px solid var(--rule-grey);padding-bottom:6px}
+.stage-h .n{width:24px;height:24px;display:grid;place-items:center;font-weight:700;font-size:12.5px;color:#fff;flex:none}
+.stage-h h2{font-size:16px;margin:0;color:var(--defender-blue);font-weight:700}
+.stage-h small{color:var(--text-secondary);font-size:12.5px}
+
+/* ---------- Nodes: datasheet-flat, no radius, no shadow ---------- */
+.node{background:var(--cb,var(--row-stripe));border-left:4px solid var(--c,var(--rule-grey));padding:12px 14px}
+.node h3{margin:0 0 4px;font-size:14.5px;font-weight:700;color:var(--text-primary)}
+.node p{margin:0;color:var(--text-secondary);font-size:13.5px}
+.node ul{margin:6px 0 0;padding-left:18px;color:var(--text-secondary);font-size:13.5px}
+.node li{margin:2px 0}
+.node li::marker{color:var(--c,var(--text-secondary))}
+.node .tag{display:inline-block;font:700 10.5px/1 var(--font-sans);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;color:var(--c,var(--text-secondary))}
+.node .badge{float:right;font:700 10px/1 var(--font-sans);letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;margin-left:8px;border:1px solid currentColor;background:var(--page-bg)}
+.b-live{color:var(--xylem-teal)}
+.b-build{color:var(--text-secondary)}
+.b-gap{color:var(--safe)}
+.b-swap{color:var(--defender-blue-mid)}
+.phone{--c:var(--phone);--cb:var(--phone-bg)}
+.agent{--c:var(--agent);--cb:var(--agent-bg)}
+.tool{--c:var(--tool);--cb:var(--tool-bg)}
+.n8n{--c:var(--n8n);--cb:var(--n8n-bg)}
+.jira{--c:var(--jira);--cb:var(--jira-bg)}
+.safe{--c:var(--safe);--cb:var(--safe-bg)}
+.ok{--c:var(--ok);--cb:var(--ok-bg)}
+.off{--c:var(--off);--cb:var(--off-bg)}
+.node:not([class*=" "]){background:var(--page-bg);border-left:0;padding:0}
+
+.decision{background:var(--page-bg);border:1px dashed var(--c,var(--rule-grey));padding:10px 14px;text-align:center;font-weight:700;font-size:14px;color:var(--defender-blue)}
+.decision::before{content:"◆ ";color:var(--c)}
+
+.down{display:flex;flex-direction:column;align-items:center;height:28px;justify-content:center;color:var(--text-secondary);font-size:11.5px;font-weight:600}
+.down::before{content:"";width:1px;flex:1;background:var(--defender-blue-light)}
+.down::after{content:"";border:5px solid transparent;border-top:6px solid var(--defender-blue-light);border-bottom:0}
+.down.lbl{height:44px}
+.down span{padding:2px 0}
+
+.row{display:grid;gap:10px}
+.r2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.r3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:720px){.r3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.r2,.r3{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+@media (max-width:520px){.split{grid-template-columns:1fr}}
+.branchlbl{font:700 11px var(--font-sans);letter-spacing:.08em;color:var(--xylem-teal);text-align:center;margin-bottom:6px}
+
+.end{display:inline-block;margin-top:8px;font:700 11px/1 var(--font-sans);padding:5px 7px;border:1px solid var(--rule-grey);color:var(--text-primary);background:var(--page-bg)}
+.end.toRoute{color:var(--defender-blue);border-color:var(--defender-blue)}
+.end.toClose{color:var(--xylem-teal);border-color:var(--xylem-teal)}
+
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--safe-bg);border-left:4px solid var(--safe);padding:11px 14px;margin-top:14px}
+.banner b{color:var(--safe)}
+.banner p{margin:0;font-size:13.5px}
+
+/* ---------- Tables: datasheet style ---------- */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;font-variant-numeric:lining-nums tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--rule-grey);vertical-align:top}
+th{font-size:12px;font-weight:600;color:var(--text-primary);background:var(--page-bg)}
+tr:has(th)+tr td{border-top:0}
+table tr:nth-child(even) td{background:var(--row-stripe)}
+td:first-child{font-weight:600;white-space:nowrap;color:var(--text-primary)}
+.node table td{color:var(--text-primary);background:var(--page-bg)}
+.node table tr:nth-child(even) td{background:var(--row-stripe)}
+.swap td:first-child{white-space:normal;font-weight:400;color:var(--text-secondary)}
+.swap td:last-child{font-weight:600}
+
+.form{background:var(--page-bg);border-top:1px solid var(--rule-grey)}
+.form .f{display:flex;justify-content:space-between;gap:10px;padding:7px 8px;border-bottom:1px solid var(--rule-grey);font-size:13.5px}
+.form .f:nth-child(odd){background:var(--row-stripe)}
+.form .f span:last-child{color:var(--text-secondary);font-size:12px;text-align:right}
+.node .form{margin-left:-2px}
+
+/* ---------- Ticket anatomy ---------- */
+.ticket{border-top:1px solid var(--rule-grey)}
+.ticket .top{padding:10px 0;border-bottom:1px solid var(--xylem-teal)}
+.ticket .top .mono{color:var(--defender-blue);font-weight:500}
+.ticket .body{padding:12px 0;font-size:13.5px}
+.ticket .body h4{margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--defender-blue)}
+.ticket .body h4:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font:500 11.5px var(--font-mono);padding:4px 6px;background:var(--row-stripe);color:var(--defender-blue)}
+.chip.c{background:var(--page-bg);color:var(--text-secondary);border:1px dashed var(--rule-grey)}
+
+.notes{margin-top:36px}
+.notes h2{font-size:18px;margin:0 0 10px;color:var(--defender-blue);padding-bottom:6px;border-bottom:1px solid var(--xylem-teal)}
+.notes ol{margin:0;padding-left:20px;font-size:14px}
+.notes li{margin:6px 0}
+.notes li::marker{color:var(--xylem-teal);font-weight:700}
+
+footer{margin-top:56px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;border-top:1px solid var(--rule-grey);padding-top:14px}
+footer p{margin:0;font-size:10.5px;color:var(--text-secondary);max-width:640px;text-align:justify}
+footer .mark{font-weight:800;font-size:30px;line-height:1;color:var(--xylem-teal);letter-spacing:.01em}
+footer .mark sup{font-size:20px}
+
+/* ---------- Motion: row-stripe wipe on tab show ---------- */
+.tab.on .fx{animation:rise 420ms var(--ease-standard) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  #swooshPath{stroke-dashoffset:0}
+}
+</style>
+</head>
+<body>
+<div class="backbar"><a class="back" href="/tools">&larr; Tools</a></div>
+<div class="wrap">
+
+<header class="hdr" id="hero">
+    <svg class="swoosh" viewBox="0 0 1808 132" preserveAspectRatio="none" aria-hidden="true">
+      <path id="swooshPath" d="M0,132 C 620,132 820,48 1160,26 C 1420,10 1620,7 1808,3" fill="none" stroke="#0085AD" stroke-width="5"></path>
+    </svg>
+    <div class="brand">
+      <div class="nb">Neptune Benson<span style="color:#0085AD">.</span></div>
+      <div class="sub">D&amp;A · a <span class="xy">xylem</span> brand</div>
+    </div>
+    <div class="title">
+      <div class="t1">NBTS AI</div>
+      <div class="t2">Support Workflows to Jira</div>
+      <div class="t3">Contact: Casey Glynn Lead Engineer</div>
+    </div>
+  </header>
+<p class="lede">WWT (WI Projects) phone, SMS and email land in the Xylem Technical Support space. NBTS submittals and spec scorecards land in NBTS Jira.</p>
+
+<nav class="tabs" id="tabs">
+  <span class="grp">WWT</span>
+  <a href="#phone" data-t="phone">Phone</a>
+  <a href="#sms" data-t="sms">SMS</a>
+  <a href="#email" data-t="email">Email</a>
+  <span class="grp">NBTS</span>
+  <a href="#submittal" data-t="submittal">Submittal</a>
+  <a href="#scorecard" data-t="scorecard">Spec Scorecard</a>
+</nav>
+
+<div class="legend">
+  <span><i style="background:var(--phone)"></i>Customer / Twilio</span>
+  <span><i style="background:var(--agent)"></i>Agent or form</span>
+  <span><i style="background:var(--tool)"></i>Service / tool</span>
+  <span><i style="background:var(--n8n)"></i>n8n</span>
+  <span><i style="background:var(--jira)"></i>Jira</span>
+  <span><i style="background:var(--safe)"></i>Safety / gap</span>
+</div>
+
+<!-- ================= PHONE ================= -->
+<section class="tab" id="tab-phone">
+<div class="tabintro">
+  <h2>Phone line to XTS Jira</h2>
+  <span class="st st-live">Live</span>
+  <p>A call to the support line goes through the ElevenLabs agent and its n8n tools, then the post-call workflow opens a ticket in XTS.</p>
+</div>
+<div class="meta">
+  <span class="pill">+1 855 516 7056</span>
+  <span class="pill">Glennbot_frontdesk_wwt</span>
+  <span class="pill">n8n: WWT - ElevenLabs Call to XTS Jira rev 1.0</span>
+  <span class="pill">Jira: XTS / Support</span>
+</div>
+
+<div class="legend" style="display:none">
+  <span><i style="background:var(--phone)"></i>Phone / Twilio</span>
+  <span><i style="background:var(--agent)"></i>ElevenLabs agent</span>
+  <span><i style="background:var(--tool)"></i>Live agent tools</span>
+  <span><i style="background:var(--n8n)"></i>n8n post-call</span>
+  <span><i style="background:var(--jira)"></i>Jira</span>
+  <span><i style="background:var(--safe)"></i>Safety override</span>
+</div>
+
+<!-- STAGE 1 -->
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--phone)">1</div><h2>Inbound call</h2></div>
+  <div class="row r2">
+    <div class="node phone"><span class="tag">Twilio</span><h3>Caller dials 855 516 7056</h3><p>Toll-free number routes into the ElevenLabs agent. Caller ID is captured automatically for the ticket.</p></div>
+    <div class="node agent"><span class="tag">Agent</span><h3>Greeting</h3><p>"Thanks for calling Xylem support. This call may be recorded..." Asks who is calling and what they need, then listens.</p></div>
+  </div>
+  <div class="banner"><b>⚠</b><p><b>Safety rules override every step.</b> Injury, gas or chemical exposure, ozone smell or leak alarm: leave the area, follow plant emergency procedures, call 911, then log it. Never guide confined space entry, live panel work, or lit UV lamp work. LOTO reminder before any hands-on step.</p></div>
+</section>
+
+<div class="down"></div>
+
+<!-- STAGE 2 -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">2</div><h2>Identify product and plant</h2><small>asks only if unclear</small></div>
+  <div class="node agent">
+    <h3>Map caller words to a product family</h3>
+    <div class="scroll"><table>
+      <tr><th>Family</th><th>Cue words</th></tr>
+      <tr><td>ICEAS</td><td>ICEAS, SBR, decanter, basin, blower, diffuser, DO, cycle</td></tr>
+      <tr><td>CHAIN_SCRAPER</td><td>chain, scraper, flights, sprocket, shear pin, wear shoe, cross conveyor</td></tr>
+      <tr><td>LEOPOLD</td><td>underdrain, Type S / XA, IMS cap, media, backwash, Valve-PAC, FilterWorx, Clari-Vac, Clari-Trac</td></tr>
+      <tr><td>WEDECO_UV</td><td>Wedeco + UV, Duron, TAK, Spektron, K143, BX / LBX, ballast, lamp, wiper</td></tr>
+      <tr><td>WEDECO_OZONE</td><td>Wedeco + ozone, SMO, SMA, PDO, ozone destruct, dew point</td></tr>
+    </table></div>
+    <ul>
+      <li>"Clarifier" alone: ask chain and flight vs Clari-Vac / Clari-Trac.</li>
+      <li>"UV" or "ozone" alone: ask the brand. ETS UV or Pacific Ozone goes to D&amp;A (message only).</li>
+      <li>Ask plant name once, early. Drives site-scoped answers and the ticket.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="down"></div>
+<div class="decision" style="--c:var(--agent)">What does the caller need?</div>
+<div class="down"></div>
+
+<!-- STAGE 3 BRANCHES -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">3</div><h2>Branches</h2></div>
+  <div class="row r3">
+    <div class="node agent"><span class="tag">a</span><h3>Troubleshooting / how-to</h3><p>Answer first using the KB. See Stage 4.</p><span class="end">→ Stage 4</span></div>
+    <div class="node agent"><span class="tag">g</span><h3>Asks for a person</h3><p>Offer help once. If they still want a person, or ask twice, get product group and plant. Named specialist tried first.</p><span class="end toRoute">→ Human routing</span></div>
+    <div class="node agent"><span class="tag">d</span><h3>Filter press / other WW</h3><p>No KB search. Brief intake (plant, equipment, issue), offer a specialist or callback. Unmatched products: "right team will follow up."</p><span class="end toRoute">→ Human routing</span></div>
+    <div class="node agent"><span class="tag">e</span><h3>Warranty</h3><p>Never states coverage or terms. Captures equipment, serial, start-up date, failure. Still helps with the technical issue.</p><span class="end toClose">→ Feedback, close</span></div>
+    <div class="node agent"><span class="tag">f</span><h3>Parts / orders / quotes / billing</h3><p>No KB answer. Captures part, equipment, order or PO number. Tells caller who follows up.</p><span class="end toClose">→ Feedback, close</span></div>
+    <div class="node off"><span class="tag">h</span><h3>No details / voicemail</h3><p>Nothing usable after two tries. "Someone will follow up next business day." Skips feedback.</p><span class="end">→ End call</span></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<!-- STAGE 4 -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--tool)">4</div><h2>Answer-first loop</h2><small>branch a</small></div>
+  <div class="node tool">
+    <span class="tag">Webhook tool</span>
+    <h3>search_wwt_knowledge_base</h3>
+    <p>POST <code>/webhook/wwt-voice-search-kb</code> with <code>query</code>, <code>product</code>, <code>site</code>. n8n <b>WWT - Voice Agent - Search KB</b> filters <code>wwt_documents</code> by brand / product first, then searches within those chunks. Returns short excerpts with site and a SITE SCOPE / WARNING note.</p>
+  </div>
+  <div class="down"></div>
+  <div class="row r2">
+    <div class="node agent"><h3>Site and model checks</h3><ul><li>Result site matches caller's plant: give values.</li><li>Different plant: explain the function, point to their O&amp;M / panel.</li><li>Ask chain type, Valve-PAC generation, or Wedeco model when the answer depends on it.</li></ul></div>
+    <div class="node agent"><h3>Deliver in small doses</h3><ul><li>One most likely cause and fix, max 3 items.</li><li>Alarm wording kept exactly as documented.</li><li>Every number must come from this call's search result.</li><li>"Try that and tell me what you see."</li></ul></div>
+  </div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--tool)">Fixed?</div>
+  <div class="split" style="margin-top:10px">
+    <div>
+      <div class="branchlbl">YES</div>
+      <div class="node ok"><h3>Confirm it helped</h3><p>No intake checklist on resolved calls.</p><span class="end toClose">→ Feedback, close</span></div>
+    </div>
+    <div>
+      <div class="branchlbl">NO, or found = false</div>
+      <div class="node agent"><h3>Escalation intake</h3><p>Name, plant, product, model or tag, one-line issue. Three questions max. Never asks for phone or email.</p></div>
+      <div class="down lbl"><span>"Connect you now?"</span></div>
+      <div class="row r2">
+        <div class="node agent"><h3>Yes</h3><span class="end toRoute">→ Human routing</span></div>
+        <div class="node agent"><h3>No</h3><p>Contact 1 for the group, by name, will follow up.</p><span class="end toClose">→ Feedback, close</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<!-- STAGE 5 -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">5</div><h2>Human routing</h2><small>transfer_to_number, conference</small></div>
+  <div class="node agent">
+    <h3>Try contacts in order</h3>
+    <div class="scroll"><table>
+      <tr><th>Group</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+      <tr><td>Sanitaire / ICEAS</td><td>Dolan Hovde</td><td>Stephen Grant</td><td>Beth Nelson</td><td></td></tr>
+      <tr><td>Wastewater / chain &amp; scraper</td><td>Beth Nelson</td><td>Stephen Grant</td><td></td><td></td></tr>
+      <tr><td>Leopold</td><td>Mike Maciejewski</td><td>Jeremiah Lewis</td><td>Jeremy Brown</td><td>John Turner</td></tr>
+      <tr><td>Wedeco Ozone</td><td>Robert Voitle</td><td>James Pettis</td><td>Mckenzie Krauss</td><td>John Turner</td></tr>
+      <tr><td>Wedeco UV</td><td>Robert Voitle</td><td>Allan Gagg</td><td>Mckenzie Krauss</td><td>John Turner</td></tr>
+      <tr><td>Filter press</td><td>AFS/CDI line</td><td>Harrison Bryant</td><td>Firas Shamoun</td><td></td></tr>
+    </table></div>
+    <ul>
+      <li>Names the specialist and product, and says the need and what was tried out loud so the summary captures it.</li>
+      <li>No answer: "Let me try another specialist." Stops after 3 attempts.</li>
+      <li>All fail: contact 1 for that group, by name, will call back.</li>
+      <li>Never reads specialist numbers or emails. Only the AFS/CDI line may be given, on request.</li>
+    </ul>
+  </div>
+  <div class="split" style="margin-top:10px">
+    <div class="node ok"><h3>Connected</h3><p>Caller is conferenced to the specialist. Feedback skipped.</p></div>
+    <div class="node agent"><h3>No one answered</h3><p>Callback promised by contact 1.</p><span class="end toClose">→ Feedback, close</span></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<!-- STAGE 6 -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">6</div><h2>Feedback and close</h2></div>
+  <div class="node agent">
+    <h3>"This support line is new. Anything that worked well, or anything I could do better?"</h3>
+    <p>Asked once, repeated back in one sentence. Skipped for safety events, upset or rushed callers, transfers, voicemail, or feedback already given.</p>
+  </div>
+</section>
+
+<div class="down lbl"><span>call ends</span></div>
+
+<!-- STAGE 7 -->
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--n8n)">7</div><h2>Post-call workflow</h2><small>runs on every call</small></div>
+  <div class="node n8n"><span class="tag">ElevenLabs → n8n</span><h3>Post-call webhook</h3><p>Transcript event (JSON, no audio) POSTs to <code>/webhook/wwt-elevenlabs-post-call</code>.</p></div>
+  <div class="down"></div>
+  <div class="node n8n"><span class="tag">Code</span><h3>Normalize Call</h3>
+    <p>Pulls conversation ID, caller ID, duration, end reason, tools used, caller lines and a 15k-char transcript. Sets the outcome:</p>
+    <div class="chips" style="margin-top:6px"><span class="chip c">completed</span><span class="chip c">hung_up_early</span><span class="chip c">no_request</span><span class="chip c">voicemail</span><span class="chip c">call_failed</span></div>
+  </div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--n8n)">Caller spoke?</div>
+  <div class="split" style="margin-top:10px">
+    <div>
+      <div class="branchlbl">YES</div>
+      <div class="node n8n"><span class="tag">OpenAI gpt-4.1-mini</span><h3>Summarize Call</h3><p>JSON: need, summary, tried, resolved, follow-up, title, caller, plant, product group, equipment, request type, specialist, transfer result, urgency, feedback and sentiment.</p><p style="margin-top:6px">On failure, continues with caller's own words.</p></div>
+    </div>
+    <div>
+      <div class="branchlbl">NO</div>
+      <div class="node off"><h3>Skip AI</h3><p>Ticket titled with the outcome (e.g. "No request captured") and labeled <code>no-request</code>.</p></div>
+    </div>
+  </div>
+  <div class="down"></div>
+  <div class="node n8n"><span class="tag">Code</span><h3>Build XTS Ticket</h3><p>Assembles summary, description and labels (below).</p></div>
+  <div class="down"></div>
+  <div class="node jira"><span class="tag">Jira Cloud</span><h3>Create XTS Ticket</h3><p>Project <b>Xylem Technical Support</b> (22462), issue type <b>Support</b>. Retries 3x.</p></div>
+  <div class="down"></div>
+  <div class="node off"><span class="tag">Twilio · disabled</span><h3>SMS ticket number to caller</h3><p>"Your request XTS-### has been logged..." Off until the 855 toll-free number is verified for SMS.</p></div>
+</section>
+
+<!-- TICKET ANATOMY -->
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--jira)">8</div><h2>What lands in Jira</h2></div>
+  <div class="ticket">
+    <div class="top"><div class="mono">[WWT Phone] Leopold: Valve-PAC hunting on rate of flow - Springfield WTP</div></div>
+    <div class="body">
+      <h4>Description</h4>
+      <ul style="margin:0;padding-left:18px">
+        <li>What the caller needs · Call summary · Tried on the call · Follow-up needed</li>
+        <li>Field table: caller, callback phone, plant, product group, equipment, request type, resolved, specialist, transfer, urgency, time, duration, outcome</li>
+        <li>Caller feedback on the phone line (with sentiment)</li>
+        <li>Caller said (verbatim) · Listen to the call link · Conversation ID</li>
+      </ul>
+      <h4>Labels</h4>
+      <div class="chips">
+        <span class="chip">phone-intake</span><span class="chip">wwt-voice</span>
+        <span class="chip c">wwt-&lt;group&gt;</span><span class="chip c">request-&lt;type&gt;</span>
+        <span class="chip c">urgent</span><span class="chip c">no-request</span>
+        <span class="chip c">phone-feedback</span><span class="chip c">feedback-&lt;sentiment&gt;</span>
+      </div>
+      <p style="margin:8px 0 0;color:var(--muted);font-size:12.5px">Solid = always. Dashed = when it applies. Example title is illustrative.</p>
+    </div>
+  </div>
+</section>
+
+<section class="notes">
+  <h2>Worth knowing</h2>
+  <ol>
+    <li><b>Every call opens a ticket</b>, including resolved calls, connected transfers, hang-ups and voicemails. Filter on <code>no-request</code> to strip the noise.</li>
+    <li><b>Transfers don't stop the ticket.</b> The summary records specialist named and transfer result, so a connected call still leaves a trail.</li>
+    <li><b>Caller SMS is built but off</b>, pending toll-free SMS verification in Twilio.</li>
+    <li><b>Conversation ID in every ticket</b> supports a future reconciliation audit, same pattern as NBTS.</li>
+    <li><b>Separate from NBTS.</b> Own KB table, own webhook, own Jira space. Nothing crosses into the NBTS AI Jira project.</li>
+  </ol>
+</section>
+
+</section>
+
+<!-- ================= SUBMITTAL (NBTS) ================= -->
+<section class="tab" id="tab-submittal">
+<div class="tabintro">
+  <h2>NBTS Submittal Generator</h2>
+  <span class="st st-live">Live</span>
+  <p>Engineer uploads the sold job on an n8n form, a Render service builds the annotated package, and the email opens a ticket in NBTS Jira.</p>
+</div>
+<div class="meta">
+  <span class="pill">n8n: Submittal Generator (NB)</span>
+  <span class="pill">n8n: NBTS OSEC Submittal Generator</span>
+  <span class="pill">Jira: nbts@xyleminc.atlassian.net</span>
+</div>
+
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">1</div><h2>Pick the product line</h2></div>
+  <div class="row r3">
+    <div class="node agent"><span class="badge b-live">live</span><span class="tag">Neptune Benson / Lawson</span><h3>Quote PDF form</h3>
+      <div class="form" style="margin-top:6px;padding:6px 10px">
+        <div class="f"><span>Your Email</span><span>req</span></div>
+        <div class="f"><span>Quote PDF</span><span>req</span></div>
+        <div class="f"><span>Job Number</span><span>req</span></div>
+        <div class="f"><span>Engineer Initials</span><span>opt</span></div>
+        <div class="f"><span>Project Name</span><span>opt, overrides quote</span></div>
+      </div></div>
+    <div class="node agent"><span class="badge b-live">live</span><span class="tag">OSEC (W&amp;T)</span><h3>HKOM AS SOLD workbook form</h3>
+      <div class="form" style="margin-top:6px;padding:6px 10px">
+        <div class="f"><span>Your Email</span><span>req</span></div>
+        <div class="f"><span>HKOM workbook</span><span>.xlsm / .xlsx</span></div>
+        <div class="f"><span>Job Number</span><span>opt</span></div>
+        <div class="f"><span>Submittal Date / PM / Customer</span><span>opt</span></div>
+      </div></div>
+    <div class="node off"><span class="badge b-build">not in n8n</span><span class="tag">ETS UV engineered</span><h3>AS SOLD workbook</h3><p>Body generator built and regression-tested (Mosier, Lakeside, Pickens, Jamesville). No form or portal tile yet.</p></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--tool)">2</div><h2>Generate on Render</h2><small>header auth, 300s timeout</small></div>
+  <div class="split">
+    <div class="node tool"><span class="tag">submittal-generator /generate</span><h3>NB quote path</h3>
+      <ul>
+        <li><b>Parse quote:</b> line items, sections split per Defender system (pool, splash pad, spa).</li>
+        <li><b>Route parts:</b> part number and description to cut sheet pages.</li>
+        <li><b>Valve roles:</b> influent (check valve first), effluent, precoat (verified by sightglass), system fill 3" or 4"; extras listed by name.</li>
+        <li><b>Annotate:</b> red boxes on ordered table rows, yellow callouts with qty and size.</li>
+        <li><b>Fill</b> cover page and datasheets, assemble one PDF.</li>
+      </ul></div>
+    <div class="node tool"><span class="tag">osec-submittal-generator /generate</span><h3>OSEC workbook path</h3>
+      <ul>
+        <li>Reads Firm Scope and every Product N BOM in the workbook.</li>
+        <li>Fills the Word body template, adds appendix tabs.</li>
+        <li>Returns file URLs, flags, warnings and a review note.</li>
+      </ul></div>
+  </div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--tool)">Generated OK?</div>
+  <div class="split" style="margin-top:10px">
+    <div><div class="branchlbl">YES</div><div class="node n8n"><h3>Package the files</h3><p>NB: carry the original quote forward. OSEC: download full PDF + Word body, list every <b>CHECK BEFORE RELEASE</b> flag.</p></div></div>
+    <div><div class="branchlbl">NO</div><div class="node off"><h3>Email error to requester</h3><p>Service error included so the input can be fixed and resubmitted.</p></div></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--jira)">3</div><h2>Deliver and log</h2></div>
+  <div class="node jira"><span class="tag">Gmail</span><h3>Email requester + NBTS Jira intake</h3><p>Attachments: submittal PDF (plus Word body for OSEC) and the original quote or workbook. The intake address opens the NBTS ticket; reply-to is the requester.</p></div>
+  <div class="down"></div>
+  <div class="node agent"><h3>Beta review before release</h3><p>Dallas, Renee or Michael checks each package before it goes to a customer.</p></div>
+</section>
+
+<section class="stage">
+  <div class="stage-h"><h2>What the NB path covers today</h2></div>
+  <div class="node"><div class="scroll"><table>
+    <tr><th>Area</th><th>Pages it builds</th></tr>
+    <tr><td>Defender</td><td>Datasheets per SP model incl. 36" Virtuo line, valve kits or loose valves, precoat tee, sightglass, system fill / drain</td></tr>
+    <tr><td>Accessories</td><td>Guardian FG strainers, reducers, surge tank anti-vortex, ladder, diversion valves</td></tr>
+    <tr><td>Drives</td><td>Greendrive VFD, bypass and no-bypass, frame row boxed by HP</td></tr>
+    <tr><td>Media / chemicals</td><td>AquaPerl perlite with bag count, Chem-Clean Express by pail size</td></tr>
+    <tr><td>ETS UV wafer</td><td>WF packages, NEMA 12 and NEMA 4X</td></tr>
+  </table></div></div>
+</section>
+
+<section class="stage">
+  <div class="stage-h"><h2>Open items</h2></div>
+  <div class="node"><ol style="margin:0;padding-left:20px;font-size:14px">
+    <li>Wire the ETS UV engineered generator to an n8n form and portal tile.</li>
+    <li>Rule on system fill for 12/10/6 kits (separate quoted line, or default to 4").</li>
+    <li>Add the Defender Virtuo shipping dimensions page.</li>
+    <li>Pages still missing: trash pumps, DE screen separator, 10" and 12" sightglass rows.</li>
+  </ol></div>
+</section>
+</section>
+
+<!-- ================= SCORECARD (NBTS) ================= -->
+<section class="tab" id="tab-scorecard">
+<div class="tabintro">
+  <h2>NBTS Spec Scorecard</h2>
+  <span class="st st-live">Live · v4</span>
+  <p>Project Spec Scorecard Generator (NBTSAI) v4. Upload the bid specs, Claude scores 28 technical categories plus commercial position, and the scorecard opens an NBTS Jira ticket.</p>
+</div>
+<div class="meta">
+  <span class="pill">n8n: caUpEmi7Hg8mI1i3</span>
+  <span class="pill">Sonnet 4.6 · Haiku 4.5 · Opus 4.7</span>
+  <span class="pill">Jira: nbts@xyleminc.atlassian.net</span>
+</div>
+
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">1</div><h2>n8n form</h2></div>
+  <div class="form">
+    <div class="f"><span>Project Name</span><span>required</span></div>
+    <div class="f"><span>Your Email</span><span>CC on the result</span></div>
+    <div class="f"><span>Project PDFs</span><span>multiple files: specs, drawings, addenda</span></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--n8n)">2</div><h2>Read the spec</h2></div>
+  <div class="node n8n"><span class="tag">Claude Sonnet 4.6</span><h3>Loop each PDF</h3><p>Base64 PDF straight to the Anthropic API (vision read, 8k tokens), text combined per file, then concatenated into one spec.</p></div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--n8n)">3</div><h2>Score in parallel</h2></div>
+  <div class="split">
+    <div class="node n8n"><span class="tag">Haiku 4.5 × 28</span><h3>Technical categories</h3><p>One run per category, temp 0, native item-per-run (v3 loop fix). Each returns 1, 2 or 3 with triggers, evidence and reasoning.</p></div>
+    <div class="node n8n"><span class="tag">Opus 4.7</span><h3>Commercial position</h3><p>Full spec, adaptive thinking. Margin pressure and risk, class A / B / C / D with override rules, default C.</p></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--jira)">4</div><h2>Assemble and send</h2></div>
+  <div class="node n8n"><h3>Assemble Final Scorecard</h3><p>Total out of 28, normalized score with band (Low / Moderate / High / Very high), composite = class + score. Rendered as HTML.</p></div>
+  <div class="down"></div>
+  <div class="node jira"><span class="tag">Gmail</span><h3>Email NBTS Jira intake, CC submitter</h3><p>Opens a scorecard ticket with the full report in the body.</p></div>
+</section>
+
+<section class="stage">
+  <div class="stage-h"><h2>Worth knowing</h2></div>
+  <div class="node safe"><span class="badge b-gap">category gap</span><h3>The 28 categories score clarifier specs</h3><p>Mechanism type (Tow-Bro, spiral, Riser Bro, Detritor, DAF), bridge, truss, skimmer, scum trough, pier, coatings, civil. None target Defender, Lawson, ETS UV, OSEC or Pacific Ozone, so NBTS product bids score against the wrong rubric.</p>
+  <p style="margin-top:6px">Fix: add NBTS category sets (filter system, valves and controls, UV dose and NEMA, chemical feed, aquatics code) behind a product picker on the form.</p></div>
+</section>
+</section>
+
+<!-- ================= SMS ================= -->
+<section class="tab" id="tab-sms">
+<div class="tabintro">
+  <h2>WWT SMS Agent</h2>
+  <span class="st st-block">Blocked: SMS verification</span>
+  <p>Clone of the NBTS Twilio SMS Agent and its helper workflows, pointed at the WWT KB and XTS. Waits on the 855 number being verified for texting.</p>
+</div>
+<div class="meta">
+  <span class="pill">Pattern: hEc78lvFMVPHaBfc + 4 helpers</span>
+  <span class="pill">Number: +1 855 516 7056 (shared with voice)</span>
+</div>
+
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--phone)">1</div><h2>Inbound text</h2></div>
+  <div class="node phone"><span class="badge b-gap">blocker</span><span class="tag">Twilio</span><h3>Customer texts the 855 number</h3><p>Twilio webhook to <code>/wwt-sms-agent</code>, which answers with empty TwiML right away.</p></div>
+  <div class="down"></div>
+  <div class="node n8n"><span class="tag">Helper</span><h3>Bot pause check</h3><p>Paused when the conversation ticket is labeled <code>bot-paused</code>, has a future pause date, or an engineer commented publicly in the last 24h.</p></div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--n8n)">Paused?</div>
+  <div class="split" style="margin-top:10px">
+    <div><div class="branchlbl">YES</div><div class="node off"><h3>Log only, no reply</h3><p>The engineer owns the thread.</p></div></div>
+    <div><div class="branchlbl">NO</div><div class="node agent"><span class="tag">gpt-4o-mini</span><h3>Classify intent</h3></div></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--agent)">2</div><h2>Intents</h2></div>
+  <div class="row r3">
+    <div class="node agent"><span class="tag">menu</span><h3>Menu</h3><p>Start ticket · Leave comment · Ask a question.</p></div>
+    <div class="node agent"><span class="tag">start_ticket</span><h3>Start ticket</h3><p>Has name, email and issue: email to XTS intake with customer CC, SMS confirm. Missing: ask for them.</p></div>
+    <div class="node agent"><span class="tag">leave_comment</span><h3>Leave comment</h3><p>Needs ticket key. Replies on the ticket's email thread, photos attached from MMS.</p></div>
+    <div class="node tool"><span class="tag">ask_question</span><h3>Ask a question</h3><p>Brand-first search of <code>wwt_documents</code> (<code>match_wwt_documents</code>), plant-scope and warranty rules from the phone agent, 1,200-char cap.</p></div>
+    <div class="node agent"><span class="tag">add_email</span><h3>Add email</h3><p>Validates it, finds the latest XTS ticket by phone, adds the caller as a request participant, texts a confirmation.</p></div>
+    <div class="node safe"><span class="tag">always</span><h3>Safety rules</h3><p>Same overrides as the phone agent: LOTO, no confined space, ozone leave-the-area, 911 first.</p></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--jira)">3</div><h2>Every turn is logged</h2></div>
+  <div class="node jira"><span class="tag">Helper · conversation logger</span><h3>One XTS ticket per phone number</h3><p>Each message added as an internal note. Flags: asked for a person, no answer found, bot paused, delivery failed.</p></div>
+  <div class="split" style="margin-top:10px">
+    <div class="node n8n"><span class="badge b-gap">off</span><h3>Teams alert</h3><p>NBTS webhook URL is empty, so alerts never fire. Fill it for WWT.</p></div>
+    <div class="node n8n"><h3>Delivery failure watcher</h3><p>Twilio status callback; logs undelivered or failed replies to the conversation ticket.</p></div>
+  </div>
+  <div class="down lbl"><span>engineer replies publicly</span></div>
+  <div class="node ok"><h3>Human handoff</h3><p>A public comment on the conversation ticket pauses the bot for 24h.</p></div>
+</section>
+
+<section class="stage">
+  <div class="stage-h"><h2>NBTS to WWT swaps</h2></div>
+  <div class="node"><div class="scroll"><table class="swap">
+    <tr><th>NBTS today</th><th>WWT version</th></tr>
+    <tr><td>+1 866 722 1776</td><td>855 516 7056, after SMS verification</td></tr>
+    <tr><td>documents / match_documents_v2</td><td>wwt_documents / match_wwt_documents</td></tr>
+    <tr><td>Neptune Benson prompt, Defender RMF rule</td><td>WWT prompt from Glennbot_frontdesk_wwt (5 families, site scope)</td></tr>
+    <tr><td>Jira project 17399, nbts intake email</td><td>XTS project 22462, XTS intake email</td></tr>
+    <tr><td>Shared sms_conversations table</td><td>WWT table or a line column, so numbers don't collide</td></tr>
+    <tr><td>"NBTS-###" in texts</td><td>"XTS-###"</td></tr>
+  </table></div></div>
+</section>
+</section>
+
+<!-- ================= EMAIL ================= -->
+<section class="tab" id="tab-email">
+<div class="tabintro">
+  <h2>WWT Email to XTS Jira</h2>
+  <span class="st st-part">Partly built</span>
+  <p>Email creates the XTS ticket, Jira Automation hands it to the WWT Jira RAG Agent, and the answer posts back as a comment. The agent is live but not posting yet.</p>
+</div>
+<div class="meta">
+  <span class="pill">Pattern: NBTS Jira RAG Agent rev 0.8</span>
+  <span class="pill">WWT Jira RAG Agent (Ypaev7i5bP1P9Dw2)</span>
+</div>
+
+<section class="stage">
+  <div class="stage-h"><div class="n" style="background:var(--phone)">1</div><h2>Intake</h2></div>
+  <div class="node phone"><span class="badge b-gap">not set up</span><span class="tag">Email</span><h3>Customer emails the XTS intake address</h3><p>JSM turns the email into an XTS Support ticket. Phone and SMS tickets land in the same XTS space.</p></div>
+  <div class="down"></div>
+  <div class="node jira"><span class="badge b-gap">to build</span><span class="tag">Jira Automation</span><h3>Rule: new XTS ticket → webhook</h3><p>Sends the ticket to <code>/wwt-jira-agent</code>, same as the NBTS rule.</p></div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--n8n)">2</div><h2>WWT Jira RAG Agent</h2><span class="st st-live" style="margin-left:auto">Active</span></div>
+  <div class="node n8n"><h3>Parse and sanitize</h3><p>Strip org name, signatures, legal footers and URLs (rev 0.7 sanitizer pattern), then detect product, component and site.</p><span class="badge b-gap" style="float:none;display:inline-block;margin:8px 0 0">ICEAS + chain only</span></div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--n8n)">Question text?</div>
+  <div class="split" style="margin-top:10px">
+    <div><div class="branchlbl">NO</div><div class="node off"><h3>Stop</h3><p>Nothing to answer.</p></div></div>
+    <div><div class="branchlbl">YES</div><div class="node tool"><span class="tag">gpt-4.1</span><h3>KB-only answer</h3><p><code>wwt_documents</code> via <code>match_wwt_documents</code>, topK 12, product filter, memory per issue.</p></div></div>
+  </div>
+  <div class="down"></div>
+  <div class="node safe"><h3>Warranty Guard</h3><p>Deterministic code node strips any coverage claims and adds the referral line. Technical help in the same answer stays.</p></div>
+  <div class="down"></div>
+  <div class="node n8n"><h3>Format Jira comment</h3><p>Answer, sources, "Not found in KB" section, rev footer.</p></div>
+  <div class="down"></div>
+  <div class="decision" style="--c:var(--n8n)">Posting configured?</div>
+  <div class="split" style="margin-top:10px">
+    <div><div class="branchlbl">NO (today)</div><div class="node off"><span class="badge b-gap">current</span><h3>Returns comment in webhook response</h3><p>Nothing lands on the ticket. <code>jira_post_url</code> and token are empty in WWT Config.</p></div></div>
+    <div><div class="branchlbl">YES</div><div class="node jira"><h3>Post comment to XTS ticket</h3><p>Through a Jira Automation incoming webhook. Store the token as a credential, not in the node.</p></div></div>
+  </div>
+</section>
+
+<div class="down"></div>
+
+<section class="stage" style="margin-top:0">
+  <div class="stage-h"><div class="n" style="background:var(--jira)">3</div><h2>Back to the customer</h2></div>
+  <div class="node jira"><span class="badge b-build">clone</span><span class="tag">Jira comment → SMS + email</span><h3>Public comment goes to the customer</h3><p>WWT copy of the NBTS comment-to-customer flow: email on every public comment, SMS once texting is verified.</p></div>
+</section>
+
+<section class="stage">
+  <div class="stage-h"><h2>To turn this on</h2></div>
+  <div class="node"><ol style="margin:0;padding-left:20px;font-size:14px">
+    <li>Set up an XTS intake email address in JSM.</li>
+    <li>Build the XTS Jira Automation rule that calls <code>/wwt-jira-agent</code>.</li>
+    <li>Fill <code>jira_post_url</code> and the token (as a credential) in WWT Config.</li>
+    <li>Add Leopold, Wedeco UV, Wedeco ozone and filter press to the agent's detection and prompt so it matches the phone line.</li>
+    <li>Clone the comment-to-customer flow for XTS.</li>
+  </ol></div>
+</section>
+</section>
+
+<footer><p>Mapped from the live Glennbot_frontdesk_wwt config and the NBTS and WWT n8n workflows, Nov 5 2026. WWT SMS is a proposed build on the NBTS pattern. Internal use only. Do not share outside Xylem.</p><div class="mark">xylem<sup>°</sup></div></footer>
+</div>
+<script>
+(function(){
+  var names=['phone','sms','email','submittal','scorecard'];
+  function show(){
+    var h=(location.hash||'').replace('#','');
+    if(names.indexOf(h)<0) h='phone';
+    names.forEach(function(n){
+      var s=document.getElementById('tab-'+n); if(s) s.classList.toggle('on',n===h);
+    });
+    document.querySelectorAll('#tabs a').forEach(function(a){
+      var on=a.getAttribute('data-t')===h; a.classList.toggle('on',on);
+      if(on){var bar=document.getElementById('tabs');bar.scrollLeft=a.offsetLeft-bar.clientWidth/2+a.clientWidth/2;}
+    });
+  }
+  requestAnimationFrame(function(){var h=document.getElementById('hero'); if(h) h.classList.add('play');});
+  names.forEach(function(n){
+    var sec=document.getElementById('tab-'+n); if(!sec) return;
+    var kids=sec.querySelectorAll(':scope > *'), i=0;
+    kids.forEach(function(k){ k.classList.add('fx'); k.style.animationDelay=Math.min(i,12)*50+'ms'; i++; });
+  });
+  window.addEventListener('hashchange',function(){show();window.scrollTo(0,0);});
+  show();
+})();
+</script>
+</body>
+</html>
